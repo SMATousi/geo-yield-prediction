@@ -323,6 +323,92 @@ class DenseYieldFPNHead(nn.Module):
         return logits
 
 
+class DenseYieldDPTHead(nn.Module):
+    """Dense Prediction Transformer (DPT) spatial decoder head.
+
+    Adapted from the geoai ``DPTSegmentationHead`` to the MMST-ViT dense
+    yield-map head. Consumes the four multi-scale feature maps produced by
+    the fusion transformer / modality encoders (finest first), projects each
+    to a common channel dimension, progressively fuses them with bilinear
+    upsampling, and produces per-pixel logits at an arbitrary target grid.
+    Because it interpolates to any ``(H, W)`` target size, it can reconstruct
+    yield directly on the harvest yield-monitor grid without redesigning the
+    encoders, preserving within-field spatial variability.
+
+    For continuous yield regression set num_classes=1 and use an L1/MSE loss
+    (the default 'l1') instead of the source's per-pixel class logits.
+    """
+
+    def __init__(self, embed_dim, num_classes=1, features=256, loss='l1', log_target=False):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.num_classes = num_classes
+        self.features = features
+        self.loss = loss
+        self.log_target = log_target
+        # Project each backbone layer to *features* channels.
+        self.projects = nn.ModuleList(
+            [nn.Conv2d(embed_dim, features, kernel_size=1) for _ in range(4)]
+        )
+        # Refine each projected feature map.
+        self.refine = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Conv2d(features, features, kernel_size=3, padding=1),
+                    nn.BatchNorm2d(features),
+                    nn.GELU(),
+                )
+                for _ in range(4)
+            ]
+        )
+        # Fuse all four scales.
+        self.fuse = nn.Sequential(
+            nn.Conv2d(features * 4, features, kernel_size=1),
+            nn.BatchNorm2d(features),
+            nn.GELU(),
+        )
+        self.head = nn.Conv2d(features, num_classes, kernel_size=1)
+
+    def compute_loss(self, logits, targets):
+        if self.log_target:
+            targets = torch.log(targets.clamp_min(1e-6))
+        if self.loss == 'l1':
+            return nn.functional.l1_loss(logits, targets)
+        return nn.functional.mse_loss(logits, targets)
+
+    def forward(self, multi_scale_features, target_size=None, targets=None, mode='tensor'):
+        """multi_scale_features: list of 4 feature maps, finest first.
+
+        ``target_size`` is the (H, W) output grid; when None it defaults to
+        the spatial size of the largest (first) feature map.
+        """
+        refined = []
+        for feat, proj, ref in zip(multi_scale_features, self.projects, self.refine):
+            refined.append(ref(proj(feat)))
+
+        # Upsample all to the spatial size of the largest (first) feature map.
+        target_h, target_w = refined[0].shape[2], refined[0].shape[3]
+        upsampled = [refined[0]]
+        for r in refined[1:]:
+            upsampled.append(
+                F.interpolate(
+                    r, size=(target_h, target_w), mode="bilinear", align_corners=False
+                )
+            )
+
+        fused = self.fuse(torch.cat(upsampled, dim=1))
+        logits = self.head(fused)
+        # Final interpolation to the target yield-map resolution.
+        if target_size is not None:
+            logits = F.interpolate(
+                logits, size=target_size, mode="bilinear", align_corners=False
+            )
+        if mode == 'loss':
+            loss = self.compute_loss(logits, targets)
+            return logits, loss
+        return logits
+
+
 def mdn_loss(pi, mu, sigma, target):
     """Negative log-likelihood of a Gaussian mixture density network.
 
@@ -436,6 +522,17 @@ if __name__ == "__main__":
     mask = np.ones((16, 16), dtype=bool)
     full, cov = head.stitch(patch, 0, 0, 8, 8, 0, 0, 16, 16, 16, 16, field_mask=mask)
     print(full.shape, cov)
+
+    # DPT dense decoder: four multi-scale feature maps -> per-pixel yield map
+    feats = [torch.randn((2, 512, 16, 16)),
+             torch.randn((2, 512, 8, 8)),
+             torch.randn((2, 512, 4, 4)),
+             torch.randn((2, 512, 2, 2))]
+    dpt = DenseYieldDPTHead(embed_dim=512, num_classes=1, loss='l1')
+    logits = dpt(feats, target_size=(32, 32), mode='tensor')
+    print(logits.shape)
+    logits, loss = dpt(feats, target_size=(32, 32), targets=torch.randn((2, 1, 32, 32)), mode='loss')
+    print(logits.shape, loss.item())
 
     # probabilistic MDN head: pooled field representation -> pi/mu/sigma
     pooled = torch.randn((2, 512))
