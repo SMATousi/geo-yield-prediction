@@ -146,6 +146,14 @@ class MultiModalEncoder(nn.Module):
     PVTSimCLR) via ``{'type': 'module', 'module': <nn.Module>}``. Every
     encoder output is projected to ``embed_dim`` so tokens from different
     sources share a common latent dimension for the fusion transformer.
+
+    ``modality_dropout`` (0..1) enables training-time random removal of input
+    sources so the backbone learns to operate on arbitrary subsets of
+    modalities (missing-modality robustness). A learned missing-modality token
+    is kept per source and substituted whenever a modality is absent or dropped,
+    following the tessera convention that an absent modality still yields a
+    well-formed embedding plus an explicit availability mask instead of failing
+    the forward pass.
     """
 
     _TYPES = {
@@ -156,12 +164,19 @@ class MultiModalEncoder(nn.Module):
         'categorical': CategoricalEncoder,
     }
 
-    def __init__(self, encoders_cfg, embed_dim=192):
+    def __init__(self, encoders_cfg, embed_dim=192, modality_dropout=0.0):
         super().__init__()
         self.embed_dim = embed_dim
+        self.modality_dropout = modality_dropout
         self.encoders = nn.ModuleDict()
         for name, cfg in encoders_cfg.items():
             self.encoders[name] = self._build_encoder(cfg)
+        # Learned missing-modality token per source (tessera convention: an
+        # absent modality still yields a well-formed embedding instead of
+        # erroring). Used whenever a modality is unavailable or dropped.
+        self.missing_tokens = nn.ParameterDict()
+        for name in self.encoders:
+            self.missing_tokens[name] = nn.Parameter(torch.zeros(embed_dim))
 
     def _build_encoder(self, cfg):
         enc_type = cfg.get('type')
@@ -186,6 +201,51 @@ class MultiModalEncoder(nn.Module):
             outputs[name] = encoder(inputs[name])
         return outputs
 
+    def forward_with_missing(self, inputs, available=None, apply_dropout=True):
+        """Missing-modality-robust forward pass.
+
+        Returns ``(embeddings, mask)`` where ``embeddings`` contains an entry
+        for *every* configured modality and ``mask`` is a dict of per-modality
+        availability flags (1 = present, 0 = absent). Absent modalities are
+        represented by a learned missing-modality token (the tessera
+        zero-fill/mask convention adapted to this repo's dict-of-embeddings
+        design) so the downstream fusion transformer always receives a
+        well-formed input and can gate attention on ``mask``.
+
+        ``available`` optionally overrides which modalities are present (e.g.
+        from a data loader's availability mask). When ``apply_dropout`` is set
+        and the module is in training mode, ``modality_dropout`` randomly
+        removes input sources so the backbone learns to operate on arbitrary
+        subsets of modalities.
+        """
+        if available is None:
+            available = {name: name in inputs for name in self.encoders}
+        else:
+            available = {name: bool(available.get(name, False)) for name in self.encoders}
+
+        if self.training and apply_dropout and self.modality_dropout > 0:
+            for name in self.encoders:
+                if available[name] and torch.rand(1).item() < self.modality_dropout:
+                    available[name] = False
+
+        embeddings = {}
+        mask = {}
+        for name, encoder in self.encoders.items():
+            if available[name]:
+                embeddings[name] = encoder(inputs[name])
+                mask[name] = torch.ones(embeddings[name].shape[0], dtype=torch.float32,
+                                        device=embeddings[name].device)
+            else:
+                # learned missing-modality token: single well-formed embedding
+                # with an explicit availability flag of 0.
+                token = self.missing_tokens[name].unsqueeze(0).expand(
+                    inputs[name].shape[0], -1) if name in inputs else \
+                    self.missing_tokens[name].unsqueeze(0)
+                embeddings[name] = token
+                mask[name] = torch.zeros(embeddings[name].shape[0], dtype=torch.float32,
+                                         device=embeddings[name].device)
+        return embeddings, mask
+
 
 if __name__ == "__main__":
     cfg = {
@@ -195,7 +255,7 @@ if __name__ == "__main__":
         'soil': {'type': 'tabular', 'in_dim': 12},
         'crop': {'type': 'categorical', 'num_classes': 20},
     }
-    model = MultiModalEncoder(cfg, embed_dim=192)
+    model = MultiModalEncoder(cfg, embed_dim=192, modality_dropout=0.3)
 
     inputs = {
         'dem': torch.randn(2, 1, 64, 64),
@@ -207,3 +267,11 @@ if __name__ == "__main__":
     out = model(inputs)
     for name, emb in out.items():
         print(name, tuple(emb.shape))
+
+    # missing-modality-robust forward: every modality present, absent ones
+    # substituted with a learned token and flagged 0 in the availability mask.
+    model.train()
+    partial = {'dem': inputs['dem'], 'weather': inputs['weather']}
+    embeddings, mask = model.forward_with_missing(partial, apply_dropout=False)
+    for name in model.encoders:
+        print('fwm', name, tuple(embeddings[name].shape), 'mask', mask[name].tolist())
