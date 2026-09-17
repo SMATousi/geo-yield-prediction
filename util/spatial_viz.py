@@ -11,6 +11,41 @@ preserves within-field low/high-yield zones.
 import numpy as np
 
 
+def modality_importance(importance_scores, top_n=None):
+    """Rank modalities/features by their importance scores as a sorted DataFrame.
+
+    Adapted from Momahmoses/agricultural-yield-forecasting's ``feature_importance``
+    (src/model.py). The original hardcoded a global ``FEATURES`` list and read
+    ``model.feature_importances_`` from a single tree model. Here it is generalized
+    to accept a dict mapping modality/feature names to importance scores (e.g.
+    aggregated attention or attribution per modality encoder), so it can serve as
+    the modality-importance ranking primitive for the interpretability deliverable.
+    Returns a DataFrame sorted by descending importance, optionally truncated to
+    the ``top_n`` most important modalities.
+
+    Args:
+        importance_scores: dict of {name: importance} or a sequence of
+            (name, importance) pairs.
+        top_n: optional int; if given, keep only the top ``top_n`` rows.
+
+    Returns:
+        pandas.DataFrame with columns ``modality`` and ``importance``, sorted by
+        descending importance.
+    """
+    import pandas as pd
+
+    if isinstance(importance_scores, dict):
+        items = list(importance_scores.items())
+    else:
+        items = [(str(k), float(v)) for k, v in importance_scores]
+
+    df = pd.DataFrame(items, columns=['modality', 'importance'])
+    df = df.sort_values('importance', ascending=False).reset_index(drop=True)
+    if top_n is not None:
+        df = df.head(top_n).reset_index(drop=True)
+    return df
+
+
 def _to_dhw(data):
     """Coerce an embedding array to a (D, H, W) grid."""
     data = np.asarray(data)
