@@ -23,7 +23,10 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
+import numpy as np
 from tqdm import tqdm
+
+from dataset.spectral_indices import compute_evi, compute_ndvi
 
 #: Default raster extensions expanded by :class:`FieldGlobStep`.
 DEFAULT_RASTER_EXTENSIONS: List[str] = [".tif", ".tiff", ".jp2", ".img"]
@@ -122,6 +125,65 @@ class FieldFunctionStep(PipelineStep):
 
     def process(self, item: Dict[str, Any]) -> Dict[str, Any]:
         return self.func(item)
+
+
+class FieldSpectralIndexStep(PipelineStep):
+    """Derive vegetation indices (NDVI / EVI) from an optical reflectance raster.
+
+    This is the optical-imagery preprocessing stage of the field-level
+    geospatial pipeline (gap g6): it converts raw NIR/Red/Blue surface
+    reflectance bands into vegetation-index rasters that feed the optical
+    vision encoder (gap g2). The step reads the raster at ``item["input_path"]``
+    (a ``(C, H, W)`` channel-first stack), computes NDVI and EVI from the
+    configured band indices, and writes the derived index rasters next to the
+    source file as ``<stem>_NDVI.tif`` / ``<stem>_EVI.tif``. The item is
+    enriched with the output paths under ``item["spectral_indices"]``.
+
+    Parameters
+    ----------
+    name : str
+        Step name (default ``"spectral_indices"``).
+    nir_idx, red_idx, blue_idx : int
+        Channel indices of the NIR / Red / Blue bands in the source raster.
+    """
+
+    def __init__(self, name: str = "spectral_indices",
+                 nir_idx: int = 0, red_idx: int = 1, blue_idx: int = 2) -> None:
+        super().__init__(name)
+        self.nir_idx = nir_idx
+        self.red_idx = red_idx
+        self.blue_idx = blue_idx
+
+    def process(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        import rasterio
+        from rasterio.transform import from_origin
+
+        src_path = item["input_path"]
+        with rasterio.open(src_path) as src:
+            stack = src.read().astype(np.float32)
+            profile = src.profile
+            transform = src.transform
+
+        ndvi = compute_ndvi(None, None, stack=stack,
+                            nir_idx=self.nir_idx, red_idx=self.red_idx)
+        evi = compute_evi(None, None, None, stack=stack,
+                          nir_idx=self.nir_idx, red_idx=self.red_idx,
+                          blue_idx=self.blue_idx)
+
+        stem = os.path.splitext(src_path)[0]
+        out_paths = {}
+        for name, arr in (("NDVI", ndvi), ("EVI", evi)):
+            out_path = f"{stem}_{name}.tif"
+            with rasterio.open(
+                out_path, "w", driver="GTiff", height=arr.shape[0],
+                width=arr.shape[1], count=1, dtype="float32",
+                crs=profile.get("crs"), transform=transform,
+            ) as dst:
+                dst.write(arr, 1)
+            out_paths[name] = out_path
+
+        item["spectral_indices"] = out_paths
+        return item
 
 
 class CheckpointManager:
