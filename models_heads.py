@@ -4,6 +4,86 @@ from torch import nn
 import torch.nn.functional as F
 
 
+# ---------------------------------------------------------------------------
+# Extensible multi-head foundation-model registry.
+# Adapted from opengeos/geoai (geoai/foundation_models.py) to the MMST-ViT
+# multi-head interface. Instead of a hardcoded dict of head types, heads are
+# registered under validated category/modality vocabularies with structured
+# metadata (tasks, backbone, description). New agricultural heads (crop-stress
+# detection, management-zone segmentation, soil-property inference, ...) are
+# attached by registering them here and referencing them by name in the
+# heads_cfg, without modifying any modality encoder.
+# ---------------------------------------------------------------------------
+
+_VALID_HEAD_CATEGORIES = frozenset(
+    {"dense", "scalar", "probabilistic", "segmentation", "classification"}
+)
+
+_VALID_HEAD_MODALITIES = frozenset(
+    {"yield", "multimodal", "optical", "sar", "soil", "timeseries"}
+)
+
+# Registry keyed by head name -> structured metadata (mirrors geoai's
+# FOUNDATION_MODELS dict). ``cls`` is the callable used to build the head.
+HEAD_REGISTRY: dict = {}
+
+
+def register_head(name, category, modality, tasks, backbone, description):
+    """Register a task head under validated category/modality vocabularies.
+
+    Returns a decorator that stores the head class in :data:`HEAD_REGISTRY`
+    keyed by ``name``, validating that ``category`` and ``modality`` are drawn
+    from the controlled vocabularies. This is the extension point for new
+    agricultural heads: register a head once and attach it by name in a
+    ``heads_cfg`` without touching the modality encoders.
+    """
+    if category not in _VALID_HEAD_CATEGORIES:
+        raise ValueError(
+            "Unknown head category {!r}; valid: {}".format(
+                category, sorted(_VALID_HEAD_CATEGORIES)))
+    if modality not in _VALID_HEAD_MODALITIES:
+        raise ValueError(
+            "Unknown head modality {!r}; valid: {}".format(
+                modality, sorted(_VALID_HEAD_MODALITIES)))
+
+    def _decorator(cls):
+        HEAD_REGISTRY[name] = {
+            "name": name,
+            "category": category,
+            "modality": modality,
+            "tasks": list(tasks),
+            "backbone": backbone,
+            "description": description,
+            "cls": cls,
+        }
+        return cls
+
+    return _decorator
+
+
+def list_heads():
+    """Return the names of all registered task heads (sorted)."""
+    return sorted(HEAD_REGISTRY)
+
+
+def get_head_info(name):
+    """Return the structured metadata for a registered head by name.
+
+    Raises ``KeyError`` if the head is not registered.
+    """
+    if name not in HEAD_REGISTRY:
+        raise KeyError(
+            "Unknown task head {!r}; registered: {}".format(
+                name, list_heads()))
+    return HEAD_REGISTRY[name]
+
+
+def build_head(name, **kwargs):
+    """Instantiate a registered head by name from its stored class."""
+    info = get_head_info(name)
+    return info["cls"](**kwargs)
+
+
 def reassemble_to_grid(per_pixel_vecs, grid_indices, H, W):
     """Reassemble per-pixel latent vectors into an HxWxlatent array.
 
@@ -106,6 +186,17 @@ def stitch_tiled_representation(rep_data, src_row_start, src_col_start,
     return target_array, coverage
 
 
+@register_head(
+    "dense_yield",
+    category="dense",
+    modality="yield",
+    tasks=["yield-map-regression"],
+    backbone="fused-latent",
+    description=(
+        "Dense per-pixel FCN spatial decoder that reconstructs a within-field "
+        "yield map from the fused latent field representation."
+    ),
+)
 class DenseYieldFCNHead(nn.Module):
     """Dense per-pixel FCN spatial decoder head.
 
@@ -239,6 +330,17 @@ class PyramidPoolingHead(nn.Module):
         return out
 
 
+@register_head(
+    "dense_yield_fpn",
+    category="dense",
+    modality="yield",
+    tasks=["yield-map-regression"],
+    backbone="feature-pyramid",
+    description=(
+        "Feature-pyramid + pyramid-pooling dense yield-map decoder that "
+        "preserves multiple resolutions through the decode path."
+    ),
+)
 class DenseYieldFPNHead(nn.Module):
     """Feature-pyramid + pyramid-pooling dense yield-map decoder.
 
@@ -323,6 +425,17 @@ class DenseYieldFPNHead(nn.Module):
         return logits
 
 
+@register_head(
+    "dense_yield_dpt",
+    category="dense",
+    modality="yield",
+    tasks=["yield-map-regression"],
+    backbone="dpt",
+    description=(
+        "Dense Prediction Transformer spatial decoder that fuses multi-scale "
+        "feature maps and interpolates to an arbitrary yield-map grid."
+    ),
+)
 class DenseYieldDPTHead(nn.Module):
     """Dense Prediction Transformer (DPT) spatial decoder head.
 
@@ -448,6 +561,17 @@ def sample_from_mixture(pi, mu, sigma, n_samples=1):
     return torch.stack(samples, dim=1) if n_samples > 1 else samples[0]
 
 
+@register_head(
+    "mdn_yield",
+    category="probabilistic",
+    modality="yield",
+    tasks=["yield-map-regression", "uncertainty-estimation"],
+    backbone="mixture-density-network",
+    description=(
+        "Probabilistic Mixture Density Network yield head emitting per-location "
+        "pi/mu/sigma for calibrated per-pixel uncertainty."
+    ),
+)
 class MDNYieldHead(nn.Module):
     """Probabilistic Mixture Density Network yield head.
 

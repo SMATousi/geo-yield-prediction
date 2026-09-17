@@ -19,7 +19,13 @@ from torch import nn
 from models_multimodal_encoder import MultiModalEncoder
 from models_neck import MultiFusionNeck
 from models_latent_fusion import LatentFusionTransformer
-from models_heads import DenseYieldFCNHead, DenseYieldFPNHead
+from models_heads import (
+    DenseYieldFCNHead,
+    DenseYieldFPNHead,
+    HEAD_REGISTRY,
+    get_head_info,
+    list_heads,
+)
 
 
 class FieldAverageHead(nn.Module):
@@ -88,9 +94,17 @@ class MultiUnifiedModel(nn.Module):
 
     def _build_head(self, cfg):
         head_type = cfg.get('type')
-        if head_type not in self._HEAD_TYPES:
-            raise ValueError('Unknown task head type: {}'.format(head_type))
-        cls = self._HEAD_TYPES[head_type]
+        # Resolve through the extensible HEAD_REGISTRY first so new heads can
+        # be attached by name without editing this container; fall back to the
+        # local _HEAD_TYPES map for heads defined in this module.
+        if head_type in HEAD_REGISTRY:
+            cls = get_head_info(head_type)['cls']
+        elif head_type in self._HEAD_TYPES:
+            cls = self._HEAD_TYPES[head_type]
+        else:
+            raise ValueError(
+                'Unknown task head type: {} (registered: {})'.format(
+                    head_type, list_heads()))
         kwargs = {k: v for k, v in cfg.items() if k != 'type'}
         if 'embed_dim' in inspect.signature(cls.__init__).parameters:
             kwargs.setdefault('embed_dim', self.embed_dim)
