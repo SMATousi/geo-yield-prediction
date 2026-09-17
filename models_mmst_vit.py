@@ -5,6 +5,7 @@ from einops import rearrange, repeat
 from attention import SpatialTransformer, TemporalTransformer
 
 from models_pvt_simclr import PVTSimCLR
+from util.pos_embed import get_2d_sincos_pos_embed_with_resolution
 
 
 class MMST_ViT(nn.Module):
@@ -31,6 +32,9 @@ class MMST_ViT(nn.Module):
         self.dropout = nn.Dropout(emb_dropout)
         self.pool = pool
 
+        self.modality_res = None
+        self.modality_embed = nn.Parameter(torch.randn(1, 1, dim))
+
         self.norm1 = nn.LayerNorm(dim)
 
         self.mlp_head = nn.Sequential(
@@ -56,6 +60,22 @@ class MMST_ViT(nn.Module):
             x_hat = torch.cat([x_hat, x_hat_tmp], dim=0)
 
         return x_hat
+
+    def get_modality_pos_embed(self, grid_size, cls_token=False):
+        """Per-modality, native-resolution 2D sincos positional embeddings.
+
+        Returns a dict {modality: (n, grid_size*grid_size, dim)} (or with a
+        leading cls token) built from each modality's native ground-sample
+        distance (self.modality_res, in meters). This gives the fusion
+        transformer an explicit resolution- and modality-aware spatial prior
+        without resampling raw layers to a common grid.
+        """
+        if self.modality_res is None:
+            return None
+        return get_2d_sincos_pos_embed_with_resolution(
+            self.dim, grid_size, self.modality_res, cls_token=cls_token,
+            modalities=list(self.modality_res.keys()),
+        )
 
     def forward(self, x, ys=None, yl=None):
         b, t, g, _, _, _ = x.shape
