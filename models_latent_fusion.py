@@ -25,6 +25,44 @@ import numpy as np
 import torch
 from torch import nn
 
+# Multi-scale feature-extraction layer indices for a given transformer depth.
+# Adapted from opengeos/geoai (dinov3_finetune.py, ``_get_extraction_layers``)
+# to the MMST-ViT naming conventions. The fusion backbone calls this on its
+# depth to obtain the four evenly-spaced intermediate layer indices whose
+# outputs become the multiscale patch-token set that is projected into the
+# common latent dimension and fused (e.g. via the DPT head or cross-attention
+# queries), letting high-resolution terrain tokens coexist with coarse
+# soil/climate tokens.
+_EXTRACTION_LAYERS = {
+    12: [2, 5, 8, 11],   # ViT-S
+    24: [5, 11, 17, 23],  # ViT-L
+    32: [7, 15, 23, 31],  # ViT-H / 7B
+    40: [9, 19, 29, 39],  # ViT-g
+}
+
+
+def get_extraction_layers(num_blocks):
+    """Return the intermediate layer indices for a given transformer depth.
+
+    Returns a list of four layer indices (0-indexed) used for multi-scale
+    feature extraction from the fusion backbone. For depths in the known
+    table the canonical ViT indices are returned; for any other depth the
+    four evenly-spaced intermediate indices are computed so the fusion
+    backbone still emits a multiscale token set.
+
+    Raises:
+        ValueError: If *num_blocks* is not a positive integer.
+    """
+    if num_blocks in _EXTRACTION_LAYERS:
+        return _EXTRACTION_LAYERS[num_blocks]
+    if not isinstance(num_blocks, int) or num_blocks < 1:
+        raise ValueError(
+            f"Unsupported number of transformer blocks: {num_blocks}. "
+            f"Supported values: {sorted(_EXTRACTION_LAYERS.keys())}."
+        )
+    # fallback: four evenly-spaced intermediate layer indices
+    return [int(round((num_blocks - 1) * i / 3)) for i in range(4)]
+
 
 def get_1d_sincos_pos_embed(embed_dim, pos):
     """1D sincos positional embedding from a numpy grid (source helper)."""
@@ -154,6 +192,9 @@ class LatentFusionTransformer(nn.Module):
             for _ in range(depth)
         ])
         self.norm = nn.LayerNorm(embed_dim)
+        # multi-scale feature-extraction layer indices (finest first) whose
+        # outputs become the multiscale patch-token set fed to the DPT head.
+        self.extraction_layers = get_extraction_layers(depth)
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
@@ -203,6 +244,52 @@ class LatentFusionTransformer(nn.Module):
         latents = self.norm(latents)
         return latents
 
+    def forward_multiscale(self, embeddings, ids_keep=None):
+        """Emit multi-scale patch tokens from the fusion backbone.
+
+        Runs the same Perceiver cross-attention + self-attention stack as
+        :meth:`forward`, but collects the latent bottleneck states at the
+        four evenly-spaced intermediate layer indices returned by
+        :func:`get_extraction_layers` (finest first). These become the
+        multiscale patch-token set that is projected into the common latent
+        dimension and fused by the DPT head (or cross-attention queries),
+        letting high-resolution terrain tokens coexist with coarse
+        soil/climate tokens. Returns a list of four ``(B, num_latents,
+        embed_dim)`` tensors, finest first.
+        """
+        b = None
+        tokens = []
+        for name, emb in embeddings.items():
+            if name not in self.pos_embeds:
+                continue
+            if b is None:
+                b = emb.shape[0]
+            keep = ids_keep.get(name) if ids_keep is not None else None
+            if keep is not None:
+                emb = torch.gather(
+                    emb, dim=1,
+                    index=keep.unsqueeze(-1).repeat(1, 1, emb.shape[2]))
+            pos = self.pos_embeds[name].forward(ids_keep=keep)
+            pos = pos.expand(emb.shape[0], -1, -1)
+            mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
+            pos = torch.cat([pos, mod], dim=-1)
+            tokens.append(emb + pos)
+        if not tokens:
+            raise ValueError('LatentFusionTransformer received no modality tokens')
+        x = torch.cat(tokens, dim=1)
+
+        latents = self.latent_tokens.expand(b, -1, -1)
+        attn_out, _ = self.cross_attn(latents, x, x)
+        latents = self.cross_norm(latents + attn_out)
+        multi_scale = []
+        for i, blk in enumerate(self.blocks):
+            latents = blk(latents)
+            if i in self.extraction_layers:
+                multi_scale.append(latents)
+        # finest first, matching the DPT head's expected input order
+        return list(reversed(multi_scale))
+
+
 
 if __name__ == "__main__":
     # three modalities with different native token layouts: a 4x4 raster
@@ -236,3 +323,9 @@ if __name__ == "__main__":
     keep = torch.randint(0, 16, (2, 8))
     out_keep = model({'dem': embeddings['dem']}, ids_keep={'dem': keep})
     print('fused latent (gathered dem)', tuple(out_keep.shape))
+
+    # multi-scale patch tokens: four intermediate-layer latents (finest
+    # first) that feed the DPT dense yield-map head.
+    multi = model.forward_multiscale(embeddings)
+    print('extraction layers', model.extraction_layers)
+    print('multiscale tokens', [tuple(m.shape) for m in multi])
