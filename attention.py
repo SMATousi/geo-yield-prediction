@@ -162,7 +162,7 @@ class TemporalAttention(nn.Module):
             nn.Dropout(dropout)
         ) if project_out else nn.Identity()
 
-    def forward(self, x, bias=None):
+    def forward(self, x, bias=None, mask=None):
         b, n, _, h = *x.shape, self.heads
 
         qkv = self.to_qkv(x).chunk(3, dim=-1)
@@ -175,6 +175,12 @@ class TemporalAttention(nn.Module):
             qb, kb, _ = map(lambda t: rearrange(t, 'b t (h d) -> b h t d', h=h), bias)
             bias = einsum('b h i d, b h j d -> b h i j', qb, kb) * self.scale
             dots += bias
+
+        # mask out missing temporal frames (NaN-sentinel / dropped modalities)
+        if exists(mask):
+            mask = rearrange(mask, 'b t -> b () () t').bool()
+            max_neg_value = -torch.finfo(dots.dtype).max
+            dots.masked_fill_(~mask, max_neg_value)
 
         attn = dots.softmax(dim=-1)
 
@@ -232,8 +238,8 @@ class TemporalTransformer(nn.Module):
                 PreNorm(dim, FeedForward(dim, dim_out=dim, mult=mult, dropout=dropout))
             ]))
 
-    def forward(self, x, bias=None):
+    def forward(self, x, bias=None, mask=None):
         for attn, ff in self.layers:
-            x = attn(x, bias=bias) + x
+            x = attn(x, bias=bias, mask=mask) + x
             x = ff(x) + x
         return self.norm(x)

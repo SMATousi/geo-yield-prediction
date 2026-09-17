@@ -327,7 +327,7 @@ def train_one_epoch(model: torch.nn.Module,
     total_step = len(data_loader_sentinel) - 1
     for data_iter_step, (x, y, z) in enumerate(zip(data_loader_sentinel, data_loader_hrrr, data_loader_usda)):
 
-        fips, max_mem = x[1][0], torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+        fips, max_mem = x[2][0], torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
         num_grids = tuple(x[0].shape)[2]
         print("Epoch: [{}]  [ {} / {}]  FIPS Code: {}  Number of Grids: {}  Max Mem: {}"
               .format(epoch, data_iter_step, total_step, fips, num_grids, f"{max_mem:.0f}"))
@@ -339,6 +339,8 @@ def train_one_epoch(model: torch.nn.Module,
 
         # satellited imagery
         x = x[0].to(device, non_blocking=True)
+        # per-bin availability mask for missing-modality robustness
+        mask = x[1].to(device, non_blocking=True)
         # short- and long-term weather variables
         ys = y[0].to(device, non_blocking=True)
         yl = y[1].to(device, non_blocking=True)
@@ -352,7 +354,7 @@ def train_one_epoch(model: torch.nn.Module,
         x = rearrange(x, '(b t g) c h w -> b t g c h w', b=b, t=t, g=g)
 
 
-        z_hat = model(x, ys=ys, yl=yl)
+        z_hat = model(x, ys=ys, yl=yl, mask=mask)
 
         # log_scale
         loss = criterion(z, z_hat)
@@ -403,13 +405,15 @@ def evaluate(model: torch.nn.Module, data_loader_sentinel: Iterable, data_loader
     total_step = len(data_loader_sentinel) - 1
     for data_iter_step, (x, y, z) in enumerate(zip(data_loader_sentinel, data_loader_hrrr, data_loader_usda)):
 
-        fips, max_mem = x[1][0], torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+        fips, max_mem = x[2][0], torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
         num_grids = tuple(x[0].shape)[2]
         print(" Eval [ {} / {}]  FIPS Code: {}  Number of Grids: {}  Max Mem: {}"
               .format(data_iter_step, total_step, fips, num_grids, f"{max_mem:.0f}"))
 
         # satellite imagery
         x = x[0].to(device, non_blocking=True)
+        # per-bin availability mask for missing-modality robustness
+        mask = x[1].to(device, non_blocking=True)
 
         # short- and long-term weather variables
         ys = y[0].to(device, non_blocking=True)
@@ -423,7 +427,7 @@ def evaluate(model: torch.nn.Module, data_loader_sentinel: Iterable, data_loader
         x, _ = data_wrapper(x)
         x = rearrange(x, '(b t g) c h w -> b t g c h w', b=b, t=t, g=g)
 
-        z_hat = model(x, ys=ys, yl=yl)
+        z_hat = model(x, ys=ys, yl=yl, mask=mask)
 
         true_labels = torch.cat([true_labels, z.detach().cpu()], dim=0)
         pred_labels = torch.cat([pred_labels, z_hat.detach().cpu()], dim=0)

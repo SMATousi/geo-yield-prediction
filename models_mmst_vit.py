@@ -11,7 +11,7 @@ from util.pos_embed import get_2d_sincos_pos_embed_with_resolution
 class MMST_ViT(nn.Module):
     def __init__(self, out_dim=2, num_grid=64, num_short_term_seq=6, num_long_term_seq=12, num_year=5,
                  pvt_backbone=None, context_dim=9, dim=192, batch_size=64, depth=4, heads=3, pool='cls', dim_head=64,
-                 dropout=0., emb_dropout=0., scale_dim=4, ):
+                 dropout=0., emb_dropout=0., scale_dim=4, modality_drop_rate=0.):
         super().__init__()
 
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
@@ -34,6 +34,13 @@ class MMST_ViT(nn.Module):
 
         self.modality_res = None
         self.modality_embed = nn.Parameter(torch.randn(1, 1, dim))
+
+        # missing-modality robustness: a learned token replaces NaN-sentinel /
+        # dropped frames, and a per-bin mask gates their attention in the fusion
+        # transformer. modality_drop_rate randomly removes input sources during
+        # training so the backbone learns to run on arbitrary subsets.
+        self.missing_token = nn.Parameter(torch.randn(1, 1, dim))
+        self.modality_drop_rate = modality_drop_rate
 
         self.norm1 = nn.LayerNorm(dim)
 
@@ -77,7 +84,7 @@ class MMST_ViT(nn.Module):
             modalities=list(self.modality_res.keys()),
         )
 
-    def forward(self, x, ys=None, yl=None):
+    def forward(self, x, ys=None, yl=None, mask=None):
         b, t, g, _, _, _ = x.shape
         x = self.forward_features(x, ys)
         x = rearrange(x, '(b t g) d -> b t g d', b=b, t=t, g=g)
@@ -91,6 +98,17 @@ class MMST_ViT(nn.Module):
         x = self.space_transformer(x)
         x = rearrange(x[:, 0], '(b t) ... -> b t ...', b=b)
 
+        # modality dropout: randomly drop present temporal frames during training
+        if self.training and self.modality_drop_rate > 0 and mask is not None:
+            drop = torch.rand(t, device=x.device) < self.modality_drop_rate
+            mask = mask.clone()
+            mask[:, drop] = 0.0
+
+        # replace missing (NaN-sentinel / dropped) frames with a learned token
+        if mask is not None:
+            missing = self.missing_token.expand(b, t, -1)
+            x = torch.where(mask.unsqueeze(-1).bool(), x, missing)
+
         cls_temporal_tokens = repeat(self.temporal_token, '() t d -> b t d', b=b)
         x = torch.cat((cls_temporal_tokens, x), dim=1)
 
@@ -103,7 +121,13 @@ class MMST_ViT(nn.Module):
         yl = torch.cat((cls_temporal_tokens, yl), dim=1)
         yl = self.norm1(yl)
 
-        x = self.temporal_transformer(x, yl)
+        # attention mask over the temporal sequence; the cls token is always present
+        if mask is not None:
+            attn_mask = torch.cat((torch.ones(b, 1, device=x.device), mask), dim=1)
+        else:
+            attn_mask = None
+
+        x = self.temporal_transformer(x, yl, mask=attn_mask)
 
         x = x.mean(dim=1) if self.pool == 'mean' else x[:, 0]
 
