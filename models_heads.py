@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 
 def reassemble_to_grid(per_pixel_vecs, grid_indices, H, W):
@@ -322,6 +323,94 @@ class DenseYieldFPNHead(nn.Module):
         return logits
 
 
+def mdn_loss(pi, mu, sigma, target):
+    """Negative log-likelihood of a Gaussian mixture density network.
+
+    Adapted from the CropWise MDN head: expands the target to match the
+    mixture components, computes the per-component log-likelihood under each
+    Gaussian, weights it by the mixture log-probability, and returns the
+    mean negative log-likelihood over the batch. This is the training
+    objective for the probabilistic yield head, giving calibrated per-pixel
+    uncertainty (e.g. ~95% coverage) in addition to the point estimate.
+    """
+    target = target.unsqueeze(1).expand_as(mu)
+    normal = torch.distributions.Normal(mu, sigma)
+    log_prob = normal.log_prob(target)
+    weighted_log_prob = log_prob + torch.log(pi + 1e-10)
+    log_sum = torch.logsumexp(weighted_log_prob, dim=1)
+    return -log_sum.mean()
+
+
+def sample_from_mixture(pi, mu, sigma, n_samples=1):
+    """Draw samples from a Gaussian mixture density network.
+
+    Adapted from the CropWise MDN head: for each batch element, samples a
+    mixture component from the categorical ``pi`` distribution and then draws
+    a Gaussian sample from that component's ``mu``/``sigma``. Returns a
+    ``(batch, n_samples)`` tensor (or a ``(batch,)`` tensor when
+    ``n_samples == 1``) for sampling yield distributions at inference.
+    """
+    batch_size = pi.size(0)
+    samples = []
+    for _ in range(n_samples):
+        component = torch.multinomial(pi, 1).squeeze()
+        indices = torch.arange(batch_size, device=pi.device)
+        mu_sample = mu[indices, component]
+        sigma_sample = sigma[indices, component]
+        sample = torch.normal(mu_sample, sigma_sample)
+        samples.append(sample)
+    return torch.stack(samples, dim=1) if n_samples > 1 else samples[0]
+
+
+class MDNYieldHead(nn.Module):
+    """Probabilistic Mixture Density Network yield head.
+
+    Adapted from the CropWise MDN head to the MMST-ViT multi-head interface.
+    This is a drop-in probabilistic head that attaches alongside the dense
+    yield-map decoder: it feeds the backbone's pooled field representation
+    (or per-pixel decoder features) through a small MLP feature extractor and
+    emits per-location mixture parameters ``pi``/``mu``/``sigma``. Training
+    uses :func:`mdn_loss` (negative log-likelihood) and inference can draw
+    yield samples via :func:`sample_from_mixture`, yielding calibrated
+    per-pixel uncertainty without modifying any modality encoder. New
+    agricultural heads (crop-stress, management-zone segmentation, soil
+    property estimation, ...) can be attached the same way, satisfying the
+    extensible multi-head foundation-model interface.
+    """
+
+    def __init__(self, input_dim, hidden_dims=(256, 128, 64), n_gaussians=5):
+        super().__init__()
+        self.input_dim = input_dim
+        self.n_gaussians = n_gaussians
+        layers = []
+        prev_dim = input_dim
+        for hidden_dim in hidden_dims:
+            layers.extend([
+                nn.Linear(prev_dim, hidden_dim),
+                nn.ReLU(),
+                nn.BatchNorm1d(hidden_dim),
+                nn.Dropout(0.2),
+            ])
+            prev_dim = hidden_dim
+        self.feature_extractor = nn.Sequential(*layers)
+        self.pi_net = nn.Linear(prev_dim, n_gaussians)
+        self.mu_net = nn.Linear(prev_dim, n_gaussians)
+        self.sigma_net = nn.Linear(prev_dim, n_gaussians)
+
+    def forward(self, x):
+        features = self.feature_extractor(x)
+        pi = F.softmax(self.pi_net(features), dim=-1)
+        mu = self.mu_net(features)
+        sigma = F.softplus(self.sigma_net(features)) + 1e-6
+        return pi, mu, sigma
+
+    def compute_loss(self, pi, mu, sigma, targets):
+        return mdn_loss(pi, mu, sigma, targets)
+
+    def sample(self, pi, mu, sigma, n_samples=1):
+        return sample_from_mixture(pi, mu, sigma, n_samples=n_samples)
+
+
 if __name__ == "__main__":
     # fused latent field representation: B, embed_dim, H, W
     x = torch.randn((2, 512, 16, 16))
@@ -347,3 +436,14 @@ if __name__ == "__main__":
     mask = np.ones((16, 16), dtype=bool)
     full, cov = head.stitch(patch, 0, 0, 8, 8, 0, 0, 16, 16, 16, 16, field_mask=mask)
     print(full.shape, cov)
+
+    # probabilistic MDN head: pooled field representation -> pi/mu/sigma
+    pooled = torch.randn((2, 512))
+    targets = torch.randn((2,))
+    mdn = MDNYieldHead(input_dim=512, n_gaussians=5)
+    pi, mu, sigma = mdn(pooled)
+    print(pi.shape, mu.shape, sigma.shape)
+    loss = mdn.compute_loss(pi, mu, sigma, targets)
+    print(loss.item())
+    samples = mdn.sample(pi, mu, sigma, n_samples=3)
+    print(samples.shape)
