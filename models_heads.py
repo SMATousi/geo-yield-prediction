@@ -1,5 +1,35 @@
+import numpy as np
 import torch
 from torch import nn
+
+
+def reassemble_to_grid(per_pixel_vecs, grid_indices, H, W):
+    """Reassemble per-pixel latent vectors into an HxWxlatent array.
+
+    Adapted from the tessera dense-output contract: instead of pooling a
+    field representation into a single scalar, the model emits one latent
+    vector per spatial pixel and scatters them back onto their grid
+    positions, producing an ``(H, W, latent_dim)`` array that preserves
+    within-field spatial variability. This is the output layout expected by
+    the dense yield-map decoder's upsampling / query heads.
+
+    Args:
+        per_pixel_vecs: (N, latent_dim) float array of per-pixel latent
+            vectors (one per valid grid cell).
+        grid_indices: (N,) int array of flat grid indices (row-major) into
+            the HxW output grid.
+        H, W: output grid height and width.
+
+    Returns:
+        np.ndarray of shape (H, W, latent_dim); cells without a vector stay
+        zero-filled, mirroring the tessera convention.
+    """
+    per_pixel_vecs = np.asarray(per_pixel_vecs, dtype=np.float32)
+    grid_indices = np.asarray(grid_indices, dtype=np.int64)
+    latent_dim = per_pixel_vecs.shape[1]
+    out_array = np.zeros((H * W, latent_dim), dtype=np.float32)
+    out_array[grid_indices] = per_pixel_vecs
+    return out_array.reshape(H, W, latent_dim)
 
 
 class DenseYieldFCNHead(nn.Module):
@@ -39,6 +69,15 @@ class DenseYieldFCNHead(nn.Module):
             return logits, loss
         return logits
 
+    def reassemble(self, per_pixel_vecs, grid_indices, H, W):
+        """Emit the dense output as an HxWxlatent array (tessera contract).
+
+        Scatters per-pixel latent vectors back onto their grid positions so
+        downstream heads reconstruct a full yield map with within-field
+        variability rather than a single field-average value.
+        """
+        return reassemble_to_grid(per_pixel_vecs, grid_indices, H, W)
+
 
 if __name__ == "__main__":
     # fused latent field representation: B, embed_dim, H, W
@@ -52,3 +91,9 @@ if __name__ == "__main__":
 
     logits, loss = head(x, targets=targets, mode='loss')
     print(logits.shape, loss.item())
+
+    # per-pixel-token-to-2D-grid reassembly output contract
+    vecs = torch.randn(256, 512).detach().numpy()
+    gidx = np.arange(256, dtype=np.int64)
+    grid = head.reassemble(vecs, gidx, 16, 16)
+    print(grid.shape)
