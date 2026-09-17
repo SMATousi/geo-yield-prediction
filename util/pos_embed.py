@@ -12,6 +12,37 @@
 import torch
 
 
+def get_2d_sincos_pos_embed_with_gsd(
+    h, w, dim, gsd=1.0, temperature: int = 10000, dtype=torch.float32
+):
+    """GSD-conditioned 2D sincos positional embedding.
+
+    Adapted from cybergis/rs-embed (clay utils). Scales the sincos frequency
+    by the ground-sample-distance (gsd) of the layer, so tokens from a 10 m
+    Sentinel-2 layer and a 1 m aerial layer get position embeddings whose
+    spatial frequency matches their native resolution. This gives the fusion
+    backbone an explicit, differentiable notion of each source's native scale
+    during latent fusion.
+
+    h, w: grid height and width.
+    dim: embedding dimension (must be a multiple of 4).
+    gsd: ground-sample-distance in meters (scalar or tensor).
+    Returns: (h*w, dim) tensor.
+    """
+    assert (dim % 4) == 0, "feature dimension must be multiple of 4 for sincos emb"
+
+    y, x = torch.meshgrid(torch.arange(h), torch.arange(w), indexing="ij")
+    gsd = gsd.to(x.device)
+
+    omega = torch.arange(dim // 4) / (dim // 4 - 1)
+    omega = 1.0 / (temperature ** (2 * omega / dim)) * (gsd / 1.0)
+
+    y = y.flatten()[:, None] * omega[None, :]
+    x = x.flatten()[:, None] * omega[None, :]
+    pe = torch.cat((x.sin(), x.cos(), y.sin(), y.cos()), dim=1)
+    return pe.type(dtype)
+
+
 def get_2d_sincos_pos_embed_from_grid_torch(embed_dim, grid):
     """2D sincos positional embedding from a grid of coordinates.
 
