@@ -18,6 +18,8 @@ from torch import nn
 
 from util.norm_stats import normalize_modality
 
+from models_group_channels_vit import GroupChannelsVisionTransformer
+
 
 def _flatten_spatial(x):
     """Collapse trailing spatial dims into a token dim: (B, C, H, W) -> (B, H*W, C)."""
@@ -160,12 +162,13 @@ class MultiModalEncoder(nn.Module):
     """
 
     _TYPES = {
-        'raster': RasterCNNEncoder,
-        'sar': MultitemporalSAREncoder,
-        'timeseries': TimeSeriesEncoder,
-        'tabular': TabularEncoder,
-        'categorical': CategoricalEncoder,
-    }
+            'raster': RasterCNNEncoder,
+            'sar': MultitemporalSAREncoder,
+            'timeseries': TimeSeriesEncoder,
+            'tabular': TabularEncoder,
+            'categorical': CategoricalEncoder,
+            'grouped_vit': GroupChannelsVisionTransformer,
+        }
 
     def __init__(self, encoders_cfg, embed_dim=192, modality_dropout=0.0):
         super().__init__()
