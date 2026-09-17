@@ -58,6 +58,64 @@ def evaluate(y_true, y_pred):
     return rmse, r2, pcc
 
 
+def evaluate_regression(y_true, y_pred, mask=None, print_results=False):
+    """Evaluate dense regression predictions with an optional valid-pixel mask.
+
+    Adapted from opengeos/geoai's ``evaluate_regression`` (geoai/timm_regress.py):
+    it computes MSE/RMSE/MAE/R2 over flattened prediction and ground-truth
+    arrays and supports a valid-pixel mask (e.g. field geometry or nodata),
+    which the county-average-only evaluation in :func:`evaluate` lacks. Here it
+    is reworked onto this repo's numpy metric conventions (reusing :func:`RMSE`
+    and :func:`R2_Score`) and extended to also report Pearson correlation, so it
+    can serve as a drop-in dense yield-map evaluator. Pass per-field masks to
+    compute field-level yield error, and combine with :class:`SpatialYieldMetric`
+    for spatial-correlation / zone-preservation metrics.
+
+    Args:
+        y_true: Ground truth values (any shape).
+        y_pred: Predicted values (same shape as ``y_true``).
+        mask: Optional boolean mask of valid pixels (same shape).
+        print_results: Whether to print the metrics.
+
+    Returns:
+        Dictionary of metrics: mse, rmse, mae, r2, pcc.
+    """
+    y_true = np.asarray(y_true).ravel()
+    y_pred = np.asarray(y_pred).ravel()
+
+    if mask is not None:
+        mask = np.asarray(mask).ravel()
+        y_true = y_true[mask]
+        y_pred = y_pred[mask]
+
+    mse = float(np.mean((y_true - y_pred) ** 2))
+    rmse = float(np.sqrt(mse))
+    mae = float(np.mean(np.abs(y_true - y_pred)))
+    r2 = R2_Score(y_true, y_pred)
+    pcc = PCC(y_true, y_pred)
+
+    metrics = {
+        'mse': mse,
+        'rmse': rmse,
+        'mae': mae,
+        'r2': r2,
+        'pcc': pcc,
+    }
+
+    if print_results:
+        print('=' * 50)
+        print('Regression Evaluation Metrics')
+        print('=' * 50)
+        print('MSE:  %.6f' % mse)
+        print('RMSE: %.6f' % rmse)
+        print('MAE:  %.6f' % mae)
+        print('R2:   %.4f' % r2)
+        print('PCC:  %.4f' % pcc)
+        print('=' * 50)
+
+    return metrics
+
+
 class SpatialYieldMetric:
     """Dense, spatially-aware evaluation metric for full-resolution yield maps.
 
