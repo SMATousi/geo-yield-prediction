@@ -118,11 +118,12 @@ class DenseYieldFCNHead(nn.Module):
     (the default 'l1' loss) rather than a cross-entropy classification loss.
     """
 
-    def __init__(self, embed_dim, num_classes=1, loss='l1'):
+    def __init__(self, embed_dim, num_classes=1, loss='l1', log_target=False):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_classes = num_classes
         self.loss = loss
+        self.log_target = log_target
         self.head = nn.Sequential(
             nn.Conv2d(self.embed_dim, self.embed_dim // 2, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
@@ -130,6 +131,12 @@ class DenseYieldFCNHead(nn.Module):
         )
 
     def compute_loss(self, logits, targets):
+        # Log-transform of the yield target (adapted from the CropNet USDA
+        # loader's ``torch.log`` preprocessing) stabilizes training on skewed
+        # yield distributions: the head regresses log-yield and the loss is
+        # computed in log space, mirroring the tabular loader's target transform.
+        if self.log_target:
+            targets = torch.log(targets.clamp_min(1e-6))
         if self.loss == 'l1':
             return nn.functional.l1_loss(logits, targets)
         return nn.functional.mse_loss(logits, targets)
@@ -247,12 +254,13 @@ class DenseYieldFPNHead(nn.Module):
     (the default 'l1') instead of the source's 2-class LogSoftmax.
     """
 
-    def __init__(self, channels=2048, out_channels=256, num_classes=1, loss='l1'):
+    def __init__(self, channels=2048, out_channels=256, num_classes=1, loss='l1', log_target=False):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels
         self.num_classes = num_classes
         self.loss = loss
+        self.log_target = log_target
 
         self.ppm_head = PyramidPoolingHead(in_channels=channels, out_channels=out_channels)
         self.conv_fuse1 = nn.Sequential(
@@ -282,6 +290,8 @@ class DenseYieldFPNHead(nn.Module):
         self.cls_seg = nn.Conv2d(out_channels, num_classes, 1)
 
     def compute_loss(self, logits, targets):
+        if self.log_target:
+            targets = torch.log(targets.clamp_min(1e-6))
         if self.loss == 'l1':
             return nn.functional.l1_loss(logits, targets)
         return nn.functional.mse_loss(logits, targets)
