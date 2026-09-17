@@ -168,7 +168,7 @@ class MultimodalYieldModel(nn.Module):
     def forward(self, inputs, targets=None, available=None, mode='tensor'):
         embeddings, mask = self.encoders.forward_with_missing(
             inputs, available=available)
-        latents = self.fusion(embeddings)          # (B, num_latents, embed_dim)
+        latents = self.fusion(embeddings, mask=mask)          # (B, num_latents, embed_dim)
         b, num_latents, d = latents.shape
         grid = int(round(num_latents ** 0.5))
         # reshape the latent bottleneck to a spatial feature map for the dense

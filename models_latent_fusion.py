@@ -206,13 +206,45 @@ class LatentFusionTransformer(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    def forward(self, embeddings, ids_keep=None):
+    def _build_key_padding_mask(self, mask, tokens):
+        """Build a ``(B, sum L)`` key-padding mask for the Perceiver
+        cross-attention from a per-modality availability dict.
+
+        ``mask`` maps a modality name to a per-sample availability flag
+        (scalar, or a ``(B,)`` tensor; 1 = present, 0 = absent). Tokens of an
+        absent modality are masked out of the cross-attention (True = ignore)
+        so a learned missing-modality token does not contribute to the fused
+        representation. Returns ``None`` when no mask is supplied.
+        """
+        if mask is None:
+            return None
+        key_padding_mask = None
+        for name, emb in tokens:
+            avail = mask.get(name)
+            if avail is None:
+                continue
+            avail = torch.as_tensor(avail, device=emb.device).float()
+            if avail.dim() == 0:
+                avail = avail.expand(emb.shape[0])
+            # True = masked (missing), so invert the availability flag.
+            m = (1 - avail).unsqueeze(1).expand(emb.shape[0], emb.shape[1])
+            if key_padding_mask is None:
+                key_padding_mask = m
+            else:
+                key_padding_mask = torch.cat([key_padding_mask, m], dim=1)
+        return key_padding_mask
+
+    def forward(self, embeddings, ids_keep=None, mask=None):
         """embeddings: dict {modality: (B, L_m, embed_dim)}.
 
         ``ids_keep`` optionally maps a modality name to a ``(B, K)`` index
         tensor selecting a kept subset of that modality's tokens (gather-by-
         ids_keep), keeping the positional embeddings aligned when tokens are
-        masked/dropped. Returns the fused latent ``(B, num_latents, embed_dim)``.
+        masked/dropped. ``mask`` optionally maps a modality name to a per-sample
+        availability flag (1 = present, 0 = absent); absent-modality tokens are
+        masked out of the Perceiver cross-attention via a key-padding mask so
+        they do not contribute to the fused representation. Returns the fused
+        latent ``(B, num_latents, embed_dim)``.
         """
         b = None
         tokens = []
@@ -237,21 +269,22 @@ class LatentFusionTransformer(nn.Module):
                 pos = pos[:, :emb.shape[1], :]
             mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
             pos = torch.cat([pos, mod], dim=-1)
-            tokens.append(emb + pos)
+            tokens.append((name, emb + pos))
         if not tokens:
             raise ValueError('LatentFusionTransformer received no modality tokens')
-        x = torch.cat(tokens, dim=1)  # (B, sum L, embed_dim)
+        x = torch.cat([t for _, t in tokens], dim=1)  # (B, sum L, embed_dim)
+        key_padding_mask = self._build_key_padding_mask(mask, tokens)
 
         # Perceiver cross-attention: latent queries attend to the modality tokens
         latents = self.latent_tokens.expand(b, -1, -1)
-        attn_out, _ = self.cross_attn(latents, x, x)
+        attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
         latents = self.cross_norm(latents + attn_out)
         for blk in self.blocks:
             latents = blk(latents)
         latents = self.norm(latents)
         return latents
 
-    def forward_multiscale(self, embeddings, ids_keep=None):
+    def forward_multiscale(self, embeddings, ids_keep=None, mask=None):
         """Emit multi-scale patch tokens from the fusion backbone.
 
         Runs the same Perceiver cross-attention + self-attention stack as
@@ -261,8 +294,10 @@ class LatentFusionTransformer(nn.Module):
         multiscale patch-token set that is projected into the common latent
         dimension and fused by the DPT head (or cross-attention queries),
         letting high-resolution terrain tokens coexist with coarse
-        soil/climate tokens. Returns a list of four ``(B, num_latents,
-        embed_dim)`` tensors, finest first.
+        soil/climate tokens. ``mask`` optionally maps a modality name to a
+        per-sample availability flag (1 = present, 0 = absent); absent-modality
+        tokens are masked out of the cross-attention. Returns a list of four
+        ``(B, num_latents, embed_dim)`` tensors, finest first.
         """
         b = None
         tokens = []
@@ -284,13 +319,14 @@ class LatentFusionTransformer(nn.Module):
                 pos = pos[:, :emb.shape[1], :]
             mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
             pos = torch.cat([pos, mod], dim=-1)
-            tokens.append(emb + pos)
+            tokens.append((name, emb + pos))
         if not tokens:
             raise ValueError('LatentFusionTransformer received no modality tokens')
-        x = torch.cat(tokens, dim=1)
+        x = torch.cat([t for _, t in tokens], dim=1)
+        key_padding_mask = self._build_key_padding_mask(mask, tokens)
 
         latents = self.latent_tokens.expand(b, -1, -1)
-        attn_out, _ = self.cross_attn(latents, x, x)
+        attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
         latents = self.cross_norm(latents + attn_out)
         multi_scale = []
         for i, blk in enumerate(self.blocks):
@@ -340,3 +376,12 @@ if __name__ == "__main__":
     multi = model.forward_multiscale(embeddings)
     print('extraction layers', model.extraction_layers)
     print('multiscale tokens', [tuple(m.shape) for m in multi])
+
+    # attention masking: mark SAR as absent (0) so its tokens are masked out
+    # of the Perceiver cross-attention via a key-padding mask, while DEM and
+    # weather remain present (1). The fused latent shape is unchanged.
+    mask = {'dem': torch.ones(2), 'sar': torch.zeros(2), 'weather': torch.ones(2)}
+    out_masked = model(embeddings, mask=mask)
+    print('fused latent (masked sar)', tuple(out_masked.shape))
+    multi_masked = model.forward_multiscale(embeddings, mask=mask)
+    print('multiscale tokens (masked sar)', [tuple(m.shape) for m in multi_masked])
