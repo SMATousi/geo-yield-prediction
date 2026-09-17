@@ -5,6 +5,8 @@ import os
 import numpy as np
 import json
 
+from util.sar_normalize import normalize_s1_vvvh_chw
+
 torch.manual_seed(0)
 np.random.seed(0)
 
@@ -45,6 +47,9 @@ class Sentinel_Dataset(Dataset):
                     if i % 2 == 0:
                         grids = groups[d]["data"]
                         grids = np.asarray(grids)
+                        # Sentinel-1 VV/VH backscatter -> numerically stable [0,1]
+                        if grids.ndim == 3 and grids.shape[0] == 2:
+                            grids = normalize_s1_vvvh_chw(grids)
                         temporal_list.append(torch.from_numpy(grids))
                 hf.close()
 
