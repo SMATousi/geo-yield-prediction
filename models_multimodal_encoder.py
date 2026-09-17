@@ -12,8 +12,11 @@
 # into a shared latent dimension for the fusion transformer.
 # --------------------------------------------------------
 
+import numpy as np
 import torch
 from torch import nn
+
+from util.norm_stats import normalize_modality
 
 
 def _flatten_spatial(x):
@@ -171,6 +174,14 @@ class MultiModalEncoder(nn.Module):
         self.encoders = nn.ModuleDict()
         for name, cfg in encoders_cfg.items():
             self.encoders[name] = self._build_encoder(cfg)
+        # Per-modality standardization: each source is normalized with its own
+        # mean/std (see util/norm_stats.py) before its dedicated encoder runs,
+        # so every modality is standardized in its own scientific units rather
+        # than being forced onto a common raster scale. A config may override
+        # the registry key via 'norm_source' (e.g. 's1a' vs 's1d' for SAR).
+        self.norm_sources = {
+            name: cfg.get('norm_source', name) for name, cfg in encoders_cfg.items()
+        }
         # Learned missing-modality token per source (tessera convention: an
         # absent modality still yields a well-formed embedding instead of
         # erroring). Used whenever a modality is unavailable or dropped.
@@ -193,12 +204,15 @@ class MultiModalEncoder(nn.Module):
         """inputs: dict {modality_name: tensor}. Returns dict of per-modality
         embeddings keyed by source name, each projected to the shared latent
         dimension. Missing modalities are simply absent from the output dict,
-        so the backbone can run on arbitrary subsets of sources."""
+so the backbone can run on arbitrary subsets of sources."""
         outputs = {}
         for name, encoder in self.encoders.items():
             if name not in inputs:
                 continue
-            outputs[name] = encoder(inputs[name])
+            x = inputs[name]
+            if isinstance(x, np.ndarray):
+                x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+            outputs[name] = encoder(x)
         return outputs
 
     def forward_with_missing(self, inputs, available=None, apply_dropout=True):
@@ -232,7 +246,10 @@ class MultiModalEncoder(nn.Module):
         mask = {}
         for name, encoder in self.encoders.items():
             if available[name]:
-                embeddings[name] = encoder(inputs[name])
+                x = inputs[name]
+                if isinstance(x, np.ndarray):
+                    x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+                embeddings[name] = encoder(x)
                 mask[name] = torch.ones(embeddings[name].shape[0], dtype=torch.float32,
                                         device=embeddings[name].device)
             else:
