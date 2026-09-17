@@ -1,5 +1,8 @@
-from scipy.stats import pearsonr
+import os
+from pathlib import Path
+
 import numpy as np
+from scipy.stats import pearsonr
 
 
 def RMSE(y_true, y_pred):
@@ -53,6 +56,74 @@ def evaluate(y_true, y_pred):
     pcc = PCC(y_true, y_pred)
 
     return rmse, r2, pcc
+
+
+class SpatialYieldMetric:
+    """Dense, spatially-aware evaluation metric for full-resolution yield maps.
+
+    Adapted from AgriFM's CropIoUMetric: instead of per-class IoU histograms
+    over segmentation labels, it accumulates per-field spatial statistics
+    (spatial correlation, zone preservation, RMSE, MAE, R2) over dense yield
+    maps and optionally dumps each field's predicted yield raster to an
+    output_dir keyed by the sample's file_name. This provides the spatial
+    yield-map evaluation suite (spatial correlation + zone preservation) that
+    complements the global scalar metrics in :func:`evaluate`.
+    """
+
+    def __init__(self, output_dir=None, n_zones=3, format_only=False):
+        self.output_dir = output_dir
+        self.n_zones = n_zones
+        self.format_only = format_only
+        self.results = []
+        if self.output_dir is not None:
+            Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+
+    def process(self, pred_maps, true_maps, file_names=None):
+        """Accumulate per-field spatial statistics for a batch of dense maps.
+
+        Args:
+            pred_maps: (B, H, W) or (B, 1, H, W) predicted yield maps.
+            true_maps: (B, H, W) or (B, 1, H, W) observed yield maps.
+            file_names: optional list of per-sample file names used to name
+                the dumped prediction rasters.
+        """
+        pred_maps = np.asarray(pred_maps)
+        true_maps = np.asarray(true_maps)
+        if pred_maps.ndim == 4:
+            pred_maps = pred_maps[:, 0]
+        if true_maps.ndim == 4:
+            true_maps = true_maps[:, 0]
+
+        for i in range(pred_maps.shape[0]):
+            pred = pred_maps[i]
+            true = true_maps[i]
+            if not self.format_only:
+                self.results.append({
+                    'spatial_corr': SpatialCorrelation(true, pred),
+                    'zone_preservation': ZonePreservation(true, pred, self.n_zones),
+                    'rmse': RMSE(true, pred),
+                    'mae': float(np.mean(np.abs(true - pred))),
+                    'r2': R2_Score(true, pred),
+                })
+            if self.output_dir is not None:
+                basename = 'field_{}'.format(i)
+                if file_names is not None and i < len(file_names):
+                    basename = os.path.splitext(os.path.basename(file_names[i]))[0]
+                png_filename = os.path.abspath(
+                    os.path.join(self.output_dir, '{}.npy'.format(basename)))
+                np.save(png_filename, pred.astype(np.float32))
+
+    def compute(self):
+        """Aggregate per-field statistics into a single summary dict."""
+        if not self.results:
+            return {}
+        keys = self.results[0].keys()
+        summary = {}
+        for k in keys:
+            vals = [r[k] for r in self.results if np.isfinite(r[k])]
+            summary[k] = float(np.mean(vals)) if vals else float('nan')
+        summary['num_fields'] = len(self.results)
+        return summary
 
 
 if __name__ == '__main__':
