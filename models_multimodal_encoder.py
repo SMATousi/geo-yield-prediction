@@ -18,7 +18,10 @@ from torch import nn
 
 from util.norm_stats import normalize_modality
 
-from models_group_channels_vit import GroupChannelsVisionTransformer
+from models_group_channels_vit import (
+    GroupChannelsVisionTransformer,
+    get_2d_sincos_pos_embed_from_grid,
+)
 
 
 def _flatten_spatial(x):
@@ -48,6 +51,79 @@ class RasterCNNEncoder(nn.Module):
     def forward(self, x):
         h = self.net(x)
         return _flatten_spatial(self.proj(h))
+
+
+class PatchEmbeddingEncoder(nn.Module):
+    """Native-resolution raster tokenizer with a learnable cls token and a
+    spatial positional embedding.
+
+    Adapted from srinadh99/VISION-TRANSFORMER-DRIVEN-LIDAR-DATA-FUSION-FOR-
+    ENHANCED-HYPERSPECTRAL-IMAGE-CLASSIFICATION (UH_ViT_CA_LF_CLS_HSI_LiDAR.ipynb,
+    PatchEmbedding) to the MMST-ViT plain-PyTorch layout. It tokenizes a raster
+    patch (B, C, H, W) into a sequence of learned tokens, projects each spatial
+    location to a shared latent dim, and prepends a learnable cls token plus a
+    positional embedding. Unlike the source's 1x1 conv (a channel-wise no-op),
+    the projection here is a real patchify conv (kernel=patch_size,
+    stride=patch_size) so spatial patches are actually aggregated. Because it
+    is parameterized by ``in_channels`` and ``patch_size``, it can be
+    instantiated once per modality (DEM/terrain, SAR, soil, optical) at that
+    modality's own native resolution without resampling. The cls token serves
+    as a field-level summary token for the fusion transformer, and the
+    positional embedding already encodes spatial position.
+
+    Returns (B, num_patches + 1, embed_dim): the cls token followed by one
+    token per spatial patch.
+    """
+
+    def __init__(self, in_channels, embed_dim, patch_size=16, dropout=0.0,
+                 num_patches=None):
+        super().__init__()
+        self.in_channels = in_channels
+        self.embed_dim = embed_dim
+        self.patch_size = patch_size
+        self.dropout = dropout
+        # real patchify conv: aggregates spatial patches (kernel=stride=patch_size)
+        self.proj = nn.Conv2d(in_channels, embed_dim,
+                              kernel_size=patch_size, stride=patch_size)
+        self.norm = nn.LayerNorm(embed_dim)
+        self.num_patches = num_patches
+        # positional embedding sized for num_patches + 1 (cls) tokens; if
+        # num_patches is not known up front it is inferred on the first forward.
+        self.pos_embedding = None
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.dropout_layer = nn.Dropout(dropout)
+        nn.init.trunc_normal_(self.cls_token, std=0.02)
+
+    def _init_pos_embedding(self, num_patches, device):
+        self.num_patches = num_patches
+        pos_embedding = torch.zeros(1, num_patches + 1, self.embed_dim)
+        pos_embedding = pos_embedding + self._get_2d_sincos_pos_embed(
+            self.embed_dim, int(num_patches ** 0.5), cls_token=True)
+        self.pos_embedding = nn.Parameter(pos_embedding.to(device))
+
+    @staticmethod
+    def _get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
+        grid_h = np.arange(grid_size, dtype=np.float32)
+        grid_w = np.arange(grid_size, dtype=np.float32)
+        grid = np.meshgrid(grid_w, grid_h)
+        grid = np.stack(grid, axis=0).reshape([2, 1, grid_size, grid_size])
+        pos_embed = get_2d_sincos_pos_embed_from_grid(embed_dim, grid)
+        if cls_token:
+            pos_embed = np.concatenate(
+                [np.zeros([1, embed_dim], dtype=np.float32), pos_embed], axis=0)
+        return pos_embed
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        x = self.proj(x)                       # (B, embed_dim, H/p, W/p)
+        x = x.flatten(2).transpose(1, 2)       # (B, num_patches, embed_dim)
+        x = self.norm(x)
+        if self.pos_embedding is None or self.pos_embedding.shape[1] != x.shape[1] + 1:
+            self._init_pos_embedding(x.shape[1], x.device)
+        x = torch.cat((self.cls_token.expand(B, -1, -1), x), dim=1)
+        x = x + self.pos_embedding
+        x = self.dropout_layer(x)
+        return x
 
 
 class MultitemporalSAREncoder(nn.Module):
@@ -163,6 +239,7 @@ class MultiModalEncoder(nn.Module):
 
     _TYPES = {
             'raster': RasterCNNEncoder,
+            'patch': PatchEmbeddingEncoder,
             'sar': MultitemporalSAREncoder,
             'timeseries': TimeSeriesEncoder,
             'tabular': TabularEncoder,
