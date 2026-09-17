@@ -11,12 +11,14 @@
 # ('tensor' / 'predict' / 'loss') mirrors the source template.
 # --------------------------------------------------------
 
+import inspect
+
 import torch
 from torch import nn
 
 from models_multimodal_encoder import MultiModalEncoder
 from models_neck import MultiFusionNeck
-from models_heads import DenseYieldFCNHead
+from models_heads import DenseYieldFCNHead, DenseYieldFPNHead
 
 
 class FieldAverageHead(nn.Module):
@@ -70,6 +72,7 @@ class MultiUnifiedModel(nn.Module):
 
     _HEAD_TYPES = {
         'dense_yield': DenseYieldFCNHead,
+        'dense_yield_fpn': DenseYieldFPNHead,
         'field_average': FieldAverageHead,
     }
 
@@ -88,7 +91,8 @@ class MultiUnifiedModel(nn.Module):
             raise ValueError('Unknown task head type: {}'.format(head_type))
         cls = self._HEAD_TYPES[head_type]
         kwargs = {k: v for k, v in cfg.items() if k != 'type'}
-        kwargs.setdefault('embed_dim', self.embed_dim)
+        if 'embed_dim' in inspect.signature(cls.__init__).parameters:
+            kwargs.setdefault('embed_dim', self.embed_dim)
         return cls(**kwargs)
 
     def forward(self, inputs, targets=None, mode='tensor'):
