@@ -27,6 +27,7 @@ from typing import Iterable
 import util.lr_sched as lr_sched
 from models_mmst_vit import MMST_ViT
 from util import metrics
+from util.spatial_split import cross_location_split
 
 from datetime import datetime
 
@@ -100,6 +101,17 @@ def get_args_parser():
     parser.add_argument('-dft', '--data_file_train', type=str, default='./data/soybean_train.json')
     parser.add_argument('-dfv', '--data_file_val', type=str, default='./data/soybean_val.json')
 
+    # spatial-split cross-location evaluation (prevents spatial data leakage)
+    parser.add_argument('--spatial_split', action='store_true',
+                        help='Partition samples into disjoint state groups and train on some '
+                             'groups while validating/testing on a held-out group')
+    parser.add_argument('--test_group', type=str, default='1',
+                        help='held-out state group name for spatial-split evaluation')
+    parser.add_argument('--test_year', type=int, default=2022,
+                        help='year on which the held-out group is evaluated')
+    parser.add_argument('--train_years', type=int, default=None,
+                        help='if set, only train on the last N years before test_year')
+
     # pvt_simclr
     parser.add_argument('--pvt_simclr', default='', help='load from checkpoint')
 
@@ -127,6 +139,30 @@ def main(args):
     np.random.seed(seed)
 
     cudnn.benchmark = True
+
+    # spatial-split cross-location evaluation: partition samples into disjoint
+    # state groups so the model trains on some groups and validates/tests on a
+    # geographically held-out group, preventing spatial data leakage.
+    if args.spatial_split:
+        train_idx, valid_idx, test_idx = cross_location_split(
+            args.data_file_train, test_group=args.test_group,
+            test_year=args.test_year, train_years=args.train_years)
+        data = json.load(open(args.data_file_train))
+        train_data = [data[i] for i in train_idx]
+        valid_data = [data[i] for i in valid_idx]
+        test_data = [data[i] for i in test_idx]
+        split_dir = os.path.join(args.output_dir, 'spatial_split')
+        os.makedirs(split_dir, exist_ok=True)
+        train_file = os.path.join(split_dir, 'train_{}_{}.json'.format(args.test_group, args.test_year))
+        valid_file = os.path.join(split_dir, 'valid_{}_{}.json'.format(args.test_group, args.test_year))
+        test_file = os.path.join(split_dir, 'test_{}_{}.json'.format(args.test_group, args.test_year))
+        json.dump(train_data, open(train_file, 'w'))
+        json.dump(valid_data, open(valid_file, 'w'))
+        json.dump(test_data, open(test_file, 'w'))
+        args.data_file_train = train_file
+        args.data_file_val = valid_file
+        print('Spatial split: train={} valid={} test={} samples'.format(
+            len(train_idx), len(valid_idx), len(test_idx)))
 
     dataset_sentinel_train = Sentinel_Dataset(args.root_dir, args.data_file_train)
     dataset_hrrr_train = HRRR_Dataset(args.root_dir, args.data_file_train)
