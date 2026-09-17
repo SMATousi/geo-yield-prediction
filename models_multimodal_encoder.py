@@ -295,6 +295,39 @@ so the backbone can run on arbitrary subsets of sources."""
             outputs[name] = encoder(x)
         return outputs
 
+    def _encode_mixed(self, name, encoder, inputs, avail, batch_size):
+        """Encode a modality with per-sample availability within a batch.
+
+        Present samples are encoded by the dedicated encoder; absent samples
+        are represented by the learned missing-modality token repeated to the
+        same token count as the present samples, so the batch stays
+        token-aligned for the fusion transformer (which concatenates token
+        sets across sources). Returns ``(embeddings, mask)`` where ``mask`` is
+        the per-sample availability flag (1 = present, 0 = absent).
+        """
+        x = inputs[name]
+        if isinstance(x, np.ndarray):
+            x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+        present = avail > 0.5
+        if present.all():
+            return encoder(x), avail
+        if not present.any():
+            token = self.missing_tokens[name].unsqueeze(0).unsqueeze(0)
+            if batch_size is not None:
+                token = token.expand(batch_size, 1, -1)
+            return token, avail
+        # mixed batch: encode the present samples, substitute the learned
+        # missing-modality token (repeated to the same token count) for the
+        # absent ones, then reorder back to the original batch order.
+        emb_present = encoder(x[present])
+        num_tokens = emb_present.shape[1]
+        token = self.missing_tokens[name].unsqueeze(0).unsqueeze(0).expand(
+            int((~present).sum()), num_tokens, -1)
+        emb = torch.cat([emb_present, token], dim=0)
+        order = torch.cat([torch.nonzero(present).flatten(),
+                           torch.nonzero(~present).flatten()])
+        return emb[torch.argsort(order)], avail
+
     def forward_with_missing(self, inputs, available=None, apply_dropout=True):
         """Missing-modality-robust forward pass.
 
@@ -307,19 +340,31 @@ so the backbone can run on arbitrary subsets of sources."""
         well-formed input and can gate attention on ``mask``.
 
         ``available`` optionally overrides which modalities are present (e.g.
-        from a data loader's availability mask). When ``apply_dropout`` is set
-        and the module is in training mode, ``modality_dropout`` randomly
+        from a data loader's availability mask). Each entry may be a scalar
+        bool (the modality is present/absent for the whole batch) or a ``(B,)``
+        float tensor (per-sample availability, e.g. produced by
+        ``dataset.collate.collate_field_samples``), so a single batch may
+        contain fields with different subsets of sources. When ``apply_dropout``
+        is set and the module is in training mode, ``modality_dropout`` randomly
         removes input sources so the backbone learns to operate on arbitrary
         subsets of modalities.
         """
         if available is None:
             available = {name: name in inputs for name in self.encoders}
         else:
-            available = {name: bool(available.get(name, False)) for name in self.encoders}
+            available = {name: available.get(name, False) for name in self.encoders}
 
+        # modality dropout: randomly remove sources during training so the
+        # backbone learns to run on arbitrary subsets of modalities. Per-sample
+        # availability tensors are dropped element-wise.
         if self.training and apply_dropout and self.modality_dropout > 0:
             for name in self.encoders:
-                if available[name] and torch.rand(1).item() < self.modality_dropout:
+                avail = available[name]
+                if isinstance(avail, torch.Tensor):
+                    drop = (torch.rand(avail.shape[0], device=avail.device)
+                            < self.modality_dropout).float()
+                    available[name] = avail * (1 - drop)
+                elif avail and torch.rand(1).item() < self.modality_dropout:
                     available[name] = False
 
         # Determine the batch size from the first present modality so that
@@ -328,7 +373,7 @@ so the backbone can run on arbitrary subsets of sources."""
         # the fusion transformer, which concatenates token sets across sources.
         batch_size = None
         for name in self.encoders:
-            if available[name]:
+            if name in inputs:
                 x = inputs[name]
                 if isinstance(x, np.ndarray):
                     x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
@@ -338,7 +383,13 @@ so the backbone can run on arbitrary subsets of sources."""
         embeddings = {}
         mask = {}
         for name, encoder in self.encoders.items():
-            if available[name]:
+            avail = available[name]
+            if isinstance(avail, torch.Tensor):
+                # per-sample availability: encode present samples, substitute
+                # the learned missing-modality token for absent ones.
+                embeddings[name], mask[name] = self._encode_mixed(
+                    name, encoder, inputs, avail, batch_size)
+            elif avail:
                 x = inputs[name]
                 if isinstance(x, np.ndarray):
                     x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
@@ -350,7 +401,7 @@ so the backbone can run on arbitrary subsets of sources."""
                 # an explicit availability flag of 0. When a batch size can be
                 # inferred from a present modality, the token is expanded to
                 # that batch size so all modalities stay batch-aligned; when no
-# modality is present at all, a single token is returned.
+                # modality is present at all, a single token is returned.
                 token = self.missing_tokens[name].unsqueeze(0).unsqueeze(0)
                 if batch_size is not None:
                     token = token.expand(batch_size, 1, -1)
@@ -388,3 +439,17 @@ if __name__ == "__main__":
     embeddings, mask = model.forward_with_missing(partial, apply_dropout=False)
     for name in model.encoders:
         print('fwm', name, tuple(embeddings[name].shape), 'mask', mask[name].tolist())
+
+    # per-sample availability within a batch: sample 0 has SAR, sample 1 does
+    # not. The absent sample is substituted with the learned missing-modality
+    # token repeated to the present sample's token count, so the batch stays
+    # token-aligned for the fusion transformer.
+    model.eval()
+    avail = {'dem': torch.ones(2), 'sar': torch.tensor([1.0, 0.0]),
+             'weather': torch.ones(2), 'soil': torch.ones(2),
+             'crop': torch.ones(2)}
+    embeddings, mask = model.forward_with_missing(inputs, available=avail,
+                                                  apply_dropout=False)
+    for name in model.encoders:
+        print('per-sample', name, tuple(embeddings[name].shape),
+              'mask', mask[name].tolist())
