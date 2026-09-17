@@ -18,6 +18,7 @@ from torch import nn
 
 from models_multimodal_encoder import MultiModalEncoder
 from models_neck import MultiFusionNeck
+from models_latent_fusion import LatentFusionTransformer
 from models_heads import DenseYieldFCNHead, DenseYieldFPNHead
 
 
@@ -80,7 +81,7 @@ class MultiUnifiedModel(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.encoders = MultiModalEncoder(encoders_cfg, embed_dim=embed_dim)
-        self.neck = MultiFusionNeck(**neck_cfg) if neck_cfg is not None else None
+        self.neck = self._build_neck(neck_cfg) if neck_cfg is not None else None
         self.heads = nn.ModuleList()
         for cfg in heads_cfg:
             self.heads.append(self._build_head(cfg))
@@ -94,6 +95,16 @@ class MultiUnifiedModel(nn.Module):
         if 'embed_dim' in inspect.signature(cls.__init__).parameters:
             kwargs.setdefault('embed_dim', self.embed_dim)
         return cls(**kwargs)
+
+    def _build_neck(self, cfg):
+        neck_type = cfg.get('type', 'fpn')
+        if neck_type == 'latent':
+            kwargs = {k: v for k, v in cfg.items() if k != 'type'}
+            kwargs.setdefault('embed_dim', self.embed_dim)
+            return LatentFusionTransformer(**kwargs)
+        if neck_type == 'fpn':
+            return MultiFusionNeck(**cfg)
+        raise ValueError('Unknown neck type: {}'.format(neck_type))
 
     def forward(self, inputs, targets=None, mode='tensor'):
         """Dispatch: 'tensor'/'predict' return per-head logits, 'loss' returns
