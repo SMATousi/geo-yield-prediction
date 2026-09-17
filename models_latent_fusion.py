@@ -228,6 +228,13 @@ class LatentFusionTransformer(nn.Module):
                     index=keep.unsqueeze(-1).repeat(1, 1, emb.shape[2]))
             pos = self.pos_embeds[name].forward(ids_keep=keep)
             pos = pos.expand(emb.shape[0], -1, -1)
+            # A missing modality is represented by a single compact token
+            # (B, 1, embed_dim) from the encoder's learned missing-modality
+            # token. Slice the positional embedding to the embedding's token
+            # count so the single token stays aligned with the full spatial
+            # layout instead of erroring on a shape mismatch.
+            if pos.shape[1] != emb.shape[1]:
+                pos = pos[:, :emb.shape[1], :]
             mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
             pos = torch.cat([pos, mod], dim=-1)
             tokens.append(emb + pos)
@@ -271,6 +278,10 @@ class LatentFusionTransformer(nn.Module):
                     index=keep.unsqueeze(-1).repeat(1, 1, emb.shape[2]))
             pos = self.pos_embeds[name].forward(ids_keep=keep)
             pos = pos.expand(emb.shape[0], -1, -1)
+            # slice the positional embedding to the embedding's token count so
+            # a single missing-modality token stays aligned (see forward).
+            if pos.shape[1] != emb.shape[1]:
+                pos = pos[:, :emb.shape[1], :]
             mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
             pos = torch.cat([pos, mod], dim=-1)
             tokens.append(emb + pos)

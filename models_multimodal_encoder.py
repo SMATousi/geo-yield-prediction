@@ -322,6 +322,19 @@ so the backbone can run on arbitrary subsets of sources."""
                 if available[name] and torch.rand(1).item() < self.modality_dropout:
                     available[name] = False
 
+        # Determine the batch size from the first present modality so that
+        # missing-modality tokens are emitted at the same batch size as the
+        # present ones. This keeps every modality's token set batch-aligned for
+        # the fusion transformer, which concatenates token sets across sources.
+        batch_size = None
+        for name in self.encoders:
+            if available[name]:
+                x = inputs[name]
+                if isinstance(x, np.ndarray):
+                    x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+                batch_size = x.shape[0]
+                break
+
         embeddings = {}
         mask = {}
         for name, encoder in self.encoders.items():
@@ -333,11 +346,14 @@ so the backbone can run on arbitrary subsets of sources."""
                 mask[name] = torch.ones(embeddings[name].shape[0], dtype=torch.float32,
                                         device=embeddings[name].device)
             else:
-                # learned missing-modality token: single well-formed embedding
-                # with an explicit availability flag of 0.
-                token = self.missing_tokens[name].unsqueeze(0).expand(
-                    inputs[name].shape[0], -1) if name in inputs else \
-                    self.missing_tokens[name].unsqueeze(0)
+                # learned missing-modality token: a well-formed embedding with
+                # an explicit availability flag of 0. When a batch size can be
+                # inferred from a present modality, the token is expanded to
+                # that batch size so all modalities stay batch-aligned; when no
+# modality is present at all, a single token is returned.
+                token = self.missing_tokens[name].unsqueeze(0).unsqueeze(0)
+                if batch_size is not None:
+                    token = token.expand(batch_size, 1, -1)
                 embeddings[name] = token
                 mask[name] = torch.zeros(embeddings[name].shape[0], dtype=torch.float32,
                                          device=embeddings[name].device)
