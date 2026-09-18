@@ -1,0 +1,1316 @@
+{
+  "breakdown": {
+    "by_kind": {
+      "capability": 29
+    },
+    "checked": 29,
+    "dropped": 0,
+    "found": 29,
+    "sections": [],
+    "subtasks": [
+      {
+        "id": "cap-4fc8ecf1",
+        "kind": "capability",
+        "order": 0,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Technical Description of the Problem: Develop a multimodal geospatial foundation model that predicts spatial crop yield from heterogeneous field-level data layers collected at different spatial and temporal resolutions. For each agricultural field, a ground-truth yield map is available from harvested yield-monitor data. The model receives a variable set of geospatial inputs that may include elevation and terrain derivatives, soil properties, crop-history layers, weather and climate time series, soil moisture, radar imagery, optical satellite imagery, aerial imagery, and other remote-sensing or management-related data. The objective is to learn a reusable field representation that can support yield-map prediction as the primary task while also enabling additional agricultural prediction heads.",
+        "title": "Technical Description of the Problem"
+      },
+      {
+        "id": "cap-739422ce",
+        "kind": "capability",
+        "order": 1,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "The key architectural requirement is that each input source should be processed in its native or scientifically appropriate resolution rather than forcing every layer onto a single common raster resolution before feature extraction.",
+        "title": "The key architectural requirement is that each input source should be processed in its native or scientifical\u2026"
+      },
+      {
+        "id": "cap-13e3950f",
+        "kind": "capability",
+        "order": 2,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "Each modality should therefore have a dedicated encoder suited to its structure.",
+        "title": "Each modality should therefore have a dedicated encoder suited to its structure."
+      },
+      {
+        "id": "cap-1642c138",
+        "kind": "capability",
+        "order": 3,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "SAR imagery should use an encoder appropriate for radar backscatter and multitemporal information.",
+        "title": "SAR imagery should use an encoder appropriate for radar backscatter and multitemporal information."
+      },
+      {
+        "id": "cap-5f95ed9b",
+        "kind": "capability",
+        "order": 4,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "Weather, precipitation, soil-moisture, and other temporal variables should use time-series encoders.",
+        "title": "Weather, precipitation, soil-moisture, and other temporal variables should use time-series encoders."
+      },
+      {
+        "id": "cap-723a91db",
+        "kind": "capability",
+        "order": 5,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "Crop-history or categorical land-cover layers should use learned categorical/spatial representations.",
+        "title": "Crop-history or categorical land-cover layers should use learned categorical/spatial representations."
+      },
+      {
+        "id": "cap-a8c0aa1e",
+        "kind": "capability",
+        "order": 6,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "The transformer should function as the shared foundation model.",
+        "title": "The transformer should function as the shared foundation model."
+      },
+      {
+        "id": "cap-d7f46864",
+        "kind": "capability",
+        "order": 7,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "Modality-specific embeddings must retain information about spatial position, resolution, acquisition time, modality identity, and potentially data quality.",
+        "title": "Modality-specific embeddings must retain information about spatial position, resolution, acquisition time, mo\u2026"
+      },
+      {
+        "id": "cap-088c85c6",
+        "kind": "capability",
+        "order": 8,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "The model should therefore use spatial positional encodings, temporal encodings for time-varying inputs, and modality/source embeddings so that tokens from fundamentally different datasets can be distinguished.",
+        "title": "The model should therefore use spatial positional encodings, temporal encodings for time-varying inputs, and\u2026"
+      },
+      {
+        "id": "cap-008ef2b4",
+        "kind": "capability",
+        "order": 9,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "The architecture should allow high-resolution information, such as terrain or aerial imagery, to coexist with much coarser information such as soil, climate, and satellite products without unnecessarily discarding spatial detail.",
+        "title": "The architecture should allow high-resolution information, such as terrain or aerial imagery, to coexist with\u2026"
+      },
+      {
+        "id": "cap-8990bb61",
+        "kind": "capability",
+        "order": 10,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Yield Prediction Head: The primary supervised task is dense yield-map prediction. Given the multimodal field representation, a spatial decoder should reconstruct yield at the desired output grid. The decoder may use transformer queries, convolutional upsampling, feature pyramids, or another spatial decoding architecture. Predictions should preserve within-field spatial variability rather than producing only a field-average yield. Training targets are observed yield maps aligned to the corresponding field geometry.",
+        "title": "Yield Prediction Head"
+      },
+      {
+        "id": "cap-fe13ab1e",
+        "kind": "capability",
+        "order": 11,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Foundation-Model Design: The central transformer should not be tied exclusively to yield prediction. Build the system as a shared backbone with multiple task-specific heads. The initial head predicts yield maps, while future heads may support outcomes such as field-average yield, crop-stress detection, soil-property inference, management-zone segmentation, moisture estimation, anomaly detection, or other precision-agriculture tasks. New heads should be attachable without redesigning individual modality encoders.",
+        "title": "Foundation-Model Design"
+      },
+      {
+        "id": "cap-dafad13d",
+        "kind": "capability",
+        "order": 12,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Missing-Modality Robustness: The model must operate when only a subset of inputs is available. Different fields and years may lack specific satellite acquisitions, weather variables, soil datasets, or high-resolution imagery. The architecture should therefore treat modalities as optional rather than assuming a fixed input tensor. Use explicit modality tokens and masks, and train with modality dropout so that random input sources are removed during training. Investigate whether a learned missing-modality token, masked-modality modeling, or cross-modal reconstruction objectives improve robustness. Evaluate performance as progressively more modalities are removed and determine which combinations provide the most predictive information.",
+        "title": "Missing-Modality Robustness"
+      },
+      {
+        "id": "cap-d3d40524",
+        "kind": "capability",
+        "order": 13,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Pretraining: In addition to supervised yield-map training, investigate self-supervised and multimodal pretraining so that the backbone learns general representations from fields without yield maps. Candidate objectives include masked spatial-token reconstruction, masked modality prediction, temporal reconstruction, contrastive alignment between modalities covering the same field, cross-modal prediction, and reconstruction of one sensor from representations learned from others. Pretrained modality encoders may initially be frozen and later selectively fine-tuned. Compare frozen, partially fine-tuned, and fully fine-tuned configurations.",
+        "title": "Pretraining"
+      },
+      {
+        "id": "cap-01715b56",
+        "kind": "capability",
+        "order": 14,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Data Organization: Treat each field-year pair as one multimodal sample. Inputs may include static layers such as DEM, terrain, and soil; low-frequency historical variables such as crop history; temporal environmental observations such as weather, precipitation, and soil moisture; and multitemporal remote sensing such as Sentinel-1, Sentinel-2, NAIP, PlanetScope, or comparable sources. All layers must be geographically registered to the same field, but they need not be resampled to the same native resolution before encoding.",
+        "title": "Data Organization"
+      },
+      {
+        "id": "cap-b797f016",
+        "kind": "capability",
+        "order": 15,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Training Protocol: Split data at the field level, and where possible evaluate geographically and temporally separated test sets to avoid spatial leakage. Test generalization to unseen fields, regions, years, crop conditions, and combinations of missing modalities. Compare the multimodal transformer against strong baselines including yield prediction from individual modalities, early fusion after raster resampling, late fusion of independently trained encoders, CNN-based multimodal models, and simpler ensemble approaches.",
+        "title": "Training Protocol"
+      },
+      {
+        "id": "cap-5c9780e5",
+        "kind": "capability",
+        "order": 16,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Evaluation: Evaluate dense prediction using RMSE, MAE, R\u00b2, normalized RMSE, spatial correlation, and field-level yield error. Also evaluate preservation of spatial yield patterns, particularly low- and high-yield zones. Report performance for complete-input and partial-input conditions. Perform modality ablations to measure the marginal contribution of terrain, soil, weather, moisture, optical imagery, SAR, and other sources. Measure how much each additional modality improves predictions and whether its usefulness varies geographically or temporally.",
+        "title": "Evaluation"
+      },
+      {
+        "id": "cap-145c78df",
+        "kind": "capability",
+        "order": 17,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Interpretability: Provide attention, attribution, or modality-importance analyses showing which sources and spatial regions influence predictions. Determine whether the model learns physically meaningful relationships among terrain, soil, moisture, vegetation condition, weather, and yield rather than relying primarily on one dominant imagery source.",
+        "title": "Interpretability"
+      },
+      {
+        "id": "cap-9066043a",
+        "kind": "capability",
+        "order": 18,
+        "origin": "prompt:section",
+        "section": "",
+        "text": "Model Output and Deliverables: Deliver a modular multimodal architecture containing dedicated modality encoders, a shared fusion transformer, a dense yield-map decoder, support for optional and missing modalities, and an extensible multi-head output interface. Deliver comparisons of encoder strategies, fusion mechanisms, native-resolution versus resampled processing, frozen versus fine-tuned pretrained encoders, and robustness under missing-data conditions.",
+        "title": "Model Output and Deliverables"
+      },
+      {
+        "id": "cap-72da356e",
+        "kind": "capability",
+        "order": 19,
+        "origin": "prompt:sentence",
+        "section": "",
+        "text": "Encoding each source using a representation appropriate to its native structure and performing fusion in a shared transformer latent space should retain substantially more useful information than conventional pipelines that resample all datasets into one raster stack.",
+        "title": "Encoding each source using a representation appropriate to its native structure and performing fusion in a sh\u2026"
+      },
+      {
+        "id": "cap-db1db85b",
+        "kind": "capability",
+        "order": 20,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Native-resolution modality encoders",
+        "title": "Native-resolution modality encoders"
+      },
+      {
+        "id": "cap-c540c1f3",
+        "kind": "capability",
+        "order": 21,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Spatial and temporal positional encodings",
+        "title": "Spatial and temporal positional encodings"
+      },
+      {
+        "id": "cap-ad025096",
+        "kind": "capability",
+        "order": 22,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Modality identity embedding",
+        "title": "Modality identity embedding"
+      },
+      {
+        "id": "cap-4d71c177",
+        "kind": "capability",
+        "order": 23,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Shared multimodal transformer fusion",
+        "title": "Shared multimodal transformer fusion"
+      },
+      {
+        "id": "cap-ffaf4955",
+        "kind": "capability",
+        "order": 24,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Dense yield-map spatial decoder",
+        "title": "Dense yield-map spatial decoder"
+      },
+      {
+        "id": "cap-84dba12a",
+        "kind": "capability",
+        "order": 25,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Self-supervised pretraining objectives",
+        "title": "Self-supervised pretraining objectives"
+      },
+      {
+        "id": "cap-bdd435ac",
+        "kind": "capability",
+        "order": 26,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Multi-head task-specific outputs",
+        "title": "Multi-head task-specific outputs"
+      },
+      {
+        "id": "cap-69a56598",
+        "kind": "capability",
+        "order": 27,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Field-level data splitting",
+        "title": "Field-level data splitting"
+      },
+      {
+        "id": "cap-b95ade25",
+        "kind": "capability",
+        "order": 28,
+        "origin": "decomposition:concept",
+        "section": "Stage A decomposition",
+        "text": "Modality ablation evaluation",
+        "title": "Modality ablation evaluation"
+      }
+    ],
+    "truncated": false,
+    "truncated_by_kind": {}
+  },
+  "budget_exhausted": false,
+  "budget_sec": 600.0,
+  "checks": [
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "main_multimodal_finetune.py:125 `MultiModalEncoder`",
+        "main_multimodal_finetune.py:141 `LatentFusionTransformer`",
+        "main_multimodal_finetune.py:146 `DenseYieldFCNHead`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 125,
+          "path": "main_multimodal_finetune.py",
+          "quote": "encoders = MultiModalEncoder(encoders_cfg, embed_dim=embed_dim,",
+          "reason": "",
+          "symbol": "MultiModalEncoder"
+        },
+        {
+          "confirmed": true,
+          "line": 141,
+          "path": "main_multimodal_finetune.py",
+          "quote": "fusion = LatentFusionTransformer(",
+          "reason": "",
+          "symbol": "LatentFusionTransformer"
+        },
+        {
+          "confirmed": true,
+          "line": 146,
+          "path": "main_multimodal_finetune.py",
+          "quote": "head = DenseYieldFCNHead(embed_dim=embed_dim, num_classes=1, loss='l1')",
+          "reason": "",
+          "symbol": "DenseYieldFCNHead"
+        }
+      ],
+      "id": "cap-4fc8ecf1",
+      "kind": "capability",
+      "lane": "lane1: (unsectioned)",
+      "order": 0,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Technical Description of the Problem: Develop a multimodal geospatial foundation model that predicts spatial crop yield from heterogeneous field-level data layers collected at different spatial and temporal resolutions. For each agricultural field, a ground-truth yield map is available from harvested yield-monitor data. The model receives a variable set of geospatial inputs that may include elevation and terrain derivatives, soil properties, crop-history layers, weather and climate time series, soil moisture, radar imagery, optical satellite imagery, aerial imagery, and other remote-sensing or management-related data. The objective is to learn a reusable field representation that can support yield-map prediction as the primary task while also enabling additional agricultural prediction heads.",
+      "title": "Technical Description of the Problem",
+      "verdict": "implemented",
+      "why": "A full multimodal geospatial foundation model predicting spatial crop yield is implemented and wired together (per-modality encoders, latent fusion transformer, dense yield head)."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:33 `RasterCNNEncoder`",
+        "models_multimodal_encoder.py:56 `PatchEmbeddingEncoder`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 33,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class RasterCNNEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "RasterCNNEncoder"
+        },
+        {
+          "confirmed": true,
+          "line": 56,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class PatchEmbeddingEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "PatchEmbeddingEncoder"
+        }
+      ],
+      "id": "cap-739422ce",
+      "kind": "capability",
+      "lane": "lane1: (unsectioned)",
+      "order": 1,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "The key architectural requirement is that each input source should be processed in its native or scientifically appropriate resolution rather than forcing every layer onto a single common raster resolution before feature extraction.",
+      "title": "The key architectural requirement is that each input source should be processed in its native or scientifical\u2026",
+      "verdict": "implemented",
+      "why": "Each source is encoded at its native resolution by dedicated raster/patch encoders rather than being resampled to a common grid before feature extraction."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:240 `_TYPES`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 240,
+          "path": "models_multimodal_encoder.py",
+          "quote": "_TYPES = {",
+          "reason": "",
+          "symbol": "_TYPES"
+        }
+      ],
+      "id": "cap-13e3950f",
+      "kind": "capability",
+      "lane": "lane1: (unsectioned)",
+      "order": 2,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "Each modality should therefore have a dedicated encoder suited to its structure.",
+      "title": "Each modality should therefore have a dedicated encoder suited to its structure.",
+      "verdict": "implemented",
+      "why": "MultiModalEncoder dispatches each modality to its own dedicated encoder (raster, patch, sar, timeseries, tabular, categorical) suited to its structure."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:129 `MultitemporalSAREncoder`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 129,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class MultitemporalSAREncoder(nn.Module):",
+          "reason": "",
+          "symbol": "MultitemporalSAREncoder"
+        }
+      ],
+      "id": "cap-1642c138",
+      "kind": "capability",
+      "lane": "lane1: (unsectioned)",
+      "order": 3,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "SAR imagery should use an encoder appropriate for radar backscatter and multitemporal information.",
+      "title": "SAR imagery should use an encoder appropriate for radar backscatter and multitemporal information.",
+      "verdict": "implemented",
+      "why": "A 3D-convolutional MultitemporalSAREncoder processes multitemporal SAR backscatter stacks (B,T,C,H,W) retaining temporal context."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:156 `TimeSeriesEncoder`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 156,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class TimeSeriesEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "TimeSeriesEncoder"
+        }
+      ],
+      "id": "cap-5f95ed9b",
+      "kind": "capability",
+      "lane": "lane1: (unsectioned)",
+      "order": 4,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "Weather, precipitation, soil-moisture, and other temporal variables should use time-series encoders.",
+      "title": "Weather, precipitation, soil-moisture, and other temporal variables should use time-series encoders.",
+      "verdict": "implemented",
+      "why": "A TimeSeriesEncoder handles weather/precipitation/soil-moisture temporal series, and the config maps these sources to the 'timeseries' type."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:197 `CategoricalEncoder`",
+        "main_multimodal_finetune.py:122 `categorical`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 197,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class CategoricalEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "CategoricalEncoder"
+        },
+        {
+          "confirmed": true,
+          "line": 122,
+          "path": "main_multimodal_finetune.py",
+          "quote": "'crop': {'type': 'categorical', 'num_classes': 20, 'embed_dim': embed_dim},",
+          "reason": "",
+          "symbol": "categorical"
+        }
+      ],
+      "id": "cap-723a91db",
+      "kind": "capability",
+      "lane": "lane2: (unsectioned)",
+      "order": 5,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "Crop-history or categorical land-cover layers should use learned categorical/spatial representations.",
+      "title": "Crop-history or categorical land-cover layers should use learned categorical/spatial representations.",
+      "verdict": "implemented",
+      "why": "Crop-history/land-cover layers are encoded by a learned nn.Embedding-based CategoricalEncoder producing spatial tokens."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:129 `LatentFusionTransformer`",
+        "models_heads.py:28 `HEAD_REGISTRY`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 129,
+          "path": "models_latent_fusion.py",
+          "quote": "class LatentFusionTransformer(nn.Module):",
+          "reason": "",
+          "symbol": "LatentFusionTransformer"
+        },
+        {
+          "confirmed": true,
+          "line": 28,
+          "path": "models_heads.py",
+          "quote": "HEAD_REGISTRY: dict = {}",
+          "reason": "",
+          "symbol": "HEAD_REGISTRY"
+        }
+      ],
+      "id": "cap-a8c0aa1e",
+      "kind": "capability",
+      "lane": "lane2: (unsectioned)",
+      "order": 6,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "The transformer should function as the shared foundation model.",
+      "title": "The transformer should function as the shared foundation model.",
+      "verdict": "implemented",
+      "why": "The LatentFusionTransformer is the shared backbone consumed by multiple registered task heads, functioning as the shared foundation model."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:100 `pos_embed_spatial`",
+        "models_latent_fusion.py:101 `pos_embed_temporal`",
+        "models_latent_fusion.py:167 `modality_embedding`",
+        "util/pos_embed.py:83 `get_2d_sincos_pos_embed_with_resolution`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 100,
+          "path": "models_latent_fusion.py",
+          "quote": "self.pos_embed_spatial = nn.Parameter(torch.zeros(1, spatial_dim, embed_dim))",
+          "reason": "",
+          "symbol": "pos_embed_spatial"
+        },
+        {
+          "confirmed": true,
+          "line": 101,
+          "path": "models_latent_fusion.py",
+          "quote": "self.pos_embed_temporal = nn.Parameter(torch.zeros(1, temporal_dim, embed_dim))",
+          "reason": "",
+          "symbol": "pos_embed_temporal"
+        },
+        {
+          "confirmed": true,
+          "line": 167,
+          "path": "models_latent_fusion.py",
+          "quote": "self.modality_embedding = nn.ParameterDict()",
+          "reason": "",
+          "symbol": "modality_embedding"
+        },
+        {
+          "confirmed": true,
+          "line": 83,
+          "path": "util/pos_embed.py",
+          "quote": "def get_2d_sincos_pos_embed_with_resolution(",
+          "reason": "",
+          "symbol": "get_2d_sincos_pos_embed_with_resolution"
+        }
+      ],
+      "id": "cap-d7f46864",
+      "kind": "capability",
+      "lane": "lane2: (unsectioned)",
+      "order": 7,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "Modality-specific embeddings must retain information about spatial position, resolution, acquisition time, modality identity, and potentially data quality.",
+      "title": "Modality-specific embeddings must retain information about spatial position, resolution, acquisition time, mo\u2026",
+      "verdict": "implemented",
+      "why": "Embeddings retain spatial position, acquisition time, modality identity, and native resolution via separable pos embeds, modality embedding, and resolution-scaled sincos; only data quality is not explicitly encoded."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:81 `SeparablePosEmbed`",
+        "models_latent_fusion.py:167 `modality_embedding`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 81,
+          "path": "models_latent_fusion.py",
+          "quote": "class SeparablePosEmbed(nn.Module):",
+          "reason": "",
+          "symbol": "SeparablePosEmbed"
+        },
+        {
+          "confirmed": true,
+          "line": 167,
+          "path": "models_latent_fusion.py",
+          "quote": "self.modality_embedding = nn.ParameterDict()",
+          "reason": "",
+          "symbol": "modality_embedding"
+        }
+      ],
+      "id": "cap-088c85c6",
+      "kind": "capability",
+      "lane": "lane2: (unsectioned)",
+      "order": 8,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "The model should therefore use spatial positional encodings, temporal encodings for time-varying inputs, and modality/source embeddings so that tokens from fundamentally different datasets can be distinguished.",
+      "title": "The model should therefore use spatial positional encodings, temporal encodings for time-varying inputs, and\u2026",
+      "verdict": "implemented",
+      "why": "Spatial and temporal positional encodings plus modality/source embeddings are all implemented in the fusion backbone."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:287 `forward_multiscale`",
+        "models_neck.py:19 `MultiFusionNeck`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 287,
+          "path": "models_latent_fusion.py",
+          "quote": "def forward_multiscale(self, embeddings, ids_keep=None, mask=None):",
+          "reason": "",
+          "symbol": "forward_multiscale"
+        },
+        {
+          "confirmed": true,
+          "line": 19,
+          "path": "models_neck.py",
+          "quote": "class MultiFusionNeck(nn.Module):",
+          "reason": "",
+          "symbol": "MultiFusionNeck"
+        }
+      ],
+      "id": "cap-008ef2b4",
+      "kind": "capability",
+      "lane": "lane2: (unsectioned)",
+      "order": 9,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "The architecture should allow high-resolution information, such as terrain or aerial imagery, to coexist with much coarser information such as soil, climate, and satellite products without unnecessarily discarding spatial detail.",
+      "title": "The architecture should allow high-resolution information, such as terrain or aerial imagery, to coexist with\u2026",
+      "verdict": "implemented",
+      "why": "Multiscale patch tokens, feature-pyramid neck, and DPT head let high-resolution and coarse modalities coexist in latent space without discarding spatial detail."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_heads.py:200 `class DenseYieldFCNHead`",
+        "models_heads.py:344 `class DenseYieldFPNHead`",
+        "dataset/field_yield_dataset.py:46 `register_raster_to_grid`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 200,
+          "path": "models_heads.py",
+          "quote": "class DenseYieldFCNHead(nn.Module):",
+          "reason": "",
+          "symbol": "class DenseYieldFCNHead"
+        },
+        {
+          "confirmed": true,
+          "line": 344,
+          "path": "models_heads.py",
+          "quote": "class DenseYieldFPNHead(nn.Module):",
+          "reason": "",
+          "symbol": "class DenseYieldFPNHead"
+        },
+        {
+          "confirmed": true,
+          "line": 46,
+          "path": "dataset/field_yield_dataset.py",
+          "quote": "def register_raster_to_grid(",
+          "reason": "",
+          "symbol": "register_raster_to_grid"
+        }
+      ],
+      "id": "cap-8990bb61",
+      "kind": "capability",
+      "lane": "lane3: (unsectioned)",
+      "order": 10,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Yield Prediction Head: The primary supervised task is dense yield-map prediction. Given the multimodal field representation, a spatial decoder should reconstruct yield at the desired output grid. The decoder may use transformer queries, convolutional upsampling, feature pyramids, or another spatial decoding architecture. Predictions should preserve within-field spatial variability rather than producing only a field-average yield. Training targets are observed yield maps aligned to the corresponding field geometry.",
+      "title": "Yield Prediction Head",
+      "verdict": "implemented",
+      "why": "Multiple dense spatial decoders (FCN, FPN, DPT) reconstruct per-pixel yield maps preserving within-field variability, and the dataset registers observed yield-monitor rasters to the field grid as dense targets."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_heads.py:31 `def register_head`",
+        "models_multi_unified.py:66 `class MultiUnifiedModel`",
+        "models_multi_unified.py:31 `class FieldAverageHead`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 31,
+          "path": "models_heads.py",
+          "quote": "def register_head(name, category, modality, tasks, backbone, description):",
+          "reason": "",
+          "symbol": "def register_head"
+        },
+        {
+          "confirmed": true,
+          "line": 66,
+          "path": "models_multi_unified.py",
+          "quote": "class MultiUnifiedModel(nn.Module):",
+          "reason": "",
+          "symbol": "class MultiUnifiedModel"
+        },
+        {
+          "confirmed": true,
+          "line": 31,
+          "path": "models_multi_unified.py",
+          "quote": "class FieldAverageHead(nn.Module):",
+          "reason": "",
+          "symbol": "class FieldAverageHead"
+        }
+      ],
+      "id": "cap-fe13ab1e",
+      "kind": "capability",
+      "lane": "lane3: (unsectioned)",
+      "order": 11,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Foundation-Model Design: The central transformer should not be tied exclusively to yield prediction. Build the system as a shared backbone with multiple task-specific heads. The initial head predicts yield maps, while future heads may support outcomes such as field-average yield, crop-stress detection, soil-property inference, management-zone segmentation, moisture estimation, anomaly detection, or other precision-agriculture tasks. New heads should be attachable without redesigning individual modality encoders.",
+      "title": "Foundation-Model Design",
+      "verdict": "implemented",
+      "why": "A shared backbone with an extensible HEAD_REGISTRY and a multi-head container (dense yield, FPN, field-average, MDN) lets new task heads attach by name without modifying modality encoders."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:331 `def forward_with_missing`",
+        "models_multimodal_encoder.py:360 `modality_dropout`",
+        "models_latent_fusion.py:209 `def _build_key_padding_mask`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 331,
+          "path": "models_multimodal_encoder.py",
+          "quote": "def forward_with_missing(self, inputs, available=None, apply_dropout=True):",
+          "reason": "",
+          "symbol": "def forward_with_missing"
+        },
+        {
+          "confirmed": true,
+          "line": 360,
+          "path": "models_multimodal_encoder.py",
+          "quote": "if self.training and apply_dropout and self.modality_dropout > 0:",
+          "reason": "",
+          "symbol": "modality_dropout"
+        },
+        {
+          "confirmed": true,
+          "line": 209,
+          "path": "models_latent_fusion.py",
+          "quote": "def _build_key_padding_mask(self, mask, tokens):",
+          "reason": "",
+          "symbol": "def _build_key_padding_mask"
+        }
+      ],
+      "id": "cap-dafad13d",
+      "kind": "capability",
+      "lane": "lane3: (unsectioned)",
+      "order": 12,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Missing-Modality Robustness: The model must operate when only a subset of inputs is available. Different fields and years may lack specific satellite acquisitions, weather variables, soil datasets, or high-resolution imagery. The architecture should therefore treat modalities as optional rather than assuming a fixed input tensor. Use explicit modality tokens and masks, and train with modality dropout so that random input sources are removed during training. Investigate whether a learned missing-modality token, masked-modality modeling, or cross-modal reconstruction objectives improve robustness. Evaluate performance as progressively more modalities are removed and determine which combinations provide the most predictive information.",
+      "title": "Missing-Modality Robustness",
+      "verdict": "implemented",
+      "why": "Learned missing-modality tokens, per-sample availability masks, modality dropout, and attention key-padding masks let the model run on arbitrary subsets of inputs."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_pretrain.py:59 `class MultimodalSelfSupervisedPretrain`",
+        "models_multimodal_pretrain.py:351 `def set_encoder_trainable`",
+        "models_multimodal_pretrain.py:290 `def _contrastive_alignment`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 59,
+          "path": "models_multimodal_pretrain.py",
+          "quote": "class MultimodalSelfSupervisedPretrain(nn.Module):",
+          "reason": "",
+          "symbol": "class MultimodalSelfSupervisedPretrain"
+        },
+        {
+          "confirmed": true,
+          "line": 351,
+          "path": "models_multimodal_pretrain.py",
+          "quote": "def set_encoder_trainable(self, trainable=True):",
+          "reason": "",
+          "symbol": "def set_encoder_trainable"
+        },
+        {
+          "confirmed": true,
+          "line": 290,
+          "path": "models_multimodal_pretrain.py",
+          "quote": "def _contrastive_alignment(self, inputs, available):",
+          "reason": "",
+          "symbol": "def _contrastive_alignment"
+        }
+      ],
+      "id": "cap-d3d40524",
+      "kind": "capability",
+      "lane": "lane3: (unsectioned)",
+      "order": 13,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Pretraining: In addition to supervised yield-map training, investigate self-supervised and multimodal pretraining so that the backbone learns general representations from fields without yield maps. Candidate objectives include masked spatial-token reconstruction, masked modality prediction, temporal reconstruction, contrastive alignment between modalities covering the same field, cross-modal prediction, and reconstruction of one sensor from representations learned from others. Pretrained modality encoders may initially be frozen and later selectively fine-tuned. Compare frozen, partially fine-tuned, and fully fine-tuned configurations.",
+      "title": "Pretraining",
+      "verdict": "implemented",
+      "why": "A unified self-supervised framework implements five pretraining objectives on unlabelled fields and supports freezing/partially/fully fine-tuning the encoders."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "dataset/field_yield_dataset.py:100 `class FieldYieldDataset`",
+        "dataset/heterogeneous_modality_loader.py:79 `class HeterogeneousModalityLoader`",
+        "dataset/field_yield_dataset.py:186 `available`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 100,
+          "path": "dataset/field_yield_dataset.py",
+          "quote": "class FieldYieldDataset(Dataset):",
+          "reason": "",
+          "symbol": "class FieldYieldDataset"
+        },
+        {
+          "confirmed": true,
+          "line": 79,
+          "path": "dataset/heterogeneous_modality_loader.py",
+          "quote": "class HeterogeneousModalityLoader:",
+          "reason": "",
+          "symbol": "class HeterogeneousModalityLoader"
+        },
+        {
+          "confirmed": true,
+          "line": 186,
+          "path": "dataset/field_yield_dataset.py",
+          "quote": "# missing modality -> skip the layer, flag it unavailable",
+          "reason": "",
+          "symbol": "available"
+        }
+      ],
+      "id": "cap-01715b56",
+      "kind": "capability",
+      "lane": "lane3: (unsectioned)",
+      "order": 14,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Data Organization: Treat each field-year pair as one multimodal sample. Inputs may include static layers such as DEM, terrain, and soil; low-frequency historical variables such as crop history; temporal environmental observations such as weather, precipitation, and soil moisture; and multitemporal remote sensing such as Sentinel-1, Sentinel-2, NAIP, PlanetScope, or comparable sources. All layers must be geographically registered to the same field, but they need not be resampled to the same native resolution before encoding.",
+      "title": "Data Organization",
+      "verdict": "implemented",
+      "why": "Field-year pairs are treated as one multimodal sample with all layers geographically registered to the same field grid but kept at native resolution, with optional layers flagged in an availability mask."
+    },
+    {
+      "claimed": "",
+      "confirmed_evidence": [],
+      "downgraded": false,
+      "evidence": [],
+      "id": "cap-b797f016",
+      "kind": "capability",
+      "lane": "lane4: (unsectioned)",
+      "order": 15,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Training Protocol: Split data at the field level, and where possible evaluate geographically and temporally separated test sets to avoid spatial leakage. Test generalization to unseen fields, regions, years, crop conditions, and combinations of missing modalities. Compare the multimodal transformer against strong baselines including yield prediction from individual modalities, early fusion after raster resampling, late fusion of independently trained encoders, CNN-based multimodal models, and simpler ensemble approaches.",
+      "title": "Training Protocol",
+      "verdict": "undetermined",
+      "why": "the audit probe returned no usable answer (timeout after 180s)"
+    },
+    {
+      "claimed": "",
+      "confirmed_evidence": [],
+      "downgraded": false,
+      "evidence": [],
+      "id": "cap-5c9780e5",
+      "kind": "capability",
+      "lane": "lane4: (unsectioned)",
+      "order": 16,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Evaluation: Evaluate dense prediction using RMSE, MAE, R\u00b2, normalized RMSE, spatial correlation, and field-level yield error. Also evaluate preservation of spatial yield patterns, particularly low- and high-yield zones. Report performance for complete-input and partial-input conditions. Perform modality ablations to measure the marginal contribution of terrain, soil, weather, moisture, optical imagery, SAR, and other sources. Measure how much each additional modality improves predictions and whether its usefulness varies geographically or temporally.",
+      "title": "Evaluation",
+      "verdict": "undetermined",
+      "why": "the audit probe returned no usable answer (timeout after 180s)"
+    },
+    {
+      "claimed": "",
+      "confirmed_evidence": [],
+      "downgraded": false,
+      "evidence": [],
+      "id": "cap-145c78df",
+      "kind": "capability",
+      "lane": "lane4: (unsectioned)",
+      "order": 17,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Interpretability: Provide attention, attribution, or modality-importance analyses showing which sources and spatial regions influence predictions. Determine whether the model learns physically meaningful relationships among terrain, soil, moisture, vegetation condition, weather, and yield rather than relying primarily on one dominant imagery source.",
+      "title": "Interpretability",
+      "verdict": "undetermined",
+      "why": "the audit probe returned no usable answer (timeout after 180s)"
+    },
+    {
+      "claimed": "",
+      "confirmed_evidence": [],
+      "downgraded": false,
+      "evidence": [],
+      "id": "cap-9066043a",
+      "kind": "capability",
+      "lane": "lane4: (unsectioned)",
+      "order": 18,
+      "origin": "prompt:section",
+      "section": "",
+      "text": "Model Output and Deliverables: Deliver a modular multimodal architecture containing dedicated modality encoders, a shared fusion transformer, a dense yield-map decoder, support for optional and missing modalities, and an extensible multi-head output interface. Deliver comparisons of encoder strategies, fusion mechanisms, native-resolution versus resampled processing, frozen versus fine-tuned pretrained encoders, and robustness under missing-data conditions.",
+      "title": "Model Output and Deliverables",
+      "verdict": "undetermined",
+      "why": "the audit probe returned no usable answer (timeout after 180s)"
+    },
+    {
+      "claimed": "",
+      "confirmed_evidence": [],
+      "downgraded": false,
+      "evidence": [],
+      "id": "cap-72da356e",
+      "kind": "capability",
+      "lane": "lane4: (unsectioned)",
+      "order": 19,
+      "origin": "prompt:sentence",
+      "section": "",
+      "text": "Encoding each source using a representation appropriate to its native structure and performing fusion in a shared transformer latent space should retain substantially more useful information than conventional pipelines that resample all datasets into one raster stack.",
+      "title": "Encoding each source using a representation appropriate to its native structure and performing fusion in a sh\u2026",
+      "verdict": "undetermined",
+      "why": "the audit probe returned no usable answer (timeout after 180s)"
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_encoder.py:211 `class MultiModalEncoder`",
+        "models_multimodal_encoder.py:33 `class RasterCNNEncoder`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 211,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class MultiModalEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "class MultiModalEncoder"
+        },
+        {
+          "confirmed": true,
+          "line": 33,
+          "path": "models_multimodal_encoder.py",
+          "quote": "class RasterCNNEncoder(nn.Module):",
+          "reason": "",
+          "symbol": "class RasterCNNEncoder"
+        }
+      ],
+      "id": "cap-db1db85b",
+      "kind": "capability",
+      "lane": "lane5: Stage A decomposition",
+      "order": 20,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Native-resolution modality encoders",
+      "title": "Native-resolution modality encoders",
+      "verdict": "implemented",
+      "why": "Dedicated per-modality encoders (raster CNN, 3D-conv SAR, time-series, tabular, categorical) each process their source at native resolution before projection to a shared latent dim."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:81 `class SeparablePosEmbed`",
+        "models_latent_fusion.py:100 `pos_embed_spatial`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 81,
+          "path": "models_latent_fusion.py",
+          "quote": "class SeparablePosEmbed(nn.Module):",
+          "reason": "",
+          "symbol": "class SeparablePosEmbed"
+        },
+        {
+          "confirmed": true,
+          "line": 100,
+          "path": "models_latent_fusion.py",
+          "quote": "self.pos_embed_spatial = nn.Parameter(torch.zeros(1, spatial_dim, embed_dim))",
+          "reason": "",
+          "symbol": "pos_embed_spatial"
+        }
+      ],
+      "id": "cap-c540c1f3",
+      "kind": "capability",
+      "lane": "lane5: Stage A decomposition",
+      "order": 21,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Spatial and temporal positional encodings",
+      "title": "Spatial and temporal positional encodings",
+      "verdict": "implemented",
+      "why": "SeparablePosEmbed provides both spatial and temporal sincos positional encodings applied to every modality token."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:167 `self.modality_embedding`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 167,
+          "path": "models_latent_fusion.py",
+          "quote": "self.modality_embedding = nn.ParameterDict()",
+          "reason": "",
+          "symbol": "self.modality_embedding"
+        }
+      ],
+      "id": "cap-ad025096",
+      "kind": "capability",
+      "lane": "lane5: Stage A decomposition",
+      "order": 22,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Modality identity embedding",
+      "title": "Modality identity embedding",
+      "verdict": "implemented",
+      "why": "A per-modality identity embedding is concatenated to each token so sources are distinguishable in the shared transformer."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_latent_fusion.py:129 `class LatentFusionTransformer`",
+        "main_multimodal_finetune.py:141 `fusion = LatentFusionTransformer`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 129,
+          "path": "models_latent_fusion.py",
+          "quote": "class LatentFusionTransformer(nn.Module):",
+          "reason": "",
+          "symbol": "class LatentFusionTransformer"
+        },
+        {
+          "confirmed": true,
+          "line": 141,
+          "path": "main_multimodal_finetune.py",
+          "quote": "fusion = LatentFusionTransformer(",
+          "reason": "",
+          "symbol": "fusion = LatentFusionTransformer"
+        }
+      ],
+      "id": "cap-4d71c177",
+      "kind": "capability",
+      "lane": "lane5: Stage A decomposition",
+      "order": 23,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Shared multimodal transformer fusion",
+      "title": "Shared multimodal transformer fusion",
+      "verdict": "implemented",
+      "why": "A shared Perceiver-style transformer fuses all modality token sets via cross-attention and self-attention, wired into the training pipeline."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_heads.py:200 `class DenseYieldFCNHead`",
+        "models_heads.py:439 `class DenseYieldDPTHead`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 200,
+          "path": "models_heads.py",
+          "quote": "class DenseYieldFCNHead(nn.Module):",
+          "reason": "",
+          "symbol": "class DenseYieldFCNHead"
+        },
+        {
+          "confirmed": true,
+          "line": 439,
+          "path": "models_heads.py",
+          "quote": "class DenseYieldDPTHead(nn.Module):",
+          "reason": "",
+          "symbol": "class DenseYieldDPTHead"
+        }
+      ],
+      "id": "cap-ffaf4955",
+      "kind": "capability",
+      "lane": "lane5: Stage A decomposition",
+      "order": 24,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Dense yield-map spatial decoder",
+      "title": "Dense yield-map spatial decoder",
+      "verdict": "implemented",
+      "why": "Multiple dense spatial decoders (FCN, FPN, DPT) reconstruct per-pixel yield maps preserving within-field variability."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_multimodal_pretrain.py:59 `MultimodalSelfSupervisedPretrain`",
+        "models_multimodal_pretrain.py:335 `forward`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 59,
+          "path": "models_multimodal_pretrain.py",
+          "quote": "class MultimodalSelfSupervisedPretrain(nn.Module):",
+          "reason": "",
+          "symbol": "MultimodalSelfSupervisedPretrain"
+        },
+        {
+          "confirmed": true,
+          "line": 335,
+          "path": "models_multimodal_pretrain.py",
+          "quote": "spatial, modality = self._masked_objectives(inputs, available)",
+          "reason": "",
+          "symbol": "forward"
+        }
+      ],
+      "id": "cap-84dba12a",
+      "kind": "capability",
+      "lane": "lane6: Stage A decomposition",
+      "order": 25,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Self-supervised pretraining objectives",
+      "title": "Self-supervised pretraining objectives",
+      "verdict": "implemented",
+      "why": "A unified self-supervised pretraining framework combines five objectives (masked spatial-token reconstruction, masked-modality, temporal forecasting, cross-modal prediction, contrastive alignment) into a weighted loss."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "models_heads.py:28 `HEAD_REGISTRY`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": false,
+          "line": 86,
+          "path": "models_multi_unified.py",
+          "quote": "def __init__(self, encoders_cfg, heads_cfg, neck_cfg=None, embed_dim=192):",
+          "reason": "symbol 'MultiHeadUnifiedModel' does not occur in models_multi_unified.py",
+          "symbol": "MultiHeadUnifiedModel"
+        },
+        {
+          "confirmed": true,
+          "line": 28,
+          "path": "models_heads.py",
+          "quote": "HEAD_REGISTRY: dict = {}",
+          "reason": "",
+          "symbol": "HEAD_REGISTRY"
+        }
+      ],
+      "id": "cap-bdd435ac",
+      "kind": "capability",
+      "lane": "lane6: Stage A decomposition",
+      "order": 26,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Multi-head task-specific outputs",
+      "title": "Multi-head task-specific outputs",
+      "verdict": "implemented",
+      "why": "A modular encoder+neck+heads container builds a ModuleList of task heads from heads_cfg via an extensible HEAD_REGISTRY, all consuming the same fused latent."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "dataset/field_yield_dataset.py:153 `split_file`",
+        "util/spatial_split.py:11 `cross_location_split`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 153,
+          "path": "dataset/field_yield_dataset.py",
+          "quote": "with open(self.root_dir / split_file) as f:",
+          "reason": "",
+          "symbol": "split_file"
+        },
+        {
+          "confirmed": true,
+          "line": 11,
+          "path": "util/spatial_split.py",
+          "quote": "def cross_location_split(data_file, group_indices=None, test_group='1',",
+          "reason": "",
+          "symbol": "cross_location_split"
+        }
+      ],
+      "id": "cap-69a56598",
+      "kind": "capability",
+      "lane": "lane6: Stage A decomposition",
+      "order": 27,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Field-level data splitting",
+      "title": "Field-level data splitting",
+      "verdict": "implemented",
+      "why": "Field-level splitting is implemented via per-field train/test split files and a cross-location split that partitions field-year samples into disjoint state groups to prevent spatial leakage."
+    },
+    {
+      "claimed": "implemented",
+      "confirmed_evidence": [
+        "util/modality_robustness.py:34 `evaluate_modality_robustness`"
+      ],
+      "downgraded": false,
+      "evidence": [
+        {
+          "confirmed": true,
+          "line": 34,
+          "path": "util/modality_robustness.py",
+          "quote": "def evaluate_modality_robustness(model, inputs, targets, modality_names=None,",
+          "reason": "",
+          "symbol": "evaluate_modality_robustness"
+        }
+      ],
+      "id": "cap-b95ade25",
+      "kind": "capability",
+      "lane": "lane6: Stage A decomposition",
+      "order": 28,
+      "origin": "decomposition:concept",
+      "section": "Stage A decomposition",
+      "text": "Modality ablation evaluation",
+      "title": "Modality ablation evaluation",
+      "verdict": "implemented",
+      "why": "A modality-robustness evaluator runs a trained model under every subset of available modalities and reports dense yield metrics per subset, measuring each source's marginal contribution."
+    }
+  ],
+  "counts": {
+    "checked": 29,
+    "downgraded": 0,
+    "implemented": 24,
+    "missing": 0,
+    "partial": 0,
+    "undetermined": 5
+  },
+  "coverage": 0.8276,
+  "elapsed_sec": 180.12,
+  "error": "",
+  "gap_items": [],
+  "lanes": [
+    {
+      "answered": 5,
+      "duration_sec": 142.14,
+      "error": "",
+      "label": "lane1: (unsectioned)",
+      "notes": "The repository fully implements the multimodal geospatial foundation model with native-resolution per-modality encoders, latent fusion, and dense yield prediction.",
+      "ok": true
+    },
+    {
+      "answered": 5,
+      "duration_sec": 180.0,
+      "error": "",
+      "label": "lane2: (unsectioned)",
+      "notes": "The native-resolution heterogeneous-encoder + latent-fusion architecture fully implements all five capability requirements.",
+      "ok": true
+    },
+    {
+      "answered": 5,
+      "duration_sec": 172.17,
+      "error": "",
+      "label": "lane3: (unsectioned)",
+      "notes": "The repository implements all five capabilities with dedicated encoders, a Perceiver-style latent fusion backbone, an extensible multi-head registry, missing-modality handling, self-supervised pretraining, and field-level data loaders.",
+      "ok": true
+    },
+    {
+      "answered": 0,
+      "duration_sec": 180.07,
+      "error": "timeout after 180s",
+      "label": "lane4: (unsectioned)",
+      "notes": "",
+      "ok": false
+    },
+    {
+      "answered": 5,
+      "duration_sec": 150.59,
+      "error": "",
+      "label": "lane5: Stage A decomposition",
+      "notes": "All five Stage A decomposition capabilities are fully implemented and connected end-to-end in the encoder->latent-fusion->dense-decoder pipeline.",
+      "ok": true
+    },
+    {
+      "answered": 4,
+      "duration_sec": 164.78,
+      "error": "",
+      "label": "lane6: Stage A decomposition",
+      "notes": "All four Stage A decomposition capabilities are present as real code modules, though the modality-ablation evaluator is only exercised via its __main__ demo rather than a training main script.",
+      "ok": true
+    }
+  ],
+  "line": "split the problem into 29 checkable requirement(s); checked all 29; 24 implemented with evidence, 0 partial, 0 missing, 5 undetermined \u2192 83% of checked requirements verified",
+  "receipt_path": ".primae/completeness.json",
+  "root": "/tmp/primae-eval-7_m5x1bp",
+  "todo_path": ".primae/COMPLETENESS_TODO.md"
+}
