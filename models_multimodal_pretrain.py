@@ -10,7 +10,7 @@
 # transformer (models_latent_fusion.py) -- so the backbone learns general
 # field representations from unlabelled fields without yield labels.
 #
-# Four objectives are combined into a single weighted pretraining loss:
+# Five objectives are combined into a single weighted pretraining loss:
 #   1. masked spatial-token reconstruction  -- mask a random subset of a
 #      modality's spatial tokens and reconstruct them from the fused latent
 #      (MAE-style, reusing the repo's random_masking primitive).
@@ -21,6 +21,11 @@
 #      latent.
 #   4. cross-modal prediction              -- leave-one-out: predict each
 #      modality's tokens from the fused representation of all the others.
+#   5. contrastive alignment               -- InfoNCE that pulls together the
+#      field-level embeddings of different modalities observing the *same*
+#      field while pushing apart embeddings of different fields, so the
+#      backbone learns that distinct sensors covering one field share a
+#      common latent representation.
 #
 # All reconstruction is performed in the shared embedding space (embed_dim),
 # which is uniform across the heterogeneous encoders, so a single per-modality
@@ -58,10 +63,11 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
     fusion backbone and attaches a set of self-supervised objectives that
     operate on unlabelled fields. ``forward`` returns ``(total_loss, losses)``
     where ``losses`` is a dict of per-objective scalar losses keyed by
-    ``'spatial'``, ``'modality'``, ``'temporal'`` and ``'cross_modal'``, and
-    ``total_loss`` is their ``loss_weights``-weighted sum. The backbone is
-    shared across all objectives, so it learns a general field representation
-    that can later be transferred to the supervised yield-map head.
+    ``'spatial'``, ``'modality'``, ``'temporal'``, ``'cross_modal'`` and
+    ``'contrastive'``, and ``total_loss`` is their ``loss_weights``-weighted
+    sum. The backbone is shared across all objectives, so it learns a general
+    field representation that can later be transferred to the supervised
+    yield-map head.
 
     ``encoders_cfg`` and ``modalities`` follow the same conventions as
     ``MultiModalEncoder`` / ``LatentFusionTransformer`` (see
@@ -81,6 +87,7 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
         self.temporal_forecast_steps = temporal_forecast_steps
         self.loss_weights = loss_weights or {
             'spatial': 1.0, 'modality': 1.0, 'temporal': 1.0, 'cross_modal': 1.0,
+            'contrastive': 1.0,
         }
 
         # shared backbone: native-resolution encoders + latent fusion
@@ -93,6 +100,12 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
 
         # learned mask token substituted for masked spatial tokens
         self.mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+
+        # shared contrastive projection head + temperature for the InfoNCE
+        # alignment objective (pulls together different modalities observing
+        # the same field, pushes apart different fields).
+        self.contrast_head = _mlp(embed_dim, decoder_embed_dim, embed_dim)
+        self.contrast_tau = 0.1
 
         # per-modality reconstruction heads: fused latent -> modality tokens
         # (embedding-space reconstruction, uniform across native resolutions)
@@ -224,8 +237,14 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
         for name, in_dim in self.temporal_modalities.items():
             if name not in inputs:
                 continue
-            if available is not None and not available.get(name, True):
-                continue
+            if available is not None:
+                avail = available.get(name, True)
+                # per-sample availability tensors: forecast if any sample present
+                if isinstance(avail, torch.Tensor):
+                    if not bool(avail.any()):
+                        continue
+                elif not avail:
+                    continue
             x = inputs[name]
             if isinstance(x, np.ndarray):
                 x = torch.from_numpy(
@@ -268,6 +287,43 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
         return (torch.stack(losses).mean() if losses
                 else self._zero_loss(device))
 
+    def _contrastive_alignment(self, inputs, available):
+        """Contrastive alignment between modalities covering the same field.
+
+        Mean-pools each modality's tokens to a field-level embedding, projects
+        it through the shared contrastive head, and runs InfoNCE over every
+        pair of modalities: the positive pair is the two modalities observing
+        the *same* field (same batch index), while the negatives are the other
+        fields' embeddings. This teaches the backbone that distinct sensors
+        covering one field share a common latent representation, complementing
+        the reconstruction objectives. Only modalities present for the whole
+        batch are used, so per-sample missing data does not corrupt the
+        alignment. Returns the mean InfoNCE loss over modality pairs.
+        """
+        device = next(self.parameters()).device
+        embeddings, mask = self.encoders.forward_with_missing(
+            inputs, available=available, apply_dropout=False)
+        names = []
+        for name in embeddings:
+            m = mask[name]
+            if isinstance(m, torch.Tensor) and m.numel() > 1 and not bool(m.all()):
+                continue
+            names.append(name)
+        if len(names) < 2:
+            return self._zero_loss(device)
+        z = {n: F.normalize(self.contrast_head(embeddings[n].mean(dim=1)), dim=-1)
+             for n in names}
+        losses = []
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                a, b = names[i], names[j]
+                logits = z[a] @ z[b].T / self.contrast_tau   # (B, B)
+                labels = torch.arange(logits.shape[0], device=device)
+                losses.append(F.cross_entropy(logits, labels))
+                losses.append(F.cross_entropy(logits.T, labels))
+        return (torch.stack(losses).mean() if losses
+                else self._zero_loss(device))
+
     def forward(self, inputs, available=None):
         """Run all self-supervised objectives on a batch of unlabelled fields.
 
@@ -279,12 +335,14 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
         spatial, modality = self._masked_objectives(inputs, available)
         temporal = self._temporal_forecast(inputs, available)
         cross_modal = self._cross_modal_prediction(inputs, available)
+        contrastive = self._contrastive_alignment(inputs, available)
 
         losses = {
             'spatial': spatial,
             'modality': modality,
             'temporal': temporal,
             'cross_modal': cross_modal,
+            'contrastive': contrastive,
         }
         total = sum(self.loss_weights[k] * losses[k]
                     for k in self.loss_weights if k in losses)
@@ -333,7 +391,7 @@ if __name__ == "__main__":
         'crop': torch.randint(0, 20, (2, 4, 4)),
     }
 
-    # training mode: all four objectives active
+    # training mode: all five objectives active
     model.train()
     total, losses = model(inputs)
     print('train total', total.item())
