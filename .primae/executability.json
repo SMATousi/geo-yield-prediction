@@ -1,0 +1,569 @@
+{
+  "attempts": [
+    {
+      "cause": "unknown",
+      "cause_evidence": "",
+      "cause_remedy": "",
+      "cause_signal": "",
+      "command": "/usr/local/bin/pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc",
+      "cwd_rel": "",
+      "duration_sec": 1.0,
+      "exit_code": 1,
+      "line": "$ /usr/local/bin/pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc \u2192 exit 1: ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0 [unknown]",
+      "output_tail": "Collecting torch==1.13.0 (from -r requirements.txt (line 1))\n  Downloading torch-1.13.0-cp311-cp311-manylinux1_x86_64.whl.metadata (24 kB)\n\nERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0\nERROR: Could not find a version that satisfies the requirement torchvision==0.14.0 (from versions: 0.15.1, 0.15.2, 0.16.0, 0.16.1, 0.16.2, 0.17.0, 0.17.1, 0.17.2, 0.18.0, 0.18.1, 0.19.0, 0.19.1, 0.20.0, 0.20.1, 0.21.0, 0.22.0, 0.22.1, 0.23.0, 0.24.0, 0.24.1, 0.25.0, 0.26.0, 0.27.0, 0.27.1, 0.28.0, 0.29.0)\nERROR: No matching distribution found for torchvision==0.14.0\n\n[notice] A new release of pip is available: 24.0 -> 26.2.1\n[notice] To update, run: pip install --upgrade pip",
+      "purpose": "provision",
+      "reason": "ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0",
+      "source": "manifest:pip",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "unknown",
+      "cause_evidence": "",
+      "cause_remedy": "",
+      "cause_signal": "",
+      "command": "pip install -r requirements.txt",
+      "cwd_rel": "",
+      "duration_sec": 1.02,
+      "exit_code": 1,
+      "line": "$ pip install -r requirements.txt \u2192 exit 1: ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0 [unknown]",
+      "output_tail": "Collecting torch==1.13.0 (from -r requirements.txt (line 1))\n  Using cached torch-1.13.0-cp311-cp311-manylinux1_x86_64.whl.metadata (24 kB)\n\nERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0\nERROR: Could not find a version that satisfies the requirement torchvision==0.14.0 (from versions: 0.15.1, 0.15.2, 0.16.0, 0.16.1, 0.16.2, 0.17.0, 0.17.1, 0.17.2, 0.18.0, 0.18.1, 0.19.0, 0.19.1, 0.20.0, 0.20.1, 0.21.0, 0.22.0, 0.22.1, 0.23.0, 0.24.0, 0.24.1, 0.25.0, 0.26.0, 0.27.0, 0.27.1, 0.28.0, 0.29.0)\nERROR: No matching distribution found for torchvision==0.14.0\n\n[notice] A new release of pip is available: 24.0 -> 26.2.1\n[notice] To update, run: pip install --upgrade pip",
+      "purpose": "build",
+      "reason": "ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0",
+      "source": "probe:documentation",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "artifact",
+      "cause_evidence": "raise AssertionError(\"Torch not compiled with CUDA enabled\")",
+      "cause_remedy": "",
+      "cause_signal": "assertion",
+      "command": "python main_multimodal_finetune.py",
+      "cwd_rel": "",
+      "duration_sec": 3.15,
+      "exit_code": 1,
+      "line": "$ python main_multimodal_finetune.py \u2192 exit 1: AssertionError: Torch not compiled with CUDA enabled [artifact]",
+      "output_tail": "\u2026 line 372, in <module>\n    main(args)\n  File \"/tmp/primae-eval-7_m5x1bp/main_multimodal_finetune.py\", line 241, in main\n    model.to(device)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1388, in to\n    return self._apply(convert)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  [Previous line repeated 2 more times]\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 966, in _apply\n    param_applied = fn(param)\n                    ^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1374, in convert\n    return t.to(\n           ^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/cuda/__init__.py\", line 584, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled",
+      "purpose": "entry",
+      "reason": "AssertionError: Torch not compiled with CUDA enabled",
+      "source": "probe:entry_points",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "artifact",
+      "cause_evidence": "raise AssertionError(\"Torch not compiled with CUDA enabled\")",
+      "cause_remedy": "",
+      "cause_signal": "assertion",
+      "command": "python main_pretrain_multimodal.py",
+      "cwd_rel": "",
+      "duration_sec": 2.24,
+      "exit_code": 1,
+      "line": "$ python main_pretrain_multimodal.py \u2192 exit 1: AssertionError: Torch not compiled with CUDA enabled [artifact]",
+      "output_tail": "\u2026 line 294, in <module>\n    main(args)\n  File \"/tmp/primae-eval-7_m5x1bp/main_pretrain_multimodal.py\", line 186, in main\n    model.to(device)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1388, in to\n    return self._apply(convert)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  [Previous line repeated 2 more times]\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 966, in _apply\n    param_applied = fn(param)\n                    ^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1374, in convert\n    return t.to(\n           ^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/cuda/__init__.py\", line 584, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled",
+      "purpose": "entry",
+      "reason": "AssertionError: Torch not compiled with CUDA enabled",
+      "source": "probe:entry_points",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'tensorboard'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python main_finetune_mmst_vit.py",
+      "cwd_rel": "",
+      "duration_sec": 2.04,
+      "exit_code": 1,
+      "line": "$ python main_finetune_mmst_vit.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/main_finetune_mmst_vit.py\", line 15, in <module>\n    from torch.utils.tensorboard import SummaryWriter\n  File \"/usr/local/lib/python3.11/site-packages/torch/utils/tensorboard/__init__.py\", line 1, in <module>\n    import tensorboard\nModuleNotFoundError: No module named 'tensorboard'",
+      "purpose": "entry",
+      "reason": "Traceback (most recent call last):",
+      "source": "probe:entry_points",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'pandas'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python config/build_config_soybean.py",
+      "cwd_rel": "",
+      "duration_sec": 0.03,
+      "exit_code": 1,
+      "line": "$ python config/build_config_soybean.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/config/build_config_soybean.py\", line 3, in <module>\n    import pandas as pd\nModuleNotFoundError: No module named 'pandas'",
+      "purpose": "entry",
+      "reason": "Traceback (most recent call last):",
+      "source": "probe:entry_points",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'tensorboard'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python main_pretrain_mmst_vit.py",
+      "cwd_rel": "",
+      "duration_sec": 2.09,
+      "exit_code": 1,
+      "line": "$ python main_pretrain_mmst_vit.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/main_pretrain_mmst_vit.py\", line 14, in <module>\n    from torch.utils.tensorboard import SummaryWriter\n  File \"/usr/local/lib/python3.11/site-packages/torch/utils/tensorboard/__init__.py\", line 1, in <module>\n    import tensorboard\nModuleNotFoundError: No module named 'tensorboard'",
+      "purpose": "entry",
+      "reason": "Traceback (most recent call last):",
+      "source": "probe:documentation",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "unknown",
+      "cause_evidence": "",
+      "cause_remedy": "",
+      "cause_signal": "",
+      "command": "pip install -r requirements.txt",
+      "cwd_rel": "",
+      "duration_sec": 0.94,
+      "exit_code": 1,
+      "line": "$ pip install -r requirements.txt \u2192 exit 1: ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0 [unknown]",
+      "output_tail": "Collecting torch==1.13.0 (from -r requirements.txt (line 1))\n  Using cached torch-1.13.0-cp311-cp311-manylinux1_x86_64.whl.metadata (24 kB)\n\nERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0\nERROR: Could not find a version that satisfies the requirement torchvision==0.14.0 (from versions: 0.15.1, 0.15.2, 0.16.0, 0.16.1, 0.16.2, 0.17.0, 0.17.1, 0.17.2, 0.18.0, 0.18.1, 0.19.0, 0.19.1, 0.20.0, 0.20.1, 0.21.0, 0.22.0, 0.22.1, 0.23.0, 0.24.0, 0.24.1, 0.25.0, 0.26.0, 0.27.0, 0.27.1, 0.28.0, 0.29.0)\nERROR: No matching distribution found for torchvision==0.14.0\n\n[notice] A new release of pip is available: 24.0 -> 26.2.1\n[notice] To update, run: pip install --upgrade pip",
+      "purpose": "documented_step",
+      "reason": "ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "unknown",
+      "cause_evidence": "",
+      "cause_remedy": "",
+      "cause_signal": "",
+      "command": "pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc",
+      "cwd_rel": "",
+      "duration_sec": 0.84,
+      "exit_code": 1,
+      "line": "$ pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc \u2192 exit 1: ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0 [unknown]",
+      "output_tail": "Collecting torch==1.13.0 (from -r requirements.txt (line 1))\n  Using cached torch-1.13.0-cp311-cp311-manylinux1_x86_64.whl.metadata (24 kB)\n\nERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0\nERROR: Could not find a version that satisfies the requirement torchvision==0.14.0 (from versions: 0.15.1, 0.15.2, 0.16.0, 0.16.1, 0.16.2, 0.17.0, 0.17.1, 0.17.2, 0.18.0, 0.18.1, 0.19.0, 0.19.1, 0.20.0, 0.20.1, 0.21.0, 0.22.0, 0.22.1, 0.23.0, 0.24.0, 0.24.1, 0.25.0, 0.26.0, 0.27.0, 0.27.1, 0.28.0, 0.29.0)\nERROR: No matching distribution found for torchvision==0.14.0\n\n[notice] A new release of pip is available: 24.0 -> 26.2.1\n[notice] To update, run: pip install --upgrade pip",
+      "purpose": "documented_step",
+      "reason": "ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "artifact",
+      "cause_evidence": "raise AssertionError(\"Torch not compiled with CUDA enabled\")",
+      "cause_remedy": "",
+      "cause_signal": "assertion",
+      "command": "python main_multimodal_finetune.py",
+      "cwd_rel": "",
+      "duration_sec": 3.17,
+      "exit_code": 1,
+      "line": "$ python main_multimodal_finetune.py \u2192 exit 1: AssertionError: Torch not compiled with CUDA enabled [artifact]",
+      "output_tail": "\u2026 line 372, in <module>\n    main(args)\n  File \"/tmp/primae-eval-7_m5x1bp/main_multimodal_finetune.py\", line 241, in main\n    model.to(device)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1388, in to\n    return self._apply(convert)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  [Previous line repeated 2 more times]\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 966, in _apply\n    param_applied = fn(param)\n                    ^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1374, in convert\n    return t.to(\n           ^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/cuda/__init__.py\", line 584, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled",
+      "purpose": "documented_step",
+      "reason": "AssertionError: Torch not compiled with CUDA enabled",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "artifact",
+      "cause_evidence": "raise AssertionError(\"Torch not compiled with CUDA enabled\")",
+      "cause_remedy": "",
+      "cause_signal": "assertion",
+      "command": "python main_pretrain_multimodal.py",
+      "cwd_rel": "",
+      "duration_sec": 2.26,
+      "exit_code": 1,
+      "line": "$ python main_pretrain_multimodal.py \u2192 exit 1: AssertionError: Torch not compiled with CUDA enabled [artifact]",
+      "output_tail": "\u2026 line 294, in <module>\n    main(args)\n  File \"/tmp/primae-eval-7_m5x1bp/main_pretrain_multimodal.py\", line 186, in main\n    model.to(device)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1388, in to\n    return self._apply(convert)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 933, in _apply\n    module._apply(fn)\n  [Previous line repeated 2 more times]\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 966, in _apply\n    param_applied = fn(param)\n                    ^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/nn/modules/module.py\", line 1374, in convert\n    return t.to(\n           ^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/torch/cuda/__init__.py\", line 584, in _lazy_init\n    raise AssertionError(\"Torch not compiled with CUDA enabled\")\nAssertionError: Torch not compiled with CUDA enabled",
+      "purpose": "documented_step",
+      "reason": "AssertionError: Torch not compiled with CUDA enabled",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'tensorboard'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python main_finetune_mmst_vit.py",
+      "cwd_rel": "",
+      "duration_sec": 2.01,
+      "exit_code": 1,
+      "line": "$ python main_finetune_mmst_vit.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/main_finetune_mmst_vit.py\", line 15, in <module>\n    from torch.utils.tensorboard import SummaryWriter\n  File \"/usr/local/lib/python3.11/site-packages/torch/utils/tensorboard/__init__.py\", line 1, in <module>\n    import tensorboard\nModuleNotFoundError: No module named 'tensorboard'",
+      "purpose": "documented_step",
+      "reason": "Traceback (most recent call last):",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'tensorboard'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python main_pretrain_mmst_vit.py",
+      "cwd_rel": "",
+      "duration_sec": 1.96,
+      "exit_code": 1,
+      "line": "$ python main_pretrain_mmst_vit.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/main_pretrain_mmst_vit.py\", line 14, in <module>\n    from torch.utils.tensorboard import SummaryWriter\n  File \"/usr/local/lib/python3.11/site-packages/torch/utils/tensorboard/__init__.py\", line 1, in <module>\n    import tensorboard\nModuleNotFoundError: No module named 'tensorboard'",
+      "purpose": "documented_step",
+      "reason": "Traceback (most recent call last):",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    },
+    {
+      "cause": "environment",
+      "cause_evidence": "ModuleNotFoundError: No module named 'pandas'",
+      "cause_remedy": "the package is not installed in the interpreter this build used",
+      "cause_signal": "missing-python-module",
+      "command": "python config/build_config_soybean.py",
+      "cwd_rel": "",
+      "duration_sec": 0.03,
+      "exit_code": 1,
+      "line": "$ python config/build_config_soybean.py \u2192 exit 1: Traceback (most recent call last): [environment]",
+      "output_tail": "Traceback (most recent call last):\n  File \"/tmp/primae-eval-7_m5x1bp/config/build_config_soybean.py\", line 3, in <module>\n    import pandas as pd\nModuleNotFoundError: No module named 'pandas'",
+      "purpose": "documented_step",
+      "reason": "Traceback (most recent call last):",
+      "source": "readme",
+      "status": "failed",
+      "timed_out": false
+    }
+  ],
+  "blockers": [
+    "ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0",
+    "AssertionError: Torch not compiled with CUDA enabled",
+    "Traceback (most recent call last):",
+    "tests probe: timeout after 120s"
+  ],
+  "budget_exhausted": false,
+  "budget_sec": 600.0,
+  "build_systems": [
+    "requirements.txt (pip)"
+  ],
+  "documented_steps_total": 7,
+  "elapsed_sec": 176.0,
+  "environment_line": "declares requirements.txt (pip); pip3 resolved at /usr/local/bin/pip3 \u2192 T2 NOT_ATTEMPTED: the tool resolves and no provisioner in this lane runs it",
+  "environment_verdict": "declared_and_provisionable",
+  "error": "",
+  "executable": false,
+  "line": "declares requirements.txt (pip); 0 of 14 commands ran, 14 failed, 0 not attempted; RUNNING.md documents 7 step(s), 0 verified by execution \u2192 NOT executable: ERROR: Ignored the following yanked versions: 0.1.6, 0.1.7, 0.1.8, 0.1.9, 0.2.0, 0.2.1, 0.2.2, 0.2.2.post2, 0.2.2.post3, 0.15.0; AssertionError: Torch not compiled with CUDA enabled; Traceback (most recent call last):; tests probe: timeout after 120s",
+  "probes": [
+    {
+      "duration_sec": 0.01,
+      "error": "",
+      "findings": {
+        "declared": [
+          "requirements.txt (pip)"
+        ],
+        "line": "declares requirements.txt (pip); pip3 resolved at /usr/local/bin/pip3 \u2192 T2 NOT_ATTEMPTED: the tool resolves and no provisioner in this lane runs it",
+        "rows": [
+          {
+            "build_argv": [],
+            "ecosystem": "pip",
+            "manifest_path": "requirements.txt",
+            "note": "",
+            "primary_tool": "pip3",
+            "provider_tool": "pip",
+            "provision_argv": [
+              [
+                "/usr/local/bin/pip3",
+                "install",
+                "-r",
+                "requirements.txt",
+                "--target",
+                "{prefix}"
+              ]
+            ],
+            "resolved": true,
+            "tool_path": "/usr/local/bin/pip3"
+          }
+        ],
+        "truncated": 0,
+        "verdict": "declared_and_provisionable"
+      },
+      "name": "build_system",
+      "ok": true
+    },
+    {
+      "duration_sec": 0.03,
+      "error": "",
+      "findings": {
+        "absent": [
+          "cmake",
+          "cpp",
+          "go",
+          "java",
+          "julia",
+          "mpi",
+          "rust"
+        ],
+        "available": [
+          "bun",
+          "c",
+          "fortran",
+          "git",
+          "node",
+          "provision:pip",
+          "python"
+        ],
+        "contradicts_image": [],
+        "tools": {
+          "bun": {
+            "available": true,
+            "binary": "/root/.bun/bin/bun",
+            "candidates": [
+              "bun"
+            ],
+            "contradicts_image": false,
+            "expectation": "always",
+            "tool": "bun"
+          },
+          "c": {
+            "available": true,
+            "binary": "/usr/bin/gcc",
+            "candidates": [
+              "gcc",
+              "clang",
+              "cc"
+            ],
+            "contradicts_image": false,
+            "expectation": "usually",
+            "tool": "c"
+          },
+          "cmake": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "cmake"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "cmake"
+          },
+          "cpp": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "g++",
+              "clang++",
+              "c++"
+            ],
+            "contradicts_image": false,
+            "expectation": "usually",
+            "tool": "cpp"
+          },
+          "fortran": {
+            "available": true,
+            "binary": "/usr/bin/gfortran",
+            "candidates": [
+              "gfortran",
+              "flang",
+              "f95"
+            ],
+            "contradicts_image": false,
+            "expectation": "always",
+            "tool": "fortran"
+          },
+          "git": {
+            "available": true,
+            "binary": "/usr/bin/git",
+            "candidates": [
+              "git"
+            ],
+            "contradicts_image": false,
+            "expectation": "always",
+            "tool": "git"
+          },
+          "go": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "go"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "go"
+          },
+          "java": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "javac"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "java"
+          },
+          "julia": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "julia"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "julia"
+          },
+          "mpi": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "mpicc",
+              "mpif90",
+              "mpicxx"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "mpi"
+          },
+          "node": {
+            "available": true,
+            "binary": "/usr/bin/node",
+            "candidates": [
+              "node"
+            ],
+            "contradicts_image": false,
+            "expectation": "usually",
+            "tool": "node"
+          },
+          "provision:pip": {
+            "available": true,
+            "binary": "/usr/local/bin/pip3",
+            "candidates": [
+              "pip3",
+              "pip",
+              "uv"
+            ],
+            "contradicts_image": false,
+            "expectation": "optional",
+            "tool": "provision:pip"
+          },
+          "python": {
+            "available": true,
+            "binary": "/usr/local/bin/python3",
+            "candidates": [
+              "python3",
+              "python"
+            ],
+            "contradicts_image": false,
+            "expectation": "always",
+            "tool": "python"
+          },
+          "rust": {
+            "available": false,
+            "binary": null,
+            "candidates": [
+              "rustc"
+            ],
+            "contradicts_image": false,
+            "expectation": "never",
+            "tool": "rust"
+          }
+        }
+      },
+      "name": "toolchain",
+      "ok": true
+    },
+    {
+      "duration_sec": 63.85,
+      "error": "",
+      "findings": {
+        "commands": [
+          {
+            "command": "python main_multimodal_finetune.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:entry_points"
+          },
+          {
+            "command": "python main_pretrain_multimodal.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:entry_points"
+          },
+          {
+            "command": "python main_finetune_mmst_vit.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:entry_points"
+          },
+          {
+            "command": "python config/build_config_soybean.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:entry_points"
+          }
+        ],
+        "notes": "Python/PyTorch project; all main_*.py scripts are runnable from the repo root with optional argparse flags (--output_dir, --resume, --eval, etc.)."
+      },
+      "name": "entry_points",
+      "ok": true
+    },
+    {
+      "duration_sec": 120.06,
+      "error": "timeout after 120s",
+      "findings": {},
+      "name": "tests",
+      "ok": false
+    },
+    {
+      "duration_sec": 48.43,
+      "error": "",
+      "findings": {
+        "commands": [
+          {
+            "command": "pip install -r requirements.txt",
+            "cwd": "",
+            "purpose": "build",
+            "source": "probe:documentation"
+          },
+          {
+            "command": "python main_pretrain_mmst_vit.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:documentation"
+          },
+          {
+            "command": "python main_finetune_mmst_vit.py",
+            "cwd": "",
+            "purpose": "entry",
+            "source": "probe:documentation"
+          },
+          {
+            "command": "python config/build_config_soybean.py",
+            "cwd": "",
+            "purpose": "build",
+            "source": "probe:documentation"
+          }
+        ],
+        "notes": "README.md is the only build/run documentation; no CI workflows or other build files exist."
+      },
+      "name": "documentation",
+      "ok": true
+    }
+  ],
+  "provision_prefix": "/tmp/primae-exec-xsqr_vzc",
+  "readme_path": "RUNNING.md",
+  "readme_written": true,
+  "root": "/tmp/primae-eval-7_m5x1bp",
+  "unverified_steps": [
+    "pip install -r requirements.txt",
+    "pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc",
+    "python main_multimodal_finetune.py",
+    "python main_pretrain_multimodal.py",
+    "python main_finetune_mmst_vit.py",
+    "python main_pretrain_mmst_vit.py",
+    "python config/build_config_soybean.py"
+  ],
+  "verified_steps": []
+}
