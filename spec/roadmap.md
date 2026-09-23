@@ -13,23 +13,27 @@ adding architecture until Phase 3 produces a number you believe.
 
 **Blocks everything.** Nothing else in this roadmap is verifiable until this is done.
 
-- [ ] Unpin the yanked `torch==1.13.0` / `torchvision==0.14.0`; move to `torch>=2.1`.
+- [x] Unpin the yanked `torch==1.13.0` / `torchvision==0.14.0`; move to `torch>=2.1`.
       Drop the `argparse` dependency (stdlib). See [tech_stack.md](./tech_stack.md).
-- [ ] Verify `pip install -r requirements.txt` succeeds in a clean container.
-- [ ] **Add a working `--device cpu` path.** Both System B scripts allocate directly
+- [x] Verify `pip install -r requirements.txt` succeeds in a fresh Conda environment.
+- [x] **Add a working `--device cpu` path.** Both System B scripts allocate directly
       on the device; make the synthetic-batch helpers and model construction
       device-agnostic. Without this the model cannot be debugged or tested without a
       GPU, which is what makes Phase 1 possible.
-- [ ] Fix `config/build_config_soybean.py`: resolve paths relative to the module
+- [x] Fix `config/build_config_soybean.py`: resolve paths relative to the module
       (`Path(__file__).parent`), create `data/` if absent, replace `open(path,"x")`
       with an explicit overwrite guard.
-- [ ] Commit a `Dockerfile` or `environment.yml` pinning Python 3.10–3.12 plus a
+- [x] Add an `environment.yml` pinning Python 3.10–3.12 plus a
       CUDA-matched torch build. This is the highest-leverage single artefact in the
       phase — it makes the environment reproducible instead of described.
-- [ ] Add `.gitignore` (`__pycache__/`, `output_dir/`, `*.pth`).
+- [x] Add `.gitignore` (`__pycache__/`, `output_dir/`, `*.pth`).
 
 **Exit:** `python main_multimodal_finetune.py --device cpu --epochs 1` completes on a
 clean container.
+
+**Phase 0 verification (2026-09-23):** The exit command completed in a new Python
+3.11 Conda environment. The GPU was also verified on an RTX 3090. These runs use
+synthetic batches; real-data training remains Phase 3 work. See [RUNNING.md](../RUNNING.md).
 
 ---
 

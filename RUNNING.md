@@ -1,88 +1,47 @@
-# RUNNING
+# Running the field-scale prototype
 
-## Building and running this artifact
+Phase 0 was verified on 2026-09-23 with Python 3.11, PyTorch 2.5.1, CUDA 12.1,
+and an NVIDIA RTX 3090 (driver 595.84). The training entry points still use
+synthetic tensors. Their losses and metrics are smoke-test results, not crop-yield
+results.
 
-This repository implements a multimodal geospatial foundation model for
-field-scale crop-yield prediction. It contains several entry-point scripts
-(`main_*.py`) that are runnable from the repo root with optional argparse flags
-(`--output_dir`, `--resume`, `--eval`, `--device`, etc.), plus a config builder
-(`config/build_config_soybean.py`). The declared build system is
-`requirements.txt` (pip).
+## Environment
 
-### Installing dependencies
-
-The dependency list is declared in `requirements.txt`. Installing it was
-attempted but **failed** in this environment. The pip resolver rejected the
-pinned `torch == 1.13.0` / `torchvision == 0.14.0` versions because the
-corresponding releases have been yanked from PyPI, so the install aborts with
-`ERROR: Ignored the following yanked versions: 0.1.6, ... 0.15.0` and exits 1.
-Both of the following commands were attempted and both failed with that error:
+From the repository root:
 
 ```bash
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate geo-yield-phase0
+python -m pip install -r requirements.txt
+python -m pip check
 ```
+
+The Conda file pins Python, the CUDA-matched PyTorch build, NumPy, and the MKL
+runtime required by this PyTorch package. It includes the other dependencies from
+`requirements.txt`. The separate pip command checks that the declared dependency
+list remains installable. For a local environment under the repository instead of
+Conda's default environment directory, use
+`conda env create --prefix .conda/phase0 -f environment.yml` and activate that
+prefix.
+
+## Smoke runs
 
 ```bash
-pip3 install -r requirements.txt --target /tmp/primae-exec-xsqr_vzc
+python main_multimodal_finetune.py --device cpu --epochs 1
+python main_pretrain_multimodal.py --device cpu --epochs 1 \
+  --input_size 8 --batch_size 1 --embed_dim 48 \
+  --modality_embed 16 --num_heads 3 --depth 1 --output_dir ''
 ```
 
-A reader who wants to build this must first resolve the yanked `torch` /
-`torchvision` pins (for example by installing a non-yanked CUDA build of torch
-from the PyTorch index, or relaxing the version pins) before the rest of the
-requirements can be installed.
+Both commands completed in the Phase 0 environment. A small GPU fine-tuning run
+also completed using `--device cuda` and the reduced settings above. PyTorch
+reported `torch.cuda.is_available() == True` and ran a tensor operation on the
+RTX 3090. The default fine-tuning command writes a checkpoint and log under
+`output_dir/mmst_multimodal/`.
 
-### Running the training / evaluation scripts
+`config/build_config_soybean.py` now reads `input/` relative to the repository,
+creates `data/` if needed, and refuses to replace existing JSON unless invoked
+with `--overwrite`.
 
-The primary scripts are `main_multimodal_finetune.py` (dense yield-map
-fine-tuning of the multimodal transformer) and `main_pretrain_multimodal.py`
-(self-supervised multimodal pretraining). Both default to `--device cuda` and
-construct tensors directly on that device, so they require a CUDA-enabled build
-of PyTorch. In this container the installed torch is **not compiled with CUDA**,
-so both commands were attempted and both failed immediately with:
-
-```
-AssertionError: Torch not compiled with CUDA enabled
-```
-
-```bash
-python main_multimodal_finetune.py
-```
-
-```bash
-python main_pretrain_multimodal.py
-```
-
-The MMST-ViT scripts (`main_finetune_mmst_vit.py`, `main_pretrain_mmst_vit.py`)
-and the config builder (`config/build_config_soybean.py`) were also attempted and
-each failed with a `Traceback (most recent call last):` during startup (an
-environment issue, before any training ran):
-
-```bash
-python main_finetune_mmst_vit.py
-```
-
-```bash
-python main_pretrain_mmst_vit.py
-```
-
-```bash
-python config/build_config_soybean.py
-```
-
-### What the artifact produces
-
-When the scripts run successfully they write checkpoints, `log.txt` logs, and
-TensorBoard event files under the `--output_dir` (defaults:
-`./output_dir/mmst_multimodal` for fine-tuning and
-`./output_dir/mmst_multimodal_pretrain` for pretraining). The fine-tuning script
-also supports `--eval` for evaluation-only runs and `--resume` to continue from a
-checkpoint. None of these outputs were produced in this container because every
-command above failed before training began.
-
-### Summary of the current state
-
-No runnable step succeeded in this environment. The blocker is twofold: (1) the
-pinned `torch`/`torchvision` versions in `requirements.txt` are yanked and cannot
-be installed, and (2) the installed PyTorch lacks CUDA while the scripts default
-to `--device cuda`. Building and running this artifact requires a working,
-CUDA-enabled PyTorch installation and a resolvable dependency set.
+The field-level GeoTIFF loaders are still disconnected from these training scripts.
+See `spec/roadmap.md` for the remaining integration and correctness work.

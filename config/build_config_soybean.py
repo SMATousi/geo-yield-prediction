@@ -1,10 +1,22 @@
 import json
+from pathlib import Path
 
 import pandas as pd
 
+ROOT = Path(__file__).resolve().parent.parent
 
-def build_soybean_train(target_fips=None):
-    csv_path = "./../input/county_info_2021.csv"
+
+def _write_config(name, data, overwrite):
+    path = ROOT / 'data' / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and not overwrite:
+        raise FileExistsError(f'{path} already exists; pass overwrite=True to replace it')
+    with path.open('w', encoding='utf-8') as write_file:
+        json.dump(data, write_file)
+
+
+def build_soybean_train(target_fips=None, overwrite=False):
+    csv_path = ROOT / 'input' / 'county_info_2021.csv'
     df = pd.read_csv(csv_path)
 
     if target_fips:
@@ -12,21 +24,17 @@ def build_soybean_train(target_fips=None):
 
     counties = df.to_json(orient='records', lines=False)
     counties = json.loads(counties)
-
-    path = "./../data/soybean_train.json"
 
     data = []
     for county_info in counties:
         obj = get_json_obj(2021, county_info)
         data.append(obj)
 
-    with open(path, "x") as write_file:
-        # write the data to the file in JSON format
-        json.dump(data, write_file)
+    _write_config('soybean_train.json', data, overwrite)
 
 
-def build_soybean_val(target_fips=None):
-    csv_path = "./../input/county_info_2022.csv"
+def build_soybean_val(target_fips=None, overwrite=False):
+    csv_path = ROOT / 'input' / 'county_info_2022.csv'
     df = pd.read_csv(csv_path)
 
     if target_fips:
@@ -35,16 +43,12 @@ def build_soybean_val(target_fips=None):
     counties = df.to_json(orient='records', lines=False)
     counties = json.loads(counties)
 
-    path = "./../data/soybean_val.json"
-
     data = []
     for county_info in counties:
         obj = get_json_obj(2022, county_info)
         data.append(obj)
 
-    with open(path, "x") as write_file:
-        # write the data to the file in JSON format
-        json.dump(data, write_file)
+    _write_config('soybean_val.json', data, overwrite)
 
 
 def get_json_obj(year, county_info):
@@ -103,8 +107,13 @@ def get_long_HRRR_obj(state, fips, years, months=[i + 1 for i in range(12)]):
 
 
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Build soybean train/validation JSON')
+    parser.add_argument('--overwrite', action='store_true', help='replace existing JSON files')
+    args = parser.parse_args()
     target_fips = ["22007", "22121", "22043", "22107", "28089", "28015", "17091", "17155", "19117", "19135"]
     target_fips = list(map(int, target_fips))
 
-    build_soybean_train(target_fips=target_fips)
-    build_soybean_val(target_fips=target_fips)
+    build_soybean_train(target_fips=target_fips, overwrite=args.overwrite)
+    build_soybean_val(target_fips=target_fips, overwrite=args.overwrite)

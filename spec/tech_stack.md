@@ -1,5 +1,10 @@
 # Tech Stack & Environment
 
+**Phase 0 update (2026-09-23):** `environment.yml` now provides Python 3.11,
+PyTorch 2.5.1, CUDA 12.1, compatible MKL, and NumPy 1.26. The environment was
+installed successfully and `pip install -r requirements.txt` passed. The older
+dependency and environment notes below describe the `c8be363` baseline.
+
 ## Framework
 
 Plain PyTorch. This is a deliberate and load-bearing choice: several components were

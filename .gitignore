@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.conda/
+output_dir/
+data/
+*.pth

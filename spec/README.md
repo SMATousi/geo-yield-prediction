@@ -3,6 +3,11 @@
 This directory is the authoritative specification for the work built **on top of**
 the upstream [MMST-ViT](../README.md) repository (Lin et al., ICCV 2023).
 
+**Update, 2026-09-23:** Phase 0 is complete in a new Conda environment. The CPU
+fine-tuning exit command and GPU smoke run succeeded. The assessments below and in
+`status.md` describe the earlier `c8be363` baseline unless explicitly updated;
+training still uses synthetic batches. See [RUNNING.md](../RUNNING.md).
+
 The upstream project predicts **county-level** crop yield from Sentinel-2 imagery +
 WRF-HRRR weather using a Multi-Modal / Spatial / Temporal ViT stack. Starting from
 that base, 48 commits (2026-09-17 → 2026-09-18) added a largely independent second

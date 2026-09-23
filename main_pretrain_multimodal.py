@@ -180,7 +180,8 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    cudnn.benchmark = True
+    cudnn.benchmark = device.type == 'cuda'
+    print('SYNTHETIC DATA ONLY: pretraining losses are smoke-test results')
 
     model = build_model(args)
     model.to(device)
@@ -204,7 +205,7 @@ def main(args):
     param_groups = add_weight_decay(model_without_ddp, args.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
     print(optimizer)
-    loss_scaler = NativeScaler()
+    loss_scaler = NativeScaler(device)
 
     misc.load_model(args=args, model_without_ddp=model_without_ddp,
                     optimizer=optimizer, loss_scaler=loss_scaler)
@@ -273,7 +274,7 @@ def train_one_epoch(model, optimizer, device, epoch, loss_scaler, args=None):
         if (data_iter_step + 1) % accum_iter == 0:
             optimizer.zero_grad()
 
-        if torch.cuda.is_available():
+        if device.type == 'cuda':
             torch.cuda.synchronize()
         metric_logger.update(loss=loss_value)
         for k, v in losses.items():
