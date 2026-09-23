@@ -9,6 +9,7 @@ from models_heads import (
     MDNYieldHead,
     get_head_info,
     list_heads,
+    masked_yield_loss,
 )
 
 
@@ -77,3 +78,38 @@ def test_mdn_head_distribution_and_loss():
     assert (sigma > 0).all()
     assert torch.isfinite(head.compute_loss(pi, mu, sigma, torch.randn(2)))
     assert head.sample(pi, mu, sigma, n_samples=3).shape == (2, 3)
+
+
+@pytest.mark.parametrize("loss_name,expected", [("l1", 3.0), ("mse", 10.0)])
+def test_nodata_and_nonfinite_yield_do_not_affect_loss_or_gradient(loss_name, expected):
+    logits = torch.zeros(1, 1, 2, 2, requires_grad=True)
+    target = torch.tensor([[[[2.0, -9999.0], [float("nan"), 4.0]]]])
+    loss = masked_yield_loss(logits, target, loss=loss_name)
+    assert loss.item() == pytest.approx(expected)
+    loss.backward()
+    assert logits.grad[0, 0, 0, 1] == 0
+    assert logits.grad[0, 0, 1, 0] == 0
+    assert torch.isfinite(logits.grad).all()
+
+
+@pytest.mark.parametrize("head", [
+    DenseYieldFCNHead(embed_dim=16, log_target=True),
+    DenseYieldFPNHead(channels=64, out_channels=16, log_target=True),
+    DenseYieldDPTHead(embed_dim=16, features=16, log_target=True),
+])
+def test_each_dense_head_excludes_nodata_before_log_transform(head):
+    logits = torch.zeros(1, 1, 1, 2)
+    target = torch.tensor([[[[2.0, -9999.0]]]])
+    loss = head.compute_loss(logits, target)
+    assert loss.item() == pytest.approx(np.log(2.0))
+    with pytest.raises(ValueError, match="no valid pixels"):
+        head.compute_loss(logits, torch.full_like(target, -9999.0))
+
+
+def test_valid_mask_can_exclude_field_boundary_cells():
+    logits = torch.zeros(1, 1, 2, 2)
+    target = torch.tensor([[[[2.0, 100.0], [4.0, 100.0]]]])
+    valid_mask = torch.tensor([[[True, False], [True, False]]])
+    assert masked_yield_loss(logits, target, valid_mask=valid_mask).item() == pytest.approx(3)
+    with pytest.raises(ValueError, match="valid_mask"):
+        masked_yield_loss(logits, target, valid_mask=torch.ones(2, 2))

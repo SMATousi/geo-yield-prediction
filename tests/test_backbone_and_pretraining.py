@@ -4,6 +4,10 @@ import torch
 from models_multi_unified import MultiUnifiedModel
 from models_multimodal_pretrain import MultimodalSelfSupervisedPretrain
 from models_neck import MultiFusionNeck
+from main_multimodal_finetune import MultimodalYieldModel
+from models_multimodal_encoder import MultiModalEncoder
+from models_latent_fusion import LatentFusionTransformer
+from models_heads import DenseYieldFCNHead
 
 
 def test_neck_fuses_native_feature_pyramids_to_output_grid():
@@ -33,7 +37,7 @@ def test_pretraining_objectives_are_finite_and_trainable():
     model = MultimodalSelfSupervisedPretrain(
         encoders_cfg={
             "dem": {"type": "raster", "in_channels": 1},
-            "weather": {"type": "timeseries", "in_dim": 3},
+            "weather": {"type": "timeseries", "in_dim": 3, "norm_source": "unregistered"},
         },
         embed_dim=32,
         num_latents=4,
@@ -82,3 +86,17 @@ def test_unified_container_end_to_end_forward():
         embed_dim=32,
     )
     assert model({"dem": torch.randn(2, 1, 4, 4)})[0].shape == (2, 1, 4, 4)
+
+
+def test_non_square_latent_count_pads_to_next_grid():
+    model = MultimodalYieldModel(
+        MultiModalEncoder({"dem": {"type": "raster", "in_channels": 1}}, embed_dim=32),
+        LatentFusionTransformer(
+            embed_dim=32, num_latents=65, depth=1, num_heads=2,
+            modalities={"dem": {"spatial": 4, "temporal": 1}}, modality_embed=8,
+        ),
+        DenseYieldFCNHead(embed_dim=32),
+    ).eval()
+    with torch.no_grad():
+        output = model({"dem": torch.randn(2, 1, 2, 2)})
+    assert output.shape == (2, 1, 9, 9)

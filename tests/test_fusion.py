@@ -2,6 +2,7 @@ import pytest
 import torch
 
 from models_latent_fusion import LatentFusionTransformer, get_extraction_layers
+from models_multimodal_encoder import MultiModalEncoder
 
 
 @pytest.fixture
@@ -42,8 +43,6 @@ def test_fusion_accepts_subset_and_gathered_tokens(fusion):
     assert not torch.equal(partial, gathered)
 
 
-@pytest.mark.known_defect
-@pytest.mark.xfail(strict=True, reason="D1: float attention mask adds bias instead of excluding keys")
 def test_masked_modality_cannot_influence_fusion(fusion):
     dem = torch.randn(2, 4, 32)
     weather = torch.randn(2, 3, 32)
@@ -54,11 +53,38 @@ def test_masked_modality_cannot_influence_fusion(fusion):
     torch.testing.assert_close(original, changed, rtol=0, atol=0)
 
 
-@pytest.mark.known_defect
-@pytest.mark.xfail(strict=True, reason="D3: a shorter token layout is silently truncated")
 def test_fusion_rejects_declared_layout_mismatch(fusion):
     with pytest.raises(ValueError, match="token|layout"):
         fusion({"dem": torch.randn(2, 3, 32)})
+    with pytest.raises(ValueError, match="token|layout"):
+        fusion.forward_multiscale({"dem": torch.randn(2, 3, 32)})
+    with pytest.raises(ValueError, match="token|layout"):
+        fusion({"dem": torch.randn(2, 3, 32)}, ids_keep={"dem": torch.tensor([[0, 1], [1, 2]])})
+
+
+def test_all_absent_row_uses_finite_missing_token_fallback(fusion):
+    embeddings = {"dem": torch.randn(2, 4, 32), "weather": torch.randn(2, 3, 32)}
+    mask = {"dem": torch.tensor([0, 1]), "weather": torch.tensor([0, 0])}
+    with torch.no_grad():
+        output = fusion(embeddings, mask=mask)
+        scales = fusion.forward_multiscale(embeddings, mask=mask)
+    assert torch.isfinite(output).all()
+    assert all(torch.isfinite(level).all() for level in scales)
+
+
+def test_fusion_accepts_encoder_output_when_every_modality_is_absent():
+    encoder = MultiModalEncoder(
+        {"dem": {"type": "raster", "in_channels": 1}}, embed_dim=32,
+    )
+    fusion = LatentFusionTransformer(
+        embed_dim=32, num_latents=4, depth=1, num_heads=2,
+        modalities={"dem": {"spatial": 4, "temporal": 1}}, modality_embed=8,
+    )
+    embeddings, mask = encoder.forward_with_missing({})
+    with torch.no_grad():
+        output = fusion(embeddings, mask=mask)
+    assert output.shape == (1, 4, 32)
+    assert torch.isfinite(output).all()
 
 
 def test_extraction_layer_contract():

@@ -33,10 +33,13 @@ python -m pip install -e .
 python -m pytest
 ```
 
-As of 2026-09-23, 37 tests pass and five are strict expected failures for known
-encoder, fusion, and integration defects. The tests use small synthetic tensors and
-temporary GeoTIFF files; they do not validate crop-yield accuracy. GitHub Actions
-runs the CPU suite on pushes and pull requests.
+As of 2026-09-23, 52 tests pass and two strict expected failures remain for the
+`grouped_vit` and unified-container integration gaps. The tests use small synthetic
+tensors and temporary GeoTIFF files; they do not validate crop-yield accuracy.
+GitHub Actions runs the CPU suite on pushes and pull requests. Both entry points
+also completed a small CPU smoke run with the Phase 2 changes.
+The CUDA smoke run could not be repeated in this session because no NVIDIA device
+is exposed (`torch.cuda.device_count() == 0`).
 
 ## Smoke runs
 

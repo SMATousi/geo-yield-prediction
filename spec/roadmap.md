@@ -76,36 +76,43 @@ tracked until Phase 2 fixes them.
 Full detail and file:line for each in [status.md](./status.md).
 
 **Correctness — do these together:**
-- [ ] **D1** — `key_padding_mask` is float, so PyTorch treats it as an *additive
+- [x] **D1** — `key_padding_mask` is float, so PyTorch treats it as an *additive
       bias* and absent modalities are up-weighted rather than excluded. Build it as
       `bool`. This is the highest-severity finding in the review: the missing-modality
       masking currently does not work.
-- [ ] **D2** — a sample with every modality dropped yields an all-masked attention
+- [x] **D2** — a sample with every modality dropped yields an all-masked attention
       row → `NaN` → `sys.exit(1)`. Currently latent *because* D1 masks nothing;
-      **fixing D1 exposes it.** Guarantee ≥1 surviving modality per sample.
-- [ ] **D5** — `normalize_modality` is gated on `isinstance(x, np.ndarray)` and never
+      **fixing D1 exposes it.** Keep one learned missing token available to attention
+      when a sample has no real modality.
+- [x] **D5** — `normalize_modality` is gated on `isinstance(x, np.ndarray)` and never
       runs on the tensor path. Either normalise tensors, or move normalisation into
       the dataset and delete it from the model. Unnormalised SAR dB alongside DEM
       metres will not train.
-- [ ] **Loss masking for nodata.** `-9999.0` nodata cells currently enter the L1/MSE
+- [x] **Loss masking for nodata.** `-9999.0` nodata cells currently enter the L1/MSE
       loss directly (see [data_contract.md](./data_contract.md) §4). This is not in
       the defect list because it is not a code bug — it is a missing feature that will
       silently wreck the first real training run. **Do not skip it.**
 
 **Robustness:**
-- [ ] **D3** — replace the silent `pos` truncation with an explicit 1-token
+- [x] **D3** — replace the silent `pos` truncation with an explicit 1-token
       special case plus an assertion on layout mismatch.
-- [ ] **D6** — `PatchEmbeddingEncoder` creates an `nn.Parameter` inside `forward`;
+- [x] **D6** — `PatchEmbeddingEncoder` creates an `nn.Parameter` inside `forward`;
       require `num_patches` at construction.
-- [ ] **D7** — `int(round(sqrt(n)))` can round down and produce a negative pad; use
+- [x] **D7** — `int(round(sqrt(n)))` can round down and produce a negative pad; use
       `math.ceil`.
 
 **Cleanup:**
-- [ ] **D8** — extract the ~40 duplicated lines shared by `forward` and
+- [x] **D8** — extract the ~40 duplicated lines shared by `forward` and
       `forward_multiscale`.
-- [ ] **D9** — remove the unused `dpr` variable.
+- [x] **D9** — remove the unused `dpr` variable.
 
-**Exit:** the Phase 1 masking test goes green; all defects closed.
+**Verification (2026-09-23):** The D1, D3, and D6 regression tests now pass;
+all listed Phase 2 fixes are implemented. The full suite has 52 passing tests and
+two strict expected failures for separate `grouped_vit` and unified-container
+integration gaps. Both System B training scripts complete a small CPU smoke run.
+The Phase 1 demo-block conversion remains open, and real-data training is Phase 3.
+
+**Exit:** listed Phase 2 defects closed; Phase 1 masking test green.
 
 ---
 

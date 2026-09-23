@@ -183,7 +183,6 @@ class LatentFusionTransformer(nn.Module):
             embed_dim, num_heads, batch_first=True, dropout=drop_rate)
         self.cross_norm = nn.LayerNorm(embed_dim)
 
-        dpr = [drop_rate] * depth
         self.blocks = nn.ModuleList([
             nn.TransformerEncoderLayer(
                 d_model=embed_dim, nhead=num_heads,
@@ -218,21 +217,60 @@ class LatentFusionTransformer(nn.Module):
         """
         if mask is None:
             return None
-        key_padding_mask = None
+        parts = []
         for name, emb in tokens:
-            avail = mask.get(name)
-            if avail is None:
-                continue
-            avail = torch.as_tensor(avail, device=emb.device).float()
+            avail = torch.as_tensor(mask.get(name, True), device=emb.device)
             if avail.dim() == 0:
                 avail = avail.expand(emb.shape[0])
+            if avail.shape != (emb.shape[0],):
+                raise ValueError(f"Availability for {name} must have shape ({emb.shape[0]},)")
             # True = masked (missing), so invert the availability flag.
-            m = (1 - avail).unsqueeze(1).expand(emb.shape[0], emb.shape[1])
-            if key_padding_mask is None:
-                key_padding_mask = m
-            else:
-                key_padding_mask = torch.cat([key_padding_mask, m], dim=1)
+            parts.append((avail < 0.5).unsqueeze(1).expand(-1, emb.shape[1]))
+        key_padding_mask = torch.cat(parts, dim=1)
+        # An all-absent sample has no real key to attend to. Let its first
+        # learned missing token act as a stable fallback instead of creating
+        # an all-masked softmax row (which produces NaNs).
+        all_absent = key_padding_mask.all(dim=1)
+        if all_absent.any():
+            key_padding_mask[all_absent, 0] = False
         return key_padding_mask
+
+    def _assemble_tokens(self, embeddings, ids_keep=None, mask=None):
+        """Validate layouts, add position/identity, and build attention mask."""
+        tokens = []
+        batch_size = None
+        for name, emb in embeddings.items():
+            if name not in self.pos_embeds:
+                continue
+            if emb.ndim != 3 or emb.shape[2] != self.embed_dim:
+                raise ValueError(f"{name} tokens must have shape (B, L, {self.embed_dim})")
+            if batch_size is None:
+                batch_size = emb.shape[0]
+            elif emb.shape[0] != batch_size:
+                raise ValueError(f"Batch size mismatch for {name}")
+            declared = self.pos_embeds[name].spatial_dim * self.pos_embeds[name].temporal_dim
+            if emb.shape[1] not in (1, declared):
+                raise ValueError(
+                    f"Token layout mismatch for {name}: declared {declared}, got {emb.shape[1]}"
+                )
+            keep = ids_keep.get(name) if ids_keep is not None else None
+            if keep is not None:
+                emb = torch.gather(emb, dim=1, index=keep.unsqueeze(-1).expand(-1, -1, emb.shape[2]))
+            pos = self.pos_embeds[name](ids_keep=keep)
+            if emb.shape[1] == 1 and pos.shape[1] != 1:
+                # Whole-modality absence uses one compact learned token.
+                pos = pos[:, :1, :]
+            elif pos.shape[1] != emb.shape[1]:
+                raise ValueError(
+                    f"Token layout mismatch for {name}: declared {pos.shape[1]}, got {emb.shape[1]}"
+                )
+            pos = pos.expand(emb.shape[0], -1, -1)
+            mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
+            tokens.append((name, emb + torch.cat([pos, mod], dim=-1)))
+        if not tokens:
+            raise ValueError('LatentFusionTransformer received no modality tokens')
+        x = torch.cat([token for _, token in tokens], dim=1)
+        return x, self._build_key_padding_mask(mask, tokens)
 
     def forward(self, embeddings, ids_keep=None, mask=None):
         """embeddings: dict {modality: (B, L_m, embed_dim)}.
@@ -246,37 +284,10 @@ class LatentFusionTransformer(nn.Module):
         they do not contribute to the fused representation. Returns the fused
         latent ``(B, num_latents, embed_dim)``.
         """
-        b = None
-        tokens = []
-        for name, emb in embeddings.items():
-            if name not in self.pos_embeds:
-                continue
-            if b is None:
-                b = emb.shape[0]
-            keep = ids_keep.get(name) if ids_keep is not None else None
-            if keep is not None:
-                emb = torch.gather(
-                    emb, dim=1,
-                    index=keep.unsqueeze(-1).repeat(1, 1, emb.shape[2]))
-            pos = self.pos_embeds[name].forward(ids_keep=keep)
-            pos = pos.expand(emb.shape[0], -1, -1)
-            # A missing modality is represented by a single compact token
-            # (B, 1, embed_dim) from the encoder's learned missing-modality
-            # token. Slice the positional embedding to the embedding's token
-            # count so the single token stays aligned with the full spatial
-            # layout instead of erroring on a shape mismatch.
-            if pos.shape[1] != emb.shape[1]:
-                pos = pos[:, :emb.shape[1], :]
-            mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
-            pos = torch.cat([pos, mod], dim=-1)
-            tokens.append((name, emb + pos))
-        if not tokens:
-            raise ValueError('LatentFusionTransformer received no modality tokens')
-        x = torch.cat([t for _, t in tokens], dim=1)  # (B, sum L, embed_dim)
-        key_padding_mask = self._build_key_padding_mask(mask, tokens)
+        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask)
 
         # Perceiver cross-attention: latent queries attend to the modality tokens
-        latents = self.latent_tokens.expand(b, -1, -1)
+        latents = self.latent_tokens.expand(x.shape[0], -1, -1)
         attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
         latents = self.cross_norm(latents + attn_out)
         for blk in self.blocks:
@@ -299,33 +310,9 @@ class LatentFusionTransformer(nn.Module):
         tokens are masked out of the cross-attention. Returns a list of four
         ``(B, num_latents, embed_dim)`` tensors, finest first.
         """
-        b = None
-        tokens = []
-        for name, emb in embeddings.items():
-            if name not in self.pos_embeds:
-                continue
-            if b is None:
-                b = emb.shape[0]
-            keep = ids_keep.get(name) if ids_keep is not None else None
-            if keep is not None:
-                emb = torch.gather(
-                    emb, dim=1,
-                    index=keep.unsqueeze(-1).repeat(1, 1, emb.shape[2]))
-            pos = self.pos_embeds[name].forward(ids_keep=keep)
-            pos = pos.expand(emb.shape[0], -1, -1)
-            # slice the positional embedding to the embedding's token count so
-            # a single missing-modality token stays aligned (see forward).
-            if pos.shape[1] != emb.shape[1]:
-                pos = pos[:, :emb.shape[1], :]
-            mod = self.modality_embedding[name].expand(emb.shape[0], emb.shape[1], -1)
-            pos = torch.cat([pos, mod], dim=-1)
-            tokens.append((name, emb + pos))
-        if not tokens:
-            raise ValueError('LatentFusionTransformer received no modality tokens')
-        x = torch.cat([t for _, t in tokens], dim=1)
-        key_padding_mask = self._build_key_padding_mask(mask, tokens)
+        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask)
 
-        latents = self.latent_tokens.expand(b, -1, -1)
+        latents = self.latent_tokens.expand(x.shape[0], -1, -1)
         attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
         latents = self.cross_norm(latents + attn_out)
         multi_scale = []

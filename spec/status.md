@@ -12,6 +12,12 @@ failures covering D1, D3, D6, `grouped_vit` output rank, and the disconnected un
 container. The G3 baseline finding below is therefore historical; the 36 demo
 blocks have not all been converted. No real-data training has been run.
 
+**Phase 2 update (2026-09-23):** D1, D2, D3, D5, D6, D7, D8, D9 and nodata loss
+masking are implemented. The suite has 52 passing tests and two strict expected
+failures (`grouped_vit` output rank and the unified-container integration gap).
+Small CPU fine-tuning and pretraining smoke runs succeed. The defect analysis below
+records the historical baseline; D4 remains deferred to Phase 6.
+
 Reviewed at commit `c8be363`, 2026-09-23. Method: full source read of System B plus
 static import-graph analysis. **No code was executed** — `torch` is not installed in
 this environment (Python 3.14, no torch/timm/rasterio/h5py), so dynamic verification

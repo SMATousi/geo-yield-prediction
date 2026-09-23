@@ -117,11 +117,12 @@ configured modality. Three paths:
 
 `modality_dropout` (`:360`) randomly ablates sources in training mode.
 
-### Per-modality normalisation is effectively dead
+### Per-modality normalisation
 
-`normalize_modality()` from `util/norm_stats.py` is only invoked when the input is a
-`np.ndarray` (`:293`, `:309`, `:378`, `:394`). Every caller in the repo passes
-`torch.Tensor`, so normalisation never runs on the live path. See defect **D5**.
+`normalize_modality()` from `util/norm_stats.py` now accepts NumPy arrays and
+PyTorch tensors. The encoder selects the channel axis for each modality type and
+applies registered statistics before encoding. A config can set `norm_source`
+to choose the sensor statistics; unknown sources retain their input values.
 
 ---
 
@@ -142,20 +143,18 @@ Per-token conditioning, all summed/concatenated into the `D`-dim token before fu
 
 `modalities` maps each source to `{'spatial': int, 'temporal': int}` declaring its
 token layout. **These counts must match what the encoder actually emits.** The
-mismatch guard at `:267` silently truncates `pos` to the embedding's token count —
-which is correct for the 1-token missing-modality case it was written for, but
-silently absorbs genuine layout bugs. See defect **D3**.
+fusion now allows a compact 1-token missing-modality embedding and raises a
+`ValueError` for any other declared-layout mismatch.
 
 `forward_multiscale` (`:287`) re-runs the same stack and harvests latents at four
-intermediate block indices for the FPN/DPT heads. It duplicates ~40 lines of
-`forward`; the two must be kept in sync by hand.
+intermediate block indices for the FPN/DPT heads. Both paths use the same token
+assembly and mask logic.
 
 ### Attention masking
 
-`_build_key_padding_mask` (`:209`) builds a `(B, ΣL)` mask so absent-modality tokens
-do not contribute. **It is currently broken** — the mask is built as a float tensor,
-which PyTorch treats as *additive bias*, not exclusion. This is defect **D1** and is
-the highest-severity finding in this review.
+`_build_key_padding_mask` builds a boolean `(B, ΣL)` mask so absent-modality
+tokens cannot contribute. If every modality is absent in a sample, one learned
+missing token remains visible to attention to avoid an all-masked softmax row.
 
 ---
 
@@ -238,7 +237,7 @@ Read [data_contract.md](./data_contract.md) for the on-disk layout these expect.
 | `pos_embed.py` | sincos embeddings incl. resolution-conditioned `:83` | ✅ widely |
 | `metrics.py` | `RMSE`/`R2`/`PCC`, `SpatialCorrelation`, `ZonePreservation`, `evaluate_regression`, `SpatialYieldMetric`, `ConfusionMatrix` | ✅ |
 | `misc.py`, `lr_sched.py`, `lr_decay.py`, `lars.py` | training scaffolding from MAE | ✅ |
-| `norm_stats.py` | per-modality mean/std registry (S2/S1a/S1d/Landsat) | ⚠ imported but never reached — defect D5 |
+| `norm_stats.py` | per-modality mean/std registry (S2/S1a/S1d/Landsat) | ✅ encoder tensor and NumPy paths |
 | `spatial_split.py` | `cross_location_split` — disjoint state groups, prevents spatial leakage | ⚠ System A only |
 | `modality_robustness.py` | `evaluate_modality_robustness` — runs every modality subset, reports dense metrics per subset | ❌ no callers |
 | `spatial_viz.py` | quantile colour-class renderer, SVD/PCA pseudocolour | ❌ no callers |

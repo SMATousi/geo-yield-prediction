@@ -113,17 +113,16 @@ Requirements and cautions:
 - **Units must be consistent across all fields.** The model regresses raw values;
   nothing normalises the target. Mixing bu/ac with t/ha across fields will not be
   caught.
-- **Nodata is filled with `-9999.0`** (`DEFAULT_NODATA`, `field_yield_dataset.py:39`)
-  and is **not masked out of the loss**. Any cell outside the yield-monitor's coverage
-  — headlands, gaps, the area between the boundary rectangle and the actual field
-  polygon — enters the L1/MSE loss as a −9999 target and will dominate the gradient.
-  **You must add loss masking before the first real run.** See roadmap Phase 2.
+- **Nodata is filled with `-9999.0`** (`DEFAULT_NODATA`, `field_yield_dataset.py:39`).
+  The dense yield heads now exclude this value and nonfinite targets from L1/MSE
+  loss, and accept an optional `valid_mask` for field-boundary pixels. An all-invalid
+  target raises a clear error. Apply the field-boundary mask when wiring real data
+  in Phase 3.
 - Yield-monitor data needs the usual agronomic cleaning (flow-delay correction, start/
   stop pass artefacts, speed outliers) *before* it reaches this directory. The loader
   does no cleaning.
-- If you use `DenseYieldFCNHead(log_target=True)`, the loss log-transforms the target
-  with `clamp_min(1e-6)` — which turns −9999 nodata into `log(1e-6) ≈ −13.8` rather
-  than removing it. Masking is still required.
+- If you use `DenseYieldFCNHead(log_target=True)`, invalid cells are removed before
+  the valid targets are log-transformed.
 
 ---
 

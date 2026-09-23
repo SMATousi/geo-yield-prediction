@@ -5,8 +5,9 @@ the upstream [MMST-ViT](../README.md) repository (Lin et al., ICCV 2023).
 
 **Update, 2026-09-23:** Phase 0 is complete in a new Conda environment. The CPU
 fine-tuning exit command and GPU smoke run succeeded. Phase 1 now has an installable
-package, CI configuration, and a contract suite (37 pass, five strict expected
-failures). The assessments below and in `status.md` describe the earlier `c8be363`
+package and CI configuration. Phase 2 closed the listed correctness defects; the
+current contract suite has 52 passing tests and two strict expected failures. The
+assessments below and in `status.md` describe the earlier `c8be363`
 baseline unless explicitly updated; training still uses synthetic batches. See
 [RUNNING.md](../RUNNING.md).
 

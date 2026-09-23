@@ -40,7 +40,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from util.norm_stats import normalize_modality
 
 from models_multimodal_encoder import MultiModalEncoder
 from models_latent_fusion import LatentFusionTransformer
@@ -245,10 +244,9 @@ class MultimodalSelfSupervisedPretrain(nn.Module):
                         continue
                 elif not avail:
                     continue
-            x = inputs[name]
+            x = self.encoders._normalize_input(name, inputs[name])
             if isinstance(x, np.ndarray):
-                x = torch.from_numpy(
-                    normalize_modality(self.encoders.norm_sources[name], x))
+                x = torch.from_numpy(x)
             if x.shape[1] < 2:
                 continue
             past = x[:, :-1]                                  # (B, T-1, D)

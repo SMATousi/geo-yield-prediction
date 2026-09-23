@@ -86,20 +86,22 @@ class PatchEmbeddingEncoder(nn.Module):
         self.proj = nn.Conv2d(in_channels, embed_dim,
                               kernel_size=patch_size, stride=patch_size)
         self.norm = nn.LayerNorm(embed_dim)
+        if num_patches is None or num_patches < 1:
+            raise ValueError("PatchEmbeddingEncoder requires num_patches at construction")
         self.num_patches = num_patches
-        # positional embedding sized for num_patches + 1 (cls) tokens; if
-        # num_patches is not known up front it is inferred on the first forward.
-        self.pos_embedding = None
+        self.pos_embedding = nn.Parameter(self._make_pos_embedding(num_patches))
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.dropout_layer = nn.Dropout(dropout)
         nn.init.trunc_normal_(self.cls_token, std=0.02)
 
-    def _init_pos_embedding(self, num_patches, device):
-        self.num_patches = num_patches
+    def _make_pos_embedding(self, num_patches):
+        grid_size = int(num_patches ** 0.5)
+        if grid_size * grid_size != num_patches:
+            raise ValueError("PatchEmbeddingEncoder requires a square patch grid")
         pos_embedding = torch.zeros(1, num_patches + 1, self.embed_dim)
         pos_embedding = pos_embedding + self._get_2d_sincos_pos_embed(
-            self.embed_dim, int(num_patches ** 0.5), cls_token=True)
-        self.pos_embedding = nn.Parameter(pos_embedding.to(device))
+            self.embed_dim, grid_size, cls_token=True)
+        return pos_embedding
 
     @staticmethod
     def _get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
@@ -118,8 +120,10 @@ class PatchEmbeddingEncoder(nn.Module):
         x = self.proj(x)                       # (B, embed_dim, H/p, W/p)
         x = x.flatten(2).transpose(1, 2)       # (B, num_patches, embed_dim)
         x = self.norm(x)
-        if self.pos_embedding is None or self.pos_embedding.shape[1] != x.shape[1] + 1:
-            self._init_pos_embedding(x.shape[1], x.device)
+        if x.shape[1] != self.num_patches:
+            raise ValueError(
+                f"PatchEmbeddingEncoder expected {self.num_patches} patches, got {x.shape[1]}"
+            )
         x = torch.cat((self.cls_token.expand(B, -1, -1), x), dim=1)
         x = x + self.pos_embedding
         x = self.dropout_layer(x)
@@ -262,6 +266,7 @@ class MultiModalEncoder(nn.Module):
         self.norm_sources = {
             name: cfg.get('norm_source', name) for name, cfg in encoders_cfg.items()
         }
+        self.encoder_types = {name: cfg.get('type') for name, cfg in encoders_cfg.items()}
         # Learned missing-modality token per source (tessera convention: an
         # absent modality still yields a well-formed embedding instead of
         # erroring). Used whenever a modality is unavailable or dropped.
@@ -276,9 +281,16 @@ class MultiModalEncoder(nn.Module):
         if enc_type not in self._TYPES:
             raise ValueError('Unknown modality encoder type: {}'.format(enc_type))
         cls = self._TYPES[enc_type]
-        kwargs = {k: v for k, v in cfg.items() if k != 'type'}
+        kwargs = {k: v for k, v in cfg.items() if k not in ('type', 'norm_source')}
         kwargs.setdefault('embed_dim', self.embed_dim)
         return cls(**kwargs)
+
+    def _normalize_input(self, name, x):
+        if not isinstance(x, (torch.Tensor, np.ndarray)):
+            x = torch.as_tensor(x)
+        kind = self.encoder_types[name]
+        axis = 2 if kind == 'sar' else -1 if kind in ('timeseries', 'tabular') else 1
+        return normalize_modality(self.norm_sources[name], x, channel_axis=axis)
 
     def forward(self, inputs):
         """inputs: dict {modality_name: tensor}. Returns dict of per-modality
@@ -289,9 +301,9 @@ so the backbone can run on arbitrary subsets of sources."""
         for name, encoder in self.encoders.items():
             if name not in inputs:
                 continue
-            x = inputs[name]
+            x = self._normalize_input(name, inputs[name])
             if isinstance(x, np.ndarray):
-                x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+                x = torch.from_numpy(x)
             outputs[name] = encoder(x)
         return outputs
 
@@ -305,9 +317,9 @@ so the backbone can run on arbitrary subsets of sources."""
         sets across sources). Returns ``(embeddings, mask)`` where ``mask`` is
         the per-sample availability flag (1 = present, 0 = absent).
         """
-        x = inputs[name]
+        x = self._normalize_input(name, inputs[name])
         if isinstance(x, np.ndarray):
-            x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+            x = torch.from_numpy(x)
         present = avail > 0.5
         if present.all():
             return encoder(x), avail
@@ -375,8 +387,6 @@ so the backbone can run on arbitrary subsets of sources."""
         for name in self.encoders:
             if name in inputs:
                 x = inputs[name]
-                if isinstance(x, np.ndarray):
-                    x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
                 batch_size = x.shape[0]
                 break
 
@@ -390,9 +400,9 @@ so the backbone can run on arbitrary subsets of sources."""
                 embeddings[name], mask[name] = self._encode_mixed(
                     name, encoder, inputs, avail, batch_size)
             elif avail:
-                x = inputs[name]
+                x = self._normalize_input(name, inputs[name])
                 if isinstance(x, np.ndarray):
-                    x = torch.from_numpy(normalize_modality(self.norm_sources[name], x))
+                    x = torch.from_numpy(x)
                 embeddings[name] = encoder(x)
                 mask[name] = torch.ones(embeddings[name].shape[0], dtype=torch.float32,
                                         device=embeddings[name].device)

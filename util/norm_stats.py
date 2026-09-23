@@ -15,6 +15,7 @@
 # --------------------------------------------------------
 
 import numpy as np
+import torch
 
 
 # Per-modality mean/std keyed by source name. Each value is a dict with
@@ -78,24 +79,31 @@ def get_norm_stats(source):
     return stats["mean"], stats["std"]
 
 
-def normalize_modality(source, x):
+def normalize_modality(source, x, channel_axis=0):
     """Standardize a modality tensor with its own per-source mean/std.
 
-    ``x`` is a numpy array whose channel axis is the first axis (C, ...) or
-    (T, C, ...) for multitemporal stacks. Returns a float32 array of the same
-    shape. Sources without registered stats are returned unchanged.
+    Accepts NumPy arrays or tensors. ``channel_axis`` identifies the feature
+    dimension, including for batched rasters (B, C, H, W), SAR (B, T, C, H, W),
+    and weather (B, T, D). Unknown sources retain their values and type.
     """
     mean, std = get_norm_stats(source)
     if mean is None:
-        return np.asarray(x, dtype=np.float32)
-    arr = np.asarray(x, dtype=np.float32)
-    n_channels = int(arr.shape[0])
+        return x if isinstance(x, torch.Tensor) else np.asarray(x, dtype=np.float32)
+    arr = x.float() if isinstance(x, torch.Tensor) else np.asarray(x, dtype=np.float32)
+    axis = channel_axis % arr.ndim
+    n_channels = int(arr.shape[axis])
     if len(mean) != n_channels:
         raise ValueError(
             "normalize_modality: source '{}' expects {} channels but got {}.".format(
                 source, len(mean), n_channels
             )
         )
-    mean = mean.reshape(-1, *([1] * (arr.ndim - 1)))
-    std = std.reshape(-1, *([1] * (arr.ndim - 1)))
+    shape = [1] * arr.ndim
+    shape[axis] = n_channels
+    if isinstance(arr, torch.Tensor):
+        mean = torch.as_tensor(mean, dtype=arr.dtype, device=arr.device).reshape(shape)
+        std = torch.as_tensor(std, dtype=arr.dtype, device=arr.device).reshape(shape)
+    else:
+        mean = mean.reshape(shape)
+        std = std.reshape(shape)
     return (arr - mean) / std

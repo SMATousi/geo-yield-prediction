@@ -166,12 +166,12 @@ class MultimodalYieldModel(nn.Module):
         self.fusion = fusion
         self.head = head
 
-    def forward(self, inputs, targets=None, available=None, mode='tensor'):
+    def forward(self, inputs, targets=None, available=None, mode='tensor', valid_mask=None):
         embeddings, mask = self.encoders.forward_with_missing(
             inputs, available=available)
         latents = self.fusion(embeddings, mask=mask)          # (B, num_latents, embed_dim)
         b, num_latents, d = latents.shape
-        grid = int(round(num_latents ** 0.5))
+        grid = math.ceil(num_latents ** 0.5)
         # reshape the latent bottleneck to a spatial feature map for the dense
         # decoder; pad with zeros if num_latents is not a perfect square.
         if grid * grid != num_latents:
@@ -179,7 +179,7 @@ class MultimodalYieldModel(nn.Module):
             latents = torch.cat(
                 [latents, latents.new_zeros(b, pad, d)], dim=1)
         spatial = latents.transpose(1, 2).reshape(b, d, grid, grid)
-        return self.head(spatial, targets=targets, mode=mode)
+        return self.head(spatial, targets=targets, mode=mode, valid_mask=valid_mask)
 
 
 def make_synthetic_batch(args, device):
@@ -300,7 +300,6 @@ def train_one_epoch(model, optimizer, device, epoch, loss_scaler, args=None):
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
 
     accum_iter = args.accum_iter
-    criterion = torch.nn.MSELoss().to(device)
     optimizer.zero_grad()
 
     total_step = 20
@@ -322,7 +321,7 @@ def train_one_epoch(model, optimizer, device, epoch, loss_scaler, args=None):
                     available[name] = False
 
         z_hat = model(inputs, targets=targets, available=available, mode='tensor')
-        loss = criterion(z_hat, targets)
+        loss = model.head.compute_loss(z_hat, targets)
         loss_value = loss.item()
 
         if not math.isfinite(loss_value):

@@ -186,6 +186,35 @@ def stitch_tiled_representation(rep_data, src_row_start, src_col_start,
     return target_array, coverage
 
 
+def masked_yield_loss(logits, targets, *, loss='l1', log_target=False,
+                      valid_mask=None, nodata=-9999.0):
+    """Average regression error over finite, observed yield pixels only."""
+    if targets is None or logits.shape != targets.shape:
+        raise ValueError("Yield logits and targets must have identical shapes")
+    valid = torch.isfinite(targets) & (targets != nodata)
+    if valid_mask is not None:
+        valid_mask = torch.as_tensor(valid_mask, device=targets.device, dtype=torch.bool)
+        if valid_mask.shape == targets.shape[:1] + targets.shape[2:]:
+            valid_mask = valid_mask.unsqueeze(1)
+        if valid_mask.shape != targets.shape:
+            raise ValueError("Yield valid_mask must match target shape, with optional channel axis")
+        valid = valid & valid_mask
+    if not bool(valid.any()):
+        raise ValueError("Yield target contains no valid pixels")
+    if log_target:
+        # Replace invalid cells before the log so neither the loss nor its
+        # gradient can be contaminated by nodata or NaN values.
+        targets = torch.log(torch.where(valid, targets, torch.ones_like(targets)).clamp_min(1e-6))
+    else:
+        targets = torch.where(valid, targets, torch.zeros_like(targets))
+    error = (logits - targets)[valid]
+    if loss == 'l1':
+        return error.abs().mean()
+    if loss == 'mse':
+        return error.square().mean()
+    raise ValueError(f"Unsupported yield loss: {loss}")
+
+
 @register_head(
     "dense_yield",
     category="dense",
@@ -222,22 +251,19 @@ class DenseYieldFCNHead(nn.Module):
             nn.Conv2d(self.embed_dim // 2, self.num_classes, kernel_size=1, stride=1, padding=0),
         )
 
-    def compute_loss(self, logits, targets):
+    def compute_loss(self, logits, targets, valid_mask=None):
         # Log-transform of the yield target (adapted from the CropNet USDA
         # loader's ``torch.log`` preprocessing) stabilizes training on skewed
         # yield distributions: the head regresses log-yield and the loss is
         # computed in log space, mirroring the tabular loader's target transform.
-        if self.log_target:
-            targets = torch.log(targets.clamp_min(1e-6))
-        if self.loss == 'l1':
-            return nn.functional.l1_loss(logits, targets)
-        return nn.functional.mse_loss(logits, targets)
+        return masked_yield_loss(logits, targets, loss=self.loss,
+                                 log_target=self.log_target, valid_mask=valid_mask)
 
-    def forward(self, inputs, targets=None, mode='tensor'):
+    def forward(self, inputs, targets=None, mode='tensor', valid_mask=None):
         """Dispatch: 'tensor' returns logits, 'loss' returns (logits, loss)."""
         logits = self.head(inputs)
         if mode == 'loss':
-            loss = self.compute_loss(logits, targets)
+            loss = self.compute_loss(logits, targets, valid_mask=valid_mask)
             return logits, loss
         return logits
 
@@ -392,14 +418,11 @@ class DenseYieldFPNHead(nn.Module):
         # 2-class LogSoftmax segmentation head).
         self.cls_seg = nn.Conv2d(out_channels, num_classes, 1)
 
-    def compute_loss(self, logits, targets):
-        if self.log_target:
-            targets = torch.log(targets.clamp_min(1e-6))
-        if self.loss == 'l1':
-            return nn.functional.l1_loss(logits, targets)
-        return nn.functional.mse_loss(logits, targets)
+    def compute_loss(self, logits, targets, valid_mask=None):
+        return masked_yield_loss(logits, targets, loss=self.loss,
+                                 log_target=self.log_target, valid_mask=valid_mask)
 
-    def forward(self, input_fpn, targets=None, mode='tensor'):
+    def forward(self, input_fpn, targets=None, mode='tensor', valid_mask=None):
         """input_fpn: list of feature maps, finest first (4 levels)."""
         x1 = self.ppm_head(input_fpn[-1])
         x = nn.functional.interpolate(
@@ -420,7 +443,7 @@ class DenseYieldFPNHead(nn.Module):
         x = self.fuse_all(torch.cat([x1, x2, x3, x4], 1))
         logits = self.cls_seg(x)
         if mode == 'loss':
-            loss = self.compute_loss(logits, targets)
+            loss = self.compute_loss(logits, targets, valid_mask=valid_mask)
             return logits, loss
         return logits
 
@@ -482,14 +505,12 @@ class DenseYieldDPTHead(nn.Module):
         )
         self.head = nn.Conv2d(features, num_classes, kernel_size=1)
 
-    def compute_loss(self, logits, targets):
-        if self.log_target:
-            targets = torch.log(targets.clamp_min(1e-6))
-        if self.loss == 'l1':
-            return nn.functional.l1_loss(logits, targets)
-        return nn.functional.mse_loss(logits, targets)
+    def compute_loss(self, logits, targets, valid_mask=None):
+        return masked_yield_loss(logits, targets, loss=self.loss,
+                                 log_target=self.log_target, valid_mask=valid_mask)
 
-    def forward(self, multi_scale_features, target_size=None, targets=None, mode='tensor'):
+    def forward(self, multi_scale_features, target_size=None, targets=None,
+                mode='tensor', valid_mask=None):
         """multi_scale_features: list of 4 feature maps, finest first.
 
         ``target_size`` is the (H, W) output grid; when None it defaults to
@@ -517,7 +538,7 @@ class DenseYieldDPTHead(nn.Module):
                 logits, size=target_size, mode="bilinear", align_corners=False
             )
         if mode == 'loss':
-            loss = self.compute_loss(logits, targets)
+            loss = self.compute_loss(logits, targets, valid_mask=valid_mask)
             return logits, loss
         return logits
 

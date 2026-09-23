@@ -1,15 +1,17 @@
 import pytest
 import torch
 from torch import nn
+import numpy as np
 
 from models_multimodal_encoder import MultiModalEncoder
+from util.norm_stats import get_norm_stats, normalize_modality
 
 
 @pytest.mark.parametrize(
     ("kind", "cfg", "sample", "tokens"),
     [
         ("raster", {"in_channels": 1}, lambda: torch.randn(2, 1, 4, 6), 24),
-        ("patch", {"in_channels": 1, "patch_size": 2}, lambda: torch.randn(2, 1, 4, 4), 5),
+        ("patch", {"in_channels": 1, "patch_size": 2, "num_patches": 4}, lambda: torch.randn(2, 1, 4, 4), 5),
         ("sar", {"in_channels": 2}, lambda: torch.randn(2, 3, 2, 4, 4), 16),
         ("timeseries", {"in_dim": 3}, lambda: torch.randn(2, 5, 3), 1),
         ("tabular", {"in_dim": 3}, lambda: torch.randn(2, 3), 1),
@@ -57,7 +59,7 @@ def mixed_encoder():
     model = MultiModalEncoder(
         {
             "dem": {"type": "raster", "in_channels": 1},
-            "weather": {"type": "timeseries", "in_dim": 3},
+            "weather": {"type": "timeseries", "in_dim": 3, "norm_source": "unregistered"},
         },
         embed_dim=16,
     )
@@ -116,10 +118,46 @@ def test_forward_with_missing_mixed_rows(mixed_encoder, mixed_inputs, mixed):
     torch.testing.assert_close(embeddings[mixed][1], expected_missing)
 
 
-@pytest.mark.known_defect
-@pytest.mark.xfail(strict=True, reason="D6: patch positional parameter is created during forward")
 def test_patch_position_is_registered_before_optimizer():
     encoder = MultiModalEncoder(
-        {"dem": {"type": "patch", "in_channels": 1, "patch_size": 2}}, embed_dim=32
+        {"dem": {"type": "patch", "in_channels": 1, "patch_size": 2, "num_patches": 4}}, embed_dim=32
     )
     assert "encoders.dem.pos_embedding" in dict(encoder.named_parameters())
+    with pytest.raises(ValueError, match="expected 4 patches"):
+        encoder({"dem": torch.randn(2, 1, 6, 6)})
+
+
+def test_patch_encoder_requires_known_layout():
+    with pytest.raises(ValueError, match="num_patches"):
+        MultiModalEncoder({"dem": {"type": "patch", "in_channels": 1}}, embed_dim=32)
+
+
+def test_tensor_normalization_reaches_tabular_encoder():
+    model = MultiModalEncoder(
+        {"source": {"type": "tabular", "in_dim": 2, "norm_source": "s1a"}},
+        embed_dim=16,
+    ).eval()
+    mean, std = get_norm_stats("s1a")
+    raw = torch.tensor(mean + std, dtype=torch.float32).expand(2, -1).clone()
+    with torch.no_grad():
+        actual = model({"source": raw})["source"]
+        expected = model.encoders["source"](torch.ones_like(raw))
+    torch.testing.assert_close(actual, expected)
+
+
+def test_sar_normalization_uses_channel_axis_after_time():
+    model = MultiModalEncoder(
+        {"source": {"type": "sar", "in_channels": 2, "norm_source": "s1a"}},
+        embed_dim=16,
+    ).eval()
+    mean, std = get_norm_stats("s1a")
+    raw = torch.as_tensor(mean + std).reshape(1, 1, 2, 1, 1).expand(2, 3, 2, 2, 2).clone()
+    with torch.no_grad():
+        actual, _ = model.forward_with_missing({"source": raw})
+        expected = model.encoders["source"](torch.ones_like(raw))
+    torch.testing.assert_close(actual["source"], expected)
+    np.testing.assert_allclose(
+        normalize_modality("s1a", raw.numpy(), channel_axis=2),
+        np.ones(raw.shape, dtype=np.float32),
+        rtol=1e-6,
+    )
