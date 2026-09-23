@@ -42,25 +42,32 @@ synthetic batches; real-data training remains Phase 3 work. See [RUNNING.md](../
 Do this **before** fixing the defects in Phase 2, so the fixes are provably correct
 and the regressions are caught.
 
-- [ ] Add `pytest` + `pyproject.toml`. Make the repo installable.
+- [x] Add `pytest` + `pyproject.toml`. Make the repo installable.
 - [ ] **Convert the 36 `__main__` demo blocks into test cases.** They already
       exercise the right shape contracts; this is mechanical work with high payoff
       and is why Phase 1 is cheaper here than in most codebases.
-- [ ] Targeted tests for the contracts most likely to silently drift:
-  - [ ] every encoder type: input rank → output token count
-  - [ ] `forward_with_missing`: all-present / all-absent / mixed-batch, per modality
-  - [ ] **masking: assert a masked modality provably cannot influence the output** —
+- [x] Targeted tests for the contracts most likely to silently drift:
+  - [x] every encoder type: input rank → output token count
+  - [x] `forward_with_missing`: all-present / all-absent / mixed-batch, per modality
+  - [x] **masking: assert a masked modality provably cannot influence the output** —
         perturb an absent modality's tensor, assert the fused latent is bit-identical.
         This test fails today and is the regression test for defect D1.
-  - [ ] `LatentFusionTransformer`: declared token layout vs. actual encoder output
-  - [ ] every head: output shape and loss finiteness
-  - [ ] `FieldYieldDataset` against the synthetic-GeoTIFF fixture at
+  - [x] `LatentFusionTransformer`: declared token layout vs. actual encoder output
+  - [x] every head: output shape and loss finiteness
+  - [x] `FieldYieldDataset` against the synthetic-GeoTIFF fixture at
         `field_yield_dataset.py:219`
-  - [ ] `collate_field_samples` with heterogeneous modality keys across the batch
-- [ ] CI running the suite on push.
+  - [x] `collate_field_samples` with heterogeneous modality keys across the batch
+- [x] CI running the suite on push.
 
-**Exit:** green suite; the D1 masking test is present and failing (red for the right
-reason).
+**Progress (2026-09-23):** 37 tests pass. Five strict expected failures capture D1,
+D3, D6, the `grouped_vit` output-rank mismatch, and the disconnected unified
+container. Strict `xfail` keeps CI green while making an unexpected pass fail the
+suite, so a fix requires updating the assertion. The 36 demo blocks have not all
+been converted; targeted System B contract tests and several geospatial utility
+tests are in place.
+
+**Exit:** finish converting the useful demo contracts, with known defects explicitly
+tracked until Phase 2 fixes them.
 
 ---
 

@@ -24,6 +24,20 @@ Conda's default environment directory, use
 `conda env create --prefix .conda/phase0 -f environment.yml` and activate that
 prefix.
 
+## Phase 1 tests
+
+Install the project in editable mode, then run the contract suite:
+
+```bash
+python -m pip install -e .
+python -m pytest
+```
+
+As of 2026-09-23, 37 tests pass and five are strict expected failures for known
+encoder, fusion, and integration defects. The tests use small synthetic tensors and
+temporary GeoTIFF files; they do not validate crop-yield accuracy. GitHub Actions
+runs the CPU suite on pushes and pull requests.
+
 ## Smoke runs
 
 ```bash

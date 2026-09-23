@@ -4,3 +4,7 @@ __pycache__/
 output_dir/
 data/
 *.pth
+.pytest_cache/
+*.egg-info/
+build/
+dist/

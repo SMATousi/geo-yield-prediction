@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geo-yield-prediction"
+version = "0.1.0"
+description = "Field-scale multimodal geospatial yield model prototype"
+requires-python = ">=3.10,<3.13"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["config", "dataset", "loss", "util"]
+py-modules = [
+  "attention",
+  "main_finetune_mmst_vit",
+  "main_multimodal_finetune",
+  "main_pretrain_mmst_vit",
+  "main_pretrain_multimodal",
+  "models_group_channels_vit",
+  "models_heads",
+  "models_latent_fusion",
+  "models_mae_group_channels",
+  "models_mae_spectral",
+  "models_mmst_vit",
+  "models_multi_unified",
+  "models_multimodal_encoder",
+  "models_multimodal_pretrain",
+  "models_neck",
+  "models_pvt",
+  "models_pvt_simclr",
+  "primae_vandv_entry",
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "known_defect: expected failure documenting a defect scheduled for Phase 2",
+]

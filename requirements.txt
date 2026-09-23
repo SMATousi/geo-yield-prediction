@@ -1,14 +1,21 @@
-torch == 1.13.0
-torchvision == 0.14.0
-timm == 0.5.4
-numpy == 1.24.4
-pandas == 2.0.3
-h5py == 3.9.0
-einops == 0.6.1
-Pillow == 10.0.0
-argparse == 1.4.0
-tqdm == 4.65.0
-scikit-learn == 1.3.0
-tensorboard == 2.13.0
-rasterio == 1.4.4
-requests == 2.31.0
+# Install torch/torchvision from the PyTorch index for a specific build, e.g.:
+#   CPU:    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+#   CUDA:   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# then:  pip install -r requirements.txt
+#
+# torch==1.13.0 / torchvision==0.14.0 were yanked from PyPI; the old pins made
+# this file uninstallable. See spec/tech_stack.md.
+torch >= 2.1
+torchvision >= 0.16
+timm >= 0.9
+numpy >= 1.24, < 2.0
+pandas >= 2.0
+h5py >= 3.9
+einops >= 0.6
+Pillow >= 10.0
+tqdm >= 4.65
+scikit-learn >= 1.3
+tensorboard >= 2.13
+rasterio >= 1.3
+requests >= 2.31
+pytest >= 8, < 9

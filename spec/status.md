@@ -6,6 +6,12 @@ on an RTX 3090. The G4 dependency/CPU blockers and the config-builder path issue
 have been addressed. The remaining assessment records the `c8be363` baseline;
 real-data integration and correctness defects remain open. See [RUNNING.md](../RUNNING.md).
 
+**Phase 1 update (2026-09-23):** The project now installs in editable mode and has a
+CPU pytest workflow. The local suite has 37 passing tests and five strict expected
+failures covering D1, D3, D6, `grouped_vit` output rank, and the disconnected unified
+container. The G3 baseline finding below is therefore historical; the 36 demo
+blocks have not all been converted. No real-data training has been run.
+
 Reviewed at commit `c8be363`, 2026-09-23. Method: full source read of System B plus
 static import-graph analysis. **No code was executed** — `torch` is not installed in
 this environment (Python 3.14, no torch/timm/rasterio/h5py), so dynamic verification

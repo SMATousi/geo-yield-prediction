@@ -4,9 +4,11 @@ This directory is the authoritative specification for the work built **on top of
 the upstream [MMST-ViT](../README.md) repository (Lin et al., ICCV 2023).
 
 **Update, 2026-09-23:** Phase 0 is complete in a new Conda environment. The CPU
-fine-tuning exit command and GPU smoke run succeeded. The assessments below and in
-`status.md` describe the earlier `c8be363` baseline unless explicitly updated;
-training still uses synthetic batches. See [RUNNING.md](../RUNNING.md).
+fine-tuning exit command and GPU smoke run succeeded. Phase 1 now has an installable
+package, CI configuration, and a contract suite (37 pass, five strict expected
+failures). The assessments below and in `status.md` describe the earlier `c8be363`
+baseline unless explicitly updated; training still uses synthetic batches. See
+[RUNNING.md](../RUNNING.md).
 
 The upstream project predicts **county-level** crop yield from Sentinel-2 imagery +
 WRF-HRRR weather using a Multi-Modal / Spatial / Temporal ViT stack. Starting from
@@ -40,9 +42,10 @@ capability claimed in `.primae/COMPLETENESS_TODO.md` has code behind it, and the
 model code is coherent and readable. But the two flagship entry points
 (`main_multimodal_finetune.py`, `main_pretrain_multimodal.py`) train on
 `torch.randn` synthetic tensors, never on the real `rasterio`-backed loaders that
-were written alongside them; there are no tests, no CI, and no run has ever
-succeeded in a clean container. Treat this repo as a **validated architectural
-prototype awaiting a data pipeline**, not as a trained or trainable model. See
+were written alongside them. Phase 0 smoke runs now succeed, and Phase 1 tests
+cover the main System B contracts, but known defects and data integration remain.
+Treat this repo as a **validated architectural prototype awaiting a data pipeline**,
+not as a trained model. See
 [status.md](./status.md) for the evidence.
 
 ---
