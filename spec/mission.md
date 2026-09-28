@@ -55,6 +55,13 @@ sensor concepts and softly constrains reviewed cross-modal relationships, with
 optional VLM/LLM applicability estimation during pretraining. Yield fine-tuning
 and inference remain sensor-only.
 
+An alternative [YieldSAT preprocessed data branch](./yieldsat_data_contract.md)
+supports within-field grid-cell histories and targets, with point-mode prediction
+and later spatial reconstruction/patch experiments. Its existing common-grid
+preprocessing is recorded as a dataset limitation; it does not meet the native-grid
+architectural criterion. Scientific metrics await verified target units and
+grouped/geographic evaluation.
+
 ### Secondary
 6. Preserve geographic honesty in evaluation: **spatial splits**, not random splits.
 7. Quantify each modality's marginal contribution via systematic ablation.

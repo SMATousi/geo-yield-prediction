@@ -7,6 +7,10 @@ the separately managed PlanetScope corpus. It supersedes the flat-file demo layo
 as the target for real-data integration. Existing demo loaders remain useful for
 tests; their presence does not establish compliance with this document.
 
+The alternative [YieldSAT preprocessed contract](./yieldsat_data_contract.md)
+has separate AR tasks and already merged feature grids. It can share model
+interfaces, but its completion does not establish native-grid/full-layer compliance.
+
 ## 1. Sources and scope
 
 This inventory is a snapshot of the neighboring project's documents and source,

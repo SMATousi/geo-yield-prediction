@@ -150,6 +150,26 @@ and task list, including dependencies and acceptance checks.
       CPU verification and spatially held-out yield metrics. A declared subset is
       a pilot, not evidence that all source adapters are compliant.
 
+### Alternative Phase 3 branch — YieldSAT
+
+The [YieldSAT data contract](./yieldsat_data_contract.md) adds selectable
+`yieldsat_preprocessed_v1` alongside `downloader_native_layers_v1`.
+It covers Argentina, Brazil, Germany and Uruguay with explicit country selection,
+per-file channel/date/category decoding and country-qualified split identities.
+Its already merged grids use separate requirements; this is not LI completion.
+
+- [ ] **YS-01–03:** Freeze/audit extraction; recover feature/target semantics and
+      geometry; build chunked row indexes and physical-field/farm grouped splits.
+- [ ] **YS-04–06:** Implement bounded NetCDF reads, named stream selection,
+      masks/cutoffs/train-only statistics and point-mode encoders/scalar yield head.
+- [ ] **YS-07–08:** Audit objective compatibility and leakage, expose the contract
+      selector, and run a bounded real-data pilot with verified target units.
+- [ ] **YS-09:** Reconstruct spatial outputs on verified field grids; optionally
+      add spatial patch mode with valid sparse-cell/target masks.
+
+YieldSAT pilot acceptance and limitations are in the AR contract. Retain the
+original downloader/native-grid exit criteria below independently.
+
 **Exit:** real pretraining and supervised fine-tuning run through the intended
 handoff, with an honest spatially held-out yield RMSE. Full-layer compliance also
 requires adapter/contract coverage for every listed source. Missing upstream AOI
@@ -174,6 +194,10 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       estimator with abstention and calibration. Compare grounding-only, relationship,
       shuffled/no-text and teacher controls; preserve sensor-only transfer/inference.
       This supersedes the earlier text-conditioned held-out prediction proposal.
+
+- [ ] **YS-10:** Evaluate YieldSAT scratch/pretrained transfer on matching grouped
+      splits, with point/patch modes distinguished. Knowledge evaluation follows
+      YS-07 and KP-01–KP-08 with country-specific tags, units and evidence policies.
 
 - [ ] Profile the five objectives. `_cross_modal_prediction` runs the fusion stack
       once per modality and `_temporal_forecast` once per temporal modality — roughly

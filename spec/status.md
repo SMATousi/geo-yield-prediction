@@ -1,5 +1,14 @@
 # Status — Verified Review
 
+**YieldSAT contract update (2026-09-28):**
+[yieldsat_data_contract.md](./yieldsat_data_contract.md) adds an alternative
+merged-NetCDF ingestion branch covering Argentina, Brazil, Germany and Uruguay,
+with YS-01–YS-10 backlog. Read-only metadata verified all four schemas; five
+Argentina row probes and bounded companion raw-archive reads
+verified one Argentina field grid/target correspondence. Extraction completion, whole-file
+integrity, units/aggregation/target scaling and full geographic coverage remain
+unverified. No YieldSAT loader or real training is implemented.
+
 **Full-layer spec update (2026-09-28):**
 [layer_integration.md](./layer_integration.md) records the downloader/PlanetScope
 inventory and LI-01–LI-15 tasks. Real-data native-grid ingestion, full observation

@@ -69,6 +69,17 @@ concept grounding, applicability policy and scorer have also been reviewed and
 validated. Drafts and unresolved contracts are excluded. Never silently migrate
 old v1 statements into approved v2 rules.
 
+### Alternative YieldSAT source mapping
+
+The [YieldSAT branch](./yieldsat_data_contract.md) uses a separate
+versioned vocabulary and country-specific evidence mapping for its temporal
+optical/weather and static terrain/soil streams. Confirm physical units, interval aggregation,
+uncertainty meaning and target-free spatial support before applying concepts or
+teacher prompts. Do not treat merged-grid vectors as original native-grid layers,
+use yield metadata in applicability evidence, or run §11's US inventory prompt
+unchanged. YS-07 specifies the branch integration with KP tasks; dedicated
+country-aware YieldSAT generator/evidence prompts are future implementation work.
+
 ## 3. Text references and sensor concept grounding
 
 Use a frozen pretrained text encoder in evaluation mode. Cache separate embeddings

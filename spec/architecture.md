@@ -86,6 +86,13 @@ grounding and relationship constraints form an optional pretraining branch, with
 an optional offline VLM/LLM applicability teacher. See tasks
 LI-01–LI-15 rather than interpreting the demo data flow as the target handoff.
 
+A second planned input branch, [YieldSAT](./yieldsat_data_contract.md),
+reads merged NetCDF grid-cell histories lazily and separates temporal optical,
+weather, static soil and terrain streams. Its point-mode adapter/scalar yield head
+and optional later patch mode share encoder/fusion interfaces while preserving
+branch-specific provenance. Stored merged grids do not recover original native
+resolutions; AR tasks govern this branch independently of LI compliance.
+
 ---
 
 ## 2. Modality encoders — `models_multimodal_encoder.py`

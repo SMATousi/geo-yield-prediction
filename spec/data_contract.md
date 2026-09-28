@@ -1,5 +1,18 @@
 # Data Contract
 
+## Contract branches
+
+- **Downloader/native layers:** [layer_integration.md](./layer_integration.md),
+  contract key `downloader_native_layers_v1`; catalog/native-grid ingestion.
+- **YieldSAT preprocessed:** [yieldsat_data_contract.md](./yieldsat_data_contract.md),
+  contract key `yieldsat_preprocessed_v1`; merged NetCDF grid-cell histories
+  for Argentina/Brazil/Germany/Uruguay, with per-cell targets, country-aware
+  adapters and YS-01–YS-10 tasks.
+- **Legacy demo:** the flat-file loader behavior documented below.
+
+Both real-data branches are specified, not implemented. Selecting the YieldSAT
+branch does not satisfy the downloader full-layer/native-grid requirements.
+
 **Full-layer update (2026-09-28):** This document describes the existing flat-file
 demo loaders. The target real-data handoff is the downloader's per-record catalog,
 native grids, tables, vectors and acquisition indexes, specified in
