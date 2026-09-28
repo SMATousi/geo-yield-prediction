@@ -149,6 +149,12 @@ something. **This is the project's first genuine milestone.**
 
 Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
 
+- [ ] Implement and evaluate the optional
+      [expert-validated statement pretraining v1](./knowledge_pretraining.md).
+      Use frozen text embeddings to condition held-out modality prediction, with
+      a soft auxiliary loss. Compare approved text against ordinary pretraining,
+      shuffled text, and a no-text control; preserve sensor-only yield inference.
+
 - [ ] Profile the five objectives. `_cross_modal_prediction` runs the fusion stack
       once per modality and `_temporal_forecast` once per temporal modality — roughly
       8–12 fusion invocations per step at ~12k tokens each.

@@ -195,6 +195,12 @@ container that realises the "one backbone, many tasks" claim. **It has no caller
 | cross-modal prediction | `_cross_modal_prediction` `:266` | leave-one-out: reconstruct a held-out modality from the rest |
 | contrastive alignment | `_contrastive_alignment` `:290` | InfoNCE — two sensors over the same field share a latent |
 
+**Planned extension:** [Expert-validated statement pretraining](./knowledge_pretraining.md)
+adds an optional soft auxiliary objective conditioned on frozen text embeddings of
+approved general agronomic statements. Text is used only during pretraining; yield
+inference remains sensor-only. The extension is specified but not implemented and
+does not explicitly enforce conditional rules in v1.
+
 `set_encoder_trainable()` (`:351`) supports the frozen / partial / full fine-tuning
 comparison.
 
