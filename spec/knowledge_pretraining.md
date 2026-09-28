@@ -51,6 +51,14 @@ rule. They identify which inputs the text discusses; they contain no conditions,
 thresholds, or numerical consequences. Require at least two distinct, recognized
 modality names for this cross-modal objective.
 
+Resolve names through the full-layer source registry in
+[layer_integration.md](./layer_integration.md), rather than the prototype's generic
+`dem/sar/weather/soil/crop` names. Tags can identify actual sources such as
+`sentinel1`, `soil_polaris`, `weather_daymet`, or `soil_moisture_smap`, and specific
+streams such as `sentinel2_10m` or `terrain_5m`. Qualified property/depth/band
+references stay in the statement text or registry mapping; they do not introduce
+executable conditions in v1. The library version pins its registry mapping.
+
 Statement approval concerns agronomic meaning, including any qualifications
 written in the text. No per-field statement review or executable rule review is
 required in v1. Reject malformed records and duplicate identifiers; exclude
@@ -95,6 +103,13 @@ objectives continue to train the modality encoders.
 The first version predicts pooled embeddings, consistent with the current
 cross-modal objective. It does not reconstruct spatially distinct sensor pixels.
 
+Samples may be unlabelled AOI tiles as well as fields. The same physical footprint,
+time tolerance and source-validity rules from the full-layer contract apply. Hold
+out the target source family, including its related resolution/track streams, by
+default; select and predict individual eligible target-stream embeddings within
+that held-out family. Do not count resolution groups from one sensor as independent
+sources when routing a cross-modal statement.
+
 ### Eligibility and missing modalities
 
 Compute this objective only for sample/target pairs with:
@@ -107,6 +122,12 @@ Availability is evaluated per sample. A learned missing token is not an observed
 target or a qualifying conditioning source. Missing target rows do not contribute
 to the loss. If no sample/target pair is eligible, return a zero knowledge loss and
 report zero eligible pairs.
+
+Pool targets over valid observations/tokens only, excluding cloud, nodata and
+padding; a present file with no valid coverage is not an eligible modality.
+Co-occurrence means shared geographic coverage and appropriate observation times,
+not merely files stored under one record. Known source conversions (linear SAR,
+scaled reflectance, soil units) follow the source registry before encoding.
 
 Selection by modality tags does **not** establish that a statement's agronomic
 conditions hold in a particular field. The text provides context to the predictor;

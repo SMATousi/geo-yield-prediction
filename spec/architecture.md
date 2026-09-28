@@ -2,6 +2,13 @@
 
 Tree state: commit `c8be363`. ~9,700 lines of Python across 44 modules.
 
+**Full-layer update (2026-09-28):** Current implementations are described below
+with Phase 2 corrections. The target architecture for real data is specified in
+[layer_integration.md](./layer_integration.md); it is planned, not implemented.
+That contract covers downloader catalogs and external PlanetScope, native grids,
+quality/time masks, source-configured encoders and separate unlabelled/labelled
+datasets. The fixed five-modality synthetic configuration is a prototype subset.
+
 ## 0. The repo contains two systems
 
 This is the single most important fact for anyone reading the code.
@@ -71,6 +78,13 @@ The dashed break at the top is the central architectural gap: the loaders exist 
 are competently written, but no training script imports them. Both entry points call
 `make_synthetic_batch()` instead.
 
+The planned replacement reads catalog assets, indexes and sidecars into lazy
+native-footprint datasets. Both training modes share a source registry and sensor
+adapters; the supervised mode additionally loads yield and its output grid/mask.
+Tokens carry physical grid/time metadata into fusion. Text conditioning from
+approved knowledge statements is an optional pretraining branch only. See tasks
+LI-01–LI-15 rather than interpreting the demo data flow as the target handoff.
+
 ---
 
 ## 2. Modality encoders — `models_multimodal_encoder.py`
@@ -100,9 +114,10 @@ Each encoder consumes its source at whatever `H×W` that source arrives at; no
 cross-modality resampling happens *inside the model*. But `FieldYieldDataset`
 registers every layer onto one shared field template grid before the model sees it
 (`field_yield_dataset.py:46`). So "native resolution" is preserved **relative to the
-field grid**, not absolutely. This is a defensible design — the alternative demands
-per-modality positional encodings in projected world coordinates — but it should be
-stated plainly rather than implied away.
+field grid**, not absolutely. These loaders do not satisfy the native-first
+full-layer requirement. LI-03 and LI-08 replace shared-grid ingestion with native
+footprint windows and physical position/resolution/time metadata for fusion. A
+shared grid is chosen for supervised outputs, separately from predictor inputs.
 
 ### Missing-modality handling
 

@@ -46,6 +46,13 @@ the task into the encoders means re-architecting for every new question.
 5. Support **self-supervised pretraining** on unlabelled fields, then supervised
    fine-tuning on the much scarcer yield-monitor labels.
 
+Unlabelled pretraining includes AOI tiles as specified by
+[layer_integration.md](./layer_integration.md). The full source inventory includes
+optical imagery, terrain derivatives, multiple soil/weather sources and observed
+soil moisture beyond the prototype's five inputs. Optional
+[expert-validated statement pretraining](./knowledge_pretraining.md) supplies
+text context during pretraining only; yield inference remains sensor-only.
+
 ### Secondary
 6. Preserve geographic honesty in evaluation: **spatial splits**, not random splits.
 7. Quantify each modality's marginal contribution via systematic ablation.
@@ -53,8 +60,9 @@ the task into the encoders means re-architecting for every new question.
 
 ## Success criteria
 
-These are the bar this project is measured against. **None are currently met** — see
-[status.md](./status.md). They are written here as targets, not claims.
+These are the bar this project is measured against. Engineering and some
+architectural checks pass after Phases 0–2; real-data scientific outcomes remain
+unmet. See [status.md](./status.md). Unchecked items are targets, not claims.
 
 ### Functional
 - [ ] One training run completes end to end on **real georeferenced field data**.
@@ -67,17 +75,19 @@ These are the bar this project is measured against. **None are currently met** �
 - [x] Six modality types encoded by dedicated native-resolution encoders.
 - [x] Shared fusion backbone with spatial + temporal + modality-identity encodings.
 - [x] `HEAD_REGISTRY` supporting ≥3 registered task heads (currently 4).
-- [ ] Missing-modality path verified correct under test (currently defective — see
-      [status.md](./status.md), defect **D1**).
+- [x] Whole-modality attention exclusion and all-absent fallback verified under
+      test (Phase 2 fixed D1/D2).
+- [ ] Full-layer native-grid adapters, source-specific units and pixel/time/token
+      validity masks meet [layer_integration.md](./layer_integration.md).
 - [ ] Pretrained backbone demonstrably transfers: fine-tuning from pretrained weights
       beats training from scratch on the same split.
 
 ### Engineering
-- [ ] `pip install -r requirements.txt` succeeds in a clean container.
-- [ ] `--device cpu` path runs, so the model is debuggable without a GPU.
-- [ ] Test suite covering encoder shape contracts, fusion masking, head output
+- [x] `pip install -r requirements.txt` succeeds in the fresh Phase 0 environment.
+- [x] `--device cpu` path runs, so the model is debuggable without a GPU.
+- [x] Test suite covering encoder shape contracts, fusion masking, head output
       shapes, and dataset registration.
-- [ ] CI running that suite on every commit.
+- [x] CI workflow configured to run the suite on pushes and pull requests.
 
 ## Scope
 
@@ -87,6 +97,8 @@ These are the bar this project is measured against. **None are currently met** �
 - Missing-modality design **and its evaluation**.
 - Extensible multi-head architecture on a shared backbone.
 - Self-supervised pretraining + supervised fine-tuning.
+- Expert-validated statement conditioning during pretraining, within the approved
+  v1 scope; no text input is required for yield inference.
 - Geospatial registration and field-boundary alignment.
 
 ### Out of scope

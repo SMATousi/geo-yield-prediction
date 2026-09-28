@@ -1,5 +1,12 @@
 # Status — Verified Review
 
+**Full-layer spec update (2026-09-28):**
+[layer_integration.md](./layer_integration.md) records the downloader/PlanetScope
+inventory and LI-01–LI-15 tasks. Real-data native-grid ingestion, full observation
+masks, source-configured models, spatial sampling, checkpoint transfer and the
+approved statement-conditioned objective remain planned. This update verifies
+documents/source contracts, not the completeness of assets or model performance.
+
 **Phase 0 update (2026-09-23):** A fresh Python 3.11 Conda environment now installs,
 the CPU fine-tuning exit command completes, and a CUDA training smoke run succeeds
 on an RTX 3090. The G4 dependency/CPU blockers and the config-builder path issue

@@ -121,27 +121,39 @@ The Phase 1 demo-block conversion remains open, and real-data training is Phase 
 **This is the phase that changes what the project *is*.** Everything before it is
 maintenance; everything after depends on it.
 
-- [ ] Replace `make_synthetic_batch` in `main_multimodal_finetune.py` with a real
-      `DataLoader` over `FieldYieldDataset` / `HeterogeneousModalityLoader` +
-      `collate_field_samples`. Keep the synthetic path behind an explicit
-      `--smoke-test` flag, and **print a loud banner whenever it is active** so no
-      synthetic number is ever mistaken for a result.
-- [ ] Same for `main_pretrain_multimodal.py`.
-- [ ] Fix loader scalability (**L1** in [data_contract.md](./data_contract.md)):
-      registration is eager in `__init__`, so the whole dataset is reprojected into
-      memory in the parent process and `num_workers` buys nothing. Make it lazy per
-      `__getitem__` with an on-disk cache of registered arrays.
-- [ ] Make `HeterogeneousModalityLoader` subclass `torch.utils.data.Dataset` (**L2**).
-- [ ] **Add a weather/timeseries ingest path.** `TimeSeriesEncoder` is configured in
-      both entry points but no loader emits a `timeseries` kind — weather is the one
-      modality in the model with no route from disk.
-- [ ] Wire `util/spatial_split.py` to field-level splits so the geographic-honesty
-      requirement is enforced by code rather than by whoever writes `train.txt`.
-- [ ] Assemble a real pilot dataset per [data_contract.md](./data_contract.md) —
-      even 50 field-years is enough to make the pipeline honest.
+**Updated scope (2026-09-28):** Consume the downloader's catalogs, native grids,
+daily tables, soil vectors and irregular imagery, plus external PlanetScope.
+Pretraining uses unlabelled AOI tiles; fine-tuning uses the separate yield-labelled
+field corpus. The old flat-file demo loaders do not implement this handoff.
+[Full-layer integration](./layer_integration.md) is the authoritative requirement
+and task list, including dependencies and acceptance checks.
 
-**Exit:** a training run on real georeferenced fields producing an RMSE that means
-something. **This is the project's first genuine milestone.**
+- [ ] **LI-01–03:** Inspect the actual handoff, implement the source registry, and
+      build lazy datasets over shared geographic footprints with separate native
+      predictor grids. Resolve assets relative to `data_root` and read catalog
+      geometry instead of requiring a boundary TIFF.
+- [ ] **LI-04–06:** Add static/soil/CDL, daily weather/SMAP, and imagery adapters.
+      Preserve depth/band order, sensor units, native S2 groups, SAR tracks, dates
+      and ancillary quality masks. Report unavailable AOI extensions explicitly.
+- [ ] **LI-07–08:** Implement train-only normalization and unit conversion; extend
+      collation/encoders/fusion for variable sizes, physical token metadata, and
+      pixel/time/padding masks. Do not resize all sources to one input grid.
+- [ ] **LI-09–10:** Index co-occurrence and objective eligibility; enforce geographic
+      splits and separated contrastive negatives. Audit all five losses for
+      missing targets, invalid observations and temporal leakage.
+- [ ] **LI-11:** Read exported yield raster/polygons/metadata, choose an explicit
+      output grid, and apply field/target masks to loss and metrics in Mg/ha.
+- [ ] **LI-12:** Wire both real-data entry points and explicit pretrained
+      encoder/fusion checkpoint transfer. Keep synthetic input behind
+      `--smoke-test` with a visible banner.
+- [ ] **LI-13:** Run a documented real-data pilot with coverage/exclusion reports,
+      CPU verification and spatially held-out yield metrics. A declared subset is
+      a pilot, not evidence that all source adapters are compliant.
+
+**Exit:** real pretraining and supervised fine-tuning run through the intended
+handoff, with an honest spatially held-out yield RMSE. Full-layer compliance also
+requires adapter/contract coverage for every listed source. Missing upstream AOI
+assets remain external dependencies, not permission to fabricate samples.
 
 ---
 
@@ -149,7 +161,12 @@ something. **This is the project's first genuine milestone.**
 
 Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
 
-- [ ] Implement and evaluate the optional
+- [ ] **LI-14:** Profile the full-layer pipeline and measure transfer on identical
+      spatial splits/budgets, including modality subsets and validation-tuned loss
+      weights. Profile actual token counts; the five-modality prototype's cost is
+      not an estimate for the expanded inventory.
+
+- [ ] **LI-15:** Implement and evaluate the optional
       [expert-validated statement pretraining v1](./knowledge_pretraining.md).
       Use frozen text embeddings to condition held-out modality prediction, with
       a soft auxiliary loss. Compare approved text against ordinary pretraining,
@@ -196,6 +213,10 @@ their cost.
 
 Deliberately placed after Phase 5 so the change can be **measured** rather than
 assumed to help.
+
+Phase 3 must already preserve actual timestamps, missing observations and forecast
+cutoffs. This phase upgrades the order-sensitive temporal architecture; it does
+not defer ingestion, masks, or prevention of future-information leakage.
 
 - [ ] **D4** — `TimeSeriesEncoder` is an MLP followed by `mean(dim=1)`, which is
       permutation-invariant over time: a shuffled growing season produces an identical
@@ -265,8 +286,8 @@ Phase 8  docs + extensibility ──┘
 
 | Risk | Mitigation |
 |---|---|
-| **No real data exists yet.** Phase 3 is gated on assembling a field-year corpus with yield-monitor rasters; that is a data-acquisition problem this repo cannot solve on its own. | Start sourcing in parallel with Phase 0. Fifty field-years is enough to make the pipeline honest — do not wait for thousands. |
+| **Real-data integration is missing.** The downloader documents a field corpus and separate PlanetScope source; AOI-wide companion layers have additional upstream requirements. | Inspect actual catalogs/assets in LI-01, build native-grid adapters, and report missing sources instead of assuming full-layer coverage. |
 | Yield-monitor data is noisy and needs agronomic cleaning the loaders do not perform. | Treat cleaning as an explicit upstream stage with its own validation; do not let raw monitor output reach `<field>_yield.tif`. |
 | Architecture keeps growing while nothing is validated. 48 commits added ~9,700 lines with zero tests. | Freeze new architecture until Phase 3 produces a believable number. |
 | The five undetermined `.primae` requirements get read as "done". | They were probe timeouts, not verdicts. [status.md](./status.md) re-reads all five as partial. |
-| Fixing D1 exposes D2 and training starts crashing with `NaN`. | Fix them in the same change; the Phase 1 test covers both. |
+| Whole-modality masks pass, but clouds, missing dates and padding are not handled by that test. | Extend pixel/time/token masks and audit every objective in LI-08–10. |

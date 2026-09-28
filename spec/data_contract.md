@@ -1,9 +1,15 @@
 # Data Contract
 
-This is the on-disk layout the field-level loaders already expect. It is written
-down here because **nothing else in the repository states it**, and it is the single
-piece of missing information standing between the current prototype and a real
-training run.
+**Full-layer update (2026-09-28):** This document describes the existing flat-file
+demo loaders. The target real-data handoff is the downloader's per-record catalog,
+native grids, tables, vectors and acquisition indexes, specified in
+[layer_integration.md](./layer_integration.md). The layouts are not currently
+compatible; do not rename all downloader assets or put them on one grid to satisfy
+the demo contract. LI-01–LI-15 define the required integration tasks.
+
+This is the on-disk layout the existing field-level demo loaders expect. It
+documents their current behavior and limitations; the new integration contract
+defines the additional work needed for the actual downloaded corpus.
 
 Everything below was read out of `dataset/field_yield_dataset.py`,
 `dataset/heterogeneous_modality_loader.py`, and `dataset/field_roi.py`. It describes
@@ -98,7 +104,7 @@ your writer before training.
 
 `TimeSeriesEncoder` expects `(B, T, D)` weather/precipitation/soil-moisture series,
 but **neither loader emits a `timeseries` kind**. Weather is the one modality in the
-model config with no ingest path. Adding it is Phase 2 work: either a
+model config with no ingest path. Adding it is Phase 3 work: either a
 `<field>_<name>.npy` of shape `(T, D)`, or a per-field CSV joined by field-year.
 
 ---

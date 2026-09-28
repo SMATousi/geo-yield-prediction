@@ -11,6 +11,11 @@ assessments below and in `status.md` describe the earlier `c8be363`
 baseline unless explicitly updated; training still uses synthetic batches. See
 [RUNNING.md](../RUNNING.md).
 
+**Full-layer update, 2026-09-28:** The downloader and PlanetScope source inventory
+is now captured in [layer_integration.md](./layer_integration.md), with fifteen
+implementation tasks mapped to Phases 3–4. These are requirements and planned work,
+not a claim that real-data ingestion or full-layer training already runs.
+
 The upstream project predicts **county-level** crop yield from Sentinel-2 imagery +
 WRF-HRRR weather using a Multi-Modal / Spatial / Temporal ViT stack. Starting from
 that base, 48 commits (2026-09-17 → 2026-09-18) added a largely independent second
@@ -29,7 +34,8 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 |---|---|
 | [mission.md](./mission.md) | You need the goal, scope boundaries, and success criteria. |
 | [architecture.md](./architecture.md) | You are writing or reviewing code. Module map, tensor contracts, data flow, and where the two systems divide. |
-| [data_contract.md](./data_contract.md) | You are preparing real data. On-disk layout the field-level loaders expect. **This is the top blocker to real training.** |
+| [data_contract.md](./data_contract.md) | Existing flat-file demo-loader layout, masks and limitations; the full-layer target is in `layer_integration.md`. |
+| [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
 | [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v1 design for expert-validated statements conditioning cross-modal pretraining; planned, not implemented. |
 | [status.md](./status.md) | You want the honest state: what is verified, what is orphaned, and the defect list with file:line. |
 | [tech_stack.md](./tech_stack.md) | You are provisioning an environment or resolving dependencies. |
