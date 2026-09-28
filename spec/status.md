@@ -4,8 +4,15 @@
 [layer_integration.md](./layer_integration.md) records the downloader/PlanetScope
 inventory and LI-01–LI-15 tasks. Real-data native-grid ingestion, full observation
 masks, source-configured models, spatial sampling, checkpoint transfer and the
-approved statement-conditioned objective remain planned. This update verifies
+approved relationship-based knowledge objective remain planned. This update verifies
 documents/source contracts, not the completeness of assets or model performance.
+
+**Knowledge design update (2026-09-28):**
+[Relationship pretraining v2](./knowledge_pretraining.md) replaces the earlier
+statement-conditioned reconstruction design with auxiliary concept grounding and
+reviewed relationship constraints on sensor encoders. KP-01–KP-08 include evaluating
+an optional offline VLM/LLM applicability teacher. This is a specification update;
+no knowledge objectives, estimators or annotation caches are implemented.
 
 **Phase 0 update (2026-09-23):** A fresh Python 3.11 Conda environment now installs,
 the CPU fine-tuning exit command completes, and a CUDA training smoke run succeeds

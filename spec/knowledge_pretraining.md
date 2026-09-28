@@ -1,255 +1,363 @@
-# Expert-Validated Statement Pretraining — v1
+# Expert-Validated Relationship Pretraining — v2
 
-**Status:** Approved design, 2026-09-28. Not implemented.
+**Status:** Approved replacement design direction, 2026-09-28. Not implemented.
+The VLM/LLM applicability estimator is an experimental option to evaluate, not a
+selected model or a validated annotator. Scoring contracts and operational choices
+listed below must be resolved before implementation claims or training use.
 
-This document specifies an optional addition to the field-scale System B
-pretraining framework. The existing five objectives remain in place. The new
-component uses general agronomic statements to condition cross-modal prediction
-before supervised fine-tuning on measured yield.
+This design supersedes v1's statement-conditioned held-out sensor prediction.
+Keep the existing five self-supervised objectives. The optional addition now
+uses expert-approved agronomic concepts and relationships to constrain the
+representations of observed modalities directly. It does not append text to a
+sensor reconstruction head. Existing ordinary cross-modal prediction remains.
 
-## 1. Purpose and approved scope
+## 1. Purpose and scope
 
-A model drafts general statements about modality types and their relationships.
-A human agronomic expert validates every statement admitted to the training
-library. A frozen text encoder embeds the approved statements, and those
-embeddings provide additional context to an auxiliary sensor-prediction task.
+The knowledge library describes concept A, concept B, and their qualified
+relationship: for example, an elevation regime and a soil property within a
+specified geographic context. That example is a design illustration, not an
+approved universal elevation–soil rule.
 
-The approved v1 decisions are:
+- A drafting model receives the source inventory, not individual observations or
+  measured yield. A human expert reviews all admitted concepts, relationships,
+  qualifications and their training interpretation.
+- Frozen text embeddings represent concept descriptions and complete relationship
+  statements. Sensor-side projections connect observations to those concepts.
+- Soft concept-grounding and relationship losses update sensor encoders. Both
+  observed endpoints may receive gradients; no sensor must be hidden for this
+  objective.
+- Applicability can be estimated by a frozen VLM/LLM from permitted sensor evidence
+  and metadata. Its output is uncertain auxiliary supervision, not ground truth.
+- Yield fine-tuning and inference use sensor inputs only. No text model, rule
+  library, applicability teacher or knowledge head is required at deployment.
 
-- Statements describe general agronomic relationships, not individual field
-  observations or sample captions.
-- The drafting model receives modality descriptions and relationships, not field
-  sensor measurements or measured yield.
-- Every training statement must be approved by a human expert.
-- Knowledge contributes a soft, weighted auxiliary loss.
-- Yield prediction uses sensor inputs only. Text is used during pretraining.
-- V1 requires statements only: no executable conditions, numerical rule
-  thresholds, logical predicates, or explicit statement-satisfaction scorer.
+V2 explicitly expands the old statements-only scope to include concept definitions,
+applicability estimates and executable training scorers. Natural-language statements
+remain the scientific source; a text embedding alone does not define a scorer.
+This is knowledge-guided/self-supervised pretraining with weak concept supervision,
+not purely unsupervised learning or a source of synthetic yield labels.
 
-The longer-term intent is to encourage representations consistent with expert
-knowledge connecting multiple modalities. V1 implements **statement-conditioned
-cross-modal pretraining**, not direct enforcement of conditional agronomic rules.
-Its effectiveness must be measured rather than inferred from expert approval.
+## 2. Versioned knowledge library
 
-## 2. Statement library
+Store draft/reviewed relationships in JSONL, with a shared concept registry so a
+concept has the same definition wherever it is reused. Resolve modality names,
+properties, depths, bands, units and source families through
+[layer_integration.md](./layer_integration.md). Pin the registry snapshot.
 
-Store the library as a versioned JSONL artifact. Each record contains:
-
-| Field | Meaning |
+| Relationship field | Meaning |
 |---|---|
-| `id` | Stable statement identifier. |
-| `text` | The complete expert-approved natural-language statement. |
-| `modalities` | Model modality names involved in the statement. |
-| `review_status` | `draft`, `approved`, or `rejected`. Only `approved` is eligible. |
-| `reviewer_id` | Identifier of the expert who approved this version. |
-| `reviewed_at` | Approval timestamp. |
-| `version` | Version of this statement. Editing approved text requires review again. |
-| `generator` | Optional provenance for the drafting model and prompt version. |
+| `id`, `version` | Stable relationship identifier and immutable revision. |
+| `text` | Complete qualified agronomic statement. |
+| `modalities` | Participating canonical streams; at least two source families. |
+| `concept_a`, `concept_b` | Objects containing `id`, `description`, `modality`, `property_refs`. References must resolve through the source registry before use. |
+| `relation` | Object containing `type`, `direction`, `description`, `qualifications`. Types: `association`, `ordered_association`, `compatibility`; direction: `a_to_b`, `b_to_a`, `symmetric`. Direction of association does not establish causality. |
+| `applicability` | Object containing `context`, `required_evidence`, `unobservable_conditions`, `estimator_policy_ref`. Unknown context/evidence must permit abstention. |
+| `scoring_contract_ref` | Versioned executable interpretation; null in drafts is allowed, but such a record cannot supply a relationship loss. |
+| `review_status`, `reviewer_id`, `reviewed_at` | `draft`/`approved`/`rejected` and expert review provenance. |
+| `generator` | Prompt/model/settings provenance; actual model identity is supplied by the generation wrapper. |
 
-The modality tags support routing and do not turn the statement into a structured
-rule. They identify which inputs the text discusses; they contain no conditions,
-thresholds, or numerical consequences. Require at least two distinct, recognized
-modality names for this cross-modal objective.
+Concept definitions specify spatial support, time support, relevant soil depth,
+and physical meaning. Terms such as “high”, “wet” or “vigorous” need a reviewed
+reference context; do not assume globally valid numerical thresholds. Definition
+changes require a new concept version and review of affected relationships.
 
-Resolve names through the full-layer source registry in
-[layer_integration.md](./layer_integration.md), rather than the prototype's generic
-`dem/sar/weather/soil/crop` names. Tags can identify actual sources such as
-`sentinel1`, `soil_polaris`, `weather_daymet`, or `soil_moisture_smap`, and specific
-streams such as `sentinel2_10m` or `terrain_5m`. Qualified property/depth/band
-references stay in the statement text or registry mapping; they do not introduce
-executable conditions in v1. The library version pins its registry mapping.
+A separate scoring-contract artifact records supported relation type, required
+concept states/orderings, activation policy, score/loss formula, normalization,
+weights or margins, admissible contrasts, and reviewer/version provenance.
+An approved natural-language relationship becomes training-ready only when its
+concept grounding, applicability policy and scorer have also been reviewed and
+validated. Drafts and unresolved contracts are excluded. Never silently migrate
+old v1 statements into approved v2 rules.
 
-Statement approval concerns agronomic meaning, including any qualifications
-written in the text. No per-field statement review or executable rule review is
-required in v1. Reject malformed records and duplicate identifiers; exclude
-unapproved records from the training library.
+## 3. Text references and sensor concept grounding
 
-## 3. Text encoding
+Use a frozen pretrained text encoder in evaluation mode. Cache separate embeddings
+for both concept descriptions and the full qualified relationship. Pin encoder
+and tokenizer revisions, preprocessing, library hashes and embedding-cache keys.
+Select the model during implementation; generic text encoders are not assumed to
+understand numeric sensor units or encode agronomic truth in cosine distances.
 
-Use a pretrained text encoder with frozen parameters and evaluation-mode behavior.
-Choose its model and tokenizer during implementation; this spec does not select a
-provider or model. Cache embeddings of the approved library rather than re-encode
-unchanged statements on every training step.
+For valid sensor tokens, form a representation at the concept's actual support:
+valid-token pooling for a tile/field, or local token grouping for a spatial patch.
+Do not broadcast coarse SMAP/weather/centroid soil evidence as independent fine
+pixel annotations. Match footprints, dates, depth and scale before relating sources.
 
-Record the library version/hash, text encoder identifier and revision, tokenizer,
-and preprocessing settings with each experiment. These identify the actual
-knowledge input and allow a cache to be rebuilt or invalidated after changes.
+A small modality-side projector maps the sensor representation into the fixed text
+reference dimension. A prototype-based concept head produces concept scores, e.g.
+normalized sensor/text similarity with a fitted temperature and bias. Its output
+must be anchored against observed-property definitions or validated teacher labels;
+raw cosine similarity is not automatically a calibrated presence probability.
+Use source-appropriate multi-label or mutually exclusive concept-state heads.
+Known-absent concepts are valid grounding negatives; unknown concepts are masked.
+A student concept head receives only its declared sensor source and allowed metadata,
+not the other endpoint's teacher prediction or cached labels as input features.
 
-The text encoder consumes statements only. It does not generate sample-specific
-claims from sensor data during training.
+Train the projector/head and sensor encoder using soft concept targets from §4.
+Keep full sensor embeddings available to fusion; concepts are an auxiliary
+projection, not a mandatory bottleneck that discards all other information.
+Frozen prototypes and known positive/negative examples anchor semantics and limit
+arbitrary changes of the concept coordinate system.
 
-## 4. Auxiliary prediction task
+## 4. Applicability estimation: VLM/LLM as an optional teacher
 
-For an eligible field sample and target modality:
+Separate two questions:
 
-1. Encode the observed modalities using the existing native-resolution encoders.
-2. Hold the target modality out of the predictor's sensor inputs. Its actual
-   encoding supplies the reconstruction target only.
-3. Select approved statements tagged with the target and at least one remaining
-   observed modality. Average their cached text embeddings to obtain one
-   conditioning vector for this prediction direction.
-4. Fuse the remaining sensor tokens with the existing backbone and mean-pool its
-   latents into a field representation.
-5. Concatenate that representation with the text conditioning vector. A dedicated
-   auxiliary MLP for the target modality predicts its pooled sensor embedding.
-6. Compare the prediction with the detached, mean-pooled target embedding.
+1. **Concept presence:** does the observed source support concept A or B?
+2. **Relationship applicability:** are the relationship's antecedent/context
+   qualifications observable and satisfied for this sample or comparison?
 
-For shared sensor dimension `D` and text dimension `D_text`, the auxiliary head
-maps `(B, D + D_text)` to `(B, D)`. Gradients update the remaining sensor encoders,
-the fusion backbone, and the auxiliary head. The frozen text encoder and detached
-target branch receive no gradients from this objective. Other pretraining
-objectives continue to train the modality encoders.
+Neither is a yield label or proof of the statement. The relationship gate must
+not depend on whether the predicted consequence agrees with the rule. Otherwise
+it could hide violations by activating only already compatible pairs.
 
-The first version predicts pooled embeddings, consistent with the current
-cross-modal objective. It does not reconstruct spatially distinct sensor pixels.
+### Evidence and teacher inputs
 
-Samples may be unlabelled AOI tiles as well as fields. The same physical footprint,
-time tolerance and source-validity rules from the full-layer contract apply. Hold
-out the target source family, including its related resolution/track streams, by
-default; select and predict individual eligible target-stream embeddings within
-that held-out family. Do not count resolution groups from one sensor as independent
-sources when routing a cross-modal statement.
+Build an offline evidence package from QA-valid observations and allowed metadata:
+physical-unit tables/summaries for soil, terrain and weather; suitable image crops
+for a VLM; dates, resolution, depth, footprint, provenance and missingness. Choose
+an LLM for explicit numeric/tabular evidence or a VLM when image interpretation
+is actually needed. A rendering of DEM or soil values needs its physical legend;
+a natural-image VLM must not be presumed competent on multispectral/SAR arrays.
+Summaries must preserve the support of the concept they label.
 
-### Eligibility and missing modalities
+The teacher receives reviewed concept/rule definitions and this package. It must
+not receive measured yield, yield-derived summaries, held-out evaluation labels,
+or observations beyond the relevant cutoff. It must not infer unobserved
+irrigation, fertilizer or management. Unknown required conditions lead to
+abstention unless the expert-approved policy explicitly permits a qualified
+relationship without them. Never ask the model to decide whether a rule is true
+by treating its own agronomic narrative as observed evidence.
 
-Compute this objective only for sample/target pairs with:
+Use deterministic source-property estimators as a grounding reference or alternative
+where a reviewed definition makes a concept directly measurable. VLM/LLM use is
+optional and must be compared with these where feasible. No provider calls or
+sample data transfer are authorized by this specification change.
 
-- an actually observed target modality;
-- at least one actually observed conditioning modality; and
-- at least one relevant approved statement.
+### Cached annotation contract
 
-Availability is evaluated per sample. A learned missing token is not an observed
-target or a qualifying conditioning source. Missing target rows do not contribute
-to the loss. If no sample/target pair is eligible, return a zero knowledge loss and
-report zero eligible pairs.
+For each concept/sample/support, store:
 
-Pool targets over valid observations/tokens only, excluding cloud, nodata and
-padding; a present file with no valid coverage is not an eligible modality.
-Co-occurrence means shared geographic coverage and appropriate observation times,
-not merely files stored under one record. Known source conversions (linear SAR,
-scaled reflectance, soil units) follow the source registry before encoding.
+- sample/support/window ID and concept/rule versions;
+- `status`: `estimated`, `unknown`, or `not_observable`;
+- nullable `presence_score` and separate nullable `confidence_score` in [0, 1];
+- cited input asset/property/pixel-region/date references and missing evidence;
+- for a relationship, a separate context applicability status/score and evidence;
+- teacher model/revision, prompt/preprocessing/settings versions, input hash,
+  cache version, and any deterministic-estimator or calibration revision.
 
-Selection by modality tags does **not** establish that a statement's agronomic
-conditions hold in a particular field. The text provides context to the predictor;
-v1 has no mechanism to test or activate those conditions explicitly.
+A model's self-reported confidence is not calibrated reliability. Presence scores
+become soft targets only after the estimator policy passes validation; confidence
+weights require separate calibration or an explicit conservative policy validated
+on reviewed examples. Unknown is never converted to zero or “concept absent”.
+Reject non-finite/out-of-range scores, unsupported evidence references, malformed
+records, incompatible units/supports and stale cache entries.
 
-## 5. Soft training objective
+Review a stratified subset of annotations with an expert, covering positives,
+negatives, unknowns, sources, seasons and regions. Fit calibration and choose
+abstention policies on training/validation geography only; report error, calibration,
+coverage and abstention. The user has approved expert review of every rule, not
+mandatory manual review of every sample estimate. Freeze accepted estimators and
+cache outputs offline. No joint updates from the student, no student-produced
+labels, and no online teacher calls inside the training loop.
 
-Use mean squared error in the shared sensor embedding space. Average over embedding
-dimensions and eligible samples for each target direction, then average the active
-directions:
+## 5. Relationship semantics and executable scorers
+
+Do not define the loss as “make DEM and soil vectors similar” or “copy the distance
+between two sentences”. Semantic similarity neither establishes an association
+nor captures its direction, qualifications or magnitude.
+
+Represent a relationship by its text embedding plus a reviewed scoring contract.
+A bounded scorer evaluates sensor concept representations in the anchored concept
+space. Support these first implementations only when the required evidence exists:
+
+- **Ordered association:** compare eligible sample pairs in the same applicable
+  context. A reviewed signed-order scorer softly penalizes reversed ordering of
+  the specified endpoint properties/concept states, with a declared tolerance.
+  Observed orderings, meaningful contrasts and qualifications must be available;
+  do not rank arbitrary geographic pairs or force every exception to disappear.
+- **Compatibility:** use a reviewed concept-state compatibility table or validated
+  relation scorer. Penalize specifically declared incompatible combinations with
+  soft weights. An ordinary association does not make alternative outcomes invalid.
+- **General association:** a sentence alone cannot set a numerical compatibility
+  matrix or conditional probability. Retain such records in the library, but skip
+  their relationship loss until an expert-reviewed, validated contract exists.
+  A future fitted probabilistic scorer must use training geography only and
+  document the extra data supervision it introduces.
+
+If a text-conditioned relation module is used, fit it separately using reviewed
+concept-pair/relationship examples and admissible negative examples, validate it,
+then freeze it before sensor pretraining. Relation-text swaps must affect its score
+in expected ways. Do not let a jointly trained unconstrained MLP satisfy every rule
+by changing its outputs while leaving sensor embeddings uninformative. A fixed
+explicit table/order scorer is also supported; document when text is used to define
+concept coordinates rather than materially controlling the relationship scorer.
+Neither path claims automatically recovered relationship geometry from text.
+
+Negatives must be justified by the scorer and evidence. Different fields, shuffled
+rules or unobserved concepts are not automatically agronomically incompatible.
+Use shuffled rules only as an experimental control, not as scientific labels.
+
+The default knowledge branch acts on observed per-source encoder representations,
+so both endpoints receive gradients through their concept projections. Gates,
+teacher targets, cached text and the relation scorer are detached/frozen. This
+branch does not directly train fusion by default; the existing five objectives do.
+Any later fused-representation extension needs a separate leakage/gradient audit.
+
+Freeze scorer parameters, not its computation on student inputs: preserve autograd
+through the scorer into both endpoints. Training scorers must provide differentiable
+soft penalties; hard decisions/order checks belong in eligibility or evaluation.
+Specify any smooth surrogate and verify its gradients in the scoring contract.
+
+## 6. Soft objectives, eligibility and gradient flow
+
+For soft, independently present concepts, a first grounding implementation can use
+weighted binary cross-entropy; use a declared categorical loss for exclusive states.
+Choose the relationship loss from its reviewed contract, not from sentence cosine.
 
 ```text
-target_m = stop_gradient(mean_pool(sensor_encoder_m(input_m)))
-prediction_m = knowledge_head_m(concat(fused_other_sensors, relevant_text))
-L_knowledge = mean_over_active_directions(MSE_over_eligible_rows(prediction_m, target_m))
-L_total = L_existing_five_objectives + lambda_knowledge * L_knowledge
+h_a, h_b = valid_support(sensor_encoder_a(x_a)), valid_support(sensor_encoder_b(x_b))
+p_a, p_b = concept_head_a(h_a, frozen_text_a), concept_head_b(h_b, frozen_text_b)
+L_ground = weighted_known_concept_loss(p_a, p_b, detached_teacher_targets)
+L_relation = weighted_applicable_relation_loss(p_a, p_b, frozen_relation_contract)
+L_total = L_existing_five + lambda_ground * L_ground + lambda_relation * L_relation
 ```
 
-Expose `lambda_knowledge` as an experiment configuration value; choose its value
-using validation rather than fixing an unsupported default. The feature is
-optional and disabled by default. When disabled, preserve the existing objective
-behavior and perform no text encoding or additional fusion passes.
+Order scorers may consume a second matched sample pair. Weights combine reviewed
+rule weights, calibrated annotation reliability and context applicability. They
+are nonnegative, detached, bounded and fixed with respect to student predictions.
+No eligibility decision may use measured yield or drop a pair solely because it
+violates the relationship. Grounding remains eligible even when a relation is
+inapplicable, if the individual concept target is reliable.
 
-Use a separate auxiliary head from ordinary cross-modal prediction so the
-statement-conditioned component can be enabled and ablated independently. Report
-the unweighted knowledge loss, its weighted contribution, and eligible pair count.
-Sample prediction directions if necessary to keep the added fusion cost bounded.
+Relation eligibility requires two actually observed source families, valid shared
+support/time/depth, an approved training-ready rule, accepted grounding/evidence,
+and a supported scoring contract. Missing tokens, cloud/nodata/padding and stale
+annotations are excluded. Related S2 grids or SAR tracks are not independent
+source families. Follow full-layer spatial split, co-occurrence and cutoff rules.
 
-## 6. Fine-tuning and inference
+Normalize each objective over its eligible weight sum, then balance active
+concepts/rules so high-frequency statements cannot dominate. Return a defined zero
+and zero counts when no eligible terms exist, with no NaNs or division by zero.
+Report denominators, skipped reasons, active rules and unweighted/weighted losses.
+Expose both knowledge weights, scorer margins, temperatures and sampling budgets
+in versioned experiment configuration; select them on validation data.
+
+The feature is optional and disabled by default. Disabled runs perform no text,
+teacher, cache or extra-head work and preserve the existing training path. Retain
+all five existing objectives to preserve signal beyond the selected concepts.
+Monitor representation variance, concept discrimination and response to source
+perturbations: low relationship loss alone cannot establish embedding quality.
+
+## 7. Fine-tuning and inference
 
 Transfer the sensor encoders and fusion backbone to supervised yield fine-tuning.
-Discard the text encoder, cached statements, and knowledge prediction heads from
-the yield inference path. Loading a fine-tuned model and making predictions must
-require no statement library, text input, or text-model access.
+Discard text encoders/caches, applicability estimators, concept projections and
+relationship scorers from the yield inference path. Attach the yield head and
+train against actual measured yield. Loading and inference require no knowledge
+artifacts, provider access or teacher annotations.
 
-Measured yield remains the ground truth for supervised fine-tuning and evaluation.
-The statement library supplies pretraining context; it supplies no yield labels.
+The transferred representations should retain useful information learned through
+these auxiliary losses. This is an experimental aim, not a guarantee of useful
+yield transfer or universal agronomic rule satisfaction.
 
-## 7. Evaluation and acceptance
+## 8. Evaluation and acceptance
 
-Compare three primary pretraining conditions:
+Compare on identical sensor data, spatial splits, seeds where feasible, and matched
+budgets (report offline annotation cost separately):
 
-1. The existing five objectives without knowledge conditioning.
-2. The existing objectives plus approved statement conditioning.
-3. The same added objective with shuffled statement assignments.
+1. Existing five-objective pretraining only.
+2. Existing objectives plus concept grounding only.
+3. Grounding plus reviewed relationships with the same annotations.
+4. The same branch with shuffled relationship/concept assignments as a control.
+5. Constant/no-text references with the same annotations and capacity; distinguish
+   gains from weak concept supervision or explicit scorers from gains due to text.
+6. Validated VLM/LLM versus deterministic or expert annotations on an overlapping
+   measurable subset; report teacher coverage/error as well as training results.
 
-Also compare the added prediction head with its text input removed or replaced by
-a constant vector. This separates the benefit of additional prediction training
-from the benefit of statement content. Use comparable training budgets, the same
-sensor data, spatial splits, fine-tuning protocol, and evaluation metrics.
+Evaluate concept discrimination/calibration on independently expert-reviewed
+examples, embedding variance and sensitivity, and conditional relationship scores
+on held-out applicable supports. Report coverage and scorer definitions with
+violation scores; never call them proof of agronomic truth. Test rule-text swaps
+and sensor perturbations for shortcut behavior. Grounding and relationship gains
+must be distinguished; inspect whether only projections improve while transferable
+sensor features do not. Evaluate sensor-only downstream yield with the knowledge
+branches removed, including low-label transfer and missing-source subsets.
 
-Measure held-out cross-modal reconstruction error and downstream yield-map
-performance. Report uncertainty across repeated runs where practical. Shuffled
-text and no-text controls are necessary because the predictor may learn to ignore
-the statements. Useful expert knowledge is not, by itself, evidence that this
-conditioning mechanism transfers it into sensor representations.
+Acceptance requires meaningful checks for:
 
-Acceptance requires:
+- draft/unreviewed/unresolved rules and malformed/stale annotations excluded;
+- unknown versus known-absent labels, cutoff/QA/support/depth eligibility, and
+  missing/unobservable conditions handled without fabricated evidence;
+- no consequence-based gate or arbitrary false-negative generation;
+- frozen teacher/text/scorer parameters; gradients into both eligible sensor
+  encoders; no detached student path; no teacher annotations as student inputs;
+- well-defined zero losses for empty eligible sets and heterogeneous availability;
+- bounded costs, reproducible provenance and no teacher calls in the train loop;
+- disabled-path equivalence and text/teacher-free transfer/inference;
+- real-data controlled comparisons and transparent reporting of no benefit.
 
-- Tests exclude unapproved statements and missing target rows from the objective.
-- Tests verify that holding out a target prevents its embedding from entering the
-  predictor and that text-encoder parameters remain frozen.
-- Tests cover empty libraries, no eligible pairs, and heterogeneous availability.
-- Disabling the feature preserves the existing pretraining path.
-- Fine-tuning and inference run without text artifacts.
-- Reproducible real-data comparisons establish whether the addition helps.
-  Synthetic runs establish executability only.
+Synthetic checks establish execution, not knowledge validity or transfer.
 
-Do not report logical rule satisfaction or violation rates for v1: it has no
-executable definition of either. Report a lack of measured benefit or ignored text
-as an experimental result, not as successful knowledge transfer.
+## 9. Implementation tasks and decisions
 
-## 8. Implementation placement and later work
+Implement as an optional extension of `MultimodalSelfSupervisedPretrain` after
+real-data ingestion (Phase 3). These tasks expand Phase 4's LI-15, with LI-02/10/14
+as prerequisites. All remain open.
 
-Implement this as an optional extension of `MultimodalSelfSupervisedPretrain`.
-The statement library and embedding cache belong to the pretraining data/config
-path, rather than the supervised field-sample contract.
+| Task | Deliverable and acceptance |
+|---|---|
+| **KP-01: Library and review contracts** | V2 concept/rule/scorer schemas, registry references, versioning and review workflow; reject old/draft/unresolved records. Select a small expert-approved pilot of measurable relationships rather than force all layers to participate. |
+| **KP-02: Evidence and applicability policies** | Define support/window units and permitted evidence per concept, optional deterministic definitions, unknown handling and context-only gates. Expert approves definitions and scorer meaning. |
+| **KP-03: Applicability teacher pilot** | Select/evaluate frozen LLM/VLM and prompts; build offline evidence packages and versioned annotation cache. Measure expert-reviewed error/calibration/coverage and compare measurable baselines before admitting targets. |
+| **KP-04: Frozen text and concept heads** | Select/pin text encoder, cache concept/rule embeddings and implement modality projections anchored by accepted annotations. Verify grounding and gradients without cross-source inputs. |
+| **KP-05: Relationship scorers** | Implement reviewed order/compatibility contracts, or separately fit/validate/freeze a text-conditioned scorer. Establish meaningful contrasts, gradient paths and rule-swap sensitivity; unsupported associations remain inactive. |
+| **KP-06: Objective integration** | Add optional independently weighted grounding/relation losses, eligibility masks, balanced normalization, bounded sampling and logging; keep existing objectives and disabled behavior. |
+| **KP-07: Transfer and contract verification** | Cover §8 failure cases and strip auxiliary branches from supervised checkpoints/inference. Run real sensor-only transfer. |
+| **KP-08: Controlled evaluation** | Execute §8 controls on spatial holdouts; report annotation cost, confidence validity, embedding quality and downstream yield. Document absence of benefit as an outcome. |
 
-Real unlabelled field ingestion is a prerequisite for meaningful evaluation
-(roadmap Phase 3). Integrate and profile the experimental objective with the
-pretraining and transfer work in Phase 4. No implementation is claimed by this
-document.
+Operational choices to record during these tasks: pilot concepts/relations, text
+encoder, applicability model and evidence format, annotation validation/calibration
+policy, scorer type/contracts, spatial support, pairing strategy, weights and budget.
+These are implementation decisions within this design, not claims resolved here.
 
-Later versions may explore explicit conditions, measurable consequences,
-applicability checks, confidence-weighted rules, and statement-satisfaction
-scoring. Those require a separate design decision and are outside the approved v1
-scope.
+## 10. Research context
 
-## 9. Statement-generator prompt
+[Relational Knowledge Distillation](https://arxiv.org/abs/1904.05068) transfers
+relations among representations rather than just individual outputs.
+[Concept Bottleneck Models](https://arxiv.org/abs/2007.04612) ground learned
+representations in annotated concepts; [Label-Free Concept Bottleneck Models](https://arxiv.org/abs/2304.06129)
+explore construction without manually collected concept labels. These motivate
+parts of this proposal. None establishes the validity of our agronomic rules,
+LLM/VLM annotations, or this particular multimodal objective. Our concept branch
+is auxiliary and does not impose a bottleneck on yield inference.
 
-**Prompt version:** `statement_generator_v1.0`.
+## 11. Relationship-generator prompt
+
+**Prompt version:** `relationship_generator_v2.0`.
 **Layer vocabulary snapshot:** `layer_inventory_2026-09-28`.
 
-Copy the complete block below into the drafting model. It is self-contained and
-requests an initial batch of at most 60 statements. This prompt does not approve
-its outputs or implement the pretraining objective. Record the actual generator
-model/revision and generation settings externally; the model must not invent its
-own provenance. Allocate globally unique statement IDs when importing multiple
-batches, then retain those IDs through expert review and versioning.
+Copy the complete block below into the drafting model. It requests at most 30
+relationship candidates, not sample annotations. Actual generator provenance is
+recorded externally. Allocate globally unique IDs across imported batches and
+retain identifiers through review. The old v1 prompt is superseded.
 
 ```text
-You are drafting an agronomic knowledge library for review by a human expert.
-Your output will be used in statement-conditioned multimodal pretraining before
-supervised crop-yield fine-tuning.
+You are drafting an agronomic relationship library for human expert review.
+It will support soft constraints on multimodal sensor embeddings during
+pretraining. Yield fine-tuning and inference use sensors only.
 
 TASK
-Generate up to 60 distinct, scientifically defensible, general agronomic
-statements connecting the modalities listed below. You receive only the modality
-inventory, not observations from any field. Do not describe a particular field,
-invent measurements, estimate yield, or infer that any condition is currently
-present. Every generated statement is a DRAFT requiring human expert approval.
+Generate up to 30 distinct, defensible relationship candidates. Each describes
+concept A, concept B, their relationship, and conditions under which the
+relationship is applicable. Encode no measurements from a particular field: you
+receive only the inventory. Every candidate remains DRAFT.
 
-The training task hides a sensor source and uses other sensor representations plus
-approved statement embeddings to predict the held-out source representation.
-Statements should therefore express useful relationships between observable soil,
-terrain, weather, moisture, vegetation or crop-history information. Text is used
-only during pretraining; yield inference uses sensor inputs only.
-
-This version uses natural-language statements and modality tags only. Do not
-generate executable rules, formal predicates, numerical thresholds, pseudo-labels,
-loss functions, training code, or statement-satisfaction scores. Conditional
-wording and exceptions belong in the natural-language statement itself.
+Concept descriptions and the complete relationship will be encoded with a frozen
+text encoder. Sensor representations will be grounded against the concepts using
+validated observations or an optional frozen VLM/LLM applicability estimator.
+A reviewed relation-specific scorer may then softly constrain the sensor
+representations. Similar text vectors do not establish a physical relationship.
+Your job is to draft definitions and qualifications, not invent its numerical loss.
 
 AVAILABLE MODALITIES — USE THESE EXACT TAGS
 
@@ -352,63 +460,62 @@ Measured yield rasters/polygons are reserved for supervised fine-tuning and are
 not inputs to statement generation. Several AOI source extensions are planned;
 the inventory is not proof that every source is observed for every training sample.
 
-STATEMENT REQUIREMENTS
-1. Express one principal agronomic relationship per statement. Use one to three
-   sentences, approximately 35–100 words, without filler or repetitive paraphrases.
-2. Connect two to four of the allowed modality tags. Every tag must participate
-   meaningfully in the statement; do not add unrelated tags to improve coverage.
-   Include at least two source families. Sentinel-2's resolution groups are one
-   family; DEM-derived terrain is not independent evidence from DEM. Relations
-   between resolution groups alone or identities among terrain derivatives do
-   not qualify as cross-source agronomic statements.
-3. State important qualifications in the text: crop or growth stage, relevant
-   soil depth, temporal order, moisture regime, spatial scale, viewing geometry,
-   and management dependence where they materially change the relationship.
-   Do not assign universal directional effects where the relationship is conditional.
-4. Distinguish physical mechanisms, observational associations and sensor proxies.
-   A reflectance index is not a direct yield measurement; radar backscatter is
-   not uniquely determined by moisture; TWI is not observed wetness. Do not turn
-   a plausible association into an unconditional causal claim.
-5. Respect scale and time. Coarse weather/SMAP/centroid soil data cannot resolve
-   fine within-field patterns. Contemporary relationships require compatible
-   observation times; static soil/terrain and old NAIP imagery cannot automatically
-   describe current canopy conditions. Soil depths and measurement supports must
-   be comparable before asserting agreement across sources.
-6. Missing or invalid values provide no agronomic evidence. Do not interpret cloud,
-   nodata, a missing overpass or an empty CSV cell as low vegetation or dry soil.
-7. Statements may mention an important unobserved condition as a qualification,
-   but must not assert that fertilizer, irrigation, planting date or management
-   is available in these layers. Do not introduce unavailable modalities or labels.
-8. Favor established relationships a human agronomic expert can assess. Do not
-   invent citations, numerical effect sizes, probabilities, yield values, or
-   confidence scores. If you cannot defend a relationship, omit it.
-9. Cover a balanced range of terrain–soil–water relationships, weather–soil–water
-   relationships, environmental context–vegetation relationships, optical–radar
-   relationships, crop-history context and cross-source soil interpretation.
-   Include every source where a defensible relationship exists, but do not force
-   unsupported statements or every possible modality pair to meet a quota.
-10. Prioritize agronomic relationships useful for connecting sensor information.
-    Do not fill the library with file-format facts, variable definitions,
-    generic data-quality advice, management prescriptions or preprocessing steps.
-    The inventory caveats constrain your statements; they are not the entire task.
+
+RELATIONSHIP REQUIREMENTS
+1. Use one principal relationship per candidate, with a concise complete text
+   statement. Ground both endpoint concepts in observable properties from the
+   inventory. Name units, depth, time and spatial support where material.
+2. Use exactly two endpoint concepts for this first version. Each identifies a
+   modality tag and its property references. Include any additional observed
+   context sources in modalities. All tags must be relevant; require at least two
+   source families. S2 resolution groups are one family; DEM and derived terrain
+   do not provide independent source evidence.
+3. State whether this is association, ordered_association, or compatibility.
+   Choose direction a_to_b, b_to_a, or symmetric according to the described
+   relation; directional association does not prove causation.
+4. Do not infer that an association prohibits other outcomes. Do not translate
+   generic co-occurrence into similarity of whole sensor embeddings. Do not
+   invent compatibility tables, thresholds, probabilities, numerical effects,
+   causal claims, model confidence, or scorer/loss code.
+5. Define context and required evidence separately from the expected consequence.
+   State unobservable conditions explicitly. A future applicability estimator
+   must abstain when required conditions cannot be established; it must not infer
+   context solely from whether the consequence already agrees with the statement.
+6. Avoid globally undefined concepts such as high elevation without a reference
+   context. Elevation alone does not determine a universal soil type. Respect
+   region, crop/stage, soil depth, geometry, management and moisture qualifications.
+7. Respect scales and observation dates. Coarse weather, soil and SMAP are not
+   fine within-field measurements. Missing/invalid pixels are not concept absence.
+   Old NAIP does not automatically describe current vegetation. No input or
+   annotation may use measured yield or observations beyond the relevant cutoff.
+8. Prefer relationships with measurable concepts and reviewable training meaning.
+   General associations may be drafted but cannot train until a reviewed scoring
+   contract exists. Do not invent such a contract: set scoring_contract_ref null.
+9. Balance defensible terrain–soil–water, weather–water, environment–vegetation,
+   optical–radar, crop-history and cross-source soil relationships. Do not force
+   unsupported pairs or quotas. Distinguish mechanisms, associations and proxies;
+   radar does not uniquely measure moisture and TWI is not observed current wetness.
+10. Do not invent citations, field facts, unavailable management evidence, property
+    identifiers, or PlanetScope bands/scales. property_refs are proposed inventory
+    property references to resolve during review, not proof of registry validity.
 
 OUTPUT
-Return only valid JSONL: one JSON object per line, with no markdown fences,
-headings, rationale, prose preamble or trailing commentary. Use exactly these keys:
+Return only JSONL, one object per line, without markdown or commentary. Use
+exactly these keys and nested structures:
 
-{"id":"agronomy_v1_0001","text":"<your draft statement>","modalities":["<allowed tag>","<allowed tag>"],"review_status":"draft","reviewer_id":null,"reviewed_at":null,"version":1,"generator":{"prompt_version":"statement_generator_v1.0","layer_vocabulary":"layer_inventory_2026-09-28","model":null}}
+{"id":"agronomy_v2_0001","version":1,"text":"<qualified draft relationship>","modalities":["<tag A>","<tag B>"],"concept_a":{"id":"concept_v2_0001_a","description":"<observable concept A and reference context>","modality":"<tag A>","property_refs":["<inventory property reference>"]},"concept_b":{"id":"concept_v2_0001_b","description":"<observable concept B and reference context>","modality":"<tag B>","property_refs":["<inventory property reference>"]},"relation":{"type":"association","direction":"a_to_b","description":"<relationship meaning>","qualifications":["<material qualification>"]},"applicability":{"context":"<where and when applicable>","required_evidence":["<observable antecedent/context evidence>"],"unobservable_conditions":["<required condition not observed, if any>"],"estimator_policy_ref":null},"scoring_contract_ref":null,"review_status":"draft","reviewer_id":null,"reviewed_at":null,"generator":{"prompt_version":"relationship_generator_v2.0","layer_vocabulary":"layer_inventory_2026-09-28","model":null}}
 
-Use sequential IDs starting at agronomy_v1_0001. Never set review_status to
-approved or invent a reviewer, review timestamp or generator model identity.
-Keep conditional qualifications inside text; do not add structured conditions,
-consequences, thresholds, scores or other keys. Produce fewer than 60 statements
-if necessary to preserve defensibility and avoid duplicates. Before returning,
-check JSON validity, allowed tags, tag relevance, source-family diversity,
-scientific qualifications, and that every record remains draft.
+Use sequential rule IDs starting agronomy_v2_0001. Reuse concept IDs only for
+identical definitions; otherwise allocate distinct IDs. Lists can be empty when
+there is no applicable item. Keep review fields draft/null, policy/scorer refs
+null and generator model null. Produce fewer than 30 if defensibility requires it.
+Check JSON validity, tag relevance, source-family diversity, observability,
+qualifications and no fabricated numeric training targets before returning.
 ```
 
-After generation, validate the JSONL and tag vocabulary, deduplicate by meaning,
-and submit the draft text and tags to the human expert. Approval or revision is
-recorded through the statement-library review fields. Text or tag changes to an
-approved version require review again. Generation alone never makes a statement
-eligible for the training library.
+Validate schema/tags, resolve proposed property references, deduplicate concepts
+and relationships, and submit all definitions and qualifications for expert review.
+Prepare applicability/scoring policies separately before marking a rule training-ready.
+Generation or a VLM/LLM applicability estimate never constitutes expert rule approval.
+A separate sample-applicability prompt will be versioned and evaluated in KP-03;
+this inventory-only generator prompt must not be reused to annotate sensor samples.

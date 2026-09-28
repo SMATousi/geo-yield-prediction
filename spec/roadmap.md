@@ -167,10 +167,13 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       not an estimate for the expanded inventory.
 
 - [ ] **LI-15:** Implement and evaluate the optional
-      [expert-validated statement pretraining v1](./knowledge_pretraining.md).
-      Use frozen text embeddings to condition held-out modality prediction, with
-      a soft auxiliary loss. Compare approved text against ordinary pretraining,
-      shuffled text, and a no-text control; preserve sensor-only yield inference.
+      [expert-validated relationship pretraining v2](./knowledge_pretraining.md),
+      following **KP-01–KP-08**. Ground sensor concepts using frozen text references
+      and accepted annotations; apply reviewed soft relationship scorers to both
+      observed endpoints. Pilot and validate an optional offline VLM/LLM applicability
+      estimator with abstention and calibration. Compare grounding-only, relationship,
+      shuffled/no-text and teacher controls; preserve sensor-only transfer/inference.
+      This supersedes the earlier text-conditioned held-out prediction proposal.
 
 - [ ] Profile the five objectives. `_cross_modal_prediction` runs the fusion stack
       once per modality and `_temporal_forecast` once per temporal modality — roughly

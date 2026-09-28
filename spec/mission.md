@@ -50,8 +50,10 @@ Unlabelled pretraining includes AOI tiles as specified by
 [layer_integration.md](./layer_integration.md). The full source inventory includes
 optical imagery, terrain derivatives, multiple soil/weather sources and observed
 soil moisture beyond the prototype's five inputs. Optional
-[expert-validated statement pretraining](./knowledge_pretraining.md) supplies
-text context during pretraining only; yield inference remains sensor-only.
+[expert-validated relationship pretraining](./knowledge_pretraining.md) grounds
+sensor concepts and softly constrains reviewed cross-modal relationships, with
+optional VLM/LLM applicability estimation during pretraining. Yield fine-tuning
+and inference remain sensor-only.
 
 ### Secondary
 6. Preserve geographic honesty in evaluation: **spatial splits**, not random splits.
@@ -97,8 +99,9 @@ unmet. See [status.md](./status.md). Unchecked items are targets, not claims.
 - Missing-modality design **and its evaluation**.
 - Extensible multi-head architecture on a shared backbone.
 - Self-supervised pretraining + supervised fine-tuning.
-- Expert-validated statement conditioning during pretraining, within the approved
-  v1 scope; no text input is required for yield inference.
+- Expert-validated concept grounding and relationship constraints during pretraining,
+  within the v2 design, including evaluation of an optional offline VLM/LLM
+  applicability teacher; no text/teacher input is required for yield inference.
 - Geospatial registration and field-boundary alignment.
 
 ### Out of scope

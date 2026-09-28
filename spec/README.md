@@ -36,7 +36,7 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 | [architecture.md](./architecture.md) | You are writing or reviewing code. Module map, tensor contracts, data flow, and where the two systems divide. |
 | [data_contract.md](./data_contract.md) | Existing flat-file demo-loader layout, masks and limitations; the full-layer target is in `layer_integration.md`. |
 | [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
-| [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v1 design for expert-validated statements conditioning cross-modal pretraining; planned, not implemented. |
+| [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v2 direction for expert-validated relationships constraining sensor embeddings, optional VLM/LLM applicability estimation, and KP-01–KP-08 tasks; planned, not implemented. |
 | [status.md](./status.md) | You want the honest state: what is verified, what is orphaned, and the defect list with file:line. |
 | [tech_stack.md](./tech_stack.md) | You are provisioning an environment or resolving dependencies. |
 | [roadmap.md](./roadmap.md) | You are deciding what to do next. Prioritized, with the blocking order made explicit. |

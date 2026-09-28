@@ -81,8 +81,9 @@ are competently written, but no training script imports them. Both entry points 
 The planned replacement reads catalog assets, indexes and sidecars into lazy
 native-footprint datasets. Both training modes share a source registry and sensor
 adapters; the supervised mode additionally loads yield and its output grid/mask.
-Tokens carry physical grid/time metadata into fusion. Text conditioning from
-approved knowledge statements is an optional pretraining branch only. See tasks
+Tokens carry physical grid/time metadata into fusion. Expert-approved concept
+grounding and relationship constraints form an optional pretraining branch, with
+an optional offline VLM/LLM applicability teacher. See tasks
 LI-01–LI-15 rather than interpreting the demo data flow as the target handoff.
 
 ---
@@ -210,11 +211,14 @@ container that realises the "one backbone, many tasks" claim. **It has no caller
 | cross-modal prediction | `_cross_modal_prediction` `:266` | leave-one-out: reconstruct a held-out modality from the rest |
 | contrastive alignment | `_contrastive_alignment` `:290` | InfoNCE — two sensors over the same field share a latent |
 
-**Planned extension:** [Expert-validated statement pretraining](./knowledge_pretraining.md)
-adds an optional soft auxiliary objective conditioned on frozen text embeddings of
-approved general agronomic statements. Text is used only during pretraining; yield
-inference remains sensor-only. The extension is specified but not implemented and
-does not explicitly enforce conditional rules in v1.
+**Planned extension:** [Expert-validated relationship pretraining v2](./knowledge_pretraining.md)
+supersedes the previous statement-conditioned reconstruction proposal. Frozen text
+references anchor sensor concept projections; reviewed applicability policies and
+relation-specific scorers provide soft grounding/relationship losses. An optional
+frozen VLM/LLM estimates applicability offline and must be validated. Both sensor
+endpoints can receive gradients; this branch does not directly train fusion. Yield
+fine-tuning and inference discard all knowledge branches and remain sensor-only.
+This extension is specified, not implemented; see KP-01–KP-08.
 
 `set_encoder_trainable()` (`:351`) supports the frozen / partial / full fine-tuning
 comparison.
