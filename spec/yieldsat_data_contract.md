@@ -355,6 +355,7 @@ full-layer backlog.
 | **YS-07: Objective and knowledge routing audit** | Phase 3 for existing objectives; Phase 4 for knowledge; YS-03/05/06 | Record which objectives are active in point/patch modes, adapt masking/forecast eligibility and prevent source-family/temporal leakage. country-reviewed concepts/teacher policies integrate with KP-01–KP-08 only after semantics are verified. |
 | **YS-08: Real entry points and bounded pilot** | Phase 3; YS-03/05/06/07 existing-objective audit | Explicit contract selector, documented point-mode CPU/GPU pilot as available, measured I/O/memory, source exclusions and sensor-only checkpoint transfer. Report honest held-out per-country/per-crop/field-balanced metrics in verified units. |
 | **YS-09: Spatial reconstruction / patch mode** | Phase 3 follow-up; YS-02/03/06/08 | Scatter point outputs to verified field grids; optionally implement spatial patch datasets/dense heads. Test sparse holes, bounds, orientation, duplicate cells and georeferencing; no invented dense labels. |
+| **YS-11: Perceiver fusion over native token sets** | Phase 3 model follow-up; YS-06/YS-08 | Per-slot/per-depth encoder tokens with per-token masks, date-aware positions and a stronger latent stack, ablated against concat-MLP, token-transformer and the current summary Perceiver on grouped splits with 3 seeds. Details in §8. |
 | **YS-10: Transfer and relationship evaluation** | Phase 4; YS-08 and relevant YS-07/KP tasks | Scratch/pretrained comparisons and knowledge controls on matching grouped splits/budgets; report point versus patch mode, annotation cost, excluded sources and absence of benefit if applicable. |
 
 Initial pilot exit: verified target units/processing, accepted source snapshot,
@@ -729,3 +730,70 @@ No annotation cost was incurred, because no annotations exist.
 6. **Knowledge objectives.** Blocked; see YS-07.
 7. **Storage.** The cache needs ~25 GB of local disk. Without it, the `h5`
    backend works but is about 60× slower per batch over NFS.
+
+## 8. Model improvement tasks
+
+### YS-11 — Perceiver fusion over native token sets (planned, 2026-09-29)
+
+**Motivation.** The fusion stage is already Perceiver-style
+(`LatentFusionTransformer`; exact form in
+[architecture.md §9.3](./architecture.md#9-yieldsat-point-model--exact-architecture)),
+but point mode leaves it little to do:
+
+1. **Only 6 input tokens.** Each temporal encoder collapses 24 slots into one CLS
+   token, and soil collapses its 6 depths. The fusion sees 6 tokens (5 streams +
+   crop) through 8 latents. The bottleneck is wider than its input, so the
+   Perceiver's main strength (linear cost in many heterogeneous tokens) is
+   unused.
+2. **No cross-source timing.** Optical and weather cannot interact per slot
+   inside the fusion, e.g. a dry interval coinciding with a canopy decline.
+3. **Masking is per stream only.** The key-padding mask hides whole streams, not
+   individual tokens, so invalid slots or depths cannot be masked once they
+   become tokens.
+4. **Positional embeddings carry no information.** Every stream is declared as
+   `spatial=1, temporal=1`, so the positional part is a constant; observation
+   dates never reach the fusion.
+5. **Minimal fusion stack.** One cross-attention read, post-norm latent layers,
+   randn-initialized latents.
+6. **Unmeasured value.** The fusion's contribution has never been ablated.
+
+**Deliverables.**
+
+| ID | Change | Where |
+|---|---|---|
+| YS-11a | Temporal encoders gain `output='tokens'`: return all 24 per-slot tokens (B, 24, D) plus a per-token validity mask, instead of the CLS summary (`'summary'` stays the default for compatibility). `SoilProfileEncoder` likewise returns 6 depth tokens. Static DEM/terrain stay single tokens. | `models_multimodal_encoder.py` |
+| YS-11b | Per-token masks through the encoder container: `forward_with_missing` returns `(embeddings, stream_mask, token_masks)`; `LatentFusionTransformer` accepts an optional `{stream: (B, L)}` token mask, AND-ed with stream availability in the key-padding mask. Rows with no valid key keep the existing single-fallback-token rule. | `models_multimodal_encoder.py`, `models_latent_fusion.py` |
+| YS-11c | Date-aware positions: token positional embedding from the slot's actual date (days since seeding, continuous sinusoidal features), shared by optical and weather so tokens of the same interval align. Depth tokens use a depth-order embedding; streams keep their modality-identity embedding. Tokens without a date carry a learned "undated" embedding and are masked. | `models_latent_fusion.py` (or a YieldSAT-specific position module) |
+| YS-11d | Fusion stack options: `cross_attn_layers` (default 2, Perceiver-IO style repeated reads), pre-norm latent blocks, `num_latents` sweep {8, 16, 32}, trunc-normal latent init. The current configuration stays reproducible via flags. | `models_latent_fusion.py`, `models_yieldsat.py`, entry-point flags |
+| YS-11e | Baseline fusions behind `--fusion`: `concat_mlp` (concatenate the 5–6 summary tokens → MLP), `token_transformer` (small transformer over the summary tokens, no latents), `perceiver_summary` (current), `perceiver_tokens` (YS-11a–d). All use the same encoders, head, data, budget and model selection. | `models_yieldsat.py` |
+| YS-11f | Checkpoint descriptor records `fusion`, `output` mode, `cross_attn_layers` and `num_latents`. `load_sensor_state_dict` refuses incompatible fusion layouts and allows encoder-only transfer between fusion variants. | `models_yieldsat.py` |
+
+**Experiment.** Compare the four `--fusion` variants on `pooled_farm_s0` and
+`pooled_block20_s0`, with 3 seeds each, the same 20×500-step budget and the
+30-day pre-harvest cutoff. Report pixel, field-balanced and field-level
+RMSE/R², plus per country×crop metrics. Add per-token counts, throughput and GPU
+memory. Also run one missing-stream stress test: evaluate with optical removed
+for 50% of test cells, to check that token-level fusion degrades gracefully.
+Results go under `results/yieldsat/fusion_ablation/`.
+
+**Acceptance.**
+- Unit tests cover the new paths: token outputs and masks per encoder, per-token
+  key-padding including all-invalid rows (no NaNs), date-aligned positions,
+  forward/backward for every `--fusion` variant with missing streams, and
+  descriptor compatibility checks.
+- All existing tests pass, and `--fusion perceiver_summary` reproduces the current
+  architecture and parameter count (1,127,937).
+- `perceiver_tokens` is adopted as the default only if it beats both
+  `concat_mlp` and `perceiver_summary` on field-level and pixel RMSE on both
+  splits, by more than the seed standard deviation, without worse macro-country
+  results. Otherwise the default stays unchanged and the outcome is recorded
+  here: the Perceiver is still kept as the shared interface for patch mode and
+  the native-grid downloader branch, where token counts are large.
+- [architecture.md §9](./architecture.md#9-yieldsat-point-model--exact-architecture)
+  is updated to the adopted configuration with new parameter counts.
+
+**Dependencies and effort.** Depends on YS-06/YS-08 (done). Independent of the
+paper-comparison tasks PC-01–PC-08; if PC runs start first, they should state
+which fusion variant they used. Roughly 1–2 days of implementation and ~6
+GPU-hours for 24 runs at about 7–15 min each (token variants are slower, ~60
+tokens per cell).

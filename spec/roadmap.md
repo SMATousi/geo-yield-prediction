@@ -217,6 +217,12 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       budgets) is in §7 of the contract. Multi-seed runs, patch mode and knowledge
       controls remain open (knowledge is blocked on KP tasks).
 
+- [ ] **YS-11:** Improve the fusion: feed the Perceiver per-slot optical/weather
+      and per-depth soil tokens with per-token masks and date-aware positions,
+      repeated cross-attention and pre-norm latents, and ablate it against
+      concat-MLP, token-transformer and the current summary Perceiver. Specified in
+      [yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks).
+
 - [ ] **PC-01–PC-08:** Paper-compatible evaluation (per country–crop CV10, LORO,
       LOYO; S2 vs S2+ADM; LSTM protocol check), specified in
       [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md).

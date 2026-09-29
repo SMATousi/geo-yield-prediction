@@ -417,6 +417,11 @@ MSE + forecast MSE. Only encoders and fusion (156 tensors) are transferred via
 
 ### 9.6 What this model is not
 
+- Its Perceiver fusion is under-used: it reads 6 summary tokens through 8
+  latents with constant positional embeddings. The planned upgrade to
+  per-slot/per-depth tokens with per-token masks and date-aware positions is task
+  **YS-11** ([yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks)).
+
 - Each cell is predicted independently. There is no spatial context between
   cells: patch mode is not implemented.
 - It is not a native-grid model. It consumes the preprocessed common 10 m grid.
