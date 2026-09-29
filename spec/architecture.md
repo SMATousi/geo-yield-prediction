@@ -417,10 +417,23 @@ MSE + forecast MSE. Only encoders and fusion (156 tensors) are transferred via
 
 ### 9.6 What this model is not
 
-- Its Perceiver fusion is under-used: it reads 6 summary tokens through 8
-  latents with constant positional embeddings. The planned upgrade to
-  per-slot/per-depth tokens with per-token masks and date-aware positions is task
-  **YS-11** ([yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks)).
+- **Fusion variants (YS-11, 2026-09-29).** `--fusion` selects among four
+  variants:
+  - `perceiver_summary`: this section's architecture and the default;
+  - `perceiver_tokens`: temporal encoders emit all 24 slot tokens and soil 6
+    depth tokens, with per-token key-padding masks and a shared `DateEncoding`
+    (16 sinusoid periods of 8–1,024 days since seeding, then Linear; learned
+    "undated" vector). The Perceiver uses 2 cross-attention reads (the second
+    before latent block 2), pre-norm latent blocks, an input LayerNorm on the
+    tokens and trunc-normal latents; 1,204,769 parameters with 16 latents;
+  - `token_transformer`: CLS plus 2 pre-norm layers over the 6 summary tokens,
+    with a stream-absence mask; 1,060,161 parameters;
+  - `concat_mlp`: LayerNorm(6·128) → 256 → GELU → 128; 893,761 parameters.
+
+  The 3-seed ablation kept `perceiver_summary` as the default
+  ([yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks)).
+  The Perceiver still reads only 6 summary tokens in point mode. Token-level
+  fusion is kept for patch mode and native-grid data.
 
 - Each cell is predicted independently. There is no spatial context between
   cells: patch mode is not implemented.

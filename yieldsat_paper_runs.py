@@ -39,8 +39,10 @@ INPUTS = {
 
 # Model presets. Paper-protocol runs always use all 24 slots (retrospective).
 MODELS = {
-    # our point model; fusion chosen with --fusion
-    'ours': ['--model', 'yieldsat_point', '--cutoff_mode', 'all_slots'],
+    # our point model; fusion chosen with --fusion. Default budget per fold:
+    # 20 x 500 steps of 512 cells (override with --epochs/--steps_per_epoch)
+    'ours': ['--model', 'yieldsat_point', '--cutoff_mode', 'all_slots',
+             '--epochs', '20', '--steps_per_epoch', '500'],
     # the paper's pixel LSTM (PC-05): release-tutorial training (NaN -> -1,
     # raw t/ha target, Adam 1e-3, batch 1028, full passes, 15 epochs) with the
     # file's stats-* input normalization, which reproduces the paper's GER-R

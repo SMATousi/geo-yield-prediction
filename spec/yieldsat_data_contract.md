@@ -844,3 +844,46 @@ Checks:
   samples/s for tokens vs ~27 k for the summary baselines.
 
 The ablation experiment is next.
+
+**2026-09-29 — ablation done; decision: keep `perceiver_summary`.**
+
+The experiment used 26 runs:
+- 4 variants × {`pooled_farm_s0`, `pooled_block20_s0`} × seeds 0–2;
+- a latent sweep of 8 and 32 latents (farm split, seed 0);
+- 20×500 steps each, with the optical stress test;
+- code frozen at `b34f1cd`.
+
+Full tables are in `results/yieldsat/fusion_ablation/`. Seed mean ± std:
+
+| Split | Metric | `perceiver_summary` | `perceiver_tokens` (16 latents) | `token_transformer` | `concat_mlp` |
+|---|---|---|---|---|---|
+| farm | pixel RMSE | **1.643 ± 0.024** | 1.665 ± 0.033 | 1.668 ± 0.057 | 1.693 ± 0.037 |
+| farm | field RMSE | 1.069 ± 0.052 | **1.067 ± 0.044** | 1.078 ± 0.062 | 1.133 ± 0.044 |
+| farm | stress pixel RMSE | **1.868** | 1.910 | 1.913 | 1.874 |
+| block | pixel RMSE | **1.492 ± 0.030** | 1.525 ± 0.021 | 1.526 ± 0.016 | 1.514 ± 0.025 |
+| block | field RMSE | **0.954 ± 0.030** | 1.038 ± 0.035 | 0.962 ± 0.031 | 0.979 ± 0.007 |
+| block | stress pixel RMSE | **1.648** | 1.664 | 1.678 | 1.671 |
+
+**Outcome against the acceptance rule.**
+- `perceiver_tokens` does **not** beat `perceiver_summary` and `concat_mlp` on
+  both splits by more than the seed std.
+- It ties on farm field RMSE and is worse elsewhere, clearly so on block field
+  RMSE (+0.08).
+- It also degrades slightly more when optical is removed.
+
+The default therefore stays `perceiver_summary`, which is the best or
+statistically tied best on every metric. Plain concatenation is the weakest on
+the farm split, so the Perceiver bottleneck adds value over no fusion, but
+token-level fusion does not help in point mode.
+
+Likely reasons:
+- Each temporal encoder already attends over its own slots, and cross-source
+  timing is available through the shared per-slot time features.
+- The richer ~60-token input adds optimization difficulty at the same budget.
+- Point mode gives no spatial context to exploit.
+
+The token path stays available (`--fusion perceiver_tokens`). It is expected to
+matter in patch mode and on the native-grid downloader data, where token counts
+are large. Latent count: 16 was best among {8, 16, 32} (one seed each for 8 and
+32). The variants are all tested and documented in
+[architecture.md §9](./architecture.md#9-yieldsat-point-model--exact-architecture).
