@@ -148,8 +148,18 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
             'wandb_tags': [suite['suite'], tag, proto, policy_name, inputs, pair, 'seed{}'.format(seed)]}
 
 
+def _factor(speed, model):
+    """``gpu_speed_factor`` may be one number or ``{model: factor, 'test': f}``."""
+    if isinstance(speed, dict):
+        return float(speed.get(model, speed.get('default', 0.7)))
+    return float(speed)
+
+
 def estimate_seconds(run, speed_factor):
-    """Single-run wall seconds on the target GPU (see REF_* constants)."""
+    """Single-run wall seconds on the target GPU (see REF_* constants).
+    Factors for concurrent runs are the per-run speed at ``runs_per_gpu``
+    divided by CONCURRENCY_SPEEDUP, so measured per-run rates can be entered
+    directly via ``measured_per_run``."""
     b = run['budget']
     model = run['model']
     batch = b.get('batch_size', 1028 if model == 'paper_lstm' else 512)
@@ -159,17 +169,24 @@ def estimate_seconds(run, speed_factor):
         steps = max(b.get('min_steps_per_epoch', 1), math.ceil(run['n_train'] / batch))
         if b.get('max_steps_per_epoch', 0) > 0:
             steps = min(steps, b['max_steps_per_epoch'])
-    train = epochs * steps * batch / (REF_THROUGHPUT[model] * speed_factor)
+    train = epochs * steps * batch / (REF_THROUGHPUT[model] * _factor(speed_factor, model))
     val = epochs * 2.0                       # ~500 cells per validation field
-    test = run['n_test'] / (REF_TEST_ROWS_PER_S * speed_factor) * (2 if '--eval_drop_stream' in run['args'] else 1)
+    test = run['n_test'] / (REF_TEST_ROWS_PER_S * _factor(speed_factor, 'test')) * (
+        2 if '--eval_drop_stream' in run['args'] else 1)
     return REF_STARTUP_S + train + val + test
 
 
+STAGE_GB = {'Argentina': 11.0, 'Brazil': 8.7, 'Germany': 1.2, 'Uruguay': 4.4}   # cache + index
+
+
 def make_jobs(suite, runs):
-    """Group runs into jobs: one per pair, or balanced shards within a pair."""
+    """Group runs into jobs: one per pair, or balanced shards within a pair.
+    Each job pays a one-off staging cost (its country's cache copied to pod
+    scratch at ``stage_mb_per_s``; Nautilus CephFS measured ~42 MB/s)."""
     speed = suite['gpu_speed_factor']
     rpg = suite['runs_per_gpu']
-    eff = CONCURRENCY_SPEEDUP.get(rpg, 1.5)
+    eff = suite.get('concurrency_speedup', CONCURRENCY_SPEEDUP.get(rpg, 1.5))
+    stage_rate = float(suite.get('stage_mb_per_s', 42.0))
     for r in runs:
         r['est_seconds'] = round(estimate_seconds(r, speed), 1)
     jobs = []
@@ -186,11 +203,13 @@ def make_jobs(suite, runs):
             i = min(range(n), key=load.__getitem__)
             shards[i].append(r)
             load[i] += r['est_seconds']
+        stage_h = STAGE_GB.get(pr[0]['country'], 5.0) * 1024 / stage_rate / 3600
         for i, shard in enumerate(shards):
             jobs.append({'job_index': len(jobs), 'pair': pair, 'shard': i, 'n_shards': n,
                          'country': shard[0]['country'],
                          'run_ids': [r['run_id'] for r in shard],
-                         'est_hours': round(sum(r['est_seconds'] for r in shard) / eff / 3600, 2)})
+                         'est_hours': round(sum(r['est_seconds'] for r in shard) / eff / 3600
+                                            + stage_h, 2)})
     return jobs
 
 
@@ -242,7 +261,8 @@ def print_estimate(plan, runs, gpus):
         d = by.setdefault(key, [0, 0.0])
         d[0] += 1
         d[1] += r['est_seconds']
-    eff = CONCURRENCY_SPEEDUP.get(plan['suite']['runs_per_gpu'], 1.5)
+    eff = plan['suite'].get('concurrency_speedup',
+                            CONCURRENCY_SPEEDUP.get(plan['suite']['runs_per_gpu'], 1.5))
     for key, (n, s) in sorted(by.items()):
         print('  {:<12} {:<6} {:<7} {:>5} runs  {:7.1f} GPU-h'.format(*key, n, s / eff / 3600))
     longest = max(jobs, key=lambda j: j['est_hours'])

@@ -297,3 +297,63 @@ every test fold. This will be specified when KP-01–KP-08 land.
   predictions to `results_root` only.
 - Provide `<DATA_DIR>` and the image; fill in the example manifest; copy or
   rebuild `yieldsat_artifacts` on the shared volume and plan there.
+
+## 11. Nautilus (NRP) deployment — test run log (2026-09-29)
+
+**Environment.**
+- Namespace `gpn-mizzou-vigir`, kubectl context `nautilus`. Authentication uses
+  the krew `oidc-login` plugin, so `~/.krew/bin` must be on `PATH`.
+- Image `gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest`. Jobs clone
+  `main` of this repository at start (`YIELDSAT_GIT_REF`), so code changes need
+  no rebuild.
+- The W&B key is the namespace Secret `smatousi-wandb` (created from the user's
+  job YAML, which is gitignored and never committed). Runs land in W&B entity
+  `tousi-team`.
+
+**Data on PVC `ali-vol-1tera`**, mounted at `/data`:
+
+| Path | Contents |
+|---|---|
+| `/data/YieldSAT/preprocessed/<Country>/…nc` | Source. Byte sizes equal the recorded snapshot; the content fingerprints were accepted by every run. |
+| `/data/YieldSAT/yieldsat_artifacts/` | index, cache, geometry, splits, audit. 679 files, streamed from the preparation host in 17 min and verified by name and size. |
+| `/data/YieldSAT/yieldsat_artifacts/cluster/<suite>/` | Plans (created in-pod by the first job). |
+| `/data/YieldSAT/yieldsat_results/<suite>/` | Per-run report and predictions. |
+
+**Job files:**
+- `cluster/nautilus/run_in_pod.sh`: GPU check, plan-once lock, driver;
+- `yieldsat_smoke_job.yaml`;
+- manifests rendered by `yieldsat_cluster.py k8s`, e.g.
+  `cluster/nautilus/before_full_job.yaml`: Indexed Job, `completions` =
+  n_jobs, parallelism 16, A10 affinity, 16 CPU / 48 GiB, 8 GiB `/dev/shm`,
+  40 GiB scratch, PVC and Secret mounts; no credentials inside;
+- `pvc_inspect_pod.yaml`: a short-lived CPU pod for data inspection and copy.
+
+**Test runs:**
+
+| Job | Result |
+|---|---|
+| `smatousi-yieldsat-smoke` (`smoke` suite, 1 GPU) | Scheduled on an A10 (`gpu-11.nrp.mghpcc.org`) after the affinity was widened to A10/A6000; with A10 only it stayed pending for ~8 min while A10s were busy. 12/12 runs `ok` (GER-R 7 LOYO folds 20–26 s each; URG-S 5 folds 25–35 s). Staging: Germany 35 s, Uruguay 123 s. All 12 runs are `finished` in W&B with history, test summary and `model` + `results` artifacts. `aggregate --from_wandb` rebuilt both experiment aggregates from W&B alone. |
+| `smatousi-yieldsat-calibrate-a10` (8 CPU, 2 runs/GPU) | ARG-S CV fold, S2+ADM, 3×1,500 steps. Our model ran at 7.5 k samples/s per run (15 k per GPU) with data wait 24 s of ~300 s. The LSTM ran at 41 k samples/s with data wait 81 s of 124 s (loader-bound). Argentina staged in 261 s (~42 MB/s). |
+| `smatousi-yieldsat-calibrate-a10-x4` (16 CPU, 4 runs/GPU) | 6.93 k samples/s per run, **27.7 k per GPU** (1.85× the 2-run setting). Throughput is bound per process (CPU and kernel launch), not by the A10. GPU memory is 0.38 GB per run and test inference 38–49 k cells/s per run. |
+
+**Adopted for `before_full`.**
+- 4 runs per GPU, 3 loader workers per run, pods with 16 CPU and 48 GiB.
+- Measured speed factors `{ours: 0.226, paper_lstm: 0.2, test: 0.27}` per run
+  relative to the RTX 3090 reference, concurrency 4, staging at 42 MB/s per job.
+
+**Recalibrated estimate** (`plan --gpus 16`, including staging):
+
+| Metric | Value |
+|---|---|
+| Runs / jobs | 3,546 runs in 341 jobs |
+| GPU-hours (A10) | about 1,365 |
+| **Wall clock, 16 A10s** | **about 88 h (3.7 days)** |
+| Wall clock, 32 A10s | about 44 h |
+
+The longest job is about 4.3 h. The variant table in §8 scales proportionally,
+e.g. variant D is about 32 h on 16 A10s.
+
+**Not yet done:** submitting `before_full` (`kubectl apply -f
+cluster/nautilus/before_full_job.yaml`). This awaits the budget/seed decision
+(§8) and A10 availability. With `parallelism: 16` and A10-only affinity, pods
+queue until A10s free up; adding A6000 (faster) to the affinity shortens queueing.

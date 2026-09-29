@@ -11,9 +11,16 @@ data:
 pairs: all
 job_unit: pair_shard          # pair = one job per country-crop; pair_shard splits big pairs
 target_job_hours: 4.0         # shard size target for pair_shard
-runs_per_gpu: 2               # concurrent runs inside one job (A10: 24 GB, runs need <1 GB)
-num_workers: 4                # DataLoader workers per run
-gpu_speed_factor: 0.7         # A10 throughput relative to the RTX 3090 used for calibration
+runs_per_gpu: 4               # concurrent runs per A10 (measured best: 4 runs -> 27.7k samples/s/GPU)
+num_workers: 3                # DataLoader workers per run (16 CPUs per pod)
+# Measured on Nautilus A10 pods (16 CPU), 2026-09-29, ARG-S S2+ADM, 4 concurrent
+# runs: 6.93k samples/s per run for our model (= 0.226 x the RTX 3090 single-run
+# reference), test inference ~43k cells/s per run; the paper LSTM ran at 41k
+# samples/s with 2 concurrent runs (0.29x), 0.2 assumed at 4. With per-run
+# factors, the concurrency speed-up is the run count itself.
+gpu_speed_factor: {ours: 0.226, paper_lstm: 0.2, test: 0.27}
+concurrency_speedup: 4.0
+stage_mb_per_s: 42            # CephFS -> pod scratch (Argentina 11 GB in 261 s)
 experiments:
   - name: ours                # our point model, default fusion (YS-11 decision)
     model: ours
