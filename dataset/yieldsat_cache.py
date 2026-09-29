@@ -38,7 +38,7 @@ from dataset.yieldsat_schema import (
     read_band_names,
     resolve_channel_indices,
 )
-from dataset.yieldsat_source import fingerprint, open_source, source_path
+from dataset.yieldsat_source import fingerprint, open_source, same_snapshot, source_path
 
 CACHE_VERSION = 1
 # Version of the per-field statistics' validity rule (see temporal_valid_mask).
@@ -313,6 +313,7 @@ def load_cache_manifest(artifact_root, source_root, country, check_source=True):
         raise SnapshotError('{}: cache built for another contract/version'.format(country))
     if not manifest.get('complete'):
         raise SnapshotError('{}: cache is partial'.format(country))
-    if check_source and fingerprint(source_path(source_root, country)) != manifest['fingerprint']:
+    if check_source and not same_snapshot(fingerprint(source_path(source_root, country)),
+                                          manifest['fingerprint']):
         raise SnapshotError('{}: cache was built from a different source snapshot'.format(country))
     return manifest

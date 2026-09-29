@@ -108,6 +108,22 @@ def get_args_parser():
     p.add_argument('--eval_drop_stream', default=None, choices=list(STREAMS),
                    help='stress test: remove this stream for --eval_drop_frac of test cells')
     p.add_argument('--eval_drop_frac', type=float, default=0.5)
+    p.add_argument('--min_steps_per_epoch', type=int, default=1,
+                   help='lower clamp when --steps_per_epoch 0 (full pass)')
+    p.add_argument('--max_steps_per_epoch', type=int, default=0,
+                   help='upper clamp when --steps_per_epoch 0 (0 = no clamp)')
+    # Weights & Biases (optional; the API key comes from WANDB_API_KEY)
+    p.add_argument('--wandb', action='store_true', help='log metrics and artifacts to W&B')
+    p.add_argument('--wandb_project', default=os.environ.get('WANDB_PROJECT', 'yieldsat'))
+    p.add_argument('--wandb_entity', default=os.environ.get('WANDB_ENTITY'))
+    p.add_argument('--wandb_group', default=None)
+    p.add_argument('--wandb_name', default=None)
+    p.add_argument('--wandb_tags', nargs='*', default=[])
+    p.add_argument('--wandb_job_type', default=None)
+    p.add_argument('--wandb_meta', default='{}',
+                   help='JSON dict of job metadata added to the W&B config')
+    p.add_argument('--wandb_no_artifacts', action='store_true',
+                   help='log metrics only, do not upload models/results')
     return p
 
 
@@ -157,6 +173,79 @@ def predict(model, ds, args, device, drop=None):
         cols.append(batch['grid_col'].numpy())
     cat = np.concatenate
     return cat(preds), cat(targets), cat(seasons), cat(rows), cat(cols)
+
+
+class WandbLogger:
+    """Optional W&B logging: config, per-epoch history, flattened test
+    metrics as summary, and the run's models/results as artifacts. A no-op
+    unless ``--wandb``; ``WANDB_MODE=offline`` works without network."""
+
+    MODEL_FILES = ('checkpoint_best.pth', 'sensor_checkpoint.pth', 'sensor_checkpoint_last.pth',
+                   'normalizer.json')
+    RESULT_FILES = ('report.json', 'test_predictions.npz')
+
+    def __init__(self, args, out_dir):
+        self.run = None
+        self.args = args
+        self.out_dir = Path(out_dir)
+        if not args.wandb:
+            return
+        import wandb
+        config = {k: v for k, v in vars(args).items() if not k.startswith('wandb')}
+        config['job'] = json.loads(args.wandb_meta)
+        self.wandb = wandb
+        kwargs = dict(project=args.wandb_project, entity=args.wandb_entity, group=args.wandb_group,
+                      name=args.wandb_name, tags=list(args.wandb_tags),
+                      job_type=args.wandb_job_type or args.mode, config=config,
+                      dir=str(self.out_dir))
+        try:
+            self.run = wandb.init(**kwargs)
+        except Exception as exc:              # no network / bad key: keep training, sync later
+            print('W&B init failed ({}); logging offline'.format(exc), flush=True)
+            self.run = wandb.init(mode='offline', **kwargs)
+
+    def log_epoch(self, rec):
+        if self.run is not None:
+            self.run.log({k: v for k, v in rec.items() if k != 'epoch'}, step=rec['epoch'])
+
+    @staticmethod
+    def _flatten(prefix, block, out):
+        for level in ('pixel', 'field_level', 'field_balanced'):
+            for k, v in block.get(level, {}).items():
+                if isinstance(v, (int, float)):
+                    out['{}/{}_{}'.format(prefix, level, k)] = v
+
+    def finish(self, report):
+        if self.run is None:
+            return
+        summary = {'train_seasons': report['train_seasons'], 'val_seasons': report['val_seasons'],
+                   'test_seasons': report['test_seasons'],
+                   'parameters': report['model']['parameters'],
+                   'best_epoch': (report.get('best_val') or {}).get('epoch'),
+                   'split_label': report['split']['label'], 'label_policy': report['label_policy']}
+        for key in ('test', 'test_stress'):
+            if key in report:
+                self._flatten(key, report[key]['overall'], summary)
+                for c, block in report[key].get('per_country_crop', {}).items():
+                    self._flatten('{}/{}'.format(key, c), block, summary)
+        summary.update({'io/' + k: v for k, v in report['io'].items()})
+        summary.update({'resources/' + k: v for k, v in report['resources'].items()})
+        self.run.summary.update(summary)
+        if not self.args.wandb_no_artifacts:
+            safe = ''.join(ch if ch.isalnum() or ch in '-_.' else '-' for ch in (self.run.name or self.run.id))
+            for kind, files, pattern in (('model', self.MODEL_FILES, None),
+                                         ('results', self.RESULT_FILES, 'pred_*.tif')):
+                paths = [self.out_dir / f for f in files if (self.out_dir / f).exists()]
+                if pattern:
+                    paths += sorted(self.out_dir.glob(pattern))
+                if not paths:
+                    continue
+                art = self.wandb.Artifact('{}-{}'.format(kind, safe)[:120], type=kind,
+                                          metadata={'split': report['split'], 'job': self.run.config.get('job')})
+                for path in paths:
+                    art.add_file(str(path))
+                self.run.log_artifact(art)
+        self.run.finish()
 
 
 def main(args):
@@ -227,7 +316,11 @@ def main(args):
     # cuDNN LSTMs do not run under bf16 autocast
     amp = device.type == 'cuda' and not args.no_amp and args.model != 'paper_lstm'
     if args.steps_per_epoch <= 0:
-        args.steps_per_epoch = max(1, math.ceil(len(train_ds) / args.batch_size))
+        steps = max(args.min_steps_per_epoch, math.ceil(len(train_ds) / args.batch_size))
+        if args.max_steps_per_epoch > 0:
+            steps = min(steps, args.max_steps_per_epoch)
+        args.steps_per_epoch = max(1, steps)
+    wb = WandbLogger(args, out_dir)
     transfer = None
     if args.init_sensor_ckpt:
         transfer = model.load_sensor_state_dict(
@@ -292,6 +385,7 @@ def main(args):
                            out_dir / 'checkpoint_best.pth')
         history.append(rec)
         print(json.dumps(rec), flush=True)
+        wb.log_epoch(rec)
 
     report = {
         'contract': CONTRACT_KEY, 'mode': args.mode, 'data_mode': 'point_timeseries',
@@ -362,6 +456,7 @@ def main(args):
         'peak_gpu_gb': round(torch.cuda.max_memory_allocated() / 1e9, 2) if device.type == 'cuda' else None,
     }
     (out_dir / 'report.json').write_text(json.dumps(report, indent=1, default=str))
+    wb.finish(report)
     if 'test' in report:
         t = report['test']['overall']
         print('TEST', report['test']['label'], json.dumps({

@@ -1,5 +1,17 @@
 # Status — Verified Review
 
+**Cluster execution update (2026-09-29):**
+[yieldsat_cluster_runs.md](./yieldsat_cluster_runs.md) and `yieldsat_cluster.py`
+make the full "before" suite ready for submission:
+- 3,546 runs in 343 country–crop pair-shard jobs;
+- 60-epoch budget;
+- W&B metrics, models and results for every run;
+- shared-volume completion markers for resume and retry.
+
+It was tested end to end locally (offline W&B). Estimated runtime is ≈ 1,350
+A10 GPU-hours, ≈ 87 h on 16 A10s (A10 speed assumed, ±30–50%). Source
+fingerprints are now content-based, so artifacts are portable across storage.
+
 **YieldSAT model and paper-comparison update (2026-09-29):**
 - **YS-11:** token-level Perceiver fusion and three alternative fusions are
   implemented and ablated (26 runs, 3 seeds). The default `perceiver_summary`

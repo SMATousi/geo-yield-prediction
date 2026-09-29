@@ -137,3 +137,20 @@ python yieldsat_paper_runs.py --pairs GER-R --protocols cv --group physical --po
 # side-by-side tables against the paper
 python yieldsat_paper_compare.py --runs_root $YIELDSAT_ARTIFACT_ROOT/runs
 ```
+
+### YieldSAT on a GPU cluster
+
+See `spec/yieldsat_cluster_runs.md`. In short:
+
+```bash
+# once, with YIELDSAT_* pointing at the shared volume:
+python yieldsat_cluster.py plan --suite cluster/suites/before_full.yaml \
+    --out $YIELDSAT_ARTIFACT_ROOT/cluster/before_full          # prints the runtime estimate
+# per pod (Kubernetes Indexed Job sets JOB_COMPLETION_INDEX; WANDB_API_KEY from the job YAML):
+python yieldsat_cluster.py run --plan $YIELDSAT_ARTIFACT_ROOT/cluster/before_full \
+    --local_root /scratch/yieldsat --results_root <DATA_DIR>/yieldsat_results/before_full
+python yieldsat_cluster.py status --plan $YIELDSAT_ARTIFACT_ROOT/cluster/before_full
+python yieldsat_cluster.py aggregate --plan ... --results_root ... --compare_out results/yieldsat/paper_comparison
+```
+Start with `cluster/suites/smoke.yaml` (2 jobs). An example Indexed Job manifest
+is in `cluster/k8s_indexed_job.example.yaml`.

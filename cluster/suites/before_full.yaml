@@ -1,0 +1,33 @@
+# YieldSAT "before knowledge pretraining" suite (spec/yieldsat_cluster_runs.md).
+# Every paper pair x CV10/LORO/LOYO x {paper, strict} policy x {S2, S2+ADM}
+# x 3 seeds for our model, plus the paper-LSTM re-run baseline (CV10).
+suite: before_full
+wandb:
+  project: yieldsat-cvpr27          # API key: WANDB_API_KEY from the job YAML
+  entity: null                      # set to the team/user entity if needed
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}      # shared: <DATA_DIR>/Preprocessed
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}  # shared: index, cache, geometry, splits
+pairs: all
+job_unit: pair_shard          # pair = one job per country-crop; pair_shard splits big pairs
+target_job_hours: 4.0         # shard size target for pair_shard
+runs_per_gpu: 2               # concurrent runs inside one job (A10: 24 GB, runs need <1 GB)
+num_workers: 4                # DataLoader workers per run
+gpu_speed_factor: 0.7         # A10 throughput relative to the RTX 3090 used for calibration
+experiments:
+  - name: ours                # our point model, default fusion (YS-11 decision)
+    model: ours
+    fusion: perceiver_summary
+    protocols: [cv, loro, loyo]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    # increased budget: 60 epochs of one pass over the fold's training cells,
+    # clamped to 500..1500 steps of 512 (3x the previous 20 x 500)
+    budget: {epochs: 60, steps_per_epoch: 0, min_steps_per_epoch: 500, max_steps_per_epoch: 1500}
+  - name: paper_lstm          # paper LSTM re-run (PC-05 preset: 15 full passes)
+    model: paper_lstm
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2, s2_adm]
+    seeds: [0]

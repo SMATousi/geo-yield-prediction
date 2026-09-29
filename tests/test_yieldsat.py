@@ -210,13 +210,22 @@ def test_stale_cache_and_index_are_rejected(corpus, tmp_path):
     root, art, _ = corpus
     path = root / 'Uruguay' / SOURCE_FILENAME
     st = os.stat(path)
+    original = path.read_bytes()
     try:
+        # a copy with a new mtime is the same snapshot (portable artifacts)
         os.utime(path, ns=(st.st_atime_ns, st.st_mtime_ns + 10**9))
+        load_cache_manifest(art, root, 'Uruguay')
+        load_country_index(art, root, 'Uruguay')
+        # changed content is a different snapshot
+        with open(path, 'r+b') as f:
+            f.seek(len(original) - 1)
+            f.write(bytes([original[-1] ^ 0xFF]))
         with pytest.raises(SnapshotError):
             load_cache_manifest(art, root, 'Uruguay')
         with pytest.raises(SnapshotError):
             load_country_index(art, root, 'Uruguay')
     finally:
+        path.write_bytes(original)
         os.utime(path, ns=(st.st_atime_ns, st.st_mtime_ns))
 
 
@@ -584,3 +593,64 @@ def test_normalization_policies_and_paper_lstm(corpus):
     assert pred.shape == (8,) and torch.isfinite(loss)
     with pytest.raises(ValueError):
         NormalizerView(norm, features='supplied')
+
+
+# ---- cluster driver ---------------------------------------------------------------
+
+def _suite_file(tmp_path, root, art, **over):
+    import yaml
+    suite = {'suite': 'unit', 'wandb': {'project': 'unit'},
+             'data': {'source_root': str(root), 'artifact_root': str(art)},
+             'pairs': ['GER-R', 'GER-W'], 'job_unit': 'pair_shard', 'target_job_hours': 0.0001,
+             'runs_per_gpu': 2, 'num_workers': 0,
+             'experiments': [{'name': 'ours', 'model': 'ours', 'protocols': ['loyo'],
+                              'policies': ['paper'], 'inputs': ['s2'], 'seeds': [0, 1],
+                              'save_maps': 0,
+                              'budget': {'epochs': 1, 'steps_per_epoch': 2, 'batch_size': 8},
+                              'extra_args': ['--device', 'cpu', '--eval_batch_size', '64',
+                                             '--embed_dim', '32', '--num_heads', '2',
+                                             '--modality_embed', '8', '--num_latents', '4']}]}
+    suite.update(over)
+    path = tmp_path / 'suite.yaml'
+    path.write_text(yaml.safe_dump(suite))
+    return path
+
+
+def test_cluster_plan_shards_every_run_once(corpus, tmp_path):
+    import argparse
+    import yieldsat_cluster as yc
+    root, art, _ = corpus
+    suite = _suite_file(tmp_path, root, art)
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(tmp_path / 'plan'), gpus=4))
+    plan, runs = yc._load_plan(tmp_path / 'plan')
+    assigned = [r for j in plan['jobs'] for r in j['run_ids']]
+    assert sorted(assigned) == sorted(runs) and len(set(assigned)) == len(assigned)
+    assert all(len({runs[r]['pair'] for r in j['run_ids']}) == 1 for j in plan['jobs'])
+    # 2 pairs x 2 years (LOYO) x 2 seeds
+    assert len(runs) == 8 and len(plan['jobs']) > 2              # tiny target -> sharded
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(tmp_path / 'plan2'), gpus=4))
+    assert sorted(yc._load_plan(tmp_path / 'plan2')[1]) == sorted(runs)   # stable ids
+    one = _suite_file(tmp_path, root, art, job_unit='pair')
+    yc.cmd_plan(argparse.Namespace(suite=str(one), out=str(tmp_path / 'plan3'), gpus=4))
+    assert json.loads((tmp_path / 'plan3' / 'plan.json').read_text())['n_jobs'] == 2
+
+
+def test_cluster_job_runs_resumes_and_aggregates(corpus, tmp_path):
+    import argparse
+    import yieldsat_cluster as yc
+    root, art, _ = corpus
+    suite = _suite_file(tmp_path, root, art, pairs=['GER-R'], job_unit='pair')
+    plan_dir = tmp_path / 'plan'
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(plan_dir), gpus=1))
+    rc = yc.run_job(plan_dir, 0, local_root=tmp_path / 'pod', results_root=tmp_path / 'res',
+                    use_wandb=False)
+    assert rc == 0
+    plan, runs = yc._load_plan(plan_dir)
+    assert len(list((plan_dir / 'state').glob('*.done.json'))) == len(runs) == 4
+    assert (tmp_path / 'pod' / 'artifacts' / 'cache' / 'Germany' / 'cache_manifest.json').exists()
+    assert yc.run_job(plan_dir, 0, local_root=tmp_path / 'pod', use_wandb=False) == 0  # all skipped
+    yc.cmd_aggregate(argparse.Namespace(plan=str(plan_dir), results_root=str(tmp_path / 'res'),
+                                        from_wandb=False, compare_out=None))
+    aggs = list((tmp_path / 'res').glob('paper/*/*/*/*/aggregate.json'))
+    assert len(aggs) == 2                                          # one per seed
+    assert all(json.loads(a.read_text())['complete'] for a in aggs)

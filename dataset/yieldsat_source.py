@@ -66,6 +66,15 @@ def fingerprint(path, probe_bytes=4 << 20):
     return {'bytes': st.st_size, 'mtime_ns': st.st_mtime_ns, 'head_tail_sha256': h.hexdigest()}
 
 
+def same_snapshot(a, b):
+    """Two fingerprints describe the same snapshot when size and head/tail
+    content hashes agree. ``mtime_ns`` is informational only, so artifacts stay
+    valid when the source is copied to other storage (e.g. a cluster volume)
+    without preserving timestamps."""
+    return (a is not None and b is not None and a.get('bytes') == b.get('bytes')
+            and a.get('head_tail_sha256') == b.get('head_tail_sha256'))
+
+
 def compute_crc32(path, block=64 << 20):
     crc = 0
     with open(path, 'rb') as f:
@@ -102,7 +111,7 @@ def check_snapshot(root, countries, crc_evidence_dir=None, full_crc=False,
         time.sleep(stability_wait)
         fp2 = fingerprint(path)
         entry['fingerprint'] = fp2
-        entry['stable'] = fp1 == fp2
+        entry['stable'] = fp1 == fp2          # includes mtime: nothing is writing the file
         expected = EXPECTED_SNAPSHOT[country]
         entry['size_matches_record'] = fp2['bytes'] == expected['bytes']
         with open_source(path) as f:
@@ -298,7 +307,7 @@ def load_country_index(artifact_root, source_root, country, check_source=True):
         raise SnapshotError('{}: index built for another contract/version'.format(country))
     if check_source:
         current = fingerprint(source_path(source_root, country))
-        if current != manifest['fingerprint']:
+        if not same_snapshot(current, manifest['fingerprint']):
             raise SnapshotError('{}: index was built from a different source snapshot'.format(country))
     rows = dict(np.load(d / 'rows.npz'))
     fields = json.loads((d / 'fields.json').read_text())

@@ -33,6 +33,33 @@ def load_paper(path):
 
 
 def load_ours(runs_root):
+    """Our experiments; ``<model>_seed<N>`` directories of one experiment are
+    merged: values are the mean over seeds of the fold mean (± the mean fold
+    std, the paper's statistic), with the std over seeds as ``seed_std``."""
+    import re
+    import numpy as np
+    raw = _load_ours_raw(runs_root)
+    groups = {}
+    for r in raw:
+        base = re.sub(r'_seed\d+$', '', r['model_dir'])
+        key = (r['protocol'], r['level'], r['pair'], r['modalities'], r['entry_base'].replace(
+            r['model_dir'], base), r['like_for_like'])
+        groups.setdefault(key, []).append(r)
+    out = []
+    for (proto, level, pair, mods, entry, lfl), rs in groups.items():
+        m = lambda k: float(np.mean([x[k] for x in rs]))
+        out.append({'protocol': proto, 'level': level, 'pair': pair, 'modalities': mods,
+                    'entry': entry + (' ({} seeds)'.format(len(rs)) if len(rs) > 1 else ''),
+                    'like_for_like': lfl, 'r2_mean': m('r2_mean'), 'r2_std': m('r2_std'),
+                    'rmse_mean': m('rmse_mean'), 'rmse_std': m('rmse_std'),
+                    'seed_std_r2': float(np.std([x['r2_mean'] for x in rs])),
+                    'seed_std_rmse': float(np.std([x['rmse_mean'] for x in rs])),
+                    'folds': '/'.join(x['folds'] for x in rs), 'pooled_r2': m('pooled_r2'),
+                    'source': '; '.join(x['source'] for x in rs)})
+    return out
+
+
+def _load_ours_raw(runs_root):
     out = []
     for agg in sorted(Path(runs_root).glob('paper/*/*/*/*/aggregate.json')):
         pair_dir = agg.parent
@@ -47,7 +74,8 @@ def load_ours(runs_root):
         for level, key in (('field', 'field'), ('pixel', 'pixel')):
             out.append({'protocol': proto, 'level': level, 'pair': pair_dir.name,
                         'modalities': INPUT_LABEL[inputs],
-                        'entry': ('re-run: ' if model.startswith('paper_') else 'ours: ') + model
+                        'model_dir': model,
+                        'entry_base': ('re-run: ' if model.startswith('paper_') else 'ours: ') + model
                                  + ('' if like_for_like else
                                                             ' [{} grouping, {} policy]'.format(group, policy)),
                         'like_for_like': like_for_like,
@@ -88,7 +116,8 @@ def write(table, out_dir):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cols = ('protocol', 'level', 'pair', 'entry', 'note', 'modalities', 'r2_mean', 'r2_std', 'rmse_mean',
-            'rmse_std', 'folds', 'like_for_like', 'sources_agree', 'pooled_r2')
+            'rmse_std', 'seed_std_r2', 'seed_std_rmse', 'folds', 'like_for_like', 'sources_agree',
+            'pooled_r2')
     with open(out_dir / 'comparison.csv', 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction='ignore')
         w.writeheader()

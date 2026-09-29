@@ -1,0 +1,22 @@
+# Cluster smoke test: 2 jobs, a few minutes. Validates staging, W&B logging,
+# completion markers and aggregation before submitting before_full.
+suite: smoke
+wandb:
+  project: yieldsat-cvpr27-smoke
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs: [GER-R, URG-S]
+job_unit: pair
+runs_per_gpu: 2
+num_workers: 4
+gpu_speed_factor: 0.7
+experiments:
+  - name: ours
+    model: ours
+    protocols: [loyo]
+    policies: [paper]
+    inputs: [s2_adm]
+    seeds: [0]
+    budget: {epochs: 2, steps_per_epoch: 50}

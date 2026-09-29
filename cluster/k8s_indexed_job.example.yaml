@@ -1,0 +1,47 @@
+# EXAMPLE ONLY (untested): Kubernetes Indexed Job running a YieldSAT plan.
+# One completion index = one planned job (a country-crop pair shard); up to
+# `parallelism` pods (GPUs) run concurrently. Fill in the <...> placeholders.
+# Pre-requisites (spec/yieldsat_cluster_runs.md §4): the shared volume holds
+# Preprocessed/, yieldsat_artifacts/ and the plan directory produced by
+#   python yieldsat_cluster.py plan --suite cluster/suites/before_full.yaml \
+#       --out <DATA_DIR>/yieldsat_artifacts/cluster/before_full
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: yieldsat-before-full
+spec:
+  completionMode: Indexed
+  completions: 343            # = n_jobs in <plan>/plan.json
+  parallelism: 16             # number of A10 pods
+  backoffLimitPerIndex: 2     # re-runs skip finished runs (completion markers)
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: yieldsat
+          image: <registry>/geo-yield-prediction:<tag>   # repo + geo-yield-phase0 env
+          workingDir: /workspace/geo-yield-prediction
+          command: ["python", "yieldsat_cluster.py", "run",
+                    "--plan", "/data/yieldsat_artifacts/cluster/before_full",
+                    "--local_root", "/scratch/yieldsat",
+                    "--results_root", "/data/yieldsat_results/before_full"]
+          env:
+            - name: YIELDSAT_SOURCE_ROOT        # must match the suite/plan paths
+              value: /data/Preprocessed
+            - name: YIELDSAT_ARTIFACT_ROOT
+              value: /data/yieldsat_artifacts
+            - name: WANDB_API_KEY
+              value: "<your W&B API key, or use valueFrom.secretKeyRef>"
+            - name: WANDB_ENTITY
+              value: "<entity>"
+          resources:
+            limits: {nvidia.com/gpu: 1, cpu: "10", memory: 48Gi}
+            requests: {cpu: "8", memory: 32Gi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: scratch, mountPath: /scratch}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: <shared-data-pvc>}
+        - name: scratch
+          emptyDir: {sizeLimit: 40Gi}   # staged country cache (<= 11 GB) + run outputs

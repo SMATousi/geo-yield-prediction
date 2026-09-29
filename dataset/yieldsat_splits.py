@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 
 from dataset.yieldsat_schema import CONTRACT_KEY
+from dataset.yieldsat_source import same_snapshot
 
 PARTITIONS = ('train', 'val', 'test')
 PAPER_PROTOCOLS = ('cv', 'loro', 'loyo')
@@ -327,7 +328,7 @@ def load_split(artifact_root, name, fingerprints=None):
         raise ValueError('split manifest was made for another contract')
     if fingerprints is not None:
         for c, fp in split['fingerprints'].items():
-            if c in fingerprints and fingerprints[c] != fp:
+            if c in fingerprints and not same_snapshot(fingerprints[c], fp):
                 raise ValueError('split {} was built from another snapshot of {}'.format(name, c))
     return split
 
