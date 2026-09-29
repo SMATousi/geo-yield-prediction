@@ -797,3 +797,50 @@ paper-comparison tasks PC-01–PC-08; if PC runs start first, they should state
 which fusion variant they used. Roughly 1–2 days of implementation and ~6
 GPU-hours for 24 runs at about 7–15 min each (token variants are slower, ~60
 tokens per cell).
+
+#### YS-11 progress log
+
+**2026-09-29 — implementation (YS-11a–f) done.**
+
+- **a — token outputs.** `MaskedTemporalEncoder` and `SoilProfileEncoder` take
+  `output='summary'|'tokens'`, and every encoder exposes `token_mask(x)`: slots
+  or depths with no valid value are False.
+- **b — per-token masks.**
+  - `MultiModalEncoder.forward_with_missing(..., return_token_masks=True)`
+    returns `{stream: (B, L)}` token masks.
+  - `LatentFusionTransformer.forward(..., token_mask=)` ORs them into the
+    key-padding mask with stream availability. The all-invalid fallback is kept,
+    and the tests confirm no NaNs and that masked tokens have no influence.
+- **c — date-aware positions.** `models_yieldsat.DateEncoding` uses sinusoids of
+  days since seeding (16 periods, 8–1,024 days) and a Linear layer, as one module
+  shared by optical and weather, with a learned "undated" embedding. The fusion
+  additionally declares 24 slot and 6 depth positions.
+- **d — fusion stack options.** `LatentFusionTransformer` gains
+  `cross_attn_layers` (extra reads interleaved before evenly spaced latent
+  blocks), `norm_first`, `input_norm` and `latent_init`. The defaults leave the
+  original module unchanged.
+- **e — `--fusion` variants.** `perceiver_summary` (default), `perceiver_tokens`
+  (2 reads, pre-norm, input LayerNorm, trunc-normal latents), `concat_mlp` and
+  `token_transformer` (CLS + 2 pre-norm layers over summary tokens with a
+  stream-absence mask). New flags: `--fusion`, `--cross_attn_layers`,
+  `--encoders_only_transfer`, `--eval_drop_stream/--eval_drop_frac`.
+  `report.json` now records the model config and parameter count, and
+  `test_stress` when the stress test is enabled.
+- **f — transfer checks.** The descriptor carries `fusion`, `encoder_output` and
+  `cross_attn_layers`. Loading a checkpoint with a different fusion layout is
+  refused unless `encoders_only=True`. Legacy descriptors are read as
+  `perceiver_summary`.
+
+Checks:
+- `perceiver_summary` is **weight-for-weight identical** to the committed model
+  under the same seed (state dicts compared against `HEAD`): 1,127,937
+  parameters.
+- Parameter counts at the defaults (embed 128, depth 2): `perceiver_tokens`
+  1,203,745 (8 latents) / 1,204,769 (16); `token_transformer` 1,060,161;
+  `concat_mlp` 893,761.
+- 9 new tests; suite: 77 passed, 2 expected failures.
+- Real-data smoke on Germany: all variants train and evaluate; the stress test
+  and pretraining work with `perceiver_tokens`. Single-run throughput is ~20 k
+  samples/s for tokens vs ~27 k for the summary baselines.
+
+The ablation experiment is next.

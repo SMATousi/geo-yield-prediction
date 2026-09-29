@@ -386,3 +386,116 @@ def test_entry_point_contract_selector():
         '--split', 'x', '--source_root', '/nonexistent', '--artifact_root', '/nonexistent'])
     with pytest.raises(SystemExit, match='not implemented'):
         entry.main(args)
+
+
+# ---- YS-11 fusion variants ---------------------------------------------------
+
+def _fake_batch(layout, B=6, T=24, seed=0):
+    g = torch.Generator().manual_seed(seed)
+    b = {'inputs': {}, 'masks': {}, 'available': {}}
+    for n, lay in layout.items():
+        C = len(lay['out_channels'])
+        shape = (B, T, C) if lay['temporal'] else (B, C)
+        b['inputs'][n] = torch.randn(shape, generator=g)
+        b['masks'][n] = torch.rand(shape, generator=g) > 0.3
+        b['available'][n] = torch.ones(B)
+    for n, i in (('yieldsat_s2', 0), ('yieldsat_weather', 1)):   # empty histories
+        b['masks'][n][i] = False
+        b['available'][n][i] = 0
+    b['time_features'] = torch.randn(B, T, 3, generator=g)
+    b['time_valid'] = torch.rand(B, T, generator=g) > 0.3
+    b['crop'] = torch.randint(0, 4, (B,), generator=g)
+    b['target'] = torch.randn(B, generator=g)
+    b['target_valid'] = torch.ones(B, dtype=torch.bool)
+    return b
+
+
+def test_encoders_emit_tokens_with_masks():
+    from models_multimodal_encoder import MaskedTemporalEncoder, SoilProfileEncoder
+    enc = MaskedTemporalEncoder(in_dim=3, embed_dim=16, hidden_dim=16, output='tokens')
+    x = torch.zeros(2, 24, 3 * 2 + 3)
+    x[0, 5, 3] = 1.0                                            # one valid slot in sample 0
+    assert enc(x).shape == (2, 24, 16)
+    tm = enc.token_mask(x)
+    assert tm.shape == (2, 24) and tm[0, 5] and tm.sum() == 1
+    soil = SoilProfileEncoder(embed_dim=16, hidden_dim=16, output='tokens')
+    xs = torch.zeros(2, 96)
+    xs[1, 48] = 1.0                                             # mask of property 0, depth 0
+    assert soil(xs).shape == (2, 6, 16)
+    assert soil.token_mask(xs)[1].tolist() == [True] + [False] * 5
+    summary = MaskedTemporalEncoder(in_dim=3, embed_dim=16, hidden_dim=16)
+    assert summary(x).shape == (2, 1, 16) and summary.token_mask(x).tolist() == [[True], [False]]
+
+
+def test_fusion_token_mask_and_all_invalid_rows():
+    from models_latent_fusion import LatentFusionTransformer
+    f = LatentFusionTransformer(embed_dim=32, num_latents=4, depth=2, num_heads=2,
+                                modalities={'a': {'spatial': 1, 'temporal': 5},
+                                            'b': {'spatial': 1, 'temporal': 1}},
+                                modality_embed=8, cross_attn_layers=2, norm_first=True,
+                                input_norm=True, latent_init='trunc_normal')
+    emb = {'a': torch.randn(3, 5, 32), 'b': torch.randn(3, 1, 32)}
+    tm = {'a': torch.tensor([[1, 1, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]], dtype=torch.bool)}
+    mask = {'a': torch.ones(3), 'b': torch.tensor([1.0, 1.0, 0.0])}
+    out = f(emb, mask=mask, token_mask=tm)                      # sample 2: every key invalid
+    assert out.shape == (3, 4, 32) and torch.isfinite(out).all()
+    # masked tokens must not influence the output
+    emb2 = {'a': emb['a'].clone(), 'b': emb['b']}
+    emb2['a'][0, 2:] = 100.0
+    out2 = f(emb2, mask=mask, token_mask=tm)
+    assert torch.allclose(out[0], out2[0], atol=1e-5)
+    with pytest.raises(ValueError):
+        f(emb, token_mask={'a': torch.ones(3, 4, dtype=torch.bool)})
+
+
+@pytest.mark.parametrize('fusion', ['perceiver_summary', 'perceiver_tokens', 'concat_mlp',
+                                    'token_transformer'])
+def test_every_fusion_variant_trains_with_missing_streams(fusion):
+    from dataset.yieldsat_schema import STREAMS
+    layout = stream_layout(list(STREAMS))
+    model = YieldSATPointModel(layout, embed_dim=32, num_latents=4, depth=2, num_heads=2,
+                               modality_embed=8, modality_dropout=0.3, fusion=fusion)
+    model.train()
+    pred, loss = model.loss(_fake_batch(layout))
+    loss.backward()
+    assert pred.shape == (6,) and torch.isfinite(pred).all()
+    assert model.descriptor()['config']['fusion'] == fusion
+
+
+def test_summary_perceiver_reproduces_original_parameter_count():
+    from dataset.yieldsat_schema import STREAMS
+    model = YieldSATPointModel(stream_layout(list(STREAMS)))
+    assert sum(p.numel() for p in model.parameters()) == 1127937
+    assert model.config['cross_attn_layers'] == 1 and model.encoder_output == 'summary'
+
+
+def test_date_encoding_aligns_optical_and_weather_tokens():
+    from dataset.yieldsat_schema import STREAMS
+    from models_yieldsat import DateEncoding
+    enc = DateEncoding(16)
+    days = torch.tensor([[0.0, 30.0, 30.0]])
+    dated = torch.tensor([[True, True, False]])
+    e = enc(days, dated)
+    assert not torch.allclose(e[0, 0], e[0, 1])
+    assert torch.equal(e[0, 2], enc.undated)
+    # the same module (one set of weights) serves both temporal streams
+    model = YieldSATPointModel(stream_layout(list(STREAMS)), embed_dim=32, num_latents=4,
+                               num_heads=2, modality_embed=8, fusion='perceiver_tokens')
+    assert sum(1 for n, _ in model.named_modules() if n.endswith('date_enc')) == 1
+
+
+def test_fusion_layout_is_checked_on_transfer():
+    from dataset.yieldsat_schema import STREAMS
+    layout = stream_layout(list(STREAMS))
+    kw = dict(embed_dim=32, num_latents=4, depth=2, num_heads=2, modality_embed=8)
+    tokens = YieldSATPointModel(layout, fusion='perceiver_tokens', **kw).sensor_state_dict()
+    summary = YieldSATPointModel(layout, **kw)
+    with pytest.raises(ValueError, match='fusion layout differs'):
+        summary.load_sensor_state_dict(tokens)
+    info = summary.load_sensor_state_dict(tokens, encoders_only=True)
+    assert info['loaded'] > 0 and all(k.startswith('encoders.') for k in info['missing_sensor_keys'] or ['encoders.'])
+    # an old descriptor without fusion keys is read as perceiver_summary
+    legacy = summary.sensor_state_dict()
+    for k in ('fusion', 'encoder_output', 'cross_attn_layers'):
+        legacy['descriptor']['config'].pop(k)
+    assert YieldSATPointModel(layout, **kw).load_sensor_state_dict(legacy)['loaded'] > 0

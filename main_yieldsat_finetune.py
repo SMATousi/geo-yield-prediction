@@ -32,7 +32,7 @@ from dataset.yieldsat_dataset import (
 from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, PROVENANCE, STREAMS
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
-from models_yieldsat import YieldSATPointModel
+from models_yieldsat import FUSIONS, YieldSATPointModel
 from util.yieldsat_eval import evaluate_predictions, reconstruct_field, write_geotiff
 from yieldsat_objectives import OBJECTIVE_ROUTING, YieldSATPointPretrainer
 
@@ -64,7 +64,13 @@ def get_args_parser():
     p.add_argument('--num_heads', type=int, default=4)
     p.add_argument('--modality_embed', type=int, default=32)
     p.add_argument('--modality_dropout', type=float, default=0.1)
+    p.add_argument('--fusion', default='perceiver_summary', choices=FUSIONS,
+                   help='how per-stream encodings are fused (YS-11)')
+    p.add_argument('--cross_attn_layers', type=int, default=None,
+                   help='Perceiver reads (perceiver_tokens only; default 2)')
     p.add_argument('--init_sensor_ckpt', default='')
+    p.add_argument('--encoders_only_transfer', action='store_true',
+                   help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
     # optimisation
     p.add_argument('--epochs', type=int, default=10)
     p.add_argument('--steps_per_epoch', type=int, default=500)
@@ -85,6 +91,9 @@ def get_args_parser():
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--output_dir', default='./output_dir/yieldsat')
     p.add_argument('--save_maps', type=int, default=3, help='test fields written as GeoTIFF')
+    p.add_argument('--eval_drop_stream', default=None, choices=list(STREAMS),
+                   help='stress test: remove this stream for --eval_drop_frac of test cells')
+    p.add_argument('--eval_drop_frac', type=float, default=0.5)
     return p
 
 
@@ -103,12 +112,25 @@ def _to(batch, device):
     return out
 
 
+def drop_stream(batch, stream, frac):
+    """Remove ``stream`` for a deterministic ``frac`` of cells (by item id)."""
+    item = batch['item']
+    drop = ((item * 2654435761) % 1000) < int(round(frac * 1000))
+    batch['available'][stream] = batch['available'][stream] * (~drop).float()
+    keep = (~drop).view(-1, *([1] * (batch['masks'][stream].ndim - 1)))
+    batch['masks'][stream] = batch['masks'][stream] & keep
+    batch['inputs'][stream] = batch['inputs'][stream] * keep
+    return drop
+
+
 @torch.no_grad()
-def predict(model, ds, args, device):
+def predict(model, ds, args, device, drop=None):
     model.eval()
     loader = _loader(ds, SequentialBatchSampler(len(ds), args.eval_batch_size), args.num_workers)
     preds, targets, seasons, rows, cols = [], [], [], [], []
     for batch in loader:
+        if drop is not None:
+            drop_stream(batch, drop[0], drop[1])
         b = _to(batch, device)
         with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
             p = model(b, apply_dropout=False).float()
@@ -170,10 +192,14 @@ def main(args):
                                depth=args.depth, num_heads=args.num_heads,
                                modality_embed=args.modality_embed,
                                modality_dropout=args.modality_dropout,
-                               use_crop_context=not args.no_crop_context).to(device)
+                               use_crop_context=not args.no_crop_context,
+                               fusion=args.fusion,
+                               cross_attn_layers=args.cross_attn_layers).to(device)
     transfer = None
     if args.init_sensor_ckpt:
-        transfer = model.load_sensor_state_dict(torch.load(args.init_sensor_ckpt, map_location='cpu', weights_only=True))
+        transfer = model.load_sensor_state_dict(
+            torch.load(args.init_sensor_ckpt, map_location='cpu', weights_only=True),
+            encoders_only=args.encoders_only_transfer)
         print('loaded sensor checkpoint:', transfer['loaded'], 'tensors')
     trainable = YieldSATPointPretrainer(model).to(device) if args.mode == 'pretrain' else model
     opt = torch.optim.AdamW(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -235,6 +261,8 @@ def main(args):
         'label_policy': ('retrospective ({})'.format(args.cutoff_mode) if train_ds.retrospective
                          else 'pre-harvest: cutoff {} {} d'.format(args.cutoff_mode, args.cutoff_days)),
         'streams': {n: l['out_channels'] for n, l in train_ds.layout.items()},
+        'model': {'descriptor': model.descriptor()['config'],
+                  'parameters': int(sum(p.numel() for p in model.parameters()))},
         'excluded_sources': ['coord_x/y/z (unverified, metadata only)', 'row/col/field/farm ids',
                              'harvest date as input', 'supplied stats-*', 'yield_ground_truth attrs']
                             + ([] if args.soil_uncertainty == 'ancillary' else ['soil uncertainty']),
@@ -260,6 +288,12 @@ def main(args):
         report['test']['label'] = '{}; {}'.format(split['label'], report['label_policy'])
         report['test']['rows_evaluated'] = int(len(p))
         report['io']['test_rows_per_second'] = round(len(p) / max(1e-6, time.time() - te), 1)
+        if args.eval_drop_stream:
+            ps, ys, ss, _, _ = predict(model, test_ds, args, device,
+                                       drop=(args.eval_drop_stream, args.eval_drop_frac))
+            report['test_stress'] = evaluate_predictions(ps, ys, ss, test_ds.seasons)
+            report['test_stress']['label'] = '{} removed for {:.0%} of test cells'.format(
+                args.eval_drop_stream, args.eval_drop_frac)
         np.savez_compressed(out_dir / 'test_predictions.npz', pred=p, target=y, season=s, grid_row=r,
                             grid_col=c, season_names=np.array([x['field_shared_name'] for x in test_ds.seasons]))
         # spatial reconstruction of a few held-out fields on verified grids

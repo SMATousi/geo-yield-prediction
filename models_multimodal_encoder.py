@@ -222,15 +222,20 @@ class MaskedTemporalEncoder(nn.Module):
     Each slot is embedded from its values, validity and time features (days
     since seeding, day of year) plus a slot embedding; slots with no valid
     value are removed from attention, so variable valid histories never mix
-    padding into the summary. Returns one summary token ``(B, 1, embed_dim)``.
+    padding into the summary. ``output='summary'`` (default) returns one summary
+    token ``(B, 1, embed_dim)``; ``output='tokens'`` returns every slot token
+    ``(B, T, embed_dim)``, whose validity is given by :meth:`token_mask`.
     """
 
     def __init__(self, in_dim, embed_dim, time_dim=3, max_len=24, hidden_dim=128,
-                 depth=2, num_heads=4, dropout=0.0):
+                 depth=2, num_heads=4, dropout=0.0, output='summary'):
         super().__init__()
+        if output not in ('summary', 'tokens'):
+            raise ValueError('output must be summary or tokens')
         self.in_dim = in_dim
         self.time_dim = time_dim
         self.embed_dim = embed_dim
+        self.output = output
         self.value_proj = nn.Linear(2 * in_dim, hidden_dim)
         self.time_proj = nn.Linear(time_dim, hidden_dim)
         self.slot_embed = nn.Parameter(torch.zeros(1, max_len, hidden_dim))
@@ -258,7 +263,16 @@ class MaskedTemporalEncoder(nn.Module):
         h = torch.cat([self.cls_token.expand(x.shape[0], -1, -1), h], dim=1)
         pad = torch.cat([torch.zeros_like(slot_valid[:, :1]), ~slot_valid], dim=1)
         h = self.blocks(h, src_key_padding_mask=pad)
+        if self.output == 'tokens':
+            return self.proj(self.norm(h[:, 1:]))
         return self.proj(self.norm(h[:, :1]))
+
+    def token_mask(self, x):
+        """(B, L) validity of the returned tokens (L = T for tokens, 1 for summary)."""
+        slot_valid = x[..., self.in_dim:2 * self.in_dim].sum(-1) > 0
+        if self.output == 'tokens':
+            return slot_valid
+        return slot_valid.any(dim=1, keepdim=True)
 
 
 class MaskedStaticEncoder(nn.Module):
@@ -282,6 +296,9 @@ class MaskedStaticEncoder(nn.Module):
                 2 * self.in_dim, tuple(x.shape)))
         return self.proj(self.net(x)).unsqueeze(1)
 
+    def token_mask(self, x):
+        return (x[:, self.in_dim:] > 0).any(dim=1, keepdim=True)
+
 
 class SoilProfileEncoder(nn.Module):
     """Depth-aware encoder for property x depth soil vectors (SoilGrids-style).
@@ -291,13 +308,17 @@ class SoilProfileEncoder(nn.Module):
     number of uncertainty channels (``with_uncertainty``: ``C = 2 * P * D``,
     estimates first). Each depth becomes a token of its P properties (and
     their uncertainties/masks) plus a depth embedding; a small transformer
-    over the depth profile yields ``(B, 1, embed_dim)``. Depths with no valid
-    value are removed from attention.
+    over the depth profile yields ``(B, 1, embed_dim)`` (``output='summary'``)
+    or one token per depth ``(B, D, embed_dim)`` (``output='tokens'``). Depths
+    with no valid value are removed from attention.
     """
 
     def __init__(self, embed_dim, num_properties=8, num_depths=6, with_uncertainty=False,
-                 hidden_dim=64, depth=1, num_heads=4):
+                 hidden_dim=64, depth=1, num_heads=4, output='summary'):
         super().__init__()
+        if output not in ('summary', 'tokens'):
+            raise ValueError('output must be summary or tokens')
+        self.output = output
         self.P, self.D = num_properties, num_depths
         self.groups = 2 if with_uncertainty else 1
         self.embed_dim = embed_dim
@@ -327,7 +348,17 @@ class SoilProfileEncoder(nn.Module):
         h = torch.cat([self.cls_token.expand(B, -1, -1), h], dim=1)
         pad = torch.cat([torch.zeros_like(depth_valid[:, :1]), ~depth_valid], dim=1)
         h = self.blocks(h, src_key_padding_mask=pad)
+        if self.output == 'tokens':
+            return self.proj(self.norm(h[:, 1:]))
         return self.proj(self.norm(h[:, :1]))
+
+    def token_mask(self, x):
+        B = x.shape[0]
+        v = x.reshape(B, 2, self.groups, self.P, self.D)
+        depth_valid = v[:, 1].sum(dim=(1, 2)) > 0
+        if self.output == 'tokens':
+            return depth_valid
+        return depth_valid.any(dim=1, keepdim=True)
 
 
 class MultiModalEncoder(nn.Module):
@@ -464,8 +495,15 @@ so the backbone can run on arbitrary subsets of sources."""
                            torch.nonzero(~present).flatten()])
         return emb[torch.argsort(order)], avail
 
-    def forward_with_missing(self, inputs, available=None, apply_dropout=True):
+    def forward_with_missing(self, inputs, available=None, apply_dropout=True,
+                             return_token_masks=False):
         """Missing-modality-robust forward pass.
+
+        With ``return_token_masks`` a third dict ``{name: (B, L) bool}`` gives
+        the validity of each emitted token (encoders exposing ``token_mask``,
+        e.g. per-slot tokens with no valid value are False); it is all True for
+        encoders without it and for substituted missing-modality tokens, whose
+        absence is already carried by the availability mask.
 
         Returns ``(embeddings, mask)`` where ``embeddings`` contains an entry
         for *every* configured modality and ``mask`` is a dict of per-modality
@@ -542,7 +580,23 @@ so the backbone can run on arbitrary subsets of sources."""
                 embeddings[name] = token
                 mask[name] = torch.zeros(embeddings[name].shape[0], dtype=torch.float32,
                                          device=embeddings[name].device)
-        return embeddings, mask
+        if not return_token_masks:
+            return embeddings, mask
+        token_masks = {}
+        for name, emb in embeddings.items():
+            encoder = self.encoders[name]
+            tm = None
+            if name in inputs and hasattr(encoder, 'token_mask'):
+                x = self._normalize_input(name, inputs[name])
+                if isinstance(x, np.ndarray):
+                    x = torch.from_numpy(x)
+                tm = encoder.token_mask(x)
+                if tm.shape != emb.shape[:2]:
+                    tm = None
+            if tm is None:
+                tm = torch.ones(emb.shape[:2], dtype=torch.bool, device=emb.device)
+            token_masks[name] = tm
+        return embeddings, mask, token_masks
 
 
 if __name__ == "__main__":

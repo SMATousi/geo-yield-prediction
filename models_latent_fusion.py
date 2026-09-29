@@ -148,8 +148,17 @@ class LatentFusionTransformer(nn.Module):
 
     def __init__(self, embed_dim=192, num_latents=64, depth=4, num_heads=3,
                  modalities=None, modality_embed=64, mlp_ratio=4., drop_rate=0.,
-                 qkv_bias=True):
+                 qkv_bias=True, cross_attn_layers=1, norm_first=False, input_norm=False,
+                 latent_init='randn'):
+        """``cross_attn_layers`` > 1 interleaves repeated cross-attention reads
+        with the latent self-attention blocks (Perceiver-IO style);
+        ``norm_first`` makes the latent blocks pre-norm; ``input_norm`` applies a
+        LayerNorm to the modality tokens before they are read; ``latent_init``
+        is 'randn' (original) or 'trunc_normal' (std 0.02). The defaults
+        reproduce the original single-read, post-norm module exactly."""
         super().__init__()
+        if cross_attn_layers < 1 or cross_attn_layers > max(1, depth):
+            raise ValueError('cross_attn_layers must be in [1, max(1, depth)]')
         self.embed_dim = embed_dim
         self.num_latents = num_latents
         self.modalities = modalities or {}
@@ -176,6 +185,10 @@ class LatentFusionTransformer(nn.Module):
 
         # learned latent bottleneck queries (Perceiver)
         self.latent_tokens = nn.Parameter(torch.randn(1, num_latents, embed_dim))
+        if latent_init == 'trunc_normal':
+            nn.init.trunc_normal_(self.latent_tokens, std=0.02)
+        elif latent_init != 'randn':
+            raise ValueError('latent_init must be randn or trunc_normal')
 
         # cross-attention: latent queries attend to the concatenated modality
         # tokens, then a self-attention stack refines the latents.
@@ -187,9 +200,19 @@ class LatentFusionTransformer(nn.Module):
             nn.TransformerEncoderLayer(
                 d_model=embed_dim, nhead=num_heads,
                 dim_feedforward=int(embed_dim * mlp_ratio), dropout=drop_rate,
-                activation='gelu', batch_first=True)
+                activation='gelu', batch_first=True, norm_first=norm_first)
             for _ in range(depth)
         ])
+        # additional cross-attention reads, placed before evenly spaced blocks
+        self.cross_attn_layers = cross_attn_layers
+        self.extra_cross_attn = nn.ModuleList([
+            nn.MultiheadAttention(embed_dim, num_heads, batch_first=True, dropout=drop_rate)
+            for _ in range(cross_attn_layers - 1)])
+        self.extra_cross_norm = nn.ModuleList([
+            nn.LayerNorm(embed_dim) for _ in range(cross_attn_layers - 1)])
+        self._read_before = {int(round(i * depth / cross_attn_layers)): i - 1
+                             for i in range(1, cross_attn_layers)}
+        self.input_norm = nn.LayerNorm(embed_dim) if input_norm else None
         self.norm = nn.LayerNorm(embed_dim)
         # multi-scale feature-extraction layer indices (finest first) whose
         # outputs become the multiscale patch-token set fed to the DPT head.
@@ -205,7 +228,7 @@ class LatentFusionTransformer(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    def _build_key_padding_mask(self, mask, tokens):
+    def _build_key_padding_mask(self, mask, tokens, token_mask=None):
         """Build a ``(B, sum L)`` key-padding mask for the Perceiver
         cross-attention from a per-modality availability dict.
 
@@ -215,8 +238,10 @@ class LatentFusionTransformer(nn.Module):
         so a learned missing-modality token does not contribute to the fused
         representation. Returns ``None`` when no mask is supplied.
         """
-        if mask is None:
+        if mask is None and token_mask is None:
             return None
+        mask = mask or {}
+        token_mask = token_mask or {}
         parts = []
         for name, emb in tokens:
             avail = torch.as_tensor(mask.get(name, True), device=emb.device)
@@ -225,7 +250,14 @@ class LatentFusionTransformer(nn.Module):
             if avail.shape != (emb.shape[0],):
                 raise ValueError(f"Availability for {name} must have shape ({emb.shape[0]},)")
             # True = masked (missing), so invert the availability flag.
-            parts.append((avail < 0.5).unsqueeze(1).expand(-1, emb.shape[1]))
+            missing = (avail < 0.5).unsqueeze(1).expand(-1, emb.shape[1])
+            tm = token_mask.get(name)
+            if tm is not None:
+                tm = torch.as_tensor(tm, device=emb.device, dtype=torch.bool)
+                if tm.shape != emb.shape[:2]:
+                    raise ValueError(f"Token mask for {name} must have shape {tuple(emb.shape[:2])}")
+                missing = missing | ~tm
+            parts.append(missing)
         key_padding_mask = torch.cat(parts, dim=1)
         # An all-absent sample has no real key to attend to. Let its first
         # learned missing token act as a stable fallback instead of creating
@@ -235,7 +267,7 @@ class LatentFusionTransformer(nn.Module):
             key_padding_mask[all_absent, 0] = False
         return key_padding_mask
 
-    def _assemble_tokens(self, embeddings, ids_keep=None, mask=None):
+    def _assemble_tokens(self, embeddings, ids_keep=None, mask=None, token_mask=None):
         """Validate layouts, add position/identity, and build attention mask."""
         tokens = []
         batch_size = None
@@ -256,6 +288,8 @@ class LatentFusionTransformer(nn.Module):
             keep = ids_keep.get(name) if ids_keep is not None else None
             if keep is not None:
                 emb = torch.gather(emb, dim=1, index=keep.unsqueeze(-1).expand(-1, -1, emb.shape[2]))
+                if token_mask is not None and name in token_mask:
+                    raise ValueError('ids_keep and token_mask cannot be combined')
             pos = self.pos_embeds[name](ids_keep=keep)
             if emb.shape[1] == 1 and pos.shape[1] != 1:
                 # Whole-modality absence uses one compact learned token.
@@ -270,9 +304,30 @@ class LatentFusionTransformer(nn.Module):
         if not tokens:
             raise ValueError('LatentFusionTransformer received no modality tokens')
         x = torch.cat([token for _, token in tokens], dim=1)
-        return x, self._build_key_padding_mask(mask, tokens)
+        if self.input_norm is not None:
+            x = self.input_norm(x)
+        return x, self._build_key_padding_mask(mask, tokens, token_mask)
 
-    def forward(self, embeddings, ids_keep=None, mask=None):
+    def _read(self, i, latents, x, key_padding_mask):
+        """Cross-attention read ``i`` (0 = the original read)."""
+        attn = self.cross_attn if i == 0 else self.extra_cross_attn[i - 1]
+        norm = self.cross_norm if i == 0 else self.extra_cross_norm[i - 1]
+        out, _ = attn(latents, x, x, key_padding_mask=key_padding_mask)
+        return norm(latents + out)
+
+    def _latent_stack(self, x, key_padding_mask, collect=False):
+        latents = self.latent_tokens.expand(x.shape[0], -1, -1)
+        latents = self._read(0, latents, x, key_padding_mask)
+        multi_scale = []
+        for i, blk in enumerate(self.blocks):
+            if i in self._read_before:
+                latents = self._read(self._read_before[i] + 1, latents, x, key_padding_mask)
+            latents = blk(latents)
+            if collect and i in self.extraction_layers:
+                multi_scale.append(latents)
+        return latents, multi_scale
+
+    def forward(self, embeddings, ids_keep=None, mask=None, token_mask=None):
         """embeddings: dict {modality: (B, L_m, embed_dim)}.
 
         ``ids_keep`` optionally maps a modality name to a ``(B, K)`` index
@@ -282,20 +337,15 @@ class LatentFusionTransformer(nn.Module):
         availability flag (1 = present, 0 = absent); absent-modality tokens are
         masked out of the Perceiver cross-attention via a key-padding mask so
         they do not contribute to the fused representation. Returns the fused
-        latent ``(B, num_latents, embed_dim)``.
+        latent ``(B, num_latents, embed_dim)``. ``token_mask`` optionally maps a
+        modality to a ``(B, L_m)`` bool validity of its individual tokens;
+        invalid tokens are masked out of every cross-attention read.
         """
-        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask)
+        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask, token_mask)
+        latents, _ = self._latent_stack(x, key_padding_mask)
+        return self.norm(latents)
 
-        # Perceiver cross-attention: latent queries attend to the modality tokens
-        latents = self.latent_tokens.expand(x.shape[0], -1, -1)
-        attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
-        latents = self.cross_norm(latents + attn_out)
-        for blk in self.blocks:
-            latents = blk(latents)
-        latents = self.norm(latents)
-        return latents
-
-    def forward_multiscale(self, embeddings, ids_keep=None, mask=None):
+    def forward_multiscale(self, embeddings, ids_keep=None, mask=None, token_mask=None):
         """Emit multi-scale patch tokens from the fusion backbone.
 
         Runs the same Perceiver cross-attention + self-attention stack as
@@ -310,16 +360,8 @@ class LatentFusionTransformer(nn.Module):
         tokens are masked out of the cross-attention. Returns a list of four
         ``(B, num_latents, embed_dim)`` tensors, finest first.
         """
-        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask)
-
-        latents = self.latent_tokens.expand(x.shape[0], -1, -1)
-        attn_out, _ = self.cross_attn(latents, x, x, key_padding_mask=key_padding_mask)
-        latents = self.cross_norm(latents + attn_out)
-        multi_scale = []
-        for i, blk in enumerate(self.blocks):
-            latents = blk(latents)
-            if i in self.extraction_layers:
-                multi_scale.append(latents)
+        x, key_padding_mask = self._assemble_tokens(embeddings, ids_keep, mask, token_mask)
+        _, multi_scale = self._latent_stack(x, key_padding_mask, collect=True)
         # finest first, matching the DPT head's expected input order
         return list(reversed(multi_scale))
 
