@@ -20,7 +20,7 @@ spec:
               - matchExpressions:
                   - key: nvidia.com/gpu.product
                     operator: In
-                    values: [NVIDIA-A10]
+                    values: [NVIDIA-A10, NVIDIA-A6000]   # as in the lab template; A10 preferred for timing
       containers:
         - name: yieldsat
           image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest

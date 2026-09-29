@@ -1,0 +1,31 @@
+# A10 throughput calibration: one real-length ARG-S CV fold for our model
+# (two seeds side by side, i.e. the production 2 runs/GPU) and one LSTM fold.
+suite: calibrate_a10
+wandb: {project: yieldsat-cvpr27-smoke, entity: null}
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs: [ARG-S]
+job_unit: pair
+runs_per_gpu: 2
+num_workers: 4
+gpu_speed_factor: 0.7
+experiments:
+  - name: ours
+    model: ours
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2_adm]
+    seeds: [0, 1]
+    max_folds: 1
+    save_maps: 0
+    budget: {epochs: 3, steps_per_epoch: 1500}
+  - name: paper_lstm
+    model: paper_lstm
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2_adm]
+    seeds: [0]
+    max_folds: 1
+    save_maps: 0
+    budget: {epochs: 2}
