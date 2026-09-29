@@ -91,7 +91,21 @@ reads merged NetCDF grid-cell histories lazily and separates temporal optical,
 weather, static soil and terrain streams. Its point-mode adapter/scalar yield head
 and optional later patch mode share encoder/fusion interfaces while preserving
 branch-specific provenance. Stored merged grids do not recover original native
-resolutions; AR tasks govern this branch independently of LI compliance.
+resolutions; YS tasks govern this branch independently of LI compliance.
+
+Implemented data flow (2026-09-28):
+
+```text
+<Country>/merge_s2-soil-dem-weather-coords.nc   (read-only, HDF5 via h5py)
+  └─ yieldsat_prepare.py index / cache / geometry / splits  → artifact root
+       rows.npz, fields.json | temporal/static/times .npy + field_stats | geometry | split manifests
+  └─ YieldSATPointDataset (cache or h5 backend; masks, cutoff, train-only normalizer)
+       inputs/masks: s2 (T,12)  weather (T,4)  dem (1)  terrain (4)  soil (48)  + time features, crop id
+  └─ YieldSATPointModel
+       MultiModalEncoder: masked_temporal ×2, masked_static ×2, soil_profile  → one token each
+       LatentFusionTransformer (+ optional crop token)  → scalar_cell_yield head  → t/ha per cell
+  └─ util/yieldsat_eval.py: per-country/crop pixel, field-balanced, field-level metrics; grid scatter → GeoTIFF
+```
 
 ---
 

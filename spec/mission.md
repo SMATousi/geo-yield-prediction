@@ -60,7 +60,10 @@ supports within-field grid-cell histories and targets, with point-mode predictio
 and later spatial reconstruction/patch experiments. Its existing common-grid
 preprocessing is recorded as a dataset limitation; it does not meet the native-grid
 architectural criterion. Scientific metrics await verified target units and
-grouped/geographic evaluation.
+grouped/geographic evaluation. Update 2026-09-28: the target is documented as
+dry t/ha and verified cell by cell against raw yield masks. Point-mode training and
+farm/block/country-held-out evaluation now run; results and remaining unit
+questions (slope, TWI, soil uncertainty, coordinates) are in §7 of the contract.
 
 ### Secondary
 6. Preserve geographic honesty in evaluation: **spatial splits**, not random splits.

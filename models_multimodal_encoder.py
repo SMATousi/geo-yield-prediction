@@ -212,6 +212,124 @@ class CategoricalEncoder(nn.Module):
         return self.embedding(x.long()).reshape(x.shape[0], -1, self.embed_dim)
 
 
+class MaskedTemporalEncoder(nn.Module):
+    """Point-mode temporal encoder for one sensor family (YieldSAT S2 bands or
+    weather interval features) with per-value validity and real dates.
+
+    Accepts one packed tensor ``(B, T, 2*in_dim + time_dim)`` =
+    ``[values * mask, mask, time_features]`` so it fits the single-tensor
+    MultiModalEncoder interface (including per-sample availability indexing).
+    Each slot is embedded from its values, validity and time features (days
+    since seeding, day of year) plus a slot embedding; slots with no valid
+    value are removed from attention, so variable valid histories never mix
+    padding into the summary. Returns one summary token ``(B, 1, embed_dim)``.
+    """
+
+    def __init__(self, in_dim, embed_dim, time_dim=3, max_len=24, hidden_dim=128,
+                 depth=2, num_heads=4, dropout=0.0):
+        super().__init__()
+        self.in_dim = in_dim
+        self.time_dim = time_dim
+        self.embed_dim = embed_dim
+        self.value_proj = nn.Linear(2 * in_dim, hidden_dim)
+        self.time_proj = nn.Linear(time_dim, hidden_dim)
+        self.slot_embed = nn.Parameter(torch.zeros(1, max_len, hidden_dim))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
+        self.blocks = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(hidden_dim, num_heads, dim_feedforward=2 * hidden_dim,
+                                       dropout=dropout, activation='gelu', batch_first=True,
+                                       norm_first=True),
+            num_layers=depth, enable_nested_tensor=False)
+        self.norm = nn.LayerNorm(hidden_dim)
+        self.proj = nn.Linear(hidden_dim, embed_dim)
+        nn.init.trunc_normal_(self.slot_embed, std=0.02)
+        nn.init.trunc_normal_(self.cls_token, std=0.02)
+
+    def forward(self, x):
+        expected = 2 * self.in_dim + self.time_dim
+        if x.ndim != 3 or x.shape[-1] != expected:
+            raise ValueError('MaskedTemporalEncoder expects (B, T, {}), got {}'.format(
+                expected, tuple(x.shape)))
+        values_mask = x[..., :2 * self.in_dim]
+        slot_valid = x[..., self.in_dim:2 * self.in_dim].sum(-1) > 0      # (B, T)
+        time_feats = x[..., 2 * self.in_dim:]
+        T = x.shape[1]
+        h = self.value_proj(values_mask) + self.time_proj(time_feats) + self.slot_embed[:, :T]
+        h = torch.cat([self.cls_token.expand(x.shape[0], -1, -1), h], dim=1)
+        pad = torch.cat([torch.zeros_like(slot_valid[:, :1]), ~slot_valid], dim=1)
+        h = self.blocks(h, src_key_padding_mask=pad)
+        return self.proj(self.norm(h[:, :1]))
+
+
+class MaskedStaticEncoder(nn.Module):
+    """Point-mode static vector encoder (DEM, terrain) with per-feature
+    validity. Accepts ``(B, 2*in_dim)`` = ``[values * mask, mask]`` and
+    returns ``(B, 1, embed_dim)``."""
+
+    def __init__(self, in_dim, embed_dim, hidden_dim=64):
+        super().__init__()
+        self.in_dim = in_dim
+        self.embed_dim = embed_dim
+        self.net = nn.Sequential(
+            nn.Linear(2 * in_dim, hidden_dim), nn.GELU(),
+            nn.Linear(hidden_dim, hidden_dim), nn.GELU(),
+        )
+        self.proj = nn.Linear(hidden_dim, embed_dim)
+
+    def forward(self, x):
+        if x.ndim != 2 or x.shape[-1] != 2 * self.in_dim:
+            raise ValueError('MaskedStaticEncoder expects (B, {}), got {}'.format(
+                2 * self.in_dim, tuple(x.shape)))
+        return self.proj(self.net(x)).unsqueeze(1)
+
+
+class SoilProfileEncoder(nn.Module):
+    """Depth-aware encoder for property x depth soil vectors (SoilGrids-style).
+
+    Input ``(B, 2*C)`` = ``[values * mask, mask]`` with ``C = P * D`` in
+    property-major, depth-ordered layout, optionally followed by the same
+    number of uncertainty channels (``with_uncertainty``: ``C = 2 * P * D``,
+    estimates first). Each depth becomes a token of its P properties (and
+    their uncertainties/masks) plus a depth embedding; a small transformer
+    over the depth profile yields ``(B, 1, embed_dim)``. Depths with no valid
+    value are removed from attention.
+    """
+
+    def __init__(self, embed_dim, num_properties=8, num_depths=6, with_uncertainty=False,
+                 hidden_dim=64, depth=1, num_heads=4):
+        super().__init__()
+        self.P, self.D = num_properties, num_depths
+        self.groups = 2 if with_uncertainty else 1
+        self.embed_dim = embed_dim
+        self.token_proj = nn.Linear(2 * self.groups * self.P, hidden_dim)
+        self.depth_embed = nn.Parameter(torch.zeros(1, num_depths, hidden_dim))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
+        self.blocks = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(hidden_dim, num_heads, dim_feedforward=2 * hidden_dim,
+                                       dropout=0.0, activation='gelu', batch_first=True,
+                                       norm_first=True),
+            num_layers=depth, enable_nested_tensor=False)
+        self.norm = nn.LayerNorm(hidden_dim)
+        self.proj = nn.Linear(hidden_dim, embed_dim)
+        nn.init.trunc_normal_(self.depth_embed, std=0.02)
+        nn.init.trunc_normal_(self.cls_token, std=0.02)
+
+    def forward(self, x):
+        C = self.groups * self.P * self.D
+        if x.ndim != 2 or x.shape[-1] != 2 * C:
+            raise ValueError('SoilProfileEncoder expects (B, {}), got {}'.format(2 * C, tuple(x.shape)))
+        B = x.shape[0]
+        # (B, 2, groups, P, D) -> per-depth tokens (B, D, 2*groups*P)
+        v = x.reshape(B, 2, self.groups, self.P, self.D)
+        tokens = v.permute(0, 4, 1, 2, 3).reshape(B, self.D, -1)
+        depth_valid = v[:, 1].sum(dim=(1, 2)) > 0                          # (B, D)
+        h = self.token_proj(tokens) + self.depth_embed
+        h = torch.cat([self.cls_token.expand(B, -1, -1), h], dim=1)
+        pad = torch.cat([torch.zeros_like(depth_valid[:, :1]), ~depth_valid], dim=1)
+        h = self.blocks(h, src_key_padding_mask=pad)
+        return self.proj(self.norm(h[:, :1]))
+
+
 class MultiModalEncoder(nn.Module):
     """Container that dispatches each input source to its own dedicated
     encoder and returns a dict of per-modality embeddings keyed by source
@@ -249,6 +367,11 @@ class MultiModalEncoder(nn.Module):
             'tabular': TabularEncoder,
             'categorical': CategoricalEncoder,
             'grouped_vit': GroupChannelsVisionTransformer,
+            # point-mode (YieldSAT) packed value+mask encoders; their inputs
+            # arrive already standardized with train-only statistics
+            'masked_temporal': MaskedTemporalEncoder,
+            'masked_static': MaskedStaticEncoder,
+            'soil_profile': SoilProfileEncoder,
         }
 
     def __init__(self, encoders_cfg, embed_dim=192, modality_dropout=0.0):
@@ -289,7 +412,8 @@ class MultiModalEncoder(nn.Module):
         if not isinstance(x, (torch.Tensor, np.ndarray)):
             x = torch.as_tensor(x)
         kind = self.encoder_types[name]
-        axis = 2 if kind == 'sar' else -1 if kind in ('timeseries', 'tabular') else 1
+        axis = 2 if kind == 'sar' else -1 if kind in (
+            'timeseries', 'tabular', 'masked_temporal', 'masked_static', 'soil_profile') else 1
         return normalize_modality(self.norm_sources[name], x, channel_axis=axis)
 
     def forward(self, inputs):

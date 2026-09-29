@@ -10,8 +10,10 @@
   adapters and YS-01–YS-10 tasks.
 - **Legacy demo:** the flat-file loader behavior documented below.
 
-Both real-data branches are specified, not implemented. Selecting the YieldSAT
-branch does not satisfy the downloader full-layer/native-grid requirements.
+The YieldSAT branch is implemented in point mode (2026-09-28; see
+[§7](./yieldsat_data_contract.md#7-implementation-progress-log-2026-09-28)). The
+downloader branch is specified, not implemented. Selecting the YieldSAT branch does
+not satisfy the downloader full-layer/native-grid requirements.
 
 **Full-layer update (2026-09-28):** This document describes the existing flat-file
 demo loaders. The target real-data handoff is the downloader's per-record catalog,

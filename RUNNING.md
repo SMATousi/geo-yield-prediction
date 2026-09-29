@@ -62,3 +62,54 @@ with `--overwrite`.
 
 The field-level GeoTIFF loaders are still disconnected from these training scripts.
 See `spec/roadmap.md` for the remaining integration and correctness work.
+
+## YieldSAT preprocessed branch (`yieldsat_preprocessed_v1`)
+
+Implemented 2026-09-28; see `spec/yieldsat_data_contract.md` §7 for evidence and
+results. Source NetCDF files are only read. All derived artifacts go under a
+separate writable root (≈2 KB per row for the optional cache, ~25 GB for all four
+countries on local disk):
+
+```bash
+export YIELDSAT_SOURCE_ROOT=/home1/pupil/SMATousi/YieldSAT/Preprocessed
+export YIELDSAT_ARTIFACT_ROOT=/root/yieldsat_artifacts
+C="Argentina Brazil Germany Uruguay"
+
+python yieldsat_prepare.py index    --countries $C       # YS-01/03 row index, audit (~20 s)
+python yieldsat_prepare.py geometry --countries $C \
+    --raw_zip /home1/pupil/SMATousi/YieldSAT/Raw/Raw.zip  # YS-02 grids, centroids, cell checks
+python yieldsat_prepare.py cache    --countries Germany  # YS-04 audit pass + cache + field stats
+python yieldsat_prepare.py snapshot --countries Germany  # YS-01 integrity (add --full_crc to recompute)
+python yieldsat_prepare.py semantics --countries Germany # YS-02 unit/aggregation evidence
+python yieldsat_prepare.py splits   --countries Germany --scheme farm --name germany_farm_s0
+```
+
+`cache` reads each file once (~120 MB/s aggregate over the NFS mount; Argentina
+≈63 GB). Run one process per country in parallel. Split schemes: `farm` (farm
+clusters, including aliased farms), `field` (geometry-derived physical fields),
+`block` (`--block_km` geographic blocks), `country` (`--holdout_country`), `year`
+(`--holdout_year`).
+
+Training and evaluation (point mode, one cell history → t/ha):
+
+```bash
+python main_yieldsat_finetune.py --data_contract yieldsat_preprocessed_v1 \
+    --countries Germany --split germany_farm_s0 --device cuda \
+    --output_dir output_dir/yieldsat/germany_farm
+# yield-free pretraining on the training partition, then transfer:
+python main_yieldsat_finetune.py --data_contract yieldsat_preprocessed_v1 --mode pretrain \
+    --countries Argentina Brazil Germany Uruguay --split pooled_farm_s0 --output_dir output_dir/yieldsat/pt
+python main_yieldsat_finetune.py --data_contract yieldsat_preprocessed_v1 --countries Uruguay \
+    --split pooled_farm_s0 --init_sensor_ckpt output_dir/yieldsat/pt/sensor_checkpoint.pth
+```
+
+Useful flags: `--backend h5` reads the NetCDF directly with contiguous-block
+sampling (no cache; about 60× slower per batch over NFS). `--cutoff_mode
+{before_harvest,after_seeding,harvest,all_slots}` and `--cutoff_days` set the
+prediction cutoff (the last two are labelled retrospective). The ablation flags
+are `--streams`, `--soil_uncertainty ancillary`, `--aspect_encoding cyclic`,
+`--no_crop_context`, `--norm_pooling per_country` and `--train_fraction`.
+`report.json` records the split label, cutoff policy, excluded sources, objective
+routing, I/O rates, memory and metrics: pixel, field-balanced and field-level,
+per country, per crop, and macro-country. Tests: `python -m pytest
+tests/test_yieldsat.py` (synthetic NetCDF layout; no real data needed).

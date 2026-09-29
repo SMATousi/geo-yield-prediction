@@ -689,3 +689,53 @@ if __name__ == "__main__":
     print(loss.item())
     samples = mdn.sample(pi, mu, sigma, n_samples=3)
     print(samples.shape)
+
+
+@register_head(
+    "scalar_cell_yield",
+    category="scalar",
+    modality="yield",
+    tasks=["point-yield-regression"],
+    backbone="fused-latent-tokens",
+    description=(
+        "Per-cell scalar yield head for point-mode (one grid-cell history) "
+        "inputs: pools the fused latent tokens (B, L, D) and regresses one "
+        "value per cell. Scatter outputs to field grids for yield maps."
+    ),
+)
+class ScalarCellYieldHead(nn.Module):
+    """Scalar yield head over fused latent tokens (point mode, YS-R02).
+
+    Accepts the Perceiver latents ``(B, L, embed_dim)`` and returns ``(B,)``.
+    The dense heads above expect ``(B, D, H, W)`` feature maps and cannot
+    consume a batch of independent cells; this head is the registered
+    point-mode alternative. The loss is averaged over valid targets only.
+    """
+
+    def __init__(self, embed_dim, hidden_dim=None, dropout=0.0, loss='mse'):
+        super().__init__()
+        hidden_dim = hidden_dim or embed_dim
+        self.loss = loss
+        self.norm = nn.LayerNorm(embed_dim)
+        self.head = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, 1),
+        )
+
+    def compute_loss(self, logits, targets, valid_mask=None):
+        # 1-D targets: fold the mask in as NaN (masked_yield_loss drops
+        # non-finite targets; its valid_mask path assumes a channel axis)
+        if valid_mask is not None:
+            valid_mask = torch.as_tensor(valid_mask, device=targets.device, dtype=torch.bool)
+            targets = torch.where(valid_mask, targets, torch.full_like(targets, float('nan')))
+        return masked_yield_loss(logits, targets, loss=self.loss)
+
+    def forward(self, inputs, targets=None, mode='tensor', valid_mask=None):
+        if inputs.ndim != 3:
+            raise ValueError("ScalarCellYieldHead expects fused tokens (B, L, D)")
+        logits = self.head(self.norm(inputs.mean(dim=1))).squeeze(-1)
+        if mode == 'loss':
+            return logits, self.compute_loss(logits, targets, valid_mask=valid_mask)
+        return logits

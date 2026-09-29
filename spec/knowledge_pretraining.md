@@ -79,6 +79,11 @@ teacher prompts. Do not treat merged-grid vectors as original native-grid layers
 use yield metadata in applicability evidence, or run §11's US inventory prompt
 unchanged. YS-07 specifies the branch integration with KP tasks; dedicated
 country-aware YieldSAT generator/evidence prompts are future implementation work.
+Status 2026-09-28: `yieldsat_objectives.OBJECTIVE_ROUTING` marks knowledge
+relationships *blocked* for this branch. Weather aggregation is now characterized
+(inclusive-interval Kelvin-day/metre sums), but slope and TWI scales, soil
+uncertainty definition and coordinates remain unresolved, and no concept mapping
+or annotations exist.
 
 ## 3. Text references and sensor concept grounding
 

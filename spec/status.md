@@ -1,6 +1,35 @@
 # Status — Verified Review
 
-**YieldSAT contract update (2026-09-28):**
+**YieldSAT implementation update (2026-09-28/29):** The YieldSAT branch runs
+end to end on real data in point mode. This is the repository's first real-data
+training.
+- **Verified:**
+  - whole-file CRC32 of all four `.nc` files against the recorded archive CRCs;
+  - a full-corpus audit of 12.37 M rows (no duplicate cells, no static conflicts);
+  - target t/ha matching raw yield masks on 20/20 sampled fields;
+  - weather semantics (inclusive-interval sums);
+  - per-field grids from `Raw.zip`: 1,059 physical fields, 146 cross-farm aliases;
+  - grouped split manifests with leakage checks;
+  - identical cache and direct-HDF5 adapters;
+  - one encoder per stream, a scalar head, a contract-selected entry point and
+    georeferenced output maps;
+  - 68 passing tests (16 new).
+- **Measured** (single seed, 30-day pre-harvest cutoff, all held-out cells):
+  - pooled farm-held-out: pixel RMSE 1.65 t/ha (R² 0.66), field-level 1.08
+    (R² 0.79);
+  - 20 km geographic-block-held-out: 1.45 (0.66) / 0.91 (0.81);
+  - leave-Uruguay-out: 1.51 (R² 0.08, +0.74 bias);
+  - yield-free pretraining gave no Uruguay transfer benefit.
+- **Open:**
+  - slope, TWI, soil-uncertainty and coordinate semantics;
+  - a duplicate-season policy;
+  - multi-seed evaluation;
+  - patch mode;
+  - knowledge objectives.
+
+Details: [yieldsat_data_contract.md §7](./yieldsat_data_contract.md#7-implementation-progress-log-2026-09-28).
+
+**YieldSAT contract update (2026-09-28, superseded by the implementation update above):**
 [yieldsat_data_contract.md](./yieldsat_data_contract.md) adds an alternative
 merged-NetCDF ingestion branch covering Argentina, Brazil, Germany and Uruguay,
 with YS-01–YS-10 backlog. Read-only metadata verified all four schemas; five

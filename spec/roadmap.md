@@ -158,16 +158,30 @@ It covers Argentina, Brazil, Germany and Uruguay with explicit country selection
 per-file channel/date/category decoding and country-qualified split identities.
 Its already merged grids use separate requirements; this is not LI completion.
 
-- [ ] **YS-01–03:** Freeze/audit extraction; recover feature/target semantics and
-      geometry; build chunked row indexes and physical-field/farm grouped splits.
-- [ ] **YS-04–06:** Implement bounded NetCDF reads, named stream selection,
-      masks/cutoffs/train-only statistics and point-mode encoders/scalar yield head.
-- [ ] **YS-07–08:** Audit objective compatibility and leakage, expose the contract
-      selector, and run a bounded real-data pilot with verified target units.
-- [ ] **YS-09:** Reconstruct spatial outputs on verified field grids; optionally
-      add spatial patch mode with valid sparse-cell/target masks.
+- [x] **YS-01–03** (2026-09-28): Whole-file CRC32 matches the recorded archive
+      CRC for all four files. Full-corpus value audit done. Semantics recovered:
+      target is dry t/ha, verified cell by cell against raw masks; weather is
+      inclusive-interval sums. Grids come from `Raw.zip`: 1,059 physical fields and
+      146 cross-farm aliases. Grouped farm-cluster/field/block/country/year splits
+      carry leakage checks. Slope/TWI/soil-uncertainty/coordinate semantics remain
+      open.
+- [x] **YS-04–06** (2026-09-28): Cache and direct-HDF5 backends (identical
+      output), per-feature/time/target masks, first-slot weather invalidation,
+      cutoff modes, train-only field-sum normalization. One encoder per stream
+      (`masked_temporal` ×2, `masked_static` ×2, `soil_profile`), Perceiver
+      fusion, registered `scalar_cell_yield` head, checked sensor-checkpoint
+      transfer.
+- [x] **YS-07–08** (2026-09-28): Objective routing recorded and enforced
+      (spatial MAE inactive in point mode; masked-observation and last-valid
+      forecast variants; knowledge blocked). `main_yieldsat_finetune.py
+      --data_contract yieldsat_preprocessed_v1` runs GPU pilots with I/O/memory
+      reports and labelled per-country/per-crop/field-balanced metrics.
+- [x] **YS-09** (point outputs, 2026-09-28): Test predictions are scattered to
+      each field's verified grid and written as georeferenced GeoTIFFs; holes stay
+      NaN, and bounds/duplicates raise. Patch mode is **not pursued** in this
+      iteration.
 
-YieldSAT pilot acceptance and limitations are in the AR contract. Retain the
+YieldSAT pilot acceptance and limitations are in the YieldSAT contract. Retain the
 original downloader/native-grid exit criteria below independently.
 
 **Exit:** real pretraining and supervised fine-tuning run through the intended
@@ -195,9 +209,13 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       shuffled/no-text and teacher controls; preserve sensor-only transfer/inference.
       This supersedes the earlier text-conditioned held-out prediction proposal.
 
-- [ ] **YS-10:** Evaluate YieldSAT scratch/pretrained transfer on matching grouped
+- [~] **YS-10:** Evaluate YieldSAT scratch/pretrained transfer on matching grouped
       splits, with point/patch modes distinguished. Knowledge evaluation follows
       YS-07 and KP-01–KP-08 with country-specific tags, units and evidence policies.
+      *2026-09-28:* a first single-seed point-mode comparison (yield-free
+      pretraining on pooled training farms → Uruguay fine-tuning at 10%/100% label
+      budgets) is in §7 of the contract. Multi-seed runs, patch mode and knowledge
+      controls remain open (knowledge is blocked on KP tasks).
 
 - [ ] Profile the five objectives. `_cross_modal_prediction` runs the fusion stack
       once per modality and `_temporal_forecast` once per temporal modality — roughly
