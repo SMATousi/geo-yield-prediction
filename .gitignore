@@ -8,3 +8,8 @@ data/
 *.egg-info/
 build/
 dist/
+
+# cluster job manifests with credentials (never commit)
+cvpr_vlm_job.yaml
+*.secret.yaml
+cluster/jobs/*.local.yaml

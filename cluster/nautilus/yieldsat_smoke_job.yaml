@@ -1,0 +1,59 @@
+# One-GPU smoke test of the YieldSAT cluster pipeline on Nautilus (NRP).
+# Runs both jobs of cluster/suites/smoke.yaml (GER-R, URG-S; LOYO; 2 epochs)
+# sequentially on one A10, logging to W&B project yieldsat-cvpr27-smoke.
+#   kubectl apply -f cluster/nautilus/yieldsat_smoke_job.yaml
+# The W&B key comes from the namespace secret `smatousi-wandb` (not in this file).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-smoke
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values: [NVIDIA-A10]
+      containers:
+        - name: yieldsat
+          image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest
+          imagePullPolicy: Always
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+              cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+              exec cluster/nautilus/run_in_pod.sh worker
+              --plan /data/YieldSAT/yieldsat_artifacts/cluster/smoke
+              --worker_index 0 --num_workers 1
+              --local_root /scratch/yieldsat
+              --results_root /data/YieldSAT/yieldsat_results/smoke
+          env:
+            - {name: YIELDSAT_GIT_REF, value: main}
+            - {name: YIELDSAT_SUITE, value: cluster/suites/smoke.yaml}
+            - {name: YIELDSAT_PLAN_DIR, value: /data/YieldSAT/yieldsat_artifacts/cluster/smoke}
+            - {name: YIELDSAT_SOURCE_ROOT, value: /data/YieldSAT/preprocessed}
+            - {name: YIELDSAT_ARTIFACT_ROOT, value: /data/YieldSAT/yieldsat_artifacts}
+            - name: WANDB_API_KEY
+              valueFrom: {secretKeyRef: {name: smatousi-wandb, key: WANDB_API_KEY}}
+          resources:
+            limits: {nvidia.com/gpu: 1, cpu: "8", memory: 32Gi, ephemeral-storage: 50Gi}
+            requests: {nvidia.com/gpu: 1, cpu: "8", memory: 32Gi, ephemeral-storage: 50Gi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: scratch, mountPath: /scratch}
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: ali-vol-1tera}
+        - name: scratch
+          emptyDir: {sizeLimit: 40Gi}
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 8Gi}

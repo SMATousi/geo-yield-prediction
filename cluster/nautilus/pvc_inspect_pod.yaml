@@ -1,0 +1,19 @@
+# Short-lived CPU pod to inspect/prepare the ali-vol-1tera PVC. Delete when done.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smatousi-yieldsat-pvc-inspect
+spec:
+  restartPolicy: Never
+  containers:
+    - name: shell
+      image: ubuntu:24.04
+      command: ["bash", "-c", "sleep 3600"]
+      resources:
+        limits: {cpu: "1", memory: 2Gi}
+        requests: {cpu: "1", memory: 2Gi}
+      volumeMounts:
+        - {name: data, mountPath: /data}
+  volumes:
+    - name: data
+      persistentVolumeClaim: {claimName: ali-vol-1tera}
