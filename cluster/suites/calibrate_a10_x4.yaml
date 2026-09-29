@@ -1,0 +1,21 @@
+# A10 throughput calibration: 4 concurrent runs of our model on one GPU (16 CPUs).
+suite: calibrate_a10_x4
+wandb: {project: yieldsat-cvpr27-smoke, entity: null}
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs: [ARG-S]
+job_unit: pair
+runs_per_gpu: 4
+num_workers: 3
+gpu_speed_factor: 0.7
+experiments:
+  - name: ours
+    model: ours
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2_adm]
+    seeds: [0, 1, 2, 3]
+    max_folds: 1
+    save_maps: 0
+    budget: {epochs: 3, steps_per_epoch: 1500}
