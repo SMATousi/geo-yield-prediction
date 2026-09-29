@@ -173,3 +173,34 @@ training from other years. For example, BRA-S has 283 of 293 seasons and GER-W
 149 of 188. Soil and terrain inputs are then identical between train and test
 cells, so paper-protocol numbers are likely optimistic for ADM inputs. Always
 report `--group physical --policy strict` alongside them.
+
+### 2026-09-29 — PC-05 protocol validation on GER-R CV10 ✅
+
+Our re-implementation of the paper's pixel LSTM (S2 only; 1-layer LSTM, hidden
+64, last-slot readout, MSE, Adam 1e-3, batch 1028, 15 full-pass epochs, raw t/ha
+target, NaN→-1) was run on all 10 folds of `paper_cv10_GER-R_season_paper_s0`
+under four input-normalization variants. Model selection used a 10% validation
+carve-out of the training folds. Values are fold mean ± std:
+
+| Variant (`runs/paper/cv10_season_paper_s0/s2/…`) | Pixel R² | Pixel RMSE | Field R² | Field RMSE |
+|---|---|---|---|---|
+| **Paper, Tables 13/14** | 0.36 ± 0.14 | 1.33 ± 0.23 | 0.62 ± 0.25 | 0.83 ± 0.26 |
+| `paper_lstm_raw`: raw inputs, as in the release tutorial | 0.23 ± 0.13 | 1.44 ± 0.17 | 0.43 ± 0.22 | 0.95 ± 0.24 |
+| `paper_lstm_train`: train-fold z-score | 0.28 ± 0.15 | 1.39 ± 0.19 | 0.52 ± 0.23 | 0.86 ± 0.24 |
+| `paper_lstm_train_e50`: train-fold z-score, 50 epochs | 0.27 ± 0.15 | 1.39 ± 0.19 | 0.53 ± 0.23 | 0.85 ± 0.25 |
+| **`paper_lstm`: the file's `stats-*` z-score (adopted preset)** | **0.33 ± 0.11** | **1.34 ± 0.16** | **0.64 ± 0.16** | **0.75 ± 0.16** |
+
+**Verdict.** The protocol reproduces the paper when inputs are standardized with
+the supplied `stats-*`. Every metric is within a fraction of one fold standard
+deviation of the paper's LSTM row. The raw-input tutorial recipe reproduces the
+tutorial's own GER-R numbers (pixel R² 0.27, RMSE 1.42; field R² 0.48, RMSE
+0.97) but not the paper, which therefore most likely normalized with those
+statistics. Longer training does not close the gap. The `paper_lstm` preset in
+`yieldsat_paper_runs.py` now uses `--normalization supplied`; the other variants
+are kept as tagged experiments.
+
+Our own model keeps train-fold statistics by default because the supplied
+statistics may include test folds; `-- --normalization supplied` is available
+for a strictly matched input pipeline. The comparison tables are in
+`results/yieldsat/paper_comparison/` (`comparison.md`/`.csv` plus archived
+aggregates).

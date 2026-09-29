@@ -1,0 +1,148 @@
+{
+ "experiment": "/root/yieldsat_artifacts/runs/paper/cv10_season_paper_s0/s2/paper_lstm_train/GER-R",
+ "folds_done": 10,
+ "fold_mean_std": {
+  "pixel_r2": {
+   "mean": 0.2755545062875706,
+   "std": 0.14507628467652617,
+   "n": 10
+  },
+  "pixel_rmse": {
+   "mean": 1.3875109635482645,
+   "std": 0.18633408210670777,
+   "n": 10
+  },
+  "field_r2": {
+   "mean": 0.5249165990521378,
+   "std": 0.2277326550232607,
+   "n": 10
+  },
+  "field_rmse": {
+   "mean": 0.8584580828234192,
+   "std": 0.23789627498575666,
+   "n": 10
+  }
+ },
+ "pooled_oof": {
+  "pixel": {
+   "n": 302802,
+   "rmse": 1.400248989022165,
+   "mae": 1.0410805405513828,
+   "bias": 0.0737121556664076,
+   "r2": 0.2981321125527866,
+   "pearson_r2": 0.31236449794106225
+  },
+  "field_level": {
+   "n": 111,
+   "rmse": 0.8850023515549719,
+   "mae": 0.6513668142203485,
+   "bias": -0.019250663284270806,
+   "r2": 0.5653827616993702,
+   "pearson_r2": 0.5669607624845905
+  }
+ },
+ "held_out_cells": 302802,
+ "per_fold": [
+  {
+   "fold": "fold00",
+   "test_cells": 31880,
+   "test_seasons": 12,
+   "pixel_r2": 0.09672005277637663,
+   "pixel_rmse": 1.6036839898013673,
+   "field_r2": 0.4328306936739884,
+   "field_rmse": 0.9396189474356169,
+   "best_epoch": 12
+  },
+  {
+   "fold": "fold01",
+   "test_cells": 30144,
+   "test_seasons": 10,
+   "pixel_r2": 0.13997033667471637,
+   "pixel_rmse": 1.407552867456612,
+   "field_r2": 0.3469546099913794,
+   "field_rmse": 0.8825986251240902,
+   "best_epoch": 4
+  },
+  {
+   "fold": "fold02",
+   "test_cells": 30174,
+   "test_seasons": 10,
+   "pixel_r2": 0.425743556965372,
+   "pixel_rmse": 1.2097365591081493,
+   "field_r2": 0.7307277868478249,
+   "field_rmse": 0.6226938826673989,
+   "best_epoch": 11
+  },
+  {
+   "fold": "fold03",
+   "test_cells": 32017,
+   "test_seasons": 12,
+   "pixel_r2": 0.4303891429759573,
+   "pixel_rmse": 1.23105335272568,
+   "field_r2": 0.8166930588349279,
+   "field_rmse": 0.6020855186534656,
+   "best_epoch": 12
+  },
+  {
+   "fold": "fold04",
+   "test_cells": 31785,
+   "test_seasons": 13,
+   "pixel_r2": 0.5014780500223897,
+   "pixel_rmse": 1.285987606658415,
+   "field_r2": 0.823222035682846,
+   "field_rmse": 0.6180720811658873,
+   "best_epoch": 13
+  },
+  {
+   "fold": "fold05",
+   "test_cells": 30166,
+   "test_seasons": 11,
+   "pixel_r2": 0.2616653851418802,
+   "pixel_rmse": 1.3251396127844755,
+   "field_r2": 0.6721263977872539,
+   "field_rmse": 0.6400524127877131,
+   "best_epoch": 5
+  },
+  {
+   "fold": "fold06",
+   "test_cells": 30396,
+   "test_seasons": 12,
+   "pixel_r2": 0.16412364326122375,
+   "pixel_rmse": 1.8232463425425245,
+   "field_r2": 0.3435159237961123,
+   "field_rmse": 1.194661312034077,
+   "best_epoch": 11
+  },
+  {
+   "fold": "fold07",
+   "test_cells": 29836,
+   "test_seasons": 11,
+   "pixel_r2": 0.3291421378200531,
+   "pixel_rmse": 1.1886331594761594,
+   "field_r2": 0.4281795430862998,
+   "field_rmse": 0.8264539237073121,
+   "best_epoch": 13
+  },
+  {
+   "fold": "fold08",
+   "test_cells": 27558,
+   "test_seasons": 10,
+   "pixel_r2": 0.06793408993567351,
+   "pixel_rmse": 1.394561406976141,
+   "field_r2": 0.08242873825950625,
+   "field_rmse": 1.3180495538822412,
+   "best_epoch": 2
+  },
+  {
+   "fold": "fold09",
+   "test_cells": 28846,
+   "test_seasons": 10,
+   "pixel_r2": 0.338378667302064,
+   "pixel_rmse": 1.4055147379531194,
+   "field_r2": 0.5724872025612393,
+   "field_rmse": 0.9402945707763889,
+   "best_epoch": 11
+  }
+ ],
+ "complete": true
+}

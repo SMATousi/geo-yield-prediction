@@ -41,10 +41,12 @@ INPUTS = {
 MODELS = {
     # our point model; fusion chosen with --fusion
     'ours': ['--model', 'yieldsat_point', '--cutoff_mode', 'all_slots'],
-    # the paper / release-tutorial pixel LSTM (PC-05): raw values, NaN -> -1,
-    # raw t/ha target, Adam 1e-3, batch 1028, full passes, 15 epochs
+    # the paper's pixel LSTM (PC-05): release-tutorial training (NaN -> -1,
+    # raw t/ha target, Adam 1e-3, batch 1028, full passes, 15 epochs) with the
+    # file's stats-* input normalization, which reproduces the paper's GER-R
+    # CV10 numbers (raw inputs, as in the tutorial, do not; see spec §5)
     'paper_lstm': ['--model', 'paper_lstm', '--cutoff_mode', 'all_slots',
-                   '--normalization', 'none', '--target_normalization', 'none',
+                   '--normalization', 'supplied', '--target_normalization', 'none',
                    '--fill_value', '-1', '--optimizer', 'adam', '--lr_schedule', 'constant',
                    '--weight_decay', '0', '--grad_clip', '0', '--field_alpha', '1.0',
                    '--batch_size', '1028', '--steps_per_epoch', '0', '--epochs', '15'],

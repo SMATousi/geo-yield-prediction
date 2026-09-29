@@ -47,7 +47,8 @@ def load_ours(runs_root):
         for level, key in (('field', 'field'), ('pixel', 'pixel')):
             out.append({'protocol': proto, 'level': level, 'pair': pair_dir.name,
                         'modalities': INPUT_LABEL[inputs],
-                        'entry': 'ours: {}'.format(model) + ('' if like_for_like else
+                        'entry': ('re-run: ' if model.startswith('paper_') else 'ours: ') + model
+                                 + ('' if like_for_like else
                                                             ' [{} grouping, {} policy]'.format(group, policy)),
                         'like_for_like': like_for_like,
                         'r2_mean': fm['{}_r2'.format(key)]['mean'], 'r2_std': fm['{}_r2'.format(key)]['std'],
@@ -73,9 +74,10 @@ def build(paper, ours):
                     sub = [r for r in cand if r['modalities'] == mods]
                     if sub:
                         best = max(sub, key=lambda r: r['r2_mean'])
-                        table.append(dict(best, entry='paper best ({}): {}{}'.format(
-                            mods, best['model'], '' if best['fusion'] == 'none'
-                            else ' [{}]'.format(best['fusion'])), like_for_like=True, folds=''))
+                        table.append(dict(best, entry='paper best ({})'.format(mods),
+                                          note='{}{}'.format(best['model'], '' if best['fusion'] == 'none'
+                                                             else ', ' + best['fusion'].split('_')[0]),
+                                          like_for_like=True, folds=''))
                 for o in ours:
                     if o['protocol'] == proto and o['level'] == level and o['pair'] == pair:
                         table.append(o)
@@ -85,7 +87,7 @@ def build(paper, ours):
 def write(table, out_dir):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    cols = ('protocol', 'level', 'pair', 'entry', 'modalities', 'r2_mean', 'r2_std', 'rmse_mean',
+    cols = ('protocol', 'level', 'pair', 'entry', 'note', 'modalities', 'r2_mean', 'r2_std', 'rmse_mean',
             'rmse_std', 'folds', 'like_for_like', 'sources_agree', 'pooled_r2')
     with open(out_dir / 'comparison.csv', 'w', newline='') as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction='ignore')
@@ -98,7 +100,8 @@ def write(table, out_dir):
              'over folds (the paper\'s statistic). Paper rows come from arXiv:2604.00940 Tables',
              '13–18; `*` marks cells where the PDF and the project results page disagree.',
              'Rows tagged with a grouping/policy in brackets are leakage-sensitivity runs, not',
-             'like-for-like comparisons.', '']
+             'like-for-like comparisons. "re-run" rows are our re-implementations of the paper\'s',
+             'baselines (PC-05); "ours" rows are our models.', '']
     for proto in ('CV10', 'LORO', 'LOYO'):
         for level in ('field', 'pixel'):
             rows = [r for r in table if r['protocol'] == proto and r['level'] == level]
@@ -122,8 +125,9 @@ def write(table, out_dir):
                         continue
                     r = m[0]
                     flag = '' if r.get('sources_agree', True) else '*'
-                    cells.append('{:.2f}±{:.2f} / {:.2f}{}'.format(r['r2_mean'], r['r2_std'],
-                                                                 r['rmse_mean'], flag))
+                    note = ' ({})'.format(r['note']) if r.get('note') else ''
+                    cells.append('{:.2f}±{:.2f} / {:.2f}{}{}'.format(r['r2_mean'], r['r2_std'],
+                                                                   r['rmse_mean'], flag, note))
                 lines.append('| {} | {} | {} |'.format(entry, mods, ' | '.join(cells)))
             lines.append('')
     (out_dir / 'comparison.md').write_text('\n'.join(lines))
@@ -137,7 +141,15 @@ def main():
     p.add_argument('--out_dir', default='results/yieldsat/paper_comparison')
     a = p.parse_args()
     table = build(load_paper(a.paper_csv), load_ours(a.runs_root))
-    print('wrote', write(table, a.out_dir))
+    out = write(table, a.out_dir)
+    # archive the per-experiment aggregates next to the tables
+    import shutil
+    for agg in Path(a.runs_root).glob('paper/*/*/*/*/aggregate.json'):
+        rel = agg.parent.relative_to(Path(a.runs_root) / 'paper')
+        dst = out / 'aggregates' / rel.parent / '{}.json'.format(rel.name)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(agg, dst)
+    print('wrote', out)
 
 
 if __name__ == '__main__':

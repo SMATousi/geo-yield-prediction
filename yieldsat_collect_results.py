@@ -205,11 +205,63 @@ def aggregate_folds(exp_dir, expected_rows=None):
     return out
 
 
+# ---- YS-11 fusion ablation summary ---------------------------------------------
+
+def summarize_ablation(ablation_dir, out_dir):
+    """Per-run table and seed mean ± std per (split, fusion variant) for the
+    YS-11 ablation, including the missing-optical stress test."""
+    import numpy as np
+
+    ablation_dir, out_dir = Path(ablation_dir), Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    runs = []
+    for rep in sorted(ablation_dir.glob('*/report.json')):
+        r = json.loads(rep.read_text())
+        a = r['args']
+        t = r['test']['overall']
+        st = r.get('test_stress', {}).get('overall')
+        variant = a['fusion'] + ('' if a['fusion'] != 'perceiver_tokens'
+                                 else '_L{}'.format(a['num_latents']))
+        runs.append({'run': rep.parent.name, 'split': a['split'], 'variant': variant, 'seed': a['seed'],
+                     'parameters': r['model']['parameters'],
+                     'pixel_rmse': t['pixel']['rmse'], 'pixel_r2': t['pixel']['r2'],
+                     'field_rmse': t['field_level']['rmse'], 'field_r2': t['field_level']['r2'],
+                     'field_balanced_rmse': t['field_balanced']['rmse'],
+                     'macro_country_pixel_rmse': r['test']['macro_country']['pixel_rmse'],
+                     'stress_pixel_rmse': st['pixel']['rmse'] if st else float('nan'),
+                     'stress_field_rmse': st['field_level']['rmse'] if st else float('nan'),
+                     'best_epoch': (r.get('best_val') or {}).get('epoch'),
+                     'samples_per_second': r['io']['samples_per_second'],
+                     'peak_gpu_gb': r['resources']['peak_gpu_gb']})
+    _write_csv(out_dir / 'runs.csv', [{k: _fmt(v, 4) for k, v in x.items()} for x in runs])
+    metrics = ('pixel_rmse', 'pixel_r2', 'field_rmse', 'field_r2', 'field_balanced_rmse',
+               'macro_country_pixel_rmse', 'stress_pixel_rmse', 'stress_field_rmse')
+    summary = []
+    for key in sorted({(x['split'], x['variant']) for x in runs}):
+        sel = [x for x in runs if (x['split'], x['variant']) == key]
+        row = {'split': key[0], 'variant': key[1], 'seeds': len(sel), 'parameters': sel[0]['parameters']}
+        for m in metrics:
+            v = np.array([x[m] for x in sel], dtype=float)
+            row[m + '_mean'] = round(float(np.mean(v)), 4)
+            row[m + '_std'] = round(float(np.std(v)), 4)
+        row['samples_per_second'] = round(float(np.mean([x['samples_per_second'] for x in sel])), 1)
+        summary.append(row)
+    _write_csv(out_dir / 'summary.csv', summary)
+    return runs, summary
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser('Collect YieldSAT results')
     p.add_argument('--runs_dir', required=True)
     p.add_argument('--out_dir', default='results/yieldsat')
     p.add_argument('--splits_dir', default=None)
+    p.add_argument('--ablation_dir', default=None,
+                   help='summarize a YS-11 fusion ablation into <out_dir>/fusion_ablation')
     a = p.parse_args()
+    if a.ablation_dir:
+        _, summary = summarize_ablation(a.ablation_dir, Path(a.out_dir) / 'fusion_ablation')
+        for row in summary:
+            print(row['split'], row['variant'], row['seeds'], row['pixel_rmse_mean'], row['field_rmse_mean'])
+        raise SystemExit(0)
     for row in collect(a.runs_dir, a.out_dir, a.splits_dir):
         print(row['run'], row.get('pixel_rmse', '-'), row.get('field_level_rmse', '-'))
