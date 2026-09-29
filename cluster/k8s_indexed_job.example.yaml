@@ -19,7 +19,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: yieldsat
-          image: <registry>/geo-yield-prediction:<tag>   # repo + geo-yield-phase0 env
+          image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest   # pin a :<git-sha> tag for a suite
           workingDir: /workspace/geo-yield-prediction
           command: ["python", "yieldsat_cluster.py", "run",
                     "--plan", "/data/yieldsat_artifacts/cluster/before_full",

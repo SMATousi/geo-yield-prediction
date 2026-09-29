@@ -171,6 +171,26 @@ shared `results_root` still receives reports and predictions.
 
 ## 6. Pod requirements and submission
 
+**Image (Nautilus/NRP):** `gitlab-registry.nrp-nautilus.io/smatous/yieldsat`,
+built from the repository `Dockerfile` (2026-09-29).
+- Base: `pytorch/pytorch:2.5.1-cuda12.1-cudnn9-runtime`. It carries Python
+  3.11, PyTorch 2.5.1+cu121 and cuDNN 9.1, the same stack as `geo-yield-phase0`.
+- Additions: `requirements.txt` minus torch/torchvision (wandb 0.30, rasterio,
+  h5py, scikit-learn, pyyaml, …), plus rsync/git.
+- The code sits at `/workspace/geo-yield-prediction`, installed editable.
+- The build runs `tests/test_yieldsat.py` (31 passed).
+- Size: 3.4 GB compressed, 10.3 GB unpacked. No data or credentials are baked
+  in.
+- Verified on the build host: imports, and a real GER-R fold trained and
+  evaluated on CPU from mounted data. The GPU path is untested there (no NVIDIA
+  container toolkit); CUDA 12.1 supports the A10 (sm_86).
+- Rebuild after code changes with
+  `docker build -t gitlab-registry.nrp-nautilus.io/smatous/yieldsat . && docker push …`,
+  and tag builds (e.g. `:<git-sha>`) so a running suite keeps a fixed code
+  version.
+- On the build host, `docker run` needs `--network host`: runc cannot set a
+  network sysctl there. This does not affect Kubernetes pods.
+
 The container image needs the repository and the `geo-yield-phase0`
 environment (`environment.yml`; `wandb` and `pyyaml` were added 2026-09-29).
 Per pod:

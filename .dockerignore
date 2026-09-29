@@ -1,0 +1,13 @@
+# keep the build context small and free of data, environments and outputs
+.git
+.conda
+.pytest_cache
+**/__pycache__
+**/*.pyc
+*.egg-info
+output_dir
+data
+wandb
+input/*.png
+Dockerfile
+.dockerignore
