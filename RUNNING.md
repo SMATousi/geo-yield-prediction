@@ -113,3 +113,8 @@ are `--streams`, `--soil_uncertainty ancillary`, `--aspect_encoding cyclic`,
 routing, I/O rates, memory and metrics: pixel, field-balanced and field-level,
 per country, per crop, and macro-country. Tests: `python -m pytest
 tests/test_yieldsat.py` (synthetic NetCDF layout; no real data needed).
+
+Versioned results (parameters, per-epoch history, per-group test metrics, sample
+maps) for the 2026-09-28 runs are in `results/yieldsat/`. Rebuild that directory
+after new runs with
+`python yieldsat_collect_results.py --runs_dir $YIELDSAT_ARTIFACT_ROOT/runs --splits_dir $YIELDSAT_ARTIFACT_ROOT/splits`.

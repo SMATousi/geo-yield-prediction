@@ -1,0 +1,345 @@
+{
+ "contract": "yieldsat_preprocessed_v1",
+ "mode": "pretrain",
+ "data_mode": "point_timeseries",
+ "args": {
+  "data_contract": "yieldsat_preprocessed_v1",
+  "source_root": "/home1/pupil/SMATousi/YieldSAT/Preprocessed",
+  "artifact_root": "/root/yieldsat_artifacts",
+  "countries": [
+   "Argentina",
+   "Brazil",
+   "Germany",
+   "Uruguay"
+  ],
+  "split": "pooled_farm_s0",
+  "mode": "pretrain",
+  "backend": "cache",
+  "streams": [
+   "yieldsat_s2",
+   "yieldsat_weather",
+   "yieldsat_dem",
+   "yieldsat_terrain",
+   "yieldsat_soil"
+  ],
+  "cutoff_mode": "before_harvest",
+  "cutoff_days": 30,
+  "soil_uncertainty": "none",
+  "aspect_encoding": "raw",
+  "norm_pooling": "pooled",
+  "no_crop_context": false,
+  "train_fraction": 1.0,
+  "embed_dim": 128,
+  "num_latents": 8,
+  "depth": 2,
+  "num_heads": 4,
+  "modality_embed": 32,
+  "modality_dropout": 0.1,
+  "init_sensor_ckpt": "",
+  "epochs": 20,
+  "steps_per_epoch": 500,
+  "batch_size": 512,
+  "lr": 0.001,
+  "weight_decay": 0.05,
+  "warmup_epochs": 1.0,
+  "field_alpha": 0.5,
+  "block_size": null,
+  "val_rows_per_field": 500,
+  "test_rows_per_field": null,
+  "eval_batch_size": 4096,
+  "num_workers": 6,
+  "device": "cuda",
+  "seed": 0,
+  "output_dir": "/root/yieldsat_artifacts/runs/pretrain_pooled",
+  "save_maps": 3
+ },
+ "split": {
+  "name": "pooled_farm_s0",
+  "label": "farm-held-out",
+  "scheme": "farm",
+  "hash": "23776c40a9c0d402"
+ },
+ "label_policy": "pre-harvest: cutoff before_harvest 30 d",
+ "streams": {
+  "yieldsat_s2": [
+   "B01",
+   "B02",
+   "B03",
+   "B04",
+   "B05",
+   "B06",
+   "B07",
+   "B08",
+   "B8A",
+   "B09",
+   "B11",
+   "B12"
+  ],
+  "yieldsat_weather": [
+   "temp_max",
+   "temp_mean",
+   "temp_min",
+   "total_prec"
+  ],
+  "yieldsat_dem": [
+   "dem"
+  ],
+  "yieldsat_terrain": [
+   "aspect",
+   "curvature",
+   "slope",
+   "twi"
+  ],
+  "yieldsat_soil": [
+   "cec_0-5",
+   "cec_5-15",
+   "cec_15-30",
+   "cec_30-60",
+   "cec_60-100",
+   "cec_100-200",
+   "cfvo_0-5",
+   "cfvo_5-15",
+   "cfvo_15-30",
+   "cfvo_30-60",
+   "cfvo_60-100",
+   "cfvo_100-200",
+   "clay_0-5",
+   "clay_5-15",
+   "clay_15-30",
+   "clay_30-60",
+   "clay_60-100",
+   "clay_100-200",
+   "nitrogen_0-5",
+   "nitrogen_5-15",
+   "nitrogen_15-30",
+   "nitrogen_30-60",
+   "nitrogen_60-100",
+   "nitrogen_100-200",
+   "phh2o_0-5",
+   "phh2o_5-15",
+   "phh2o_15-30",
+   "phh2o_30-60",
+   "phh2o_60-100",
+   "phh2o_100-200",
+   "sand_0-5",
+   "sand_5-15",
+   "sand_15-30",
+   "sand_30-60",
+   "sand_60-100",
+   "sand_100-200",
+   "silt_0-5",
+   "silt_5-15",
+   "silt_15-30",
+   "silt_30-60",
+   "silt_60-100",
+   "silt_100-200",
+   "soc_0-5",
+   "soc_5-15",
+   "soc_15-30",
+   "soc_30-60",
+   "soc_60-100",
+   "soc_100-200"
+  ]
+ },
+ "excluded_sources": [
+  "coord_x/y/z (unverified, metadata only)",
+  "row/col/field/farm ids",
+  "harvest date as input",
+  "supplied stats-*",
+  "yield_ground_truth attrs",
+  "soil uncertainty"
+ ],
+ "objectives": {
+  "supervised_yield": "active",
+  "masked_spatial_reconstruction": "inactive: no spatial neighbourhood in point mode; use masked_observation",
+  "masked_observation": "active (changed semantics: value masking, not spatial MAE)",
+  "masked_modality": "restricted: mask whole source families (dem+terrain together)",
+  "temporal_forecast": "adapted: forecast_last_valid, all temporal streams cut at target",
+  "cross_modal_prediction": "restricted: leave-one-family-out only",
+  "contrastive_alignment": "restricted: family-level views; negatives exclude same physical field",
+  "knowledge_relationships": "blocked: needs country-reviewed concept mapping (KP-01..KP-08) and verified units"
+ },
+ "provenance": {
+  "optical": {
+   "source": "Sentinel-2 L2A, least-cloudy acquisition per slot",
+   "units": "L2A digital numbers (reflectance x 10000); BOA offset not verified",
+   "status": "inferred",
+   "notes": "20/60 m bands nearest-upsampled to 10 m upstream; SCL not in NetCDF"
+  },
+  "dem": {
+   "source": "SRTM 30 m, cubic-upsampled to 10 m",
+   "units": "m (inferred)",
+   "status": "inferred"
+  },
+  "terrain": {
+   "source": "RichDEM derivatives of SRTM",
+   "units": "aspect: degrees (inferred); slope/curvature/twi: unresolved scale",
+   "status": "unresolved",
+   "notes": "slope values of 1e3-1e4 are not degrees; twi is NaN for many rows"
+  },
+  "soil": {
+   "source": "SoilGrids 2.0, 250 m, cubic-upsampled to 10 m",
+   "units": "SoilGrids mapped units (e.g. clay g/kg, phh2o pH*10, soc dg/kg)",
+   "status": "inferred"
+  },
+  "soil_uncertainty": {
+   "source": "SoilGrids 2.0 uncertainty layers",
+   "units": "SoilGrids uncertainty index (definition not verified)",
+   "status": "unresolved"
+  },
+  "weather": {
+   "source": "ERA5-Land daily, interpolated to field centroid",
+   "units": "sums of daily values over the inclusive interval [t_(k-1), t_k] (dt+1 days): temp_* in Kelvin-days, total_prec in m",
+   "status": "inferred",
+   "notes": "value/(dt+1) is flat across interval lengths (~275-300 K) while value/dt is not; boundary days are counted in both neighbouring slots; the first dated slot has an unrecorded interval start; spatially constant within a field; available at t_k"
+  },
+  "coords": {
+   "source": "undocumented",
+   "units": "unit-norm 3-vectors, not lat/lon",
+   "status": "unresolved"
+  },
+  "target": {
+   "source": "combine yield monitor, dry-matter standard moisture, cleaned",
+   "units": "t/ha (dry, standard moisture)",
+   "status": "documented",
+   "notes": "zero, infeasible and +-3 sigma outlier cells removed upstream"
+  }
+ },
+ "train_seasons": 1472,
+ "val_seasons": 276,
+ "test_seasons": 425,
+ "history": [
+  {
+   "epoch": 0,
+   "train_loss": 1.115140447318554,
+   "lr": 0.001,
+   "seconds": 29.2
+  },
+  {
+   "epoch": 1,
+   "train_loss": 0.5559155966043472,
+   "lr": 0.000993207839952836,
+   "seconds": 28.2
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.38788198444247246,
+   "lr": 0.0009729622830682656,
+   "seconds": 28.0
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.3283116870820522,
+   "lr": 0.0009398155480222475,
+   "seconds": 28.6
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.32754970812797546,
+   "lr": 0.0008946717913397475,
+   "seconds": 28.5
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.29736497429013253,
+   "lr": 0.000838762417022074,
+   "seconds": 28.2
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.2678370227217674,
+   "lr": 0.0007736124870557515,
+   "seconds": 28.1
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.25532489579916,
+   "lr": 0.0007009991216970689,
+   "seconds": 28.2
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.23039434584975244,
+   "lr": 0.0006229030242640951,
+   "seconds": 28.5
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.22617789739370345,
+   "lr": 0.0005414544527134698,
+   "seconds": 28.3
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.22212089182436467,
+   "lr": 0.000458875111756514,
+   "seconds": 28.2
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.1940539811551571,
+   "lr": 0.00037741755054625806,
+   "seconds": 35.1
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.19200311440229417,
+   "lr": 0.0002993037190085033,
+   "seconds": 17.0
+  },
+  {
+   "epoch": 13,
+   "train_loss": 0.18533928444981576,
+   "lr": 0.00022666435884003878,
+   "seconds": 15.9
+  },
+  {
+   "epoch": 14,
+   "train_loss": 0.18787097811698913,
+   "lr": 0.00016148088242958004,
+   "seconds": 15.8
+  },
+  {
+   "epoch": 15,
+   "train_loss": 0.18401007914543152,
+   "lr": 0.00010553132509296386,
+   "seconds": 15.9
+  },
+  {
+   "epoch": 16,
+   "train_loss": 0.17330675387382508,
+   "lr": 6.034184490472194e-05,
+   "seconds": 16.0
+  },
+  {
+   "epoch": 17,
+   "train_loss": 0.1750110977292061,
+   "lr": 2.7145093084206594e-05,
+   "seconds": 15.9
+  },
+  {
+   "epoch": 18,
+   "train_loss": 0.15931741224229337,
+   "lr": 6.846590483608306e-06,
+   "seconds": 15.8
+  },
+  {
+   "epoch": 19,
+   "train_loss": 0.15447744737565516,
+   "lr": 2.7339624120159557e-11,
+   "seconds": 15.9
+  }
+ ],
+ "best_val": null,
+ "transfer": null,
+ "io": {
+  "train_samples": 5120000,
+  "data_wait_seconds": 15.5,
+  "samples_per_second": 10772.1
+ },
+ "resources": {
+  "wall_seconds": 477.6,
+  "peak_rss_gb": 2.2,
+  "peak_gpu_gb": 0.58
+ }
+}

@@ -1,0 +1,5 @@
+level,group,test_cells,test_seasons,pixel_rmse,pixel_mae,pixel_r2,pixel_pearson_r2,pixel_bias,field_balanced_rmse,field_level_rmse,field_level_r2
+overall,all,436708,96,1.237,0.915,0.273,0.332,0.344,1.218,0.713,0.597
+country,Uruguay,436708,96,1.237,0.915,0.273,0.332,0.344,1.218,0.713,0.597
+crop,soybean,436708,96,1.237,0.915,0.273,0.332,0.344,1.218,0.713,0.597
+country_crop,Uruguay/soybean,436708,96,1.237,0.915,0.273,0.332,0.344,1.218,0.713,0.597

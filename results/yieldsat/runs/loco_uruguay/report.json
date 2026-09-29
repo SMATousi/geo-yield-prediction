@@ -1,0 +1,550 @@
+{
+ "contract": "yieldsat_preprocessed_v1",
+ "mode": "finetune",
+ "data_mode": "point_timeseries",
+ "args": {
+  "data_contract": "yieldsat_preprocessed_v1",
+  "source_root": "/home1/pupil/SMATousi/YieldSAT/Preprocessed",
+  "artifact_root": "/root/yieldsat_artifacts",
+  "countries": [
+   "Argentina",
+   "Brazil",
+   "Germany",
+   "Uruguay"
+  ],
+  "split": "loco_uruguay_s0",
+  "mode": "finetune",
+  "backend": "cache",
+  "streams": [
+   "yieldsat_s2",
+   "yieldsat_weather",
+   "yieldsat_dem",
+   "yieldsat_terrain",
+   "yieldsat_soil"
+  ],
+  "cutoff_mode": "before_harvest",
+  "cutoff_days": 30,
+  "soil_uncertainty": "none",
+  "aspect_encoding": "raw",
+  "norm_pooling": "pooled",
+  "no_crop_context": false,
+  "train_fraction": 1.0,
+  "embed_dim": 128,
+  "num_latents": 8,
+  "depth": 2,
+  "num_heads": 4,
+  "modality_embed": 32,
+  "modality_dropout": 0.1,
+  "init_sensor_ckpt": "",
+  "epochs": 20,
+  "steps_per_epoch": 500,
+  "batch_size": 512,
+  "lr": 0.001,
+  "weight_decay": 0.05,
+  "warmup_epochs": 1.0,
+  "field_alpha": 0.5,
+  "block_size": null,
+  "val_rows_per_field": 500,
+  "test_rows_per_field": null,
+  "eval_batch_size": 4096,
+  "num_workers": 6,
+  "device": "cuda",
+  "seed": 0,
+  "output_dir": "/root/yieldsat_artifacts/runs/loco_uruguay",
+  "save_maps": 3
+ },
+ "split": {
+  "name": "loco_uruguay_s0",
+  "label": "leave-one-country-out (Uruguay)",
+  "scheme": "country",
+  "hash": "9dd6a8e8f9fa6bb2"
+ },
+ "label_policy": "pre-harvest: cutoff before_harvest 30 d",
+ "streams": {
+  "yieldsat_s2": [
+   "B01",
+   "B02",
+   "B03",
+   "B04",
+   "B05",
+   "B06",
+   "B07",
+   "B08",
+   "B8A",
+   "B09",
+   "B11",
+   "B12"
+  ],
+  "yieldsat_weather": [
+   "temp_max",
+   "temp_mean",
+   "temp_min",
+   "total_prec"
+  ],
+  "yieldsat_dem": [
+   "dem"
+  ],
+  "yieldsat_terrain": [
+   "aspect",
+   "curvature",
+   "slope",
+   "twi"
+  ],
+  "yieldsat_soil": [
+   "cec_0-5",
+   "cec_5-15",
+   "cec_15-30",
+   "cec_30-60",
+   "cec_60-100",
+   "cec_100-200",
+   "cfvo_0-5",
+   "cfvo_5-15",
+   "cfvo_15-30",
+   "cfvo_30-60",
+   "cfvo_60-100",
+   "cfvo_100-200",
+   "clay_0-5",
+   "clay_5-15",
+   "clay_15-30",
+   "clay_30-60",
+   "clay_60-100",
+   "clay_100-200",
+   "nitrogen_0-5",
+   "nitrogen_5-15",
+   "nitrogen_15-30",
+   "nitrogen_30-60",
+   "nitrogen_60-100",
+   "nitrogen_100-200",
+   "phh2o_0-5",
+   "phh2o_5-15",
+   "phh2o_15-30",
+   "phh2o_30-60",
+   "phh2o_60-100",
+   "phh2o_100-200",
+   "sand_0-5",
+   "sand_5-15",
+   "sand_15-30",
+   "sand_30-60",
+   "sand_60-100",
+   "sand_100-200",
+   "silt_0-5",
+   "silt_5-15",
+   "silt_15-30",
+   "silt_30-60",
+   "silt_60-100",
+   "silt_100-200",
+   "soc_0-5",
+   "soc_5-15",
+   "soc_15-30",
+   "soc_30-60",
+   "soc_60-100",
+   "soc_100-200"
+  ]
+ },
+ "excluded_sources": [
+  "coord_x/y/z (unverified, metadata only)",
+  "row/col/field/farm ids",
+  "harvest date as input",
+  "supplied stats-*",
+  "yield_ground_truth attrs",
+  "soil uncertainty"
+ ],
+ "objectives": {
+  "supervised_yield": "active",
+  "masked_spatial_reconstruction": "inactive: no spatial neighbourhood in point mode; use masked_observation",
+  "masked_observation": "active (changed semantics: value masking, not spatial MAE)",
+  "masked_modality": "restricted: mask whole source families (dem+terrain together)",
+  "temporal_forecast": "adapted: forecast_last_valid, all temporal streams cut at target",
+  "cross_modal_prediction": "restricted: leave-one-family-out only",
+  "contrastive_alignment": "restricted: family-level views; negatives exclude same physical field",
+  "knowledge_relationships": "blocked: needs country-reviewed concept mapping (KP-01..KP-08) and verified units"
+ },
+ "provenance": {
+  "optical": {
+   "source": "Sentinel-2 L2A, least-cloudy acquisition per slot",
+   "units": "L2A digital numbers (reflectance x 10000); BOA offset not verified",
+   "status": "inferred",
+   "notes": "20/60 m bands nearest-upsampled to 10 m upstream; SCL not in NetCDF"
+  },
+  "dem": {
+   "source": "SRTM 30 m, cubic-upsampled to 10 m",
+   "units": "m (inferred)",
+   "status": "inferred"
+  },
+  "terrain": {
+   "source": "RichDEM derivatives of SRTM",
+   "units": "aspect: degrees (inferred); slope/curvature/twi: unresolved scale",
+   "status": "unresolved",
+   "notes": "slope values of 1e3-1e4 are not degrees; twi is NaN for many rows"
+  },
+  "soil": {
+   "source": "SoilGrids 2.0, 250 m, cubic-upsampled to 10 m",
+   "units": "SoilGrids mapped units (e.g. clay g/kg, phh2o pH*10, soc dg/kg)",
+   "status": "inferred"
+  },
+  "soil_uncertainty": {
+   "source": "SoilGrids 2.0 uncertainty layers",
+   "units": "SoilGrids uncertainty index (definition not verified)",
+   "status": "unresolved"
+  },
+  "weather": {
+   "source": "ERA5-Land daily, interpolated to field centroid",
+   "units": "sums of daily values over the inclusive interval [t_(k-1), t_k] (dt+1 days): temp_* in Kelvin-days, total_prec in m",
+   "status": "inferred",
+   "notes": "value/(dt+1) is flat across interval lengths (~275-300 K) while value/dt is not; boundary days are counted in both neighbouring slots; the first dated slot has an unrecorded interval start; spatially constant within a field; available at t_k"
+  },
+  "coords": {
+   "source": "undocumented",
+   "units": "unit-norm 3-vectors, not lat/lon",
+   "status": "unresolved"
+  },
+  "target": {
+   "source": "combine yield monitor, dry-matter standard moisture, cleaned",
+   "units": "t/ha (dry, standard moisture)",
+   "status": "documented",
+   "notes": "zero, infeasible and +-3 sigma outlier cells removed upstream"
+  }
+ },
+ "train_seasons": 1408,
+ "val_seasons": 193,
+ "test_seasons": 572,
+ "history": [
+  {
+   "epoch": 0,
+   "train_loss": 0.4506347434818745,
+   "lr": 0.001,
+   "seconds": 22.4,
+   "val_pixel_rmse": 1.8147355005072976,
+   "val_pixel_r2": 0.6687994044648584,
+   "val_field_rmse": 1.3691355254030801
+  },
+  {
+   "epoch": 1,
+   "train_loss": 0.2967229987680912,
+   "lr": 0.000993207839952836,
+   "seconds": 21.5,
+   "val_pixel_rmse": 1.8182704597431858,
+   "val_pixel_r2": 0.6675078433561917,
+   "val_field_rmse": 1.3710000996882106
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.2644897492825985,
+   "lr": 0.0009729622830682656,
+   "seconds": 21.4,
+   "val_pixel_rmse": 1.6395839575900282,
+   "val_pixel_r2": 0.7296466474744577,
+   "val_field_rmse": 1.1466270154544411
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.25433447149395944,
+   "lr": 0.0009398155480222475,
+   "seconds": 21.1,
+   "val_pixel_rmse": 1.7977540132903387,
+   "val_pixel_r2": 0.6749688588335937,
+   "val_field_rmse": 1.348624465703584
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.2457922654747963,
+   "lr": 0.0008946717913397475,
+   "seconds": 20.9,
+   "val_pixel_rmse": 1.6388823084103752,
+   "val_pixel_r2": 0.7298779898441572,
+   "val_field_rmse": 1.1423400428401012
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.2401910926103592,
+   "lr": 0.000838762417022074,
+   "seconds": 20.9,
+   "val_pixel_rmse": 1.7133308665431104,
+   "val_pixel_r2": 0.7047792244885549,
+   "val_field_rmse": 1.2427783501332548
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.2370188579559326,
+   "lr": 0.0007736124870557515,
+   "seconds": 21.3,
+   "val_pixel_rmse": 1.6122258869177895,
+   "val_pixel_r2": 0.7385935982379699,
+   "val_field_rmse": 1.098407163622167
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.22933347135782242,
+   "lr": 0.0007009991216970689,
+   "seconds": 21.1,
+   "val_pixel_rmse": 1.6585816656386014,
+   "val_pixel_r2": 0.7233452320924212,
+   "val_field_rmse": 1.1752728909453884
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.22745354199409484,
+   "lr": 0.0006229030242640951,
+   "seconds": 16.7,
+   "val_pixel_rmse": 1.7236715442563535,
+   "val_pixel_r2": 0.7012049057475336,
+   "val_field_rmse": 1.25658533689158
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.21993680280447006,
+   "lr": 0.0005414544527134698,
+   "seconds": 14.3,
+   "val_pixel_rmse": 1.6396485271026322,
+   "val_pixel_r2": 0.7296253531359066,
+   "val_field_rmse": 1.1517199521065913
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.21680775672197342,
+   "lr": 0.000458875111756514,
+   "seconds": 14.9,
+   "val_pixel_rmse": 1.7390059108921665,
+   "val_pixel_r2": 0.6958648926666672,
+   "val_field_rmse": 1.2795708696392343
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.21277322205901145,
+   "lr": 0.00037741755054625806,
+   "seconds": 14.5,
+   "val_pixel_rmse": 1.7131868956879632,
+   "val_pixel_r2": 0.7048288370911996,
+   "val_field_rmse": 1.246741425389817
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.21143986564874648,
+   "lr": 0.0002993037190085033,
+   "seconds": 14.8,
+   "val_pixel_rmse": 1.6307879608620446,
+   "val_pixel_r2": 0.7325396355455527,
+   "val_field_rmse": 1.1407520245466438
+  },
+  {
+   "epoch": 13,
+   "train_loss": 0.20360030141472815,
+   "lr": 0.00022666435884003878,
+   "seconds": 14.7,
+   "val_pixel_rmse": 1.6392269851942816,
+   "val_pixel_r2": 0.7297643580406084,
+   "val_field_rmse": 1.148352077196562
+  },
+  {
+   "epoch": 14,
+   "train_loss": 0.20257429850101472,
+   "lr": 0.00016148088242958004,
+   "seconds": 14.8,
+   "val_pixel_rmse": 1.6469123700087216,
+   "val_pixel_r2": 0.7272244614607571,
+   "val_field_rmse": 1.1596526698447627
+  },
+  {
+   "epoch": 15,
+   "train_loss": 0.19717336870729923,
+   "lr": 0.00010553132509296386,
+   "seconds": 14.5,
+   "val_pixel_rmse": 1.6569491001496575,
+   "val_pixel_r2": 0.7238895944829835,
+   "val_field_rmse": 1.172773963518815
+  },
+  {
+   "epoch": 16,
+   "train_loss": 0.19595480236411095,
+   "lr": 6.034184490472194e-05,
+   "seconds": 14.9,
+   "val_pixel_rmse": 1.6636533018479929,
+   "val_pixel_r2": 0.7216507270028429,
+   "val_field_rmse": 1.182132662382934
+  },
+  {
+   "epoch": 17,
+   "train_loss": 0.1943373725414276,
+   "lr": 2.7145093084206594e-05,
+   "seconds": 14.7,
+   "val_pixel_rmse": 1.6751538293831891,
+   "val_pixel_r2": 0.7177890714518609,
+   "val_field_rmse": 1.1944618766897033
+  },
+  {
+   "epoch": 18,
+   "train_loss": 0.19383251735568047,
+   "lr": 6.846590483608306e-06,
+   "seconds": 14.5,
+   "val_pixel_rmse": 1.668345615923727,
+   "val_pixel_r2": 0.7200783511562999,
+   "val_field_rmse": 1.1848078374514823
+  },
+  {
+   "epoch": 19,
+   "train_loss": 0.19366638040542603,
+   "lr": 2.7339624120159557e-11,
+   "seconds": 14.2,
+   "val_pixel_rmse": 1.6667661087848324,
+   "val_pixel_r2": 0.7206081322054402,
+   "val_field_rmse": 1.1823282830188895
+  }
+ ],
+ "best_val": {
+  "epoch": 6,
+  "train_loss": 0.2370188579559326,
+  "lr": 0.0007736124870557515,
+  "seconds": 21.3,
+  "val_pixel_rmse": 1.6122258869177895,
+  "val_pixel_r2": 0.7385935982379699,
+  "val_field_rmse": 1.098407163622167
+ },
+ "transfer": null,
+ "io": {
+  "train_samples": 5120000,
+  "data_wait_seconds": 17.2,
+  "samples_per_second": 14708.4,
+  "test_rows_per_second": 81537.9
+ },
+ "test": {
+  "overall": {
+   "pixel": {
+    "n": 2177206,
+    "rmse": 1.5118336662275578,
+    "mae": 1.153546672558211,
+    "bias": 0.7371296962882653,
+    "r2": 0.08044944005200794,
+    "pearson_r2": 0.31856327635519804
+   },
+   "field_balanced": {
+    "fields": 572,
+    "rmse": 1.4896739680762663,
+    "mae": 1.20222871018569
+   },
+   "field_level": {
+    "n": 572,
+    "rmse": 1.047673343054778,
+    "mae": 0.9010513350976905,
+    "bias": 0.7627141762439729,
+    "r2": 0.04036786445606477,
+    "pearson_r2": 0.5698657614079354
+   }
+  },
+  "per_country": {
+   "Uruguay": {
+    "pixel": {
+     "n": 2177206,
+     "rmse": 1.5118336662275578,
+     "mae": 1.153546672558211,
+     "bias": 0.7371296962882653,
+     "r2": 0.08044944005200794,
+     "pearson_r2": 0.31856327635519804
+    },
+    "field_balanced": {
+     "fields": 572,
+     "rmse": 1.4896739680762663,
+     "mae": 1.20222871018569
+    },
+    "field_level": {
+     "n": 572,
+     "rmse": 1.047673343054778,
+     "mae": 0.9010513350976905,
+     "bias": 0.7627141762439729,
+     "r2": 0.04036786445606477,
+     "pearson_r2": 0.5698657614079354
+    }
+   }
+  },
+  "per_crop": {
+   "soybean": {
+    "pixel": {
+     "n": 2177206,
+     "rmse": 1.5118336662275578,
+     "mae": 1.153546672558211,
+     "bias": 0.7371296962882653,
+     "r2": 0.08044944005200794,
+     "pearson_r2": 0.31856327635519804
+    },
+    "field_balanced": {
+     "fields": 572,
+     "rmse": 1.4896739680762663,
+     "mae": 1.20222871018569
+    },
+    "field_level": {
+     "n": 572,
+     "rmse": 1.047673343054778,
+     "mae": 0.9010513350976905,
+     "bias": 0.7627141762439729,
+     "r2": 0.04036786445606477,
+     "pearson_r2": 0.5698657614079354
+    }
+   }
+  },
+  "per_country_crop": {
+   "Uruguay/soybean": {
+    "pixel": {
+     "n": 2177206,
+     "rmse": 1.5118336662275578,
+     "mae": 1.153546672558211,
+     "bias": 0.7371296962882653,
+     "r2": 0.08044944005200794,
+     "pearson_r2": 0.31856327635519804
+    },
+    "field_balanced": {
+     "fields": 572,
+     "rmse": 1.4896739680762663,
+     "mae": 1.20222871018569
+    },
+    "field_level": {
+     "n": 572,
+     "rmse": 1.047673343054778,
+     "mae": 0.9010513350976905,
+     "bias": 0.7627141762439729,
+     "r2": 0.04036786445606477,
+     "pearson_r2": 0.5698657614079354
+    }
+   }
+  },
+  "macro_country": {
+   "pixel_rmse": 1.5118336662275578,
+   "pixel_r2": 0.08044944005200794,
+   "field_level_rmse": 1.047673343054778
+  },
+  "label": "leave-one-country-out (Uruguay); pre-harvest: cutoff before_harvest 30 d",
+  "rows_evaluated": 2177206
+ },
+ "maps": [
+  {
+   "field": "Uruguay_DUP4_farm7_field225_soybean_2019",
+   "georeferenced": true,
+   "grid": [
+    102,
+    125
+   ],
+   "cells": 5877
+  },
+  {
+   "field": "Uruguay_DUP4_farm7_field183_soybean_2020",
+   "georeferenced": true,
+   "grid": [
+    120,
+    101
+   ],
+   "cells": 2489
+  },
+  {
+   "field": "Uruguay_DUP4_farm7_field212_soybean_2018",
+   "georeferenced": true,
+   "grid": [
+    82,
+    171
+   ],
+   "cells": 3936
+  }
+ ],
+ "resources": {
+  "wall_seconds": 411.1,
+  "peak_rss_gb": 2.13,
+  "peak_gpu_gb": 0.38
+ }
+}

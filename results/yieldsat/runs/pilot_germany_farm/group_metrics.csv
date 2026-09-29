@@ -1,0 +1,7 @@
+level,group,test_cells,test_seasons,pixel_rmse,pixel_mae,pixel_r2,pixel_pearson_r2,pixel_bias,field_balanced_rmse,field_level_rmse,field_level_r2
+overall,all,137917,36,1.806,1.408,0.397,0.714,1.274,1.712,1.737,0.403
+country,Germany,137917,36,1.806,1.408,0.397,0.714,1.274,1.712,1.737,0.403
+crop,rapeseed,109257,27,1.538,1.24,-0.932,0.232,1.169,1.396,1.355,-1.383
+crop,wheat,28660,9,2.586,2.048,-0.532,0.152,1.673,2.659,2.561,-1.509
+country_crop,Germany/rapeseed,109257,27,1.538,1.24,-0.932,0.232,1.169,1.396,1.355,-1.383
+country_crop,Germany/wheat,28660,9,2.586,2.048,-0.532,0.152,1.673,2.659,2.561,-1.509

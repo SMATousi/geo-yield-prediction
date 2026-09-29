@@ -1,0 +1,548 @@
+{
+ "contract": "yieldsat_preprocessed_v1",
+ "mode": "finetune",
+ "data_mode": "point_timeseries",
+ "args": {
+  "data_contract": "yieldsat_preprocessed_v1",
+  "source_root": "/home1/pupil/SMATousi/YieldSAT/Preprocessed",
+  "artifact_root": "/root/yieldsat_artifacts",
+  "countries": [
+   "Germany"
+  ],
+  "split": "germany_farm_s0",
+  "mode": "finetune",
+  "backend": "cache",
+  "streams": [
+   "yieldsat_s2",
+   "yieldsat_weather",
+   "yieldsat_dem",
+   "yieldsat_terrain",
+   "yieldsat_soil"
+  ],
+  "cutoff_mode": "before_harvest",
+  "cutoff_days": 30,
+  "soil_uncertainty": "none",
+  "aspect_encoding": "raw",
+  "norm_pooling": "pooled",
+  "no_crop_context": false,
+  "train_fraction": 1.0,
+  "embed_dim": 128,
+  "num_latents": 8,
+  "depth": 2,
+  "num_heads": 4,
+  "modality_embed": 32,
+  "modality_dropout": 0.1,
+  "init_sensor_ckpt": "",
+  "epochs": 15,
+  "steps_per_epoch": 300,
+  "batch_size": 512,
+  "lr": 0.001,
+  "weight_decay": 0.05,
+  "warmup_epochs": 1.0,
+  "field_alpha": 0.5,
+  "block_size": null,
+  "val_rows_per_field": 500,
+  "test_rows_per_field": null,
+  "eval_batch_size": 4096,
+  "num_workers": 4,
+  "device": "cuda",
+  "seed": 0,
+  "output_dir": "/root/yieldsat_artifacts/runs/pilot_germany_farm",
+  "save_maps": 3
+ },
+ "split": {
+  "name": "germany_farm_s0",
+  "label": "farm-held-out",
+  "scheme": "farm",
+  "hash": "63c51d20fa92ecd2"
+ },
+ "label_policy": "pre-harvest: cutoff before_harvest 30 d",
+ "streams": {
+  "yieldsat_s2": [
+   "B01",
+   "B02",
+   "B03",
+   "B04",
+   "B05",
+   "B06",
+   "B07",
+   "B08",
+   "B8A",
+   "B09",
+   "B11",
+   "B12"
+  ],
+  "yieldsat_weather": [
+   "temp_max",
+   "temp_mean",
+   "temp_min",
+   "total_prec"
+  ],
+  "yieldsat_dem": [
+   "dem"
+  ],
+  "yieldsat_terrain": [
+   "aspect",
+   "curvature",
+   "slope",
+   "twi"
+  ],
+  "yieldsat_soil": [
+   "cec_0-5",
+   "cec_5-15",
+   "cec_15-30",
+   "cec_30-60",
+   "cec_60-100",
+   "cec_100-200",
+   "cfvo_0-5",
+   "cfvo_5-15",
+   "cfvo_15-30",
+   "cfvo_30-60",
+   "cfvo_60-100",
+   "cfvo_100-200",
+   "clay_0-5",
+   "clay_5-15",
+   "clay_15-30",
+   "clay_30-60",
+   "clay_60-100",
+   "clay_100-200",
+   "nitrogen_0-5",
+   "nitrogen_5-15",
+   "nitrogen_15-30",
+   "nitrogen_30-60",
+   "nitrogen_60-100",
+   "nitrogen_100-200",
+   "phh2o_0-5",
+   "phh2o_5-15",
+   "phh2o_15-30",
+   "phh2o_30-60",
+   "phh2o_60-100",
+   "phh2o_100-200",
+   "sand_0-5",
+   "sand_5-15",
+   "sand_15-30",
+   "sand_30-60",
+   "sand_60-100",
+   "sand_100-200",
+   "silt_0-5",
+   "silt_5-15",
+   "silt_15-30",
+   "silt_30-60",
+   "silt_60-100",
+   "silt_100-200",
+   "soc_0-5",
+   "soc_5-15",
+   "soc_15-30",
+   "soc_30-60",
+   "soc_60-100",
+   "soc_100-200"
+  ]
+ },
+ "excluded_sources": [
+  "coord_x/y/z (unverified, metadata only)",
+  "row/col/field/farm ids",
+  "harvest date as input",
+  "supplied stats-*",
+  "yield_ground_truth attrs",
+  "soil uncertainty"
+ ],
+ "objectives": {
+  "supervised_yield": "active",
+  "masked_spatial_reconstruction": "inactive: no spatial neighbourhood in point mode; use masked_observation",
+  "masked_observation": "active (changed semantics: value masking, not spatial MAE)",
+  "masked_modality": "restricted: mask whole source families (dem+terrain together)",
+  "temporal_forecast": "adapted: forecast_last_valid, all temporal streams cut at target",
+  "cross_modal_prediction": "restricted: leave-one-family-out only",
+  "contrastive_alignment": "restricted: family-level views; negatives exclude same physical field",
+  "knowledge_relationships": "blocked: needs country-reviewed concept mapping (KP-01..KP-08) and verified units"
+ },
+ "provenance": {
+  "optical": {
+   "source": "Sentinel-2 L2A, least-cloudy acquisition per slot",
+   "units": "L2A digital numbers (reflectance x 10000); BOA offset not verified",
+   "status": "inferred",
+   "notes": "20/60 m bands nearest-upsampled to 10 m upstream; SCL not in NetCDF"
+  },
+  "dem": {
+   "source": "SRTM 30 m, cubic-upsampled to 10 m",
+   "units": "m (inferred)",
+   "status": "inferred"
+  },
+  "terrain": {
+   "source": "RichDEM derivatives of SRTM",
+   "units": "aspect: degrees (inferred); slope/curvature/twi: unresolved scale",
+   "status": "unresolved",
+   "notes": "slope values of 1e3-1e4 are not degrees; twi is NaN for many rows"
+  },
+  "soil": {
+   "source": "SoilGrids 2.0, 250 m, cubic-upsampled to 10 m",
+   "units": "SoilGrids mapped units (e.g. clay g/kg, phh2o pH*10, soc dg/kg)",
+   "status": "inferred"
+  },
+  "soil_uncertainty": {
+   "source": "SoilGrids 2.0 uncertainty layers",
+   "units": "SoilGrids uncertainty index (definition not verified)",
+   "status": "unresolved"
+  },
+  "weather": {
+   "source": "ERA5-Land daily, interpolated to field centroid",
+   "units": "sums of daily values over the inclusive interval [t_(k-1), t_k] (dt+1 days): temp_* in Kelvin-days, total_prec in m",
+   "status": "inferred",
+   "notes": "value/(dt+1) is flat across interval lengths (~275-300 K) while value/dt is not; boundary days are counted in both neighbouring slots; the first dated slot has an unrecorded interval start; spatially constant within a field; available at t_k"
+  },
+  "coords": {
+   "source": "undocumented",
+   "units": "unit-norm 3-vectors, not lat/lon",
+   "status": "unresolved"
+  },
+  "target": {
+   "source": "combine yield monitor, dry-matter standard moisture, cleaned",
+   "units": "t/ha (dry, standard moisture)",
+   "status": "documented",
+   "notes": "zero, infeasible and +-3 sigma outlier cells removed upstream"
+  }
+ },
+ "train_seasons": 220,
+ "val_seasons": 43,
+ "test_seasons": 36,
+ "history": [
+  {
+   "epoch": 0,
+   "train_loss": 0.4562933605909347,
+   "lr": 0.001,
+   "seconds": 11.5,
+   "val_pixel_rmse": 2.1562099129289662,
+   "val_pixel_r2": 0.2410810618797672,
+   "val_field_rmse": 1.66675075213885
+  },
+  {
+   "epoch": 1,
+   "train_loss": 0.3350246693690618,
+   "lr": 0.0009875470423494678,
+   "seconds": 12.1,
+   "val_pixel_rmse": 1.9787578188472204,
+   "val_pixel_r2": 0.3608561688102273,
+   "val_field_rmse": 1.4493333247573539
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.3186647432545821,
+   "lr": 0.0009506465800517187,
+   "seconds": 12.7,
+   "val_pixel_rmse": 2.344173794492637,
+   "val_pixel_r2": 0.10299900033991083,
+   "val_field_rmse": 1.9198169860321455
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.30059107492367426,
+   "lr": 0.0008911488164939346,
+   "seconds": 11.5,
+   "val_pixel_rmse": 2.3976612927639396,
+   "val_pixel_r2": 0.061597884621291454,
+   "val_field_rmse": 1.966704925910075
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.2972315294543902,
+   "lr": 0.000812037217981927,
+   "seconds": 12.4,
+   "val_pixel_rmse": 2.442114337089002,
+   "val_pixel_r2": 0.026479053656663587,
+   "val_field_rmse": 2.0304333751339114
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.2832304421563943,
+   "lr": 0.0007172787704063549,
+   "seconds": 11.5,
+   "val_pixel_rmse": 2.3100785997540987,
+   "val_pixel_r2": 0.12890237933866755,
+   "val_field_rmse": 1.856753139885096
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.2833844684064388,
+   "lr": 0.0006116250580054758,
+   "seconds": 12.6,
+   "val_pixel_rmse": 2.219841558973399,
+   "val_pixel_r2": 0.195627398306232,
+   "val_field_rmse": 1.7324296389643292
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.27611143290996554,
+   "lr": 0.0005003739990905521,
+   "seconds": 12.1,
+   "val_pixel_rmse": 2.1846380895547837,
+   "val_pixel_r2": 0.2209374707421038,
+   "val_field_rmse": 1.6887012939705839
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.27277654767036436,
+   "lr": 0.0003891041862995437,
+   "seconds": 12.7,
+   "val_pixel_rmse": 2.2134176236319245,
+   "val_pixel_r2": 0.20027616335264964,
+   "val_field_rmse": 1.7284811117625813
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.26390964473287265,
+   "lr": 0.00028339515266806713,
+   "seconds": 11.4,
+   "val_pixel_rmse": 2.1790378070121634,
+   "val_pixel_r2": 0.22492657823137918,
+   "val_field_rmse": 1.659100978668379
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.2604489670693874,
+   "lr": 0.0001885475905448888,
+   "seconds": 12.7,
+   "val_pixel_rmse": 2.2070739729575592,
+   "val_pixel_r2": 0.2048536084364302,
+   "val_field_rmse": 1.700493651966257
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.25753646860520046,
+   "lr": 0.00010931755274379245,
+   "seconds": 12.3,
+   "val_pixel_rmse": 2.1756368602011826,
+   "val_pixel_r2": 0.22734409151155843,
+   "val_field_rmse": 1.670367564320146
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.25007614930470784,
+   "lr": 4.967796419595183e-05,
+   "seconds": 12.6,
+   "val_pixel_rmse": 2.16125669273293,
+   "val_pixel_r2": 0.23752428471355935,
+   "val_field_rmse": 1.6421581760748272
+  },
+  {
+   "epoch": 13,
+   "train_loss": 0.24909348910053572,
+   "lr": 1.2619402904389121e-05,
+   "seconds": 12.7,
+   "val_pixel_rmse": 2.1444118549158597,
+   "val_pixel_r2": 0.24936344068921268,
+   "val_field_rmse": 1.620543488992783
+  },
+  {
+   "epoch": 14,
+   "train_loss": 0.2489766523738702,
+   "lr": 1.3987533931114628e-10,
+   "seconds": 12.0,
+   "val_pixel_rmse": 2.1241810929003333,
+   "val_pixel_r2": 0.2634599082918767,
+   "val_field_rmse": 1.5940482080227467
+  }
+ ],
+ "best_val": {
+  "epoch": 1,
+  "train_loss": 0.3350246693690618,
+  "lr": 0.0009875470423494678,
+  "seconds": 12.1,
+  "val_pixel_rmse": 1.9787578188472204,
+  "val_pixel_r2": 0.3608561688102273,
+  "val_field_rmse": 1.4493333247573539
+ },
+ "transfer": null,
+ "io": {
+  "train_samples": 2304000,
+  "data_wait_seconds": 8.3,
+  "samples_per_second": 12603.9,
+  "test_rows_per_second": 88696.6
+ },
+ "test": {
+  "overall": {
+   "pixel": {
+    "n": 137917,
+    "rmse": 1.8064531007255853,
+    "mae": 1.4075328076297036,
+    "bias": 1.2735011509504255,
+    "r2": 0.39671386826884003,
+    "pearson_r2": 0.7135300276719233
+   },
+   "field_balanced": {
+    "fields": 36,
+    "rmse": 1.7119913067381451,
+    "mae": 1.5019145342244
+   },
+   "field_level": {
+    "n": 36,
+    "rmse": 1.7368186745205234,
+    "mae": 1.3895129470342882,
+    "bias": 1.3553323092715603,
+    "r2": 0.4031828866695114,
+    "pearson_r2": 0.8075287884559892
+   }
+  },
+  "per_country": {
+   "Germany": {
+    "pixel": {
+     "n": 137917,
+     "rmse": 1.8064531007255853,
+     "mae": 1.4075328076297036,
+     "bias": 1.2735011509504255,
+     "r2": 0.39671386826884003,
+     "pearson_r2": 0.7135300276719233
+    },
+    "field_balanced": {
+     "fields": 36,
+     "rmse": 1.7119913067381451,
+     "mae": 1.5019145342244
+    },
+    "field_level": {
+     "n": 36,
+     "rmse": 1.7368186745205234,
+     "mae": 1.3895129470342882,
+     "bias": 1.3553323092715603,
+     "r2": 0.4031828866695114,
+     "pearson_r2": 0.8075287884559892
+    }
+   }
+  },
+  "per_crop": {
+   "rapeseed": {
+    "pixel": {
+     "n": 109257,
+     "rmse": 1.5377295374656994,
+     "mae": 1.2395457397837288,
+     "bias": 1.1687990824643968,
+     "r2": -0.9319796230648558,
+     "pearson_r2": 0.23212729119002043
+    },
+    "field_balanced": {
+     "fields": 27,
+     "rmse": 1.3964699920317103,
+     "mae": 1.227414107478269
+    },
+    "field_level": {
+     "n": 27,
+     "rmse": 1.354988651249371,
+     "mae": 1.1587227696708196,
+     "bias": 1.1587227696708196,
+     "r2": -1.3828978687430742,
+     "pearson_r2": 0.41116384187422117
+    }
+   },
+   "wheat": {
+    "pixel": {
+     "n": 28660,
+     "rmse": 2.586334584939437,
+     "mae": 2.0479292860542557,
+     "bias": 1.6726439945156044,
+     "r2": -0.5321874322969231,
+     "pearson_r2": 0.15185649556669645
+    },
+    "field_balanced": {
+     "fields": 9,
+     "rmse": 2.658555250857451,
+     "mae": 2.3254158144627928
+    },
+    "field_level": {
+     "n": 9,
+     "rmse": 2.5608931445121135,
+     "mae": 2.0818834791246963,
+     "bias": 1.9451609280737843,
+     "r2": -1.509363058619202,
+     "pearson_r2": 0.13117267906151114
+    }
+   }
+  },
+  "per_country_crop": {
+   "Germany/rapeseed": {
+    "pixel": {
+     "n": 109257,
+     "rmse": 1.5377295374656994,
+     "mae": 1.2395457397837288,
+     "bias": 1.1687990824643968,
+     "r2": -0.9319796230648558,
+     "pearson_r2": 0.23212729119002043
+    },
+    "field_balanced": {
+     "fields": 27,
+     "rmse": 1.3964699920317103,
+     "mae": 1.227414107478269
+    },
+    "field_level": {
+     "n": 27,
+     "rmse": 1.354988651249371,
+     "mae": 1.1587227696708196,
+     "bias": 1.1587227696708196,
+     "r2": -1.3828978687430742,
+     "pearson_r2": 0.41116384187422117
+    }
+   },
+   "Germany/wheat": {
+    "pixel": {
+     "n": 28660,
+     "rmse": 2.586334584939437,
+     "mae": 2.0479292860542557,
+     "bias": 1.6726439945156044,
+     "r2": -0.5321874322969231,
+     "pearson_r2": 0.15185649556669645
+    },
+    "field_balanced": {
+     "fields": 9,
+     "rmse": 2.658555250857451,
+     "mae": 2.3254158144627928
+    },
+    "field_level": {
+     "n": 9,
+     "rmse": 2.5608931445121135,
+     "mae": 2.0818834791246963,
+     "bias": 1.9451609280737843,
+     "r2": -1.509363058619202,
+     "pearson_r2": 0.13117267906151114
+    }
+   }
+  },
+  "macro_country": {
+   "pixel_rmse": 1.8064531007255853,
+   "pixel_r2": 0.39671386826884003,
+   "field_level_rmse": 1.7368186745205234
+  },
+  "label": "farm-held-out; pre-harvest: cutoff before_harvest 30 d",
+  "rows_evaluated": 137917
+ },
+ "maps": [
+  {
+   "field": "Germany_DUP3_farm5_field265_rapeseed_2020",
+   "georeferenced": true,
+   "grid": [
+    143,
+    118
+   ],
+   "cells": 6998
+  },
+  {
+   "field": "Germany_DUP3_farm5_field267_rapeseed_2020",
+   "georeferenced": true,
+   "grid": [
+    131,
+    153
+   ],
+   "cells": 8889
+  },
+  {
+   "field": "Germany_DUP3_farm3_field234_rapeseed_2016",
+   "georeferenced": true,
+   "grid": [
+    76,
+    54
+   ],
+   "cells": 2208
+  }
+ ],
+ "resources": {
+  "wall_seconds": 194.6,
+  "peak_rss_gb": 1.53,
+  "peak_gpu_gb": 0.39
+ }
+}
