@@ -42,9 +42,10 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 | Document | Read it when |
 |---|---|
 | [mission.md](./mission.md) | You need the goal, scope boundaries, and success criteria. |
-| [architecture.md](./architecture.md) | You are writing or reviewing code. Module map, tensor contracts, data flow, and where the two systems divide. |
+| [architecture.md](./architecture.md) | You are writing or reviewing code. Module map, tensor contracts, data flow, and where the two systems divide. §9 gives the exact YieldSAT point-model architecture used for all reported runs. |
 | [data_contract.md](./data_contract.md) | Contract-branch index plus existing flat-file demo-loader layout, masks and limitations. |
 | [yieldsat_data_contract.md](./yieldsat_data_contract.md) | Alternative YieldSAT contract for Argentina, Brazil, Germany and Uruguay: schemas, country-specific decoding, YS-01–YS-10 tasks, and (§7) the implementation log with audits, splits and real-data results. |
+| [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md) | Plan (PC-01–PC-08) for evaluating on the YieldSAT paper's CV10/LORO/LOYO per-crop protocol, with open protocol questions and reporting rules. |
 | [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
 | [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v2 direction for expert-validated relationships constraining sensor embeddings, optional VLM/LLM applicability estimation, and KP-01–KP-08 tasks; planned, not implemented. |
 | [status.md](./status.md) | You want the honest state: what is verified, what is orphaned, and the defect list with file:line. |

@@ -306,3 +306,119 @@ Both System B scripts accept `--log_dir` but never construct a `SummaryWriter`
 (System A's scripts do, at `main_finetune_mmst_vit.py:211` and
 `main_pretrain_mmst_vit.py:133`). The flag is accepted and silently ignored, and
 System B produces no TensorBoard output at all.
+
+---
+
+## 9. YieldSAT point model — exact architecture
+
+`models_yieldsat.YieldSATPointModel` is the model used for every run in
+`results/yieldsat/` (2026-09-28). The values below are the defaults of
+`main_yieldsat_finetune.py` and are the configuration actually trained:
+`embed_dim=128`, `num_latents=8`, `depth=2`, `num_heads=4`, `modality_embed=32`,
+`modality_dropout=0.1`, crop context on. Shapes are per batch of B grid cells;
+T = 24 time slots. Data preparation is specified in
+[yieldsat_data_contract.md](./yieldsat_data_contract.md) §7 (YS-04/05).
+
+### 9.1 Inputs (from `YieldSATPointDataset`)
+
+| Stream | Values | Mask | Extra |
+|---|---|---|---|
+| `yieldsat_s2` | (B, 24, 12): B01–B12 incl. B8A, standardized, 0 where invalid | (B, 24, 12) bool | time features (B, 24, 3) |
+| `yieldsat_weather` | (B, 24, 4): temp_max, temp_mean, temp_min, total_prec (interval sums) | (B, 24, 4) | same time features |
+| `yieldsat_dem` | (B, 1) | (B, 1) | – |
+| `yieldsat_terrain` | (B, 4): aspect, curvature, slope, twi (5 with cyclic aspect) | (B, 4) | – |
+| `yieldsat_soil` | (B, 48): 8 properties × 6 depths, property-major (96 with uncertainty) | (B, 48) | – |
+| crop | (B,) id in {corn, rapeseed, soybean, wheat} | – | – |
+
+Time features per slot are (days since seeding)/365, sin(day of year) and cos(day
+of year), zeroed for ineligible slots. `models_yieldsat.pack_inputs` packs each
+stream into one tensor for `MultiModalEncoder`: temporal streams as
+`[values·mask, mask, time]` = (B, 24, 2C+3); static streams as
+`[values·mask, mask]` = (B, 2C). Per-stream availability is 1 if any value of the
+stream is valid.
+
+### 9.2 Per-stream encoders (`models_multimodal_encoder.py`)
+
+Every encoder outputs **one token (B, 1, 128)**.
+
+**`MaskedTemporalEncoder`** (`yieldsat_s2`, `yieldsat_weather`; separate weights):
+```text
+x_t = Linear(2C→128)([v·m, m]_t) + Linear(3→128)(time_t) + slot_embed[t]   slot_embed (1,24,128), trunc-normal 0.02
+seq = [CLS; x_1..x_24]                                                      CLS (1,1,128), trunc-normal 0.02
+key_padding_mask: slot t masked if no channel valid at t (CLS never masked)
+2 × TransformerEncoderLayer(d=128, heads=4, ff=256, GELU, dropout 0, pre-norm)
+out = Linear(128→128)(LayerNorm(seq[CLS]))
+```
+Parameters: s2 288,640; weather 286,592.
+
+**`MaskedStaticEncoder`** (`yieldsat_dem` C=1, `yieldsat_terrain` C=4):
+```text
+out = Linear(64→128)(GELU(Linear(64→64)(GELU(Linear(2C→64)([v·m, m])))))
+```
+Parameters: dem 12,672; terrain 13,056.
+
+**`SoilProfileEncoder`** (`yieldsat_soil`, P=8 properties, D=6 depths):
+```text
+depth token d = [values of 8 props at d, masks of 8 props at d]   (16 features; 32 with uncertainty)
+x_d = Linear(16→64)(token_d) + depth_embed[d]                     depth_embed (1,6,64)
+seq = [CLS; x_1..x_6], depths with no valid property masked
+1 × TransformerEncoderLayer(d=64, heads=4, ff=128, GELU, dropout 0, pre-norm)
+out = Linear(64→128)(LayerNorm(seq[CLS]))
+```
+Parameters: 43,456.
+
+**Missing streams.** `MultiModalEncoder.forward_with_missing` substitutes a
+learned per-stream token (128, zero-init; 640 parameters total) for samples whose
+stream is unavailable. During training, **modality dropout 0.1** removes each
+stream per sample with probability 0.1. Absent streams are also masked out of the
+fusion cross-attention (below).
+
+### 9.3 Fusion (`LatentFusionTransformer`, `models_latent_fusion.py`)
+
+```text
+tokens: 5 stream tokens + 1 crop token = Embedding(4, 128)(crop)       (6, 128) per cell
+each token += concat(pos_embed (96), modality_embed (32))
+    pos_embed: learnable SeparablePosEmbed(spatial=1, temporal=1, 96), sin-cos init
+    modality_embed: learnable (1,1,32) per stream, sin-cos init of the stream index
+latents: learnable (1, 8, 128), randn init
+cross-attention: MultiheadAttention(128, 4 heads)(query=latents, key/value=tokens,
+                 key_padding_mask = unavailable streams)  → latents = LayerNorm(latents + attn)
+2 × TransformerEncoderLayer(d=128, heads=4, ff=512, GELU, dropout 0, post-norm) over the 8 latents
+LayerNorm → fused latents (B, 8, 128)
+```
+Parameters: 465,472 (crop embedding 512). Linear layers are trunc-normal 0.02
+initialized, LayerNorms to (1, 0).
+
+### 9.4 Head (`ScalarCellYieldHead`, registry name `scalar_cell_yield`)
+
+```text
+y = Linear(128→1)(Dropout(0)(GELU(Linear(128→128)(LayerNorm(mean over 8 latents)))))   → (B,)
+```
+Parameters: 16,897. Output is the standardized target; predictions are inverted
+with the training mean/std to t/ha.
+
+### 9.5 Totals, loss and training
+
+- **Total 1,127,937 parameters** (encoders 644,416 + missing tokens 640 + fusion
+  465,472 + crop 512 + head 16,897).
+- **Loss:** MSE on the standardized per-cell target over valid targets.
+- **Optimization:** AdamW (lr 1e-3, weight decay 0.05), 1 warmup epoch then
+  cosine decay, gradient clipping at 1.0, bf16 autocast, batch 512 cells drawn
+  field-balanced (season probability ∝ n_rows^0.5).
+- **Model selection:** best epoch by validation pixel RMSE.
+
+**Pretraining variant** (`yieldsat_objectives.YieldSATPointPretrainer`, run
+`pretrain_pooled`). It uses the same encoders and fusion, with the crop token
+disabled. Heads are one Linear(128→24·C) per temporal stream and Linear(128→C)
+per static stream for masked-observation reconstruction (30% of observed values
+hidden), plus Linear(128→12) for the last-valid optical forecast. Loss = masked
+MSE + forecast MSE. Only encoders and fusion (156 tensors) are transferred via
+`sensor_state_dict`.
+
+### 9.6 What this model is not
+
+- Each cell is predicted independently. There is no spatial context between
+  cells: patch mode is not implemented.
+- It is not a native-grid model. It consumes the preprocessed common 10 m grid.
+- It is not one of the paper's baselines. For the paper-comparison plan see
+  [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md).

@@ -539,6 +539,9 @@ split exists in the tooling.
 
 ### YS-06 — Point encoders and yield head ✅
 
+The exact layer-by-layer architecture, shapes and parameter counts are in
+[architecture.md §9](./architecture.md#9-yieldsat-point-model--exact-architecture).
+
 One dedicated encoder per stream, all built through `MultiModalEncoder`, which
 keeps the learned missing-modality token, per-sample availability and modality
 dropout:
@@ -701,6 +704,10 @@ Still open:
 No annotation cost was incurred, because no annotations exist.
 
 ### Remaining limitations and open items
+
+0. **Paper comparison.** Results are not yet comparable with the YieldSAT
+   paper's per-crop CV10/LORO/LOYO tables. The plan is in
+   [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md).
 
 1. **Unresolved semantics.**
    - The slope scale and TWI definition are unknown (TWI is mostly missing).

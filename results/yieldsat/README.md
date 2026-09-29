@@ -6,6 +6,11 @@ Everything is **pilot evidence, not a benchmark**. Background, data audits and
 caveats are in
 [spec/yieldsat_data_contract.md §7](../../spec/yieldsat_data_contract.md#7-implementation-progress-log-2026-09-28).
 
+The model architecture is specified exactly in
+[spec/architecture.md §9](../../spec/architecture.md#9-yieldsat-point-model--exact-architecture).
+The plan for comparing with the YieldSAT paper is in
+[spec/yieldsat_paper_comparison.md](../../spec/yieldsat_paper_comparison.md).
+
 All metrics are in **t/ha** and computed over **every held-out cell** of the test
 partition. R² is the coefficient of determination.
 - *Pixel* counts each 10 m cell once.

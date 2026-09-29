@@ -217,6 +217,10 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       budgets) is in §7 of the contract. Multi-seed runs, patch mode and knowledge
       controls remain open (knowledge is blocked on KP tasks).
 
+- [ ] **PC-01–PC-08:** Paper-compatible evaluation (per country–crop CV10, LORO,
+      LOYO; S2 vs S2+ADM; LSTM protocol check), specified in
+      [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md).
+
 - [ ] Profile the five objectives. `_cross_modal_prediction` runs the fusion stack
       once per modality and `_temporal_forecast` once per temporal modality — roughly
       8–12 fusion invocations per step at ~12k tokens each.
