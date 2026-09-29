@@ -20,6 +20,14 @@ partition. R² is the coefficient of determination.
   target.
 - *Macro country* averages the per-country pixel metrics.
 
+## Other result sets
+
+- [`fusion_ablation/`](./fusion_ablation/README.md): YS-11 fusion variants, 26
+  runs (2026-09-29).
+- [`paper_comparison/`](./paper_comparison/comparison.md): paper-protocol runs
+  against the YieldSAT paper's Tables 13–18 (`paper_benchmark.csv`), with
+  archived fold aggregates.
+
 ## Layout
 
 ```text

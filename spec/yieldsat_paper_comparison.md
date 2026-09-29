@@ -1,8 +1,14 @@
 # YieldSAT Paper-Comparison Protocol
 
-**Status:** 2026-09-29: tooling implemented (PC-01–PC-04, PC-06, PC-07). PC-05
-protocol check run on GER-R and PC-08 leakage quantified. See §5 for the
-progress log. Originally a plan, 2026-09-29. It builds on the implemented point
+**Status (2026-09-29): comparison-ready.**
+- PC-01–PC-07 are implemented.
+- The protocol was validated against the paper's LSTM on GER-R CV10 (PC-05).
+- Our model has run the first matrix cell (GER-R CV10, S2 and S2+ADM).
+- PC-08 leakage is quantified in the fold manifests; its sensitivity runs are
+  tooling-ready.
+- The full 9-pair × 3-protocol matrix is ready to launch (§6).
+
+§5 is the progress log. This document started as a plan on 2026-09-29. It builds on the implemented point
 pipeline in [yieldsat_data_contract.md](./yieldsat_data_contract.md) §7. The model
 under test is specified in [architecture.md](./architecture.md#9-yieldsat-point-model--exact-architecture).
 
@@ -204,3 +210,84 @@ statistics may include test folds; `-- --normalization supplied` is available
 for a strictly matched input pipeline. The comparison tables are in
 `results/yieldsat/paper_comparison/` (`comparison.md`/`.csv` plus archived
 aggregates).
+
+### 2026-09-29 — First like-for-like matrix cell: GER-R CV10 (PC-06, PC-07)
+
+Our model (`perceiver_summary`, the ablation-confirmed default) was run on all
+10 GER-R folds with the paper protocol:
+- season grouping, `all_slots`;
+- train-fold normalization;
+- 20×500 steps of 512 cells per fold, i.e. ~21 passes over a fold's training
+  cells;
+- best epoch on the 10% validation carve-out.
+
+Fold mean ± std, from `results/yieldsat/paper_comparison/`:
+
+| GER-R, CV10 | Pixel R² | Pixel RMSE | Field R² | Field RMSE |
+|---|---|---|---|---|
+| Paper LSTM (S2) | 0.36 ± 0.14 | 1.33 | 0.62 ± 0.25 | 0.83 |
+| Paper best S2 (3D-ConvLSTM pixel / 3D-LSTM field; spatial models) | 0.49 ± 0.10 | 1.20 | 0.82 ± 0.09 | 0.57 |
+| Paper LSTM, S2+ADM input fusion | 0.47 ± 0.10 | 1.21 | 0.81 ± 0.09 | 0.58 |
+| Paper best S2+ADM (AFF pixel / 3D-LSTM field) | 0.49 ± 0.09 | 1.20 | 0.81 ± 0.07 | 0.59 |
+| Re-run: paper LSTM (S2) | 0.33 ± 0.11 | 1.34 | 0.64 ± 0.16 | 0.75 |
+| **Ours, S2** | **0.35 ± 0.12** | **1.32** | **0.63 ± 0.14** | **0.77** |
+| **Ours, S2+ADM** | **0.37 ± 0.09** | **1.31** | **0.61 ± 0.15** | **0.80** |
+
+Reading:
+- With S2 only, our point model matches the paper's pixel-wise LSTM and
+  Transformer and stays below its spatial models (3D-LSTM/3D-ConvLSTM/AFF).
+  That is expected: point mode has no neighbourhood context (YS-09 patch mode is
+  not implemented).
+- With S2+ADM, our model gains almost nothing, while the paper's input-fusion
+  LSTM gains a lot (pixel R² 0.36 → 0.47, field 0.62 → 0.81).
+- An **open hypothesis**, not a finding, may explain the ADM gap:
+  - the paper's input fusion feeds all 120 bands, including `coord_x/y/z` and
+    soil uncertainties, which our streams exclude;
+  - under season-grouped CV, 35 of GER-R's 111 test seasons share their ground
+    with training seasons of other years (PC-08);
+  - static location-like inputs can therefore memorize per-ground yield levels;
+  - under this hypothesis, the leakage-safe run (`--group physical --policy
+    strict`) should shrink the paper-style ADM gain.
+
+  Testing it is the first follow-up below.
+- Single pair, single seed. These are not claims about the other eight pairs.
+
+### Remaining work and follow-ups
+
+1. **Full matrix.** Launch the command in §6 (9 pairs × CV10/LORO/LOYO × S2/
+   S2+ADM, our model and the LSTM re-run). Budget: CV10 alone is 180
+   runs/model/seed.
+2. **PC-08 runs.** Repeat CV10 with `--group physical --policy strict` and LOYO
+   with `--policy strict`; report next to the paper-policy numbers.
+3. **ADM-gap check.** Run the paper-LSTM preset with S2+ADM and an input set that
+   includes `coord_*`/soil uncertainty (not a stream today), under both
+   policies.
+4. **Not reproduced:**
+   - the paper's spatial baselines (3D-LSTM, 3D-ConvLSTM, AFF, MMGF), which need
+     patch mode;
+   - its deep ensembles (§5.2).
+
+   Report the paper's numbers for those as external references only.
+
+## 6. How to run the comparison
+
+```bash
+export YIELDSAT_SOURCE_ROOT=... YIELDSAT_ARTIFACT_ROOT=...
+# like-for-like with the paper (resumable; add --epochs/--tag for longer training)
+python yieldsat_paper_runs.py --protocols cv loro loyo --inputs s2 s2_adm \
+    --models ours paper_lstm --fusion perceiver_summary --concurrency 3
+# leakage-safe sensitivity (PC-08)
+python yieldsat_paper_runs.py --protocols cv loyo --group physical --policy strict \
+    --inputs s2 s2_adm --models ours --concurrency 3
+# longer training for our model, kept under its own tag
+python yieldsat_paper_runs.py --protocols cv --models ours --epochs 60 --tag e60
+# tables
+python yieldsat_paper_compare.py --runs_root $YIELDSAT_ARTIFACT_ROOT/runs
+```
+
+Throughput on the RTX 3090 with three concurrent runs:
+- a GER-R CV10 fold of our model (20×500 steps) takes ~4–5 min;
+- an LSTM fold takes ~40 s;
+- larger pairs keep the same per-fold step budget unless `--steps_per_epoch 0`
+  (a full pass per epoch) is used, which scales with pair size (ARG-S ≈ 2.8 M
+  training cells ≈ 5,500 steps per epoch at batch 512).

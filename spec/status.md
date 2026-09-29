@@ -1,5 +1,21 @@
 # Status — Verified Review
 
+**YieldSAT model and paper-comparison update (2026-09-29):**
+- **YS-11:** token-level Perceiver fusion and three alternative fusions are
+  implemented and ablated (26 runs, 3 seeds). The default `perceiver_summary`
+  stays, because the token Perceiver did not beat it.
+- **Paper comparison:** protocol answers taken from the paper; per-pair
+  CV10/LORO/LOYO fold manifests (paper and strict leakage policies); per-crop
+  runs; normalization policies; fold aggregation; resumable run matrix; paper
+  Tables 13–18 transcribed (540 rows, web cross-check).
+- **Protocol validated:** our LSTM re-run matches the paper's GER-R CV10 LSTM
+  row when inputs use the file's `stats-*`.
+- **First cell:** GER-R CV10 for our model gives pixel R² 0.35/0.37 (S2 /
+  S2+ADM), level with the paper's pixel-wise models and below its spatial ones.
+- **Tests:** 81 passing.
+- Details: [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md) and
+  [yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks).
+
 **YieldSAT implementation update (2026-09-28/29):** The YieldSAT branch runs
 end to end on real data in point mode. This is the repository's first real-data
 training.

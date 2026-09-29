@@ -20,10 +20,12 @@ CV10,field,BRA-W,paper best (S2+ADM),"3D-ConvLSTM, input",S2+ADM,0.72,0.1,0.42,0
 CV10,field,GER-R,paper: LSTM (S2),,S2,0.62,0.25,0.83,0.26,,True,True,
 CV10,field,GER-R,paper best (S2),3D-LSTM,S2,0.82,0.09,0.57,0.14,,True,True,
 CV10,field,GER-R,paper best (S2+ADM),"3D-LSTM, input",S2+ADM,0.81,0.07,0.59,0.12,,True,True,
+CV10,field,GER-R,ours: ours-perceiver_summary,,S2,0.632,0.135,0.768,0.174,10,True,,0.647
 CV10,field,GER-R,re-run: paper_lstm,,S2,0.636,0.158,0.753,0.16,10,True,,0.669
 CV10,field,GER-R,re-run: paper_lstm_raw,,S2,0.434,0.222,0.948,0.241,10,True,,0.472
 CV10,field,GER-R,re-run: paper_lstm_train,,S2,0.525,0.228,0.858,0.238,10,True,,0.565
 CV10,field,GER-R,re-run: paper_lstm_train_e50,,S2,0.528,0.23,0.854,0.245,10,True,,0.567
+CV10,field,GER-R,ours: ours-perceiver_summary,,S2+ADM,0.609,0.145,0.795,0.187,10,True,,0.624
 CV10,field,GER-W,paper: LSTM (S2),,S2,0.55,0.41,2.6,1.28,,True,False,
 CV10,field,GER-W,paper best (S2),3D-ConvLSTM,S2,0.65,0.16,1.12,0.34,,True,True,
 CV10,field,GER-W,paper best (S2+ADM),"MMGF, feature",S2+ADM,0.77,0.16,0.9,0.21,,True,True,
@@ -51,10 +53,12 @@ CV10,pixel,BRA-W,paper best (S2+ADM),"AFF, feature",S2+ADM,0.24,0.06,1.37,0.18,,
 CV10,pixel,GER-R,paper: LSTM (S2),,S2,0.36,0.14,1.33,0.23,,True,True,
 CV10,pixel,GER-R,paper best (S2),3D-ConvLSTM,S2,0.49,0.1,1.2,0.22,,True,True,
 CV10,pixel,GER-R,paper best (S2+ADM),"AFF, feature",S2+ADM,0.49,0.09,1.2,0.22,,True,True,
+CV10,pixel,GER-R,ours: ours-perceiver_summary,,S2,0.348,0.12,1.323,0.211,10,True,,0.352
 CV10,pixel,GER-R,re-run: paper_lstm,,S2,0.329,0.107,1.338,0.162,10,True,,0.35
 CV10,pixel,GER-R,re-run: paper_lstm_raw,,S2,0.227,0.126,1.435,0.174,10,True,,0.251
 CV10,pixel,GER-R,re-run: paper_lstm_train,,S2,0.276,0.145,1.388,0.186,10,True,,0.298
 CV10,pixel,GER-R,re-run: paper_lstm_train_e50,,S2,0.268,0.153,1.394,0.192,10,True,,0.29
+CV10,pixel,GER-R,ours: ours-perceiver_summary,,S2+ADM,0.369,0.085,1.306,0.204,10,True,,0.371
 CV10,pixel,GER-W,paper: LSTM (S2),,S2,-0.32,0.64,3.38,1.04,,True,True,
 CV10,pixel,GER-W,paper best (S2),3D-ConvLSTM,S2,0.34,0.09,2.4,0.34,,True,True,
 CV10,pixel,GER-W,paper best (S2+ADM),"AFF, feature",S2+ADM,0.44,0.16,2.2,0.44,,True,True,

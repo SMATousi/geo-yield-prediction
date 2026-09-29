@@ -224,7 +224,7 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
       concat-MLP, token-transformer and the current summary Perceiver. Specified in
       [yieldsat_data_contract.md §8](./yieldsat_data_contract.md#8-model-improvement-tasks).
 
-- [ ] **PC-01–PC-08:** Paper-compatible evaluation (per country–crop CV10, LORO,
+- [x] **PC-01–PC-07** (2026-09-29; comparison-ready: protocol validated on GER-R; full matrix to launch), **PC-08** leakage quantified (sensitivity runs pending): Paper-compatible evaluation (per country–crop CV10, LORO,
       LOYO; S2 vs S2+ADM; LSTM protocol check), specified in
       [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md).
 
