@@ -118,3 +118,22 @@ Versioned results (parameters, per-epoch history, per-group test metrics, sample
 maps) for the 2026-09-28 runs are in `results/yieldsat/`. Rebuild that directory
 after new runs with
 `python yieldsat_collect_results.py --runs_dir $YIELDSAT_ARTIFACT_ROOT/runs --splits_dir $YIELDSAT_ARTIFACT_ROOT/splits`.
+
+### YieldSAT paper-protocol comparison
+
+The paper's protocols are specified in `spec/yieldsat_paper_comparison.md`: one
+model per country–crop pair; CV10 / LORO / LOYO; S2 vs S2+ADM; fold mean ± std.
+
+```bash
+# fold manifests (created automatically by the runner if missing)
+python yieldsat_prepare.py folds --countries Germany --pairs GER-R --protocols cv loro loyo
+# run matrix (resumable): our model and/or the paper's LSTM baseline
+python yieldsat_paper_runs.py --pairs GER-R ARG-S --protocols cv --models ours paper_lstm \
+    --inputs s2 s2_adm --fusion perceiver_summary --concurrency 3
+# long training under a separate tag, extra flags after "--"
+python yieldsat_paper_runs.py --protocols cv loro loyo --models ours --epochs 60 --tag e60 -- --lr 5e-4
+# leakage-safe sensitivity (PC-08)
+python yieldsat_paper_runs.py --pairs GER-R --protocols cv --group physical --policy strict
+# side-by-side tables against the paper
+python yieldsat_paper_compare.py --runs_root $YIELDSAT_ARTIFACT_ROOT/runs
+```

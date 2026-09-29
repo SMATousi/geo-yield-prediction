@@ -142,6 +142,69 @@ def collect(runs_dir, out_dir, splits_dir=None):
     return summary
 
 
+# ---- fold aggregation (PC-04) ------------------------------------------------
+
+def aggregate_folds(exp_dir, expected_rows=None):
+    """Aggregate the fold runs ``exp_dir/fold*/`` of one experiment (one
+    country-crop pair, protocol, input set and model).
+
+    Reports the paper's statistic (mean ± std over folds of each fold's test
+    R²/RMSE, pixel and field level) and the pooled out-of-fold metrics over all
+    held-out cells. Every cell must appear at most once across folds; with
+    ``expected_rows`` coverage must be exact.
+    """
+    import numpy as np
+    from dataset.yieldsat_schema import parse_field_shared_name
+    from util.yieldsat_eval import evaluate_predictions
+
+    exp_dir = Path(exp_dir)
+    folds = sorted(d for d in exp_dir.glob('fold*') if (d / 'report.json').exists())
+    if not folds:
+        raise FileNotFoundError('no finished folds in {}'.format(exp_dir))
+    per_fold, preds, targets, seasons, keys = [], [], [], [], []
+    names = {}
+    for d in folds:
+        r = json.loads((d / 'report.json').read_text())
+        o = r['test']['overall']
+        per_fold.append({'fold': d.name, 'test_cells': o['pixel']['n'],
+                         'test_seasons': o['field_level']['n'],
+                         'pixel_r2': o['pixel']['r2'], 'pixel_rmse': o['pixel']['rmse'],
+                         'field_r2': o['field_level']['r2'], 'field_rmse': o['field_level']['rmse'],
+                         'best_epoch': (r.get('best_val') or {}).get('epoch')})
+        z = np.load(d / 'test_predictions.npz')
+        season_names = z['season_names']
+        sid = np.array([names.setdefault(str(season_names[i]), len(names)) for i in z['season']])
+        preds.append(z['pred'])
+        targets.append(z['target'])
+        seasons.append(sid)
+        keys.append(sid.astype(np.int64) * 10**8 + z['grid_row'].astype(np.int64) * 10**4 + z['grid_col'])
+    keys = np.concatenate(keys)
+    if np.unique(keys).size != keys.size:
+        raise ValueError('{}: a cell appears in more than one test fold'.format(exp_dir))
+    if expected_rows is not None and keys.size != expected_rows:
+        raise ValueError('{}: {} held-out cells, expected {}'.format(exp_dir, keys.size, expected_rows))
+    inv = {v: k for k, v in names.items()}
+    meta = []
+    for i in range(len(names)):
+        parts = parse_field_shared_name(inv[i])
+        meta.append({'country': parts['country'], 'crop': parts['crop']})
+    pooled = evaluate_predictions(np.concatenate(preds), np.concatenate(targets),
+                                  np.concatenate(seasons), meta)['overall']
+
+    def ms(key):
+        v = np.array([f[key] for f in per_fold], dtype=float)
+        v = v[np.isfinite(v)]
+        return {'mean': float(v.mean()) if v.size else float('nan'),
+                'std': float(v.std()) if v.size else float('nan'), 'n': int(v.size)}
+
+    out = {'experiment': str(exp_dir), 'folds_done': len(folds),
+           'fold_mean_std': {k: ms(k) for k in ('pixel_r2', 'pixel_rmse', 'field_r2', 'field_rmse')},
+           'pooled_oof': {'pixel': pooled['pixel'], 'field_level': pooled['field_level']},
+           'held_out_cells': int(keys.size), 'per_fold': per_fold}
+    (exp_dir / 'aggregate.json').write_text(json.dumps(out, indent=1))
+    return out
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser('Collect YieldSAT results')
     p.add_argument('--runs_dir', required=True)

@@ -26,13 +26,13 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset.yieldsat_dataset import (
-    CUTOFF_MODES, FieldBalancedBatchSampler, SequentialBatchSampler, YieldSATNormalizer,
-    YieldSATPointDataset, collate_point_batch,
+    CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
+    YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats,
 )
-from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, PROVENANCE, STREAMS
+from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, CROPS, PROVENANCE, STREAMS
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
-from models_yieldsat import FUSIONS, YieldSATPointModel
+from models_yieldsat import FUSIONS, PaperLSTMBaseline, YieldSATPointModel
 from util.yieldsat_eval import evaluate_predictions, reconstruct_field, write_geotiff
 from yieldsat_objectives import OBJECTIVE_ROUTING, YieldSATPointPretrainer
 
@@ -55,6 +55,15 @@ def get_args_parser():
     p.add_argument('--aspect_encoding', default='raw', choices=['raw', 'cyclic'])
     p.add_argument('--norm_pooling', default='pooled', choices=['pooled', 'per_country'])
     p.add_argument('--no_crop_context', action='store_true')
+    p.add_argument('--crops', nargs='+', default=None, choices=list(CROPS),
+                   help='restrict every partition to these crops (paper: one country-crop pair)')
+    p.add_argument('--model', default='yieldsat_point', choices=['yieldsat_point', 'paper_lstm'],
+                   help='paper_lstm = the paper/tutorial pixel LSTM baseline (PC-05)')
+    p.add_argument('--normalization', default='train', choices=['train', 'supplied', 'none'],
+                   help='feature normalization: train-fold stats, the file stats-*, or raw')
+    p.add_argument('--target_normalization', default='train', choices=['train', 'none'])
+    p.add_argument('--fill_value', type=float, default=0.0,
+                   help='value for invalid inputs after normalization (tutorial: -1 on raw values)')
     p.add_argument('--train_fraction', type=float, default=1.0,
                    help='keep this fraction of training field seasons (label budget)')
     # model
@@ -73,9 +82,14 @@ def get_args_parser():
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
     # optimisation
     p.add_argument('--epochs', type=int, default=10)
-    p.add_argument('--steps_per_epoch', type=int, default=500)
+    p.add_argument('--steps_per_epoch', type=int, default=500,
+                   help='0 = one full pass over the training cells per epoch')
     p.add_argument('--batch_size', type=int, default=512)
     p.add_argument('--lr', type=float, default=1e-3)
+    p.add_argument('--optimizer', default='adamw', choices=['adamw', 'adam'])
+    p.add_argument('--lr_schedule', default='cosine', choices=['cosine', 'constant'])
+    p.add_argument('--grad_clip', type=float, default=1.0, help='0 disables clipping')
+    p.add_argument('--no_amp', action='store_true', help='disable bf16 autocast')
     p.add_argument('--weight_decay', type=float, default=0.05)
     p.add_argument('--warmup_epochs', type=float, default=1.0)
     p.add_argument('--field_alpha', type=float, default=0.5,
@@ -132,7 +146,9 @@ def predict(model, ds, args, device, drop=None):
         if drop is not None:
             drop_stream(batch, drop[0], drop[1])
         b = _to(batch, device)
-        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
+        with torch.autocast(device_type=device.type, dtype=torch.bfloat16,
+                            enabled=device.type == 'cuda' and not args.no_amp
+                            and args.model != 'paper_lstm'):
             p = model(b, apply_dropout=False).float()
         preds.append((p * b['target_std'] + b['target_mean']).cpu().numpy())
         targets.append(batch['target_raw'].numpy())
@@ -166,6 +182,11 @@ def main(args):
     by_season = {f['season_id']: f for f in table['fields']}
     parts = {p: [by_season[s] for s in split['partitions'][p] if s in by_season]
              for p in ('train', 'val', 'test')}
+    if args.crops:
+        parts = {p: [f for f in v if f['crop'] in args.crops] for p, v in parts.items()}
+    # a single crop makes the crop token constant: switch it off (PC-02)
+    single_crop = args.crops is not None and len(args.crops) == 1
+    use_crop = not args.no_crop_context and not single_crop
     rng = np.random.default_rng(args.seed)
     if args.train_fraction < 1.0:
         keep = max(1, int(round(args.train_fraction * len(parts['train']))))
@@ -178,23 +199,35 @@ def main(args):
     train_fields = [(f['country'], f['field_code'], targets[f['country']][f['row_start']:f['row_end']])
                     for f in parts['train']]
     normalizer = YieldSATNormalizer.fit(args.artifact_root, train_fields, pooling=args.norm_pooling)
+    supplied = ({c: load_supplied_stats(args.source_root, c) for c in args.countries}
+                if args.normalization == 'supplied' else None)
+    normalizer = NormalizerView(normalizer, features=args.normalization,
+                                target=args.target_normalization, supplied=supplied)
     (out_dir / 'normalizer.json').write_text(json.dumps(normalizer.to_json()))
 
     common = dict(streams=args.streams, backend=args.backend, cutoff_mode=args.cutoff_mode,
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
-                  aspect_encoding=args.aspect_encoding, seed=args.seed)
+                  aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
                                   max_rows_per_field=args.val_rows_per_field, **common) if parts['val'] else None
     block = args.block_size or (1 if args.backend == 'cache' else 64)
 
-    model = YieldSATPointModel(train_ds.layout, embed_dim=args.embed_dim, num_latents=args.num_latents,
-                               depth=args.depth, num_heads=args.num_heads,
-                               modality_embed=args.modality_embed,
-                               modality_dropout=args.modality_dropout,
-                               use_crop_context=not args.no_crop_context,
-                               fusion=args.fusion,
-                               cross_attn_layers=args.cross_attn_layers).to(device)
+    if args.model == 'paper_lstm':
+        if args.mode == 'pretrain':
+            raise SystemExit('the paper LSTM baseline has no pretraining mode')
+        model = PaperLSTMBaseline(train_ds.layout).to(device)
+    else:
+        model = YieldSATPointModel(train_ds.layout, embed_dim=args.embed_dim,
+                                   num_latents=args.num_latents, depth=args.depth,
+                                   num_heads=args.num_heads, modality_embed=args.modality_embed,
+                                   modality_dropout=args.modality_dropout,
+                                   use_crop_context=use_crop, fusion=args.fusion,
+                                   cross_attn_layers=args.cross_attn_layers).to(device)
+    # cuDNN LSTMs do not run under bf16 autocast
+    amp = device.type == 'cuda' and not args.no_amp and args.model != 'paper_lstm'
+    if args.steps_per_epoch <= 0:
+        args.steps_per_epoch = max(1, math.ceil(len(train_ds) / args.batch_size))
     transfer = None
     if args.init_sensor_ckpt:
         transfer = model.load_sensor_state_dict(
@@ -202,11 +235,16 @@ def main(args):
             encoders_only=args.encoders_only_transfer)
         print('loaded sensor checkpoint:', transfer['loaded'], 'tensors')
     trainable = YieldSATPointPretrainer(model).to(device) if args.mode == 'pretrain' else model
-    opt = torch.optim.AdamW(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    if args.optimizer == 'adam':
+        opt = torch.optim.Adam(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    else:
+        opt = torch.optim.AdamW(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     total_steps = args.epochs * args.steps_per_epoch
     warm = int(args.warmup_epochs * args.steps_per_epoch)
 
     def lr_at(step):
+        if args.lr_schedule == 'constant':
+            return args.lr
         if step < warm:
             return args.lr * (step + 1) / warm
         return args.lr * 0.5 * (1 + math.cos(math.pi * (step - warm) / max(1, total_steps - warm)))
@@ -226,14 +264,15 @@ def main(args):
             for g in opt.param_groups:
                 g['lr'] = lr_at(step)
             b = _to(batch, device)
-            with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
+            with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp):
                 if args.mode == 'pretrain':
                     loss, parts_loss = trainable(b)
                 else:
                     _, loss = model.loss(b)
             opt.zero_grad(set_to_none=True)
             loss.float().backward()
-            torch.nn.utils.clip_grad_norm_(trainable.parameters(), 1.0)
+            if args.grad_clip > 0:
+                torch.nn.utils.clip_grad_norm_(trainable.parameters(), args.grad_clip)
             opt.step()
             losses.append(loss.item())
             samples_seen += batch['target'].shape[0]
@@ -264,10 +303,15 @@ def main(args):
         'model': {'descriptor': model.descriptor()['config'],
                   'parameters': int(sum(p.numel() for p in model.parameters()))},
         'excluded_sources': ['coord_x/y/z (unverified, metadata only)', 'row/col/field/farm ids',
-                             'harvest date as input', 'supplied stats-*', 'yield_ground_truth attrs']
+                             'harvest date as input', 'yield_ground_truth attrs']
+                            + ([] if args.normalization == 'supplied' else ['supplied stats-*'])
                             + ([] if args.soil_uncertainty == 'ancillary' else ['soil uncertainty']),
         'objectives': {k: v['point_timeseries'] for k, v in OBJECTIVE_ROUTING.items()},
         'provenance': PROVENANCE,
+        'pair_filter': {'countries': args.countries, 'crops': args.crops,
+                        'crop_context': getattr(model, 'use_crop_context', False)},
+        'normalization': {'features': args.normalization, 'target': args.target_normalization,
+                          'fill_value': args.fill_value},
         'train_seasons': len(parts['train']), 'val_seasons': len(parts['val']),
         'test_seasons': len(parts['test']),
         'history': history, 'best_val': best, 'transfer': transfer,

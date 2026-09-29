@@ -1,6 +1,8 @@
 # YieldSAT Paper-Comparison Protocol
 
-**Status:** Plan, 2026-09-29. Not implemented. It builds on the implemented point
+**Status:** 2026-09-29: tooling implemented (PC-01–PC-04, PC-06, PC-07). PC-05
+protocol check run on GER-R and PC-08 leakage quantified. See §5 for the
+progress log. Originally a plan, 2026-09-29. It builds on the implemented point
 pipeline in [yieldsat_data_contract.md](./yieldsat_data_contract.md) §7. The model
 under test is specified in [architecture.md](./architecture.md#9-yieldsat-point-model--exact-architecture).
 
@@ -78,3 +80,96 @@ answers here:
   per-pair table.
 - Single-seed differences smaller than the fold-to-fold standard deviation are not
   claims of improvement.
+
+## 5. Progress log
+
+### 2026-09-29 — Protocol questions answered from the paper
+
+Sources: the paper text (arXiv:2604.00940 v1, §5 and Appendix A.3) and the
+release tutorial.
+
+| Question | Answer | Consequence |
+|---|---|---|
+| PC-Q1 CV10 grouping | "stratified, grouped 10-fold cross-validation, where pixels are grouped by field and stratified by region" (§5). "Field" means a field season (`field_shared_name`), as in the tutorial. | `cv` scheme with `--group season` (paper). `physical` is our leakage-safe variant. |
+| PC-Q2 LORO region | "a set of fields belonging to a single farmer or to a local data provider" (§5.2). | Region = `farm_identifier` (country-qualified), one fold per farm; `strict` uses farm clusters. Fold counts: ARG-C 29, ARG-S 44, ARG-W 21, BRA-C 7, BRA-S 9, BRA-W 6, GER-R 6, GER-W 6, URG-S 10. |
+| PC-Q3 LOYO | One fold per year. The paper does not say whether other seasons of the same ground stay in training; we assume they do (`paper` policy). | `strict` excludes them (e.g. BRA-S: 1,442 season-fold exclusions). |
+| PC-Q4 Time window | "a unified time series of 24 time steps, encompassing all available data modalities" (§4.5). | `--cutoff_mode all_slots` (labelled retrospective). |
+| PC-Q5 Normalization | **Not stated.** The tutorial uses raw values with NaN→-1 and a raw target. | `--normalization {train,supplied,none}`, `--target_normalization`, `--fill_value`; tested in PC-05. |
+| PC-Q6 Metrics | "The metrics are presented as the average across the folds"; field level: "all pixels in the same field are averaged and compared with the field's averaged ground truth" (§5). Appendix tables give mean ± std over folds. | The fold aggregator reports fold mean ± std (primary) plus pooled out-of-fold values. |
+| PC-Q7 Hyperparameters | **Not stated** in the paper (epochs, optimizer, model selection, seeds). The deep ensembles in §5.2 use 5 members. | The LSTM preset follows the tutorial: Adam 1e-3, batch 1028, 15 full-pass epochs, MSE, hidden 64. |
+| Model selection | Not stated. The tutorial reports the best epoch on the evaluated split, which is optimistic. | We select on a validation carve-out (10% of training groups, `--val_frac`); `--val_frac 0` uses the last epoch. |
+
+Source discrepancies, recorded in `results/yieldsat/paper_benchmark.csv`
+(`sources_agree`):
+- 517/540 means agree between the PDF appendix and the project results page.
+- In the PDF, the LORO "S2+ADM input-fusion 3D-ConvLSTM" rows (Tables 17/18)
+  duplicate the S2 3D-ConvLSTM row, while the web page has distinct values.
+- The GER-W LSTM CV10 field R² is 0.55 in the PDF and −0.87 on the web page.
+- Three URG-S cells differ by 0.01–0.02.
+- The Table 16 caption says "LORO, field level", but its header and content are
+  LOYO pixel level.
+
+### 2026-09-29 — PC-01 to PC-04, PC-06, PC-07 implemented
+
+- **PC-01** `dataset/yieldsat_splits.make_paper_folds` and
+  `yieldsat_prepare.py folds` produce per-pair fold manifests:
+  - `cv`: sklearn `StratifiedGroupKFold` on pixels (one sample per 100 cells),
+    grouped by season or physical field and stratified by region;
+  - `loro` and `loyo` as above;
+  - `paper` or `strict` leakage policy, with a 10% validation carve-out;
+  - an index file `<prefix>.folds.json` per experiment.
+
+  Coverage (every season is test exactly once) and the fold-key separation are
+  checked. Each manifest records `physical_overlap_test_seasons`.
+- **PC-02** `--crops`: all partitions are restricted to the pair's crop, and the
+  crop token is disabled automatically for a single crop.
+- **PC-03** Inputs: `s2` = `--streams yieldsat_s2`; `s2_adm` = all five streams.
+  New options: `--normalization {train,supplied,none}`,
+  `--target_normalization {train,none}`, `--fill_value`, `--model paper_lstm`,
+  `--optimizer {adamw,adam}`, `--lr_schedule {cosine,constant}`, `--grad_clip`,
+  `--no_amp`, and `--steps_per_epoch 0` (full pass). Reports record the pair
+  filter and normalization policy.
+- **PC-04** `yieldsat_collect_results.aggregate_folds`: fold mean ± std of pixel
+  and field R²/RMSE plus pooled out-of-fold metrics. It refuses cells that
+  appear in two test folds. Output: `aggregate.json` per pair.
+- **PC-06** `yieldsat_paper_runs.py`: builds missing fold manifests, runs the
+  (protocol × inputs × model × pair × fold) matrix with a concurrency limit,
+  resumes finished folds, and aggregates. `--epochs`/`--steps_per_epoch`
+  overrides, `--tag` names long-training variants, and extra arguments after
+  `--` go to `main_yieldsat_finetune.py`. Presets: `ours` (point model,
+  `--fusion` choice) and `paper_lstm`. Layout:
+  `runs/paper/<protocol>_<group>_<policy>_s<seed>/<inputs>/<model>[_tag]/<pair>/fold<ii>/`.
+- **PC-07** `util/yieldsat_paper_tables.py` transcribes appendix Tables 13–18
+  from the PDF text layer into `results/yieldsat/paper_benchmark.csv`: 540 rows
+  of mean ± std, cross-checked against the results page.
+  `yieldsat_paper_compare.py` writes `comparison.csv` and `comparison.md`: the
+  paper's LSTM, its best model per input set, and our experiments per protocol,
+  level and pair. Leakage-sensitivity runs are marked separately.
+- **Tests:** 4 new tests (fold protocols and policies, table-cell splitting,
+  fold aggregation with duplicate detection, normalization policies and the LSTM
+  baseline). Suite: 81 passed, 2 expected failures.
+
+### 2026-09-29 — PC-08 leakage quantified (fold manifests, seed 0)
+
+For each pair, the table counts test seasons (summed over folds) whose physical
+ground also appears in the training partition under the paper-compatible
+policy. The strict policy removes all of this overlap; for LOYO it does so by
+excluding seasons.
+
+| Pair | CV10 (season grouping) | LORO (farm) | LOYO (year) | LOYO strict: excluded season-folds |
+|---|---|---|---|---|
+| ARG-C | 73 | 14 | 57 | 89 |
+| ARG-S | 211 | 46 | 208 | 357 |
+| ARG-W | 71 | 2 | 64 | 99 |
+| BRA-C | 115 | 4 | 111 | 272 |
+| BRA-S | 283 | 23 | 283 | 1,442 |
+| BRA-W | 138 | 13 | 138 | 395 |
+| GER-R | 35 | 0 | 34 | 36 |
+| GER-W | 149 | 0 | 146 | 357 |
+| URG-S | 130 | 0 | 136 | 165 |
+
+Under the paper's CV10, a large share of test seasons have the same ground in
+training from other years. For example, BRA-S has 283 of 293 seasons and GER-W
+149 of 188. Soil and terrain inputs are then identical between train and test
+cells, so paper-protocol numbers are likely optimistic for ADM inputs. Always
+report `--group physical --policy strict` alongside them.

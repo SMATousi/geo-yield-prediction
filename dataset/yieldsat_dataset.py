@@ -146,6 +146,56 @@ class YieldSATNormalizer:
         return cls(stats, data['pooling'], data['fitted_on'])
 
 
+def load_supplied_stats(source_root, country):
+    """The file's own ``stats-mean``/``stats-std`` in canonical channel order
+    (PC-03 ablation only: their fitting population is unknown and may include
+    test fields, so they are never the default)."""
+    from dataset.yieldsat_schema import read_band_names, resolve_channel_indices
+    with open_source(source_path(source_root, country)) as f:
+        names = read_band_names(f)
+        mean = f['stats-mean'][:].astype(np.float64)
+        std = f['stats-std'][:].astype(np.float64)
+    ti = resolve_channel_indices(names, TEMPORAL_CHANNELS)
+    si = resolve_channel_indices(names, STATIC_CHANNELS)
+    fix = lambda v: np.where(np.isfinite(v) & (v > 0), v, 1.0)
+    return {'temporal_mean': np.nan_to_num(mean[ti]), 'temporal_std': fix(std[ti]),
+            'static_mean': np.nan_to_num(mean[si]), 'static_std': fix(std[si])}
+
+
+class NormalizerView:
+    """Feature/target normalization policy on top of a fitted normalizer.
+
+    ``features``: 'train' (train-fold statistics, default), 'supplied'
+    (the file's ``stats-*``, per country) or 'none' (raw values).
+    ``target``: 'train' (standardized with train statistics) or 'none' (raw
+    t/ha). Used to mirror the paper's protocol variants (PC-03).
+    """
+
+    def __init__(self, base, features='train', target='train', supplied=None):
+        if features not in ('train', 'supplied', 'none') or target not in ('train', 'none'):
+            raise ValueError('bad normalization policy')
+        if features == 'supplied' and not supplied:
+            raise ValueError('supplied statistics required')
+        self.base, self.features, self.target, self.supplied = base, features, target, supplied
+
+    def get(self, country):
+        st = dict(self.base.get(country))
+        if self.features == 'supplied':
+            st.update(self.supplied[country])
+        elif self.features == 'none':
+            for k in ('temporal', 'static'):
+                st[k + '_mean'] = np.zeros_like(st[k + '_mean'])
+                st[k + '_std'] = np.ones_like(st[k + '_std'])
+        if self.target == 'none':
+            st['target_mean'], st['target_std'] = 0.0, 1.0
+        return st
+
+    def to_json(self):
+        out = self.base.to_json()
+        out['policy'] = {'features': self.features, 'target': self.target}
+        return out
+
+
 # ---- row readers -------------------------------------------------------------
 
 class _CacheReader:
@@ -220,7 +270,7 @@ class YieldSATPointDataset(Dataset):
     def __init__(self, source_root, artifact_root, seasons, normalizer, streams=None,
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
-                 seed=0, check_source=True):
+                 seed=0, check_source=True, fill_value=0.0):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         if backend not in ('cache', 'h5'):
@@ -231,6 +281,7 @@ class YieldSATPointDataset(Dataset):
         self.cutoff_mode = cutoff_mode
         self.cutoff_days = cutoff_days
         self.aspect_encoding = aspect_encoding
+        self.fill_value = float(fill_value)
         self.retrospective = cutoff_mode in RETROSPECTIVE_MODES
         self.countries = sorted({s['country'] for s in seasons})
         self.index = {c: load_country_index(artifact_root, source_root, c, check_source)
@@ -317,9 +368,10 @@ class YieldSATPointDataset(Dataset):
         # temporal values: valid value (see temporal_valid_mask) AND eligible
         # slot; a date alone is not validity
         t_valid = temporal_valid_mask(temporal, times) & time_valid[:, :, None]
-        t_norm = np.where(t_valid, (temporal - t_mean[:, None, :]) / t_std[:, None, :], 0.0)
+        t_norm = np.where(t_valid, (temporal - t_mean[:, None, :]) / t_std[:, None, :],
+                          self.fill_value)
         s_valid = np.isfinite(static)
-        s_norm = np.where(s_valid, (static - s_mean) / s_std, 0.0)
+        s_norm = np.where(s_valid, (static - s_mean) / s_std, self.fill_value)
 
         with np.errstate(invalid='ignore'):
             rel = (times - meta['seeding_day'][:, None]) / 365.0

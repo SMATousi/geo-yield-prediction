@@ -499,3 +499,88 @@ def test_fusion_layout_is_checked_on_transfer():
     for k in ('fusion', 'encoder_output', 'cross_attn_layers'):
         legacy['descriptor']['config'].pop(k)
     assert YieldSATPointModel(layout, **kw).load_sensor_state_dict(legacy)['loaded'] > 0
+
+
+# ---- paper-comparison tooling (PC-01..PC-07) ----------------------------------
+
+def _pair_table(n=12):
+    fields = []
+    for i in range(n):
+        farm = 'farm{}'.format(i % 4)
+        phys = 'P{}'.format(i // 2)                                # two seasons per ground
+        fields.append({'country': 'Germany', 'crop': 'rapeseed', 'year': 2016 + i % 3,
+                       'season_id': 'Germany/s{}'.format(i), 'n_rows': 100 + 10 * i,
+                       'farm_id': 'Germany/DUP3/' + farm, 'farm_group_id': 'Germany/DUP3/' + farm,
+                       'physical_field_id': phys, 'field_code': i, 'geometry_verified': True})
+    return {'fields': fields, 'fingerprints': {}, 'countries': ['Germany']}
+
+
+def test_paper_folds_protocols_and_policies():
+    from dataset.yieldsat_splits import make_paper_folds
+    table = _pair_table()
+    cv = make_paper_folds(table, 'GER-R', 'cv', k=3, group='season', policy='paper')
+    tests = sorted(s for sp in cv for s in sp['partitions']['test'])
+    assert tests == sorted(f['season_id'] for f in table['fields'])      # each season once
+    assert sum(sp['physical_overlap_test_seasons'] for sp in cv) > 0     # paper allows it
+    strict = make_paper_folds(table, 'GER-R', 'cv', k=3, group='physical', policy='strict')
+    assert all(sp['physical_overlap_test_seasons'] == 0 for sp in strict)
+    loro = make_paper_folds(table, 'GER-R', 'loro')
+    assert len(loro) == 4 and all(len({s.split('/')[0] for s in sp['partitions']['test']}) == 1
+                                  for sp in loro)
+    loyo = make_paper_folds(table, 'GER-R', 'loyo', policy='strict')
+    assert len(loyo) == 3 and any(sp['partitions']['excluded'] for sp in loyo)
+    for sp in loyo:
+        by = {f['season_id']: f for f in table['fields']}
+        years = {by[s]['year'] for s in sp['partitions']['test']}
+        assert len(years) == 1
+        assert not years & {by[s]['year'] for s in sp['partitions']['train']}
+
+
+def test_paper_table_cell_splitting():
+    from util.yieldsat_paper_tables import split_row
+    assert split_row('0.84±0.071.13±0.22') == [(0.84, 0.07), (1.13, 0.22)]
+    assert split_row('0.75±0.20.88±0.22') == [(0.75, 0.2), (0.88, 0.22)]
+    assert split_row('0.33±10.452.30±1.47') == [(0.33, 10.45), (2.30, 1.47)]
+    assert split_row('0.62±0.25-0.87±2.60') == [(0.62, 0.25), (-0.87, 2.60)]
+
+
+def test_fold_aggregation_and_duplicate_detection(tmp_path):
+    from yieldsat_collect_results import aggregate_folds
+    names = np.array(['Germany_DUP3_farm1_field1_rapeseed_2019', 'Germany_DUP3_farm1_field2_rapeseed_2019'])
+    for i, (r2, rmse) in enumerate([(0.5, 1.0), (0.7, 0.8)]):
+        d = tmp_path / 'fold{:02d}'.format(i)
+        d.mkdir()
+        block = {'pixel': {'n': 3, 'r2': r2, 'rmse': rmse}, 'field_level': {'n': 1, 'r2': r2, 'rmse': rmse}}
+        (d / 'report.json').write_text(json.dumps({'test': {'overall': block}}))
+        np.savez(d / 'test_predictions.npz', pred=np.array([1.0, 2.0, 3.0]) + i,
+                 target=np.array([1.5, 2.0, 2.5]) + i, season=np.zeros(3, dtype=int),
+                 grid_row=np.array([0, 0, 1]), grid_col=np.array([0, 1, 0]),
+                 season_names=names[i:i + 1])
+    out = aggregate_folds(tmp_path, expected_rows=6)
+    assert abs(out['fold_mean_std']['pixel_r2']['mean'] - 0.6) < 1e-9
+    assert out['held_out_cells'] == 6 and out['pooled_oof']['pixel']['n'] == 6
+    np.savez(tmp_path / 'fold01' / 'test_predictions.npz', pred=np.ones(3), target=np.ones(3),
+             season=np.zeros(3, dtype=int), grid_row=np.array([0, 0, 1]),
+             grid_col=np.array([0, 1, 0]), season_names=names[:1])      # same cells as fold00
+    with pytest.raises(ValueError, match='more than one test fold'):
+        aggregate_folds(tmp_path)
+
+
+def test_normalization_policies_and_paper_lstm(corpus):
+    from dataset.yieldsat_dataset import NormalizerView
+    from models_yieldsat import PaperLSTMBaseline
+    ds, norm, fields = _dataset(corpus, streams=['yieldsat_s2', 'yieldsat_dem'], fill_value=-1.0)
+    raw = NormalizerView(norm, features='none', target='none')
+    ds.normalizer = raw
+    b = ds.get_batch(np.arange(8))
+    m = b['masks']['yieldsat_s2']
+    assert torch.all(b['inputs']['yieldsat_s2'][~m] == -1.0)            # tutorial fill on raw values
+    assert torch.allclose(b['target'], b['target_raw'])                 # raw t/ha target
+    root, art, truth = corpus
+    np.testing.assert_allclose(b['inputs']['yieldsat_s2'][m].numpy(),
+                               truth['Germany']['canon_t'][:8][..., :12][m.numpy()], rtol=1e-6)
+    lstm = PaperLSTMBaseline(ds.layout)
+    pred, loss = lstm.loss(b)
+    assert pred.shape == (8,) and torch.isfinite(loss)
+    with pytest.raises(ValueError):
+        NormalizerView(norm, features='supplied')

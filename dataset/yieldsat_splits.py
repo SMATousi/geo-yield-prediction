@@ -25,6 +25,22 @@ import numpy as np
 from dataset.yieldsat_schema import CONTRACT_KEY
 
 PARTITIONS = ('train', 'val', 'test')
+PAPER_PROTOCOLS = ('cv', 'loro', 'loyo')
+COUNTRY_CODES = {'Argentina': 'ARG', 'Brazil': 'BRA', 'Germany': 'GER', 'Uruguay': 'URG'}
+CROP_CODES = {'corn': 'C', 'rapeseed': 'R', 'soybean': 'S', 'wheat': 'W'}
+# the nine country-crop subsets reported in the YieldSAT paper
+PAPER_PAIRS = ('ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')
+
+
+def pair_code(country, crop):
+    return '{}-{}'.format(COUNTRY_CODES[country], CROP_CODES[crop])
+
+
+def parse_pair(code):
+    c, k = code.split('-')
+    country = {v: n for n, v in COUNTRY_CODES.items()}[c]
+    crop = {v: n for n, v in CROP_CODES.items()}[k]
+    return country, crop
 
 
 def load_field_table(artifact_root, source_root, countries, require_geometry=False,
@@ -237,6 +253,10 @@ def split_label(split):
         return 'geographic-block-held-out ({} km)'.format(split['block_km'])
     if s == 'country':
         return 'leave-one-country-out ({})'.format(split['holdout_country'])
+    if s in PAPER_PROTOCOLS:
+        return '{} fold {} of {} ({}, {} grouping, {} policy)'.format(
+            s.upper(), split['fold'] + 1, split['n_folds'], split['pair'], split['group'],
+            split['leakage_policy'])
     return 'leave-one-year-out ({})'.format(split['holdout_year'])
 
 
@@ -261,9 +281,27 @@ def summarize_split(split, fields):
 
 def check_split(split, fields):
     """Raise if physical fields (always) or farms (farm/country schemes)
-    appear in more than one of train/val/test."""
+    appear in more than one of train/val/test. Paper-compatible folds with
+    ``leakage_policy='paper'`` check their own grouping key instead (season,
+    or farm for LORO, or year for LOYO), because the paper's protocol allows
+    other seasons of the same ground in training; their cross-partition
+    physical overlap is reported, not refused."""
     by_season = {fl['season_id']: fl for fl in fields}
-    for key in ('physical_field_id',) + (('farm_group_id',) if split['scheme'] in ('farm', 'country') else ()):
+    if split['scheme'] in PAPER_PROTOCOLS:
+        # the fold's grouping key (season / farm / year) separates test from
+        # train+val; the validation carve-out may share it with training
+        gk = split['group_key']
+        test_keys = {by_season[s][gk] for s in split['partitions']['test']}
+        for p in ('train', 'val'):
+            clash = test_keys & {by_season[s][gk] for s in split['partitions'][p]}
+            if clash:
+                raise ValueError('split leakage: {} {} in test and {}'.format(gk, sorted(clash)[:3], p))
+    if split.get('leakage_policy') == 'paper':
+        keys = ()
+    else:
+        keys = ('physical_field_id',) + (('farm_group_id',) if split['scheme'] in ('farm', 'country')
+                                         else ())
+    for key in keys:
         seen = {}
         for p in PARTITIONS:
             for s in split['partitions'][p]:
@@ -292,3 +330,141 @@ def load_split(artifact_root, name, fingerprints=None):
             if c in fingerprints and fingerprints[c] != fp:
                 raise ValueError('split {} was built from another snapshot of {}'.format(name, c))
     return split
+
+
+# ---- paper-compatible fold manifests (PC-01) -------------------------------
+
+def make_paper_folds(table, pair, protocol, k=10, group='season', policy='paper', seed=0,
+                     val_frac=0.1):
+    """Fold manifests for one country-crop pair under the YieldSAT paper's
+    protocols (Pathak et al., CVPR 2026, §5):
+
+    ``cv``   stratified grouped k-fold: seasons grouped by field season
+             (``group='season'``, paper) or physical field (``'physical'``,
+             leakage-safe), stratified by region (farm), balanced in pixels;
+    ``loro`` one fold per region; a region is the fields of one farmer/local
+             provider, i.e. the farm (paper) or the farm cluster (strict);
+    ``loyo`` one fold per harvest year.
+    ``policy='strict'`` additionally moves train/val seasons that share a
+    physical field with the test fold to ``excluded``. A validation subset
+    (``val_frac`` of the training groups, 0 = none) is carved from training
+    for model selection; the paper does not specify one. Returns a list of
+    split dicts (one per fold).
+    """
+    if protocol not in PAPER_PROTOCOLS:
+        raise ValueError('protocol must be one of {}'.format(PAPER_PROTOCOLS))
+    if policy not in ('paper', 'strict') or group not in ('season', 'physical'):
+        raise ValueError('bad policy/group')
+    country, crop = parse_pair(pair)
+    fields = [f for f in table['fields'] if f['country'] == country and f['crop'] == crop]
+    if not fields:
+        raise ValueError('no field seasons for {}'.format(pair))
+    rng = np.random.default_rng(seed)
+    region_key = 'farm_id' if policy == 'paper' else 'farm_group_id'
+    if protocol == 'cv':
+        group_key = 'season_id' if group == 'season' else 'physical_field_id'
+        test_folds = _stratified_group_folds(fields, group_key, region_key, k, seed)
+    elif protocol == 'loro':
+        group_key = region_key
+        regions = sorted({f[region_key] for f in fields})
+        test_folds = [[f['season_id'] for f in fields if f[region_key] == r] for r in regions]
+    else:
+        group_key = 'year'
+        years = sorted({f['year'] for f in fields})
+        test_folds = [[f['season_id'] for f in fields if f['year'] == y] for y in years]
+    by_season = {f['season_id']: f for f in fields}
+    splits = []
+    for i, test in enumerate(test_folds):
+        test = set(test)
+        assign = {s: 'test' for s in test}
+        excluded = set()
+        if policy == 'strict':
+            test_phys = {by_season[s]['physical_field_id'] for s in test}
+            excluded = {f['season_id'] for f in fields
+                        if f['season_id'] not in test and f['physical_field_id'] in test_phys}
+        rest = [f for f in fields if f['season_id'] not in test and f['season_id'] not in excluded]
+        # validation for model selection only: carved by the CV grouping key,
+        # by season for LORO/LOYO (strict merges shared ground below)
+        vkey = 'physical_field_id' if protocol == 'cv' and group == 'physical' else 'season_id'
+        groups = sorted({f[vkey] for f in rest}, key=str)
+        rng.shuffle(groups)
+        n_val = int(round(val_frac * len(groups))) if val_frac > 0 else 0
+        val_groups = set(groups[:n_val]) if len(groups) > 1 else set()
+        for f in rest:
+            assign[f['season_id']] = 'val' if f[vkey] in val_groups else 'train'
+        for s in excluded:
+            assign[s] = 'excluded'
+        if policy == 'strict':
+            # the validation carve-out must not share ground with training either
+            _merge_physical([f for f in fields if assign[f['season_id']] in ('train', 'val')], assign)
+        train_phys = {by_season[s]['physical_field_id'] for s, a in assign.items() if a == 'train'}
+        split = {
+            'contract': CONTRACT_KEY, 'scheme': protocol, 'pair': pair, 'fold': i,
+            'n_folds': len(test_folds), 'group': group if protocol == 'cv' else group_key,
+            'group_key': group_key, 'leakage_policy': policy, 'seed': seed, 'val_frac': val_frac,
+            'countries': [country], 'crops': [crop], 'fingerprints': table['fingerprints'],
+            'created': time.strftime('%Y-%m-%dT%H:%M:%S'),
+            'geometry_verified': all(f['geometry_verified'] for f in fields),
+            'holdout': (sorted({by_season[s][region_key] for s in test}) if protocol == 'loro'
+                        else sorted({by_season[s]['year'] for s in test}) if protocol == 'loyo'
+                        else None),
+            'partitions': {p: sorted(s for s, a in assign.items() if a == p)
+                           for p in PARTITIONS + ('excluded',)},
+            'physical_overlap_test_seasons': sum(1 for s in test
+                                                 if by_season[s]['physical_field_id'] in train_phys),
+        }
+        split['summary'] = summarize_split(split, fields)
+        check_split(split, fields)
+        split['partition_hash'] = hashlib.sha256(
+            json.dumps(split['partitions'], sort_keys=True).encode()).hexdigest()[:16]
+        split['label'] = split_label(split)
+        splits.append(split)
+    covered = sorted(s for sp in splits for s in sp['partitions']['test'])
+    if protocol != 'loyo' or policy == 'paper':
+        if covered != sorted(by_season):
+            raise ValueError('folds do not cover every season exactly once as test')
+    return splits
+
+
+def _stratified_group_folds(fields, group_key, region_key, k, seed):
+    """Stratified grouped k-fold over pixels (as in the paper): each season
+    contributes its pixel count, groups never straddle folds, and the region
+    distribution is kept per fold."""
+    from sklearn.model_selection import StratifiedGroupKFold
+
+    groups = sorted({f[group_key] for f in fields}, key=str)
+    if len(groups) < k:
+        raise ValueError('only {} groups for {}-fold CV'.format(len(groups), k))
+    gid = {g: i for i, g in enumerate(groups)}
+    regions = sorted({f[region_key] for f in fields})
+    rid = {r: i for i, r in enumerate(regions)}
+    # one sample per 100 pixels keeps the pixel weighting at a tractable size
+    reps = np.array([max(1, f['n_rows'] // 100) for f in fields])
+    y = np.repeat([rid[f[region_key]] for f in fields], reps)
+    g = np.repeat([gid[f[group_key]] for f in fields], reps)
+    season = np.repeat(np.arange(len(fields)), reps)
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', UserWarning)   # regions smaller than k
+        sgkf = StratifiedGroupKFold(n_splits=k, shuffle=True, random_state=seed)
+        folds = []
+        for _, test_idx in sgkf.split(np.zeros(len(y)), y, g):
+            folds.append(sorted({fields[i]['season_id'] for i in np.unique(season[test_idx])}))
+    return folds
+
+
+def save_folds(splits, artifact_root, prefix):
+    """Save fold manifests as ``<prefix>_fold<ii>`` plus an index file."""
+    names = []
+    for sp in splits:
+        name = '{}_fold{:02d}'.format(prefix, sp['fold'])
+        save_split(sp, artifact_root, name)
+        names.append(name)
+    index = {'prefix': prefix, 'pair': splits[0]['pair'], 'protocol': splits[0]['scheme'],
+             'group': splits[0]['group'], 'leakage_policy': splits[0]['leakage_policy'],
+             'n_folds': len(splits), 'folds': names,
+             'test_seasons': [len(sp['partitions']['test']) for sp in splits],
+             'physical_overlap_test_seasons': [sp['physical_overlap_test_seasons'] for sp in splits]}
+    path = Path(artifact_root) / 'splits' / '{}.folds.json'.format(prefix)
+    path.write_text(json.dumps(index, indent=1))
+    return names

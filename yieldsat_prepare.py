@@ -198,6 +198,28 @@ def cmd_splits(args):
     print('wrote', path)
 
 
+def cmd_folds(args):
+    from dataset.yieldsat_splits import (
+        PAPER_PAIRS, load_field_table, make_paper_folds, parse_pair, save_folds)
+    pairs = args.pairs or [p for p in PAPER_PAIRS if parse_pair(p)[0] in args.countries]
+    table = load_field_table(args.artifact_root, args.source_root,
+                             sorted({parse_pair(p)[0] for p in pairs}),
+                             require_geometry=args.policy == 'strict' or args.group == 'physical')
+    for pair in pairs:
+        for protocol in args.protocols:
+            splits = make_paper_folds(table, pair, protocol, k=args.k, group=args.group,
+                                      policy=args.policy, seed=args.seed, val_frac=args.val_frac)
+            prefix = fold_prefix(pair, protocol, args.group, args.policy, args.seed, args.k)
+            save_folds(splits, args.artifact_root, prefix)
+            print(prefix, len(splits), 'folds; physical overlap (test seasons):',
+                  sum(sp['physical_overlap_test_seasons'] for sp in splits))
+
+
+def fold_prefix(pair, protocol, group, policy, seed, k=10):
+    name = {'cv': 'cv{}'.format(k), 'loro': 'loro', 'loyo': 'loyo'}[protocol]
+    return 'paper_{}_{}_{}_{}_s{}'.format(name, pair, group if protocol == 'cv' else 'na', policy, seed)
+
+
 def main():
     parser = argparse.ArgumentParser('YieldSAT preparation')
     sub = parser.add_subparsers(dest='cmd', required=True)
@@ -229,6 +251,19 @@ def main():
     p = sub.add_parser('stats', help='rebuild per-field statistics from an existing cache')
     _common(p)
     p.set_defaults(func=cmd_stats)
+
+    p = sub.add_parser('folds', help='PC-01 paper-compatible fold manifests per country-crop pair')
+    _common(p)
+    p.add_argument('--pairs', nargs='+', default=None,
+                   help='e.g. GER-R ARG-S (default: all paper pairs of --countries)')
+    p.add_argument('--protocols', nargs='+', default=['cv', 'loro', 'loyo'],
+                   choices=['cv', 'loro', 'loyo'])
+    p.add_argument('--k', type=int, default=10)
+    p.add_argument('--group', default='season', choices=['season', 'physical'])
+    p.add_argument('--policy', default='paper', choices=['paper', 'strict'])
+    p.add_argument('--val_frac', type=float, default=0.1)
+    p.add_argument('--seed', type=int, default=0)
+    p.set_defaults(func=cmd_folds)
 
     p = sub.add_parser('semantics', help='YS-02 unit/aggregation evidence from the cache')
     _common(p)
