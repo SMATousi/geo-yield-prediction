@@ -45,6 +45,7 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 | [architecture.md](./architecture.md) | You are writing or reviewing code. Module map, tensor contracts, data flow, and where the two systems divide. §9 gives the exact YieldSAT point-model architecture used for all reported runs. |
 | [data_contract.md](./data_contract.md) | Contract-branch index plus existing flat-file demo-loader layout, masks and limitations. |
 | [yieldsat_data_contract.md](./yieldsat_data_contract.md) | Alternative YieldSAT contract for Argentina, Brazil, Germany and Uruguay: schemas, country-specific decoding, YS-01–YS-10 tasks, and (§7) the implementation log with audits, splits and real-data results. |
+| [yieldsat-image-training.md](./yieldsat-image-training.md) | 64×64 same-field-season YieldSAT image dataset: non-overlapping tiling, ≥50% valid pixels, stored tensors, provenance and build/verification plan. |
 | [yieldsat_paper_comparison.md](./yieldsat_paper_comparison.md) | Plan (PC-01–PC-08) for evaluating on the YieldSAT paper's CV10/LORO/LOYO per-crop protocol, with open protocol questions and reporting rules. |
 | [yieldsat_cluster_runs.md](./yieldsat_cluster_runs.md) | Running the full YieldSAT suite on a GPU cluster: suites, plans, jobs (country–crop pair shards), shared data layout, W&B logging, submission and runtime estimate. |
 | [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
