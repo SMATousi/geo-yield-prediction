@@ -422,3 +422,42 @@ A10s and 3090s were busy.
 - Utilization: `status --min_util 80`.
 - Stop: `kubectl delete job smatousi-yieldsat-before-full-a10 smatousi-yieldsat-before-full-rtx3090`.
   Resubmitting resumes, because finished runs and jobs are skipped.
+
+### 12.1 Operations log (2026-09-30)
+
+- **Faulty-GPU drain (fixed in `21ecf5a`).** One A10 pod (`hcc-nrp-shor-c6017`)
+  failed every run within ~1 s ("CUDA error: an illegal memory access") and
+  closed 73 jobs within an hour. Pools now:
+  - run a real forward/backward health check before each job;
+  - stop after 3 consecutive fast failures (releasing the claim and recording
+    the GPU under `state/bad_gpus/`);
+  - retry failed jobs up to 3 attempts.
+
+  The first pod on the fixed code re-opened all 73 jobs.
+- **Node losses.** 15 RTX 3090 pods were evicted together by the taint manager
+  (node unhealthy; pods show `ContainerStatusUnknown`). Their claims go stale
+  after 30 min and are taken over.
+- **Health check in action.** 27 A10 pods exited at the entry GPU check before
+  claiming any work: 18 on `gpu-18.nrp.mghpcc.org` ("CUDA not available") and 9
+  on `hcc-nrp-shor-c6017`.
+- **Progress after ~9 h.** 385/3,546 runs finished (231 A10, 155 RTX 3090),
+  median run 63 min, and all 32 pods running.
+- **Extra GPU types.**
+  - RTX 4090 with 5 CPUs reached only 72% mean utilization (66% of samples
+    ≥ 80%) at 4 runs, which misses the target; it needs ≥ 7 CPUs.
+  - L40 never scheduled in 8 h.
+  - RTX A4000 nodes have 1.8 CPUs per GPU: excluded.
+- **Nautilus utilization flag.**
+  - The admission webhook `job.nrp-nautilus.io` rejects new or patched Jobs:
+    "Your pods resources utilization is too low".
+  - Cause: CPU and memory **requests** far above use. The A10 pods used 5.0 of
+    16 CPU and 8.4 of 48 GiB; the RTX 3090 pods 3.4 of 6 CPU and 7.6 of
+    24 GiB. GPU utilization was 88–96%.
+  - Right-sized pools are rendered in `cluster/nautilus/before_full_pools_v2.yaml`:
+    A10 7 CPU / 16 GiB, RTX 3090 5 CPU / 12 GiB, 1 loader worker per run, bad
+    nodes excluded.
+  - Decision (user): keep the current pools running and submit v2 once the
+    account flag clears (checked with `kubectl apply --dry-run=server`).
+- **Lesson.** Size pod requests from measured `kubectl top pods` use, not only
+  from throughput calibration. Nautilus checks CPU and memory efficiency, not
+  just GPU.
