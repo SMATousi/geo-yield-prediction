@@ -357,3 +357,68 @@ e.g. variant D is about 32 h on 16 A10s.
 cluster/nautilus/before_full_job.yaml`). This awaits the budget/seed decision
 (§8) and A10 availability. With `parallelism: 16` and A10-only affinity, pods
 queue until A10s free up; adding A6000 (faster) to the affinity shortens queueing.
+
+## 12. 32-GPU submission: A10 + RTX 3090 worker pools, ≥ 80% GPU utilization (2026-09-30)
+
+**Requirement.** Use A10 and RTX 3090 GPUs (32 in total), keeping GPU
+utilization above 80%.
+
+**Measurement.** `yieldsat_cluster.py run/pool` samples `nvidia-smi` every
+10 s. Each job writes `state/job_<i>.gpu.json` with the mean utilization, the
+fraction of samples ≥ 80%, peak memory, the final concurrency and any
+adaptations. `status --min_util 80` lists jobs below target.
+
+**Adaptive concurrency.** With `target_gpu_util: 80`, a job adds one
+concurrent run whenever utilization over the last minute is below 80%, up to
+`max_runs_per_gpu` and while GPU memory is below 85%.
+
+**Calibration** (GER-R CV fold, S2+ADM, batch 512, 2.3 M samples per run, 8
+queued runs):
+
+| GPU | Pod | Runs | Mean util | Samples ≥ 80% | Per-GPU throughput |
+|---|---|---|---|---|---|
+| A10 | 16 CPU / 48 GiB | 4 (no adaptation needed) | **96%** | 96% | ~27.7 k samples/s |
+| RTX 3090 | 6 CPU / 24 GiB | 2 → 3 (adapted at 71%) | **88%** | 89% | ~34 k samples/s |
+| RTX 3090 | 12 CPU / 32 GiB | – | never scheduled in 36 min (3090 nodes have ~3.5 CPUs per GPU) | – | – |
+
+**The training recipe is identical on both GPU types** (batch 512, lr 1e-3,
+same budget). Larger-batch variants that would need less CPU were not adopted:
+they would make results depend on the GPU a fold lands on. Only pod shape and
+concurrency differ per type, and neither changes the training trajectory (the
+sampler runs in the main process).
+
+**Worker pools.** An Indexed Job has a single pod shape, so the suite runs as
+two Jobs sharing one queue (`cluster/nautilus/before_full_pools.yaml`, rendered
+by `yieldsat_cluster.py pools`):
+
+| Pool | GPU | Pods | Pod shape | Concurrency |
+|---|---|---|---|---|
+| `a10` | NVIDIA-A10 | 16 | 16 CPU / 48 GiB | 4 → 6 runs, 3 loader workers each |
+| `rtx3090` | NVIDIA-GeForce-RTX-3090 | 16 | 6 CPU / 24 GiB | 3 → 5 runs, 2 loader workers each |
+
+- **Claiming.** Each pod repeatedly claims the largest unclaimed job with an
+  atomic `mkdir` of `state/claims/job_<i>`, runs it and marks it `done`, until
+  the queue is empty. Faster GPUs therefore take more jobs.
+- **Recovery.** Claims carry a 1-minute heartbeat. A claim without `done` whose
+  heartbeat is older than 30 min is taken over by exactly one pod, and finished
+  runs are skipped through their markers.
+- **Faulty nodes.** `hcc-chase-shor-c4715.unl.edu` and
+  `ry-gpu-09.sdsc.optiputer.net` rejected our pods with `UnexpectedAdmissionError`
+  ("GPU is lost"; the scheduler counts those GPUs as free). They are excluded via
+  `kubernetes.io/hostname NotIn`, and `backoffLimit` is 8× the pod count because
+  these rejections happen before any work starts. Add further bad nodes with
+  `--exclude_nodes`.
+
+**Estimate.** Using A10 throughput for all 32 GPUs, `before_full` is 3,546 runs
+in 341 jobs, about 1,365 GPU-hours, **about 44 h wall clock on 32 GPUs**. The
+RTX 3090s are ~20% faster, so the real figure is likely a few hours less. It
+depends on GPU availability: at submission (2026-09-30) the pods queued while
+A10s and 3090s were busy.
+
+**Operations.**
+- Progress: `yieldsat_cluster.py status --plan <PVC plan>`. It needs the PVC,
+  e.g. via `pvc_inspect_pod.yaml` with the image; W&B shows the same runs
+  grouped by cell.
+- Utilization: `status --min_util 80`.
+- Stop: `kubectl delete job smatousi-yieldsat-before-full-a10 smatousi-yieldsat-before-full-rtx3090`.
+  Resubmitting resumes, because finished runs and jobs are skipped.
