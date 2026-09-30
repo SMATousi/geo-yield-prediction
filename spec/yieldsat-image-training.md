@@ -1,6 +1,7 @@
-# YieldSAT 64×64 Image Dataset
+# YieldSAT 64×64 Image Dataset and Training
 
-**Status:** Dataset built and verified, 2026-09-30. The image dataset is
+**Status:** Dataset built and verified, 2026-09-30; image-model training is
+specified below but not implemented. The image dataset is
 derived from the implemented [YieldSAT point contract](./yieldsat_data_contract.md).
 Its source is the four read-only preprocessed country NetCDF files; its output root
 is `/home1/pupil/SMATousi/YieldSAT-Image` by default. This dataset does not restore
@@ -72,7 +73,130 @@ An image trainer must explicitly choose how to encode `(H,W,T,C)` and static
 layers, preserve pixel/feature/time masks and prevent masked cells from affecting
 losses. The existing point model is not silently a 64×64 image model.
 
-## Action plan and acceptance
+## Image training contract (planned)
+
+**Task.** Predict yield in t/ha for each eligible 10 m cell of a 64×64
+field-season tile, using sensor observations available by a declared cutoff
+and optional known-in-advance crop identity. Output is a 64×64 map, not a
+single tile value. These are design requirements, not a completed experiment.
+
+### Inputs and separate encoders
+
+The default satellite backbone is provisionally [Meta DINOv3 ViT-L/16
+pretrained on SAT-493M](https://huggingface.co/facebook/dinov3-vitl16-pretrain-sat493m),
+using [Meta's official implementation and preprocessing
+contract](https://github.com/facebookresearch/dinov3). Pin the exact checkpoint
+revision/hash, loader version, license and preprocessing in each run manifest.
+Use spatial patch tokens, never only the global/class token. This checkpoint
+expects three optical channels; it is not a pretrained 12-band Sentinel-2
+encoder. Keep the model choice configurable so a different satellite DINO
+checkpoint can be adopted with an explicit channel contract.
+
+| Stream | Stored channels | Planned encoder and output |
+|---|---|---|
+| RGB optical | S2 B04/B03/B02 from `temporal`, in red/green/blue order | DINOv3 SAT ViT-L/16 on selected observations; retain spatial patch tokens and project to fusion width. |
+| Additional S2 bands | B01, B05, B06, B07, B08, B8A, B09, B11, B12 | Separate learned spectral encoder with missing-band masks; fuse date-aligned spatial features with DINO tokens. This preserves all 12 bands without altering the pretrained RGB input layer. |
+| Weather | `temp_max`, `temp_mean`, `temp_min`, `total_prec` across 24 slots | Separate masked temporal encoder with interval/date features; broadcast or cross-attend its summary to spatial cells. Audit whether coarse upstream weather varies meaningfully within a tile before using a spatial weather CNN. |
+| Elevation and terrain | DEM (1); aspect, curvature, slope, TWI (4) | Independent DEM and terrain masked spatial encoders; encode aspect cyclically. Track coarse native resolution despite the stored 10 m grid. |
+| Soil | Eight properties × six depth intervals (48) | Depth-aware soil encoder per cell, then a lightweight spatial encoder; preserve depth/property masks. Soil uncertainty (48) is an optional reliability input/ablation, not a default feature. Track its coarse native resolution. |
+
+Trainable non-DINO encoders should emit a common fusion width (initial design:
+128–256). The input API must carry independent per-feature, per-cell and
+per-time validity. Crop identity may be used only when known at the forecast
+cutoff. Coordinate channels, `source_row`, target values, field-level yields
+and harvest outcome metadata are excluded. Stored `valid_pixel` depends on
+finite yield and is **loss/evaluation-side only**; construct model sensor masks
+from feature finiteness and dates, and mask padded/outside-field cells
+separately. Audit whether source-row occupancy reveals target availability
+before claiming whole-field deployment.
+
+### Optical observations and spatial fusion
+
+Use raw decoded S2 bands from HDF5, never percentile-stretched preview TIFFs.
+Establish how YieldSAT's decoded S2 values map to the checkpoint's expected
+RGB `[0,1]` scale before training; do not silently clip or treat raw reflectance
+as display bytes. Meta's SAT-493M transform uses RGB mean
+`(0.430, 0.411, 0.296)` and standard deviation `(0.213, 0.156, 0.143)` after
+scaling to float. Persist the exact conversion and fit any extra statistics
+only on training groups. Fill missing optical channels after creating masks, with
+a documented neutral value compatible with checkpoint normalization. DINO
+itself has no nodata mask, so carry optical coverage as a token/cell mask
+through fusion and assess partially observed patches. Do not treat upscaled
+source pixels as independent high-resolution observations.
+
+Choose at most four eligible optical observations per tile as an initial memory
+budget, spread through the pre-cutoff season using coverage and dates, never
+yield. Training can sample within fixed seasonal bins; validation/test choice
+must be deterministic. Group cells by actual acquisition date or explicitly
+verify slot-date coherence: one slot index does not guarantee that neighbors
+were observed on one day. Keep per-pixel time masks and date features (days
+since seeding and cyclical day of year). If no optical observation is usable,
+emit a missing-optical token while other streams remain available.
+
+A 64×64 image yields only a 4×4 token grid with a `/16` DINO backbone. Fuse
+date-aligned DINO and extra-band features with weather, DEM, terrain and soil
+features at a spatial token grid, retaining modality and missingness masks.
+Use a trainable multiscale decoder (for example FPN/U-Net style) with genuine
+64×64 optical/static skip features to predict each cell. Upsampling DINO's
+4×4 tokens alone does not recover 10 m detail. Ablate fusion/decoder choice;
+the point Perceiver informs the design, but its scalar head and point-only
+stream summaries are not an image model.
+
+### Training and evaluation
+
+Use YieldSAT's grouped physical-field/farm/block/country split artifacts;
+keep all years and tiles from the same held-out physical ground in one split.
+Check neighboring tiles and cross-farm aliases. Fit input and target
+normalization on training groups only. Record the forecast cutoff and exclude
+post-cutoff observations. Apply supervised loss only to finite target cells.
+Report pixel RMSE/MAE in t/ha plus field-balanced, per-country and per-crop
+metrics. Aggregate loss per tile/field so large fields do not dominate merely
+by pixel count. Inference output coverage must not depend on the target mask.
+Preserve the point contract's rule that each row's first dated weather interval
+is invalid because its interval start is unknown.
+
+Start with frozen DINO features while training other encoders, fusion and
+decoder. Cache frozen features only with a key containing checkpoint,
+preprocessing, date selection and split, and never holdout labels. If a memory
+pilot supports it, compare selectively unfrozen final DINO blocks with a
+lower backbone learning rate, mixed precision and activation checkpointing.
+First smoke-test checkpoint loading, 64×64 positional handling, variable
+missingness, forward/backward and peak memory on the available GPU. Choose
+batch size and observation count from that measurement, not point-model values.
+
+Compare with the point model on the **same held-out physical fields and cells**,
+with matching cutoffs and label budgets. Required ablations: pretrained versus
+randomly initialized optical backbone; frozen versus partial fine-tuning;
+RGB versus RGB plus nine-band branch; optical/weather/terrain/soil removals;
+spatial context versus per-cell prediction. Distinguish DINO's external optical
+pretraining from optional YieldSAT sensor-only or [expert relationship
+pretraining](./knowledge_pretraining.md). The yield head never receives text
+at inference. Report size, GPU memory, throughput, seeds, split IDs and
+uncertainty in improvements.
+
+### Implementation tasks and acceptance
+
+1. **YI-01 — Data audit and loader:** implement image HDF5 loader with grouped
+   splits, cutoff, exact band maps, independent sensor/target masks, train-only
+   normalization and deterministic evaluation dates. Verify source manifest
+   and date coherence across the corpus.
+2. **YI-02 — Optical backbone:** pin/load satellite DINO; reproduce RGB
+   preprocessing and validate 64×64 patch-token output on real tiles. Add the
+   nine-band spectral branch and missingness handling. Reject a run if the
+   checkpoint/channel contract mismatches.
+3. **YI-03 — Other encoders and dense fusion:** add masked weather, DEM,
+   terrain and depth-aware soil encoders, date fusion, spatial decoder and
+   64×64 yield head. Verify shapes and gradients under missing modalities and
+   padded cells.
+4. **YI-04 — Training:** implement frozen-backbone supervised training,
+   optional partial fine-tuning, mixed precision, field-balanced sampling,
+   checkpoint provenance and resumable configuration. Profile GPU and I/O.
+5. **YI-05 — Evaluation:** enforce group-leakage checks and matched point/image
+   holdouts; publish t/ha metrics, map readback and the ablations above.
+   Acceptance requires an end-to-end run on all four countries with declared
+   holdouts, not only a loader or visually plausible map.
+
+## Dataset construction plan and acceptance
 
 1. **Validate sources:** compare prepared index/cache fingerprints against each
    original NetCDF; use the verified geometry table; check source-size, field
@@ -88,10 +212,8 @@ losses. The existing point model is not silently a 64×64 image model.
    field/year consistency and ≥2,048 valid pixels. Check a bounded sample against
    the original cache and the shifted geometry. Publish a final manifest with
    totals and source fingerprints only after all selected countries pass.
-5. **Train later:** add an explicit image loader and image/spatial model path with
-   grouped splits, pre-harvest cutoff, train-only stats and no target leakage.
-   Compare point and image modes on the same held-out physical fields. This
-   construction task does not claim image-model training is already implemented.
+5. **Train later:** implement YI-01–YI-05 above. Image-model training was not
+   part of this dataset construction task.
 
 Build command (using the existing prepared artifacts):
 
@@ -157,3 +279,33 @@ The published `samples.json` lists exact country/patch IDs, chosen slots and TIF
 paths. Readback verified all 24 TIFFs against the image dataset, including 64×64
 shape, CRS/affine, RGB alpha, yield mask and target pixel values. TIFFs are stored
 outside Git; the exporter and this documentation are committed.
+
+## Full temporal preview sequences — 2026-09-30
+
+`yieldsat_export_temporal_sequences.py` selects one of the three existing
+sample tiles per country, prioritizing the number of nonempty optical slots
+then total dated RGB coverage. It writes all 24 slot positions as georeferenced
+RGBA GeoTIFFs and a labeled `contact_sheet.png` under
+`YieldSAT-Image-Samples/TemporalSequences/<country>/`. RGB uses one display-only
+2nd–98th percentile stretch per band across that tile's full sequence, allowing
+visual comparison between its dates. Each TIFF retains the slot index, date
+range, valid RGB count, field and year as tags. `sequences.json` records the
+selection and metadata. If a slot has no dated RGB values, its TIFF is entirely
+transparent and the sheet explicitly labels it “No RGB observation”; no image
+is synthesized. A slot can contain more than one acquisition date across cells.
+
+| Country | Patch | Slots with dated RGB |
+|---|---:|---:|
+| Argentina | 508 | 9 of 24 |
+| Brazil | 810 | 8 of 24 |
+| Germany | 64 | 9 of 24 |
+| Uruguay | 75 | 7 of 24 |
+
+```bash
+.conda/phase0/bin/python -B yieldsat_export_temporal_sequences.py
+```
+
+The published output has 96 slot GeoTIFFs and four contact sheets. Readback
+verified file counts, 64×64 shape, alpha coverage and date tags against
+`sequences.json`. These are previews of the RGB part of the stored time series;
+the HDF5 retains all 12 optical bands, weather and per-cell timestamps.

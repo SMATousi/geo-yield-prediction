@@ -184,6 +184,15 @@ Its already merged grids use separate requirements; this is not LI completion.
 YieldSAT pilot acceptance and limitations are in the YieldSAT contract. Retain the
 original downloader/native-grid exit criteria below independently.
 
+The [YieldSAT 64×64 image training branch](./yieldsat-image-training.md)
+continues the built four-country image dataset with planned **YI-01–YI-05**:
+audit/load the images with grouped splits and cutoffs; integrate a pinned
+satellite-pretrained DINO optical backbone and separate nine-band S2 encoder;
+add weather, DEM, terrain and soil encoders with spatial fusion and a dense
+yield head; train with a frozen-then-optionally-partial backbone protocol; and
+evaluate on held-out physical fields against the point model. These tasks are
+specified, not yet implemented or trained.
+
 **Exit:** real pretraining and supervised fine-tuning run through the intended
 handoff, with an honest spatially held-out yield RMSE. Full-layer compliance also
 requires adapter/contract coverage for every listed source. Missing upstream AOI
