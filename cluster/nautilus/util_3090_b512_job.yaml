@@ -22,6 +22,10 @@ spec:
                 operator: In
                 values:
                 - NVIDIA-GeForce-RTX-3090
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
       containers:
       - name: yieldsat
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest
