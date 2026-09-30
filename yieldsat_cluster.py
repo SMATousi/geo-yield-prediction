@@ -386,8 +386,55 @@ def _finish(run, proc, log, out, plan_dir, results_root, keep_local):
     return False
 
 
+class GpuMonitor:
+    """Samples ``nvidia-smi`` every ``interval`` s in a background process
+    (utilization %, memory used/total MiB) into ``path``."""
+
+    def __init__(self, path, interval=10):
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.proc = None
+        if shutil.which('nvidia-smi'):
+            self.fh = open(self.path, 'w')
+            self.proc = subprocess.Popen(
+                ['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total',
+                 '--format=csv,noheader,nounits', '-l', str(interval)],
+                stdout=self.fh, stderr=subprocess.DEVNULL)
+
+    def samples(self):
+        if self.proc is None or not self.path.exists():
+            return []
+        out = []
+        for line in self.path.read_text().splitlines():
+            try:
+                u, used, total = (float(x) for x in line.split(',')[:3])
+                out.append((u, used, total))
+            except ValueError:
+                continue
+        return out
+
+    def recent_util(self, n):
+        s = self.samples()[-n:]
+        return sum(x[0] for x in s) / len(s) if s else None
+
+    def memory_fraction(self):
+        s = self.samples()
+        return s[-1][1] / s[-1][2] if s else 0.0
+
+    def stop(self):
+        if self.proc is not None:
+            self.proc.terminate()
+            self.proc.wait(timeout=10)
+            self.fh.close()
+
+
 def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=None,
             runs_per_gpu=None, use_wandb=True, keep_local=False, dry_run=False):
+    """Run one planned job. Concurrency starts at ``runs_per_gpu`` and, if the
+    suite sets ``target_gpu_util`` (%), grows by one run whenever the mean GPU
+    utilization over the last ``adapt_window`` samples is below target, up to
+    ``max_runs_per_gpu`` and while GPU memory stays below 85%. Utilization is
+    recorded per job in ``state/job_<index>.gpu.json``."""
     plan, runs = _load_plan(plan_dir)
     if not 0 <= job_index < plan['n_jobs']:
         raise SystemExit('job index {} outside the plan (n_jobs={})'.format(job_index, plan['n_jobs']))
@@ -402,23 +449,56 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
     if local_root:
         artifact_root = stage_local(plan, job, runs, local_root)
     work_dir = work_dir or (Path(local_root) / 'work' if local_root else Path(plan_dir) / 'work')
-    k = runs_per_gpu or plan['suite']['runs_per_gpu']
+    suite = plan['suite']
+    k = runs_per_gpu or suite['runs_per_gpu']
+    target = suite.get('target_gpu_util')
+    k_max = max(k, suite.get('max_runs_per_gpu', k))
+    window = int(suite.get('adapt_window', 6))              # samples of 10 s
+    monitor = GpuMonitor(Path(work_dir) / 'gpu_util_job{}.csv'.format(job_index))
+    last_adapt = time.time()
+    t_start = time.time()
     pending, running, failures = list(todo), [], 0
-    while pending or running:
-        while pending and len(running) < k:
-            r = pending.pop(0)
-            proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb)
-            running.append((r, proc, log, out, time.time()))
-        time.sleep(5)
-        for item in list(running):
-            r, proc, log, out, t0 = item
-            if proc.poll() is None:
-                continue
-            running.remove(item)
-            ok = _finish(r, proc, log, out, plan_dir, results_root, keep_local)
-            failures += 0 if ok else 1
-            print('{} {} ({:.0f} s)'.format('ok' if ok else 'FAILED', r['name'], time.time() - t0),
-                  flush=True)
+    trace = []
+    try:
+        while pending or running:
+            while pending and len(running) < k:
+                r = pending.pop(0)
+                proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb)
+                running.append((r, proc, log, out, time.time()))
+            time.sleep(5)
+            for item in list(running):
+                r, proc, log, out, t0 = item
+                if proc.poll() is None:
+                    continue
+                running.remove(item)
+                ok = _finish(r, proc, log, out, plan_dir, results_root, keep_local)
+                failures += 0 if ok else 1
+                print('{} {} ({:.0f} s)'.format('ok' if ok else 'FAILED', r['name'], time.time() - t0),
+                      flush=True)
+            # adaptive concurrency: only after runs are past start-up
+            if target and pending and k < k_max and time.time() - last_adapt > 10 * window + 60:
+                util = monitor.recent_util(window)
+                if util is not None and util < target and monitor.memory_fraction() < 0.85:
+                    k += 1
+                    last_adapt = time.time()
+                    print('GPU util {:.0f}% < {}%: concurrency -> {}'.format(util, target, k), flush=True)
+                    trace.append({'t': round(time.time() - t_start), 'util': round(util, 1), 'k': k})
+    finally:
+        monitor.stop()
+    samples = monitor.samples()
+    if samples:
+        # ignore the first minute (staging/start-up) when the job is long enough
+        steady = samples[6:] if len(samples) > 12 else samples
+        util = [x[0] for x in steady]
+        summary = {'job_index': job_index, 'pair': job['pair'], 'samples': len(util),
+                   'mean_util': round(sum(util) / len(util), 1),
+                   'frac_ge_80': round(sum(u >= 80 for u in util) / len(util), 3),
+                   'max_mem_frac': round(max(x[1] / x[2] for x in samples), 3),
+                   'final_concurrency': k, 'adaptations': trace, 'host': os.uname().nodename,
+                   'wall_seconds': round(time.time() - t_start)}
+        (Path(plan_dir) / 'state' / 'job_{}.gpu.json'.format(job_index)).write_text(json.dumps(summary))
+        print('GPU utilization: mean {:.0f}%, {:.0%} of samples >= 80% (concurrency {})'.format(
+            summary['mean_util'], summary['frac_ge_80'], k), flush=True)
     return 1 if failures else 0
 
 

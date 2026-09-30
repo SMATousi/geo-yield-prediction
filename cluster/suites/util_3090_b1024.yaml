@@ -1,0 +1,23 @@
+# GPU-utilization calibration (NVIDIA-GeForce-RTX-3090): batch 1024, 6 CPUs, concurrency 2 -> 4 at target 80%.
+suite: util_3090_b1024
+wandb: {project: yieldsat-cvpr27-smoke, entity: null}
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs: [GER-R]
+job_unit: pair
+runs_per_gpu: 2
+max_runs_per_gpu: 4
+target_gpu_util: 80
+num_workers: 2
+gpu_speed_factor: 0.3
+experiments:
+  - name: ours
+    model: ours
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2_adm]
+    seeds: [0, 1, 2, 3, 4, 5, 6, 7]
+    max_folds: 1
+    save_maps: 0
+    budget: {epochs: 3, steps_per_epoch: 750, batch_size: 1024, lr: 0.0014}
