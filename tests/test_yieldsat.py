@@ -7,6 +7,7 @@ row dictionary (as in Brazil), NaN slots and static repetition.
 
 import json
 import os
+import time
 
 import h5py
 import numpy as np
@@ -654,3 +655,41 @@ def test_cluster_job_runs_resumes_and_aggregates(corpus, tmp_path):
     aggs = list((tmp_path / 'res').glob('paper/*/*/*/*/aggregate.json'))
     assert len(aggs) == 2                                          # one per seed
     assert all(json.loads(a.read_text())['complete'] for a in aggs)
+
+
+def test_job_claims_are_exclusive_and_stale_claims_are_taken_over(tmp_path):
+    from yieldsat_cluster import JobClaims
+    (tmp_path / 'state').mkdir()
+    a = JobClaims(tmp_path, 'pod-a', stale_minutes=30)
+    b = JobClaims(tmp_path, 'pod-b', stale_minutes=30)
+    assert a.try_claim(0) and not b.try_claim(0)          # exclusive
+    a.finish(0, 0)
+    assert a.is_done(0) and not b.try_claim(0)             # done jobs are never reclaimed
+    assert a.try_claim(1)
+    hb = tmp_path / 'state' / 'claims' / 'job_1' / 'heartbeat'
+    old = time.time() - 3600
+    os.utime(hb, (old, old))
+    c = JobClaims(tmp_path, 'pod-c', stale_minutes=30)
+    assert b.try_claim(1) and not c.try_claim(1)           # one takeover wins
+
+
+def test_pool_workers_share_one_queue(corpus, tmp_path):
+    import argparse
+    import threading
+    import yieldsat_cluster as yc
+    root, art, _ = corpus
+    suite = _suite_file(tmp_path, root, art, pairs=['GER-R', 'GER-W'], job_unit='pair')
+    plan_dir = tmp_path / 'plan'
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(plan_dir), gpus=2))
+    codes = []
+    threads = [threading.Thread(target=lambda n=n: codes.append(yc.run_pool(
+        plan_dir, n, local_root=tmp_path / n, use_wandb=False))) for n in ('p1', 'p2')]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    plan, runs = yc._load_plan(plan_dir)
+    assert codes == [0, 0]
+    assert len(list((plan_dir / 'state').glob('*.done.json'))) == len(runs)
+    assert all((plan_dir / 'state' / 'claims' / 'job_{}'.format(i) / 'done').exists()
+               for i in range(plan['n_jobs']))

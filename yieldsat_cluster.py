@@ -429,7 +429,8 @@ class GpuMonitor:
 
 
 def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=None,
-            runs_per_gpu=None, use_wandb=True, keep_local=False, dry_run=False):
+            runs_per_gpu=None, use_wandb=True, keep_local=False, dry_run=False,
+            max_runs_per_gpu=None, num_workers=None, heartbeat=None):
     """Run one planned job. Concurrency starts at ``runs_per_gpu`` and, if the
     suite sets ``target_gpu_util`` (%), grows by one run whenever the mean GPU
     utilization over the last ``adapt_window`` samples is below target, up to
@@ -450,9 +451,11 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
         artifact_root = stage_local(plan, job, runs, local_root)
     work_dir = work_dir or (Path(local_root) / 'work' if local_root else Path(plan_dir) / 'work')
     suite = plan['suite']
+    if num_workers is not None:                  # pod-shape overrides (worker pools)
+        suite['num_workers'] = num_workers
     k = runs_per_gpu or suite['runs_per_gpu']
     target = suite.get('target_gpu_util')
-    k_max = max(k, suite.get('max_runs_per_gpu', k))
+    k_max = max(k, max_runs_per_gpu or suite.get('max_runs_per_gpu', k))
     window = int(suite.get('adapt_window', 6))              # samples of 10 s
     monitor = GpuMonitor(Path(work_dir) / 'gpu_util_job{}.csv'.format(job_index))
     last_adapt = time.time()
@@ -466,6 +469,8 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
                 proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb)
                 running.append((r, proc, log, out, time.time()))
             time.sleep(5)
+            if heartbeat is not None:
+                heartbeat()
             for item in list(running):
                 r, proc, log, out, t0 = item
                 if proc.poll() is None:
@@ -510,6 +515,94 @@ def cmd_run(a):
         sys.exit('no job index: pass --job_index or set JOB_COMPLETION_INDEX')
     sys.exit(run_job(a.plan, idx, a.local_root, a.work_dir, a.results_root, a.runs_per_gpu,
                      not a.no_wandb, a.keep_local, a.dry_run))
+
+
+# ---- worker pools: pods claim jobs from a shared queue ------------------------------
+
+class JobClaims:
+    """Atomic job claims on the shared volume: ``state/claims/job_<i>/`` is
+    created with ``mkdir`` (atomic on CephFS/NFS); the owner refreshes
+    ``heartbeat`` and writes ``done`` when finished. A claim whose heartbeat is
+    older than ``stale_minutes`` and has no ``done`` is taken over by exactly
+    one pod (atomic ``mkdir`` of ``takeover_<n>``); runs already finished are
+    skipped through their completion markers."""
+
+    def __init__(self, plan_dir, owner, stale_minutes=30):
+        self.root = Path(plan_dir) / 'state' / 'claims'
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.owner = owner
+        self.stale = stale_minutes * 60
+        self._last_beat = 0.0
+        self.current = None
+
+    def _dir(self, idx):
+        return self.root / 'job_{}'.format(idx)
+
+    def is_done(self, idx):
+        return (self._dir(idx) / 'done').exists()
+
+    def try_claim(self, idx):
+        d = self._dir(idx)
+        try:
+            d.mkdir()
+        except FileExistsError:
+            if (d / 'done').exists():
+                return False
+            hb = d / 'heartbeat'
+            age = time.time() - (hb.stat().st_mtime if hb.exists() else d.stat().st_mtime)
+            if age < self.stale:
+                return False
+            n = len(list(d.glob('takeover_*')))
+            try:
+                (d / 'takeover_{}'.format(n)).mkdir()
+            except FileExistsError:
+                return False
+        (d / 'owner').write_text('{} {}'.format(self.owner, time.strftime('%Y-%m-%dT%H:%M:%S')))
+        self.current = idx
+        self._last_beat = 0.0
+        self.beat()
+        return True
+
+    def beat(self):
+        if self.current is not None and time.time() - self._last_beat > 60:
+            (self._dir(self.current) / 'heartbeat').write_text(str(time.time()))
+            self._last_beat = time.time()
+
+    def finish(self, idx, rc):
+        (self._dir(idx) / 'done').write_text(json.dumps({'owner': self.owner, 'rc': rc,
+                                                         'finished': time.strftime('%Y-%m-%dT%H:%M:%S')}))
+        self.current = None
+
+
+def run_pool(plan_dir, owner, **kw):
+    """Claim and run jobs (longest first) until the queue is exhausted."""
+    plan, _ = _load_plan(plan_dir)
+    claims = JobClaims(plan_dir, owner, kw.pop('stale_minutes', 30))
+    order = sorted(range(plan['n_jobs']), key=lambda i: -plan['jobs'][i]['est_hours'])
+    rc, ran = 0, 0
+    while True:
+        claimed = None
+        for idx in order:
+            if not claims.is_done(idx) and claims.try_claim(idx):
+                claimed = idx
+                break
+        if claimed is None:
+            break
+        code = run_job(plan_dir, claimed, heartbeat=claims.beat, **kw)
+        claims.finish(claimed, code)
+        rc |= code
+        ran += 1
+    print('pool worker {} finished: {} jobs run, queue empty'.format(owner, ran), flush=True)
+    return rc
+
+
+def cmd_pool(a):
+    owner = os.environ.get('HOSTNAME', os.uname().nodename)
+    sys.exit(run_pool(a.plan, owner, local_root=a.local_root, work_dir=a.work_dir,
+                      results_root=a.results_root, runs_per_gpu=a.runs_per_gpu,
+                      max_runs_per_gpu=a.max_runs_per_gpu, num_workers=a.num_workers,
+                      use_wandb=not a.no_wandb, keep_local=a.keep_local,
+                      stale_minutes=a.stale_minutes))
 
 
 def cmd_worker(a):
@@ -642,6 +735,41 @@ def render_k8s(suite_path, plan_name, n_jobs, parallelism, image, pvc, secret, g
                             {'name': 'dshm', 'emptyDir': {'medium': 'Memory', 'sizeLimit': '8Gi'}}]}}}}
 
 
+def render_pool(suite_path, plan_name, pool_name, pods, gpus, cpu, memory_gi, runs_per_gpu,
+                max_runs_per_gpu, num_workers, exclude_nodes=(), **kw):
+    """A worker pool: ``pods`` identical pods of one GPU type, each claiming
+    jobs from the plan's shared queue until it is empty."""
+    m = render_k8s(suite_path, plan_name, pods, pods, kw.pop('image'), kw.pop('pvc'), kw.pop('secret'),
+                   gpus, cpu=cpu, memory_gi=memory_gi, exclude_nodes=exclude_nodes, **kw)
+    m['metadata']['name'] = '{}-{}'.format(m['metadata']['name'], pool_name)
+    spec = m['spec']
+    for key in ('completionMode', 'backoffLimitPerIndex', 'maxFailedIndexes'):
+        spec.pop(key, None)
+    spec['backoffLimit'] = pods * 8          # admission rejections on faulty nodes
+    c = spec['template']['spec']['containers'][0]
+    c['args'] = [c['args'][0].replace(
+        'run_in_pod.sh run --plan', 'run_in_pod.sh pool --plan').replace(
+        '--local_root', '--runs_per_gpu {} --max_runs_per_gpu {} --num_workers {} --local_root'.format(
+            runs_per_gpu, max_runs_per_gpu, num_workers))]
+    return m
+
+
+def cmd_pools(a):
+    """Render one Job per worker pool (e.g. A10 and RTX 3090 shapes)."""
+    docs = []
+    for spec in a.pool:
+        name, gpu, pods, cpu, mem, k, kmax, workers = spec.split(':')
+        docs.append(render_pool(a.suite, a.plan_name, name, int(pods), gpu.split(','), int(cpu),
+                                int(mem), int(k), int(kmax), int(workers),
+                                exclude_nodes=a.exclude_nodes, image=a.image, pvc=a.pvc,
+                                secret=a.secret, git_ref=a.git_ref))
+    text = '# generated by yieldsat_cluster.py pools; no credentials inside\n' + '---\n'.join(
+        yaml.safe_dump(d, sort_keys=False, width=200) for d in docs)
+    Path(a.out).write_text(text)
+    print('wrote', a.out, 'with', len(docs), 'pools:',
+          ', '.join('{} x {}'.format(d['spec']['parallelism'], d['metadata']['name']) for d in docs))
+
+
 def cmd_k8s(a):
     plan, _ = _load_plan(a.plan)
     manifest = render_k8s(a.suite, a.plan_name or Path(a.plan).name, plan['n_jobs'], a.parallelism,
@@ -664,14 +792,18 @@ def main():
     s.add_argument('--out', required=True, help='plan directory on the shared volume')
     s.add_argument('--gpus', type=int, default=16)
     s.set_defaults(func=cmd_plan)
-    for name, fn in (('run', cmd_run), ('worker', cmd_worker)):
+    for name, fn in (('run', cmd_run), ('worker', cmd_worker), ('pool', cmd_pool)):
         s = sub.add_parser(name)
         s.add_argument('--plan', required=True)
         if name == 'run':
             s.add_argument('--job_index', type=int, default=None)
-        else:
+        elif name == 'worker':
             s.add_argument('--worker_index', type=int, required=True)
             s.add_argument('--num_workers', type=int, required=True)
+        else:
+            s.add_argument('--max_runs_per_gpu', type=int, default=None)
+            s.add_argument('--num_workers', type=int, default=None, help='loader workers per run')
+            s.add_argument('--stale_minutes', type=float, default=30)
         s.add_argument('--local_root', default=os.environ.get('YIELDSAT_LOCAL_ROOT'),
                        help='pod-local scratch; the country cache is staged here')
         s.add_argument('--work_dir', default=None)
@@ -698,6 +830,18 @@ def main():
                    help='hostnames to avoid (e.g. nodes with failed GPUs)')
     s.add_argument('--out', default=None)
     s.set_defaults(func=cmd_k8s)
+    s = sub.add_parser('pools', help='render worker-pool Jobs sharing the plan queue')
+    s.add_argument('--suite', required=True)
+    s.add_argument('--plan_name', required=True)
+    s.add_argument('--pool', nargs='+', required=True,
+                   help='name:GPU[,GPU]:pods:cpu:memGi:runs:max_runs:loader_workers')
+    s.add_argument('--image', default='gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest')
+    s.add_argument('--pvc', default='ali-vol-1tera')
+    s.add_argument('--secret', default='smatousi-wandb')
+    s.add_argument('--git_ref', default='main')
+    s.add_argument('--exclude_nodes', nargs='*', default=[])
+    s.add_argument('--out', required=True)
+    s.set_defaults(func=cmd_pools)
     s = sub.add_parser('status')
     s.add_argument('--plan', required=True)
     s.add_argument('--min_util', type=float, default=80.0)

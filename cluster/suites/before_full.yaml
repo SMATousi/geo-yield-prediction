@@ -11,8 +11,13 @@ data:
 pairs: all
 job_unit: pair_shard          # pair = one job per country-crop; pair_shard splits big pairs
 target_job_hours: 4.0         # shard size target for pair_shard
-runs_per_gpu: 4               # concurrent runs per A10 (measured best: 4 runs -> 27.7k samples/s/GPU)
-num_workers: 3                # DataLoader workers per run (16 CPUs per pod)
+runs_per_gpu: 4               # starting concurrency (worker pools override per GPU type)
+max_runs_per_gpu: 6           # adaptive ceiling
+target_gpu_util: 80           # add a run whenever GPU utilization < 80% (and memory allows)
+num_workers: 3                # DataLoader workers per run
+# Worker pools (spec §12): A10 16 CPU/48 GiB, 4->6 runs (measured 96% util);
+# RTX 3090 6 CPU/24 GiB, 3->5 runs (measured 88% util, adaptive from 2).
+# The training recipe (batch 512, lr 1e-3) is identical on both GPU types.
 # Measured on Nautilus A10 pods (16 CPU), 2026-09-29, ARG-S S2+ADM, 4 concurrent
 # runs: 6.93k samples/s per run for our model (= 0.226 x the RTX 3090 single-run
 # reference), test inference ~43k cells/s per run; the paper LSTM ran at 41k
