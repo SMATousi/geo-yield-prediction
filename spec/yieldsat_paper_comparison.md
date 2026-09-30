@@ -291,3 +291,41 @@ Throughput on the RTX 3090 with three concurrent runs:
 - larger pairs keep the same per-fold step budget unless `--steps_per_epoch 0`
   (a full pass per epoch) is used, which scales with pair size (ARG-S ≈ 2.8 M
   training cells ≈ 5,500 steps per epoch at batch 512).
+
+### 2026-09-30 — PC-Q2 revised: LORO regions for Argentina are provinces
+
+Partial `before_full` results showed farm-level LORO per-fold R² far below the
+paper (ARG-S S2 pixel R² −0.19 vs 0.55), while our RMSE was equal or better
+(0.98 vs 1.03). That points to much smaller target variance per test fold, i.e.
+smaller regions than the paper's.
+
+The paper's Appendix A.2.3 analyses **8 regions** for Argentine soybean
+("Region 0 … 7"). The raw metadata gives exactly 8 first-level administrative
+units (`adm_unit0`, provinces) for ARG-S, against 44 farms. So "a set of fields
+belonging to a single farmer or to a local data provider" corresponds, for
+Argentina, to provinces rather than `farm_identifier`.
+
+| Pair | Farms | Provinces |
+|---|---|---|
+| ARG-S | 44 | 8 |
+| ARG-C | 29 | 6 |
+| ARG-W | 21 | 6 |
+| URG-S | 10 | 10 |
+| BRA-S | 9 | 1 |
+| GER-R | 6 | 2 |
+
+For Uruguay, Brazil and Germany the farm grouping is kept: provinces there
+would give 10, 1 or 2 folds, and nothing in the paper contradicts farms. This
+remains an inference; confirm with the authors if possible.
+
+Implementation:
+- `make_paper_folds(..., region='province')`: `province` = country/`adm_unit0`
+  from the geometry table.
+- Suite key `loro_region: province`; fold prefix `paper_loro_<pair>_province_…`;
+  run names `…|loro-province|…`; experiment directory `loro_province_<policy>_s0`.
+- The comparison labels LORO rows `[province regions]` or `[farm regions]`.
+
+On the live plan, the not-yet-done farm-level ARG LORO runs (720) were retired
+with `yieldsat_cluster.py skip` and 240 province-LORO runs were appended with
+`extend` (29 jobs, ~110 GPU-h). The ~300 ARG farm-level LORO runs already
+finished are kept, labelled `[farm regions]`, and are not the paper comparison.

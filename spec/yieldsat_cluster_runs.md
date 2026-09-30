@@ -461,3 +461,27 @@ A10s and 3090s were busy.
 - **Lesson.** Size pod requests from measured `kubectl top pods` use, not only
   from throughput calibration. Nautilus checks CPU and memory efficiency, not
   just GPU.
+
+### 12.2 Live plan changes (2026-09-30)
+
+- **New commands.**
+  - `yieldsat_cluster.py skip --plan … --pair_prefix ARG --protocol loro`
+    retires not-yet-done runs with a `done` marker flagged `skipped`. Pods on
+    older code treat it as done.
+  - `yieldsat_cluster.py extend --plan … --suite …` appends a suite's new runs
+    as new jobs (same suite name). Pools on code ≥ `2dada2a` re-read the plan
+    between jobs.
+  - Both were run from a fresh clone inside a running pod, which has the PVC
+    mounted.
+- **Applied.** 720 farm-level ARG LORO runs were retired and 240
+  province-level runs added (`cluster/suites/before_full_loro_province.yaml`).
+  The plan is now 3,786 runs in 370 jobs. About 50 in-progress ARG farm-LORO
+  runs were killed with `pkill -f 'split paper_loro_ARG-[CSW]_na_'`; no pod
+  tripped the circuit breaker.
+- **Duplicate claim.** One job (31) was seen on two pods at once, probably a
+  stale-claim takeover while the first owner was still working. Duplicated runs
+  produce identical results (same seeds), so the cost is compute only.
+- **Picking up the new jobs.** Pods started before `2dada2a` hold the old job
+  order until they restart. The 29 new jobs are claimed by pods started on the
+  new code: replacements, or the `v2` pools once the Nautilus utilization flag
+  clears.
