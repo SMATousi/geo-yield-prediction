@@ -537,6 +537,15 @@ def cmd_status(a):
     for rid in sorted(failed)[:20]:
         info = json.loads((state / '{}.failed.json'.format(rid)).read_text())
         print('FAILED', info['name'], 'rc', info['returncode'], 'on', info['host'])
+    gpu = [json.loads(p.read_text()) for p in state.glob('job_*.gpu.json')]
+    if gpu:
+        mean = sum(g['mean_util'] for g in gpu) / len(gpu)
+        low = [g for g in gpu if g['mean_util'] < a.min_util]
+        print('GPU utilization over {} finished jobs: mean {:.0f}%; {} job(s) below {}%'.format(
+            len(gpu), mean, len(low), a.min_util))
+        for g in sorted(low, key=lambda g: g['mean_util'])[:10]:
+            print('  job {} {} on {}: {:.0f}% (concurrency {})'.format(
+                g['job_index'], g['pair'], g['host'], g['mean_util'], g['final_concurrency']))
 
 
 def cmd_aggregate(a):
@@ -685,6 +694,7 @@ def main():
     s.set_defaults(func=cmd_k8s)
     s = sub.add_parser('status')
     s.add_argument('--plan', required=True)
+    s.add_argument('--min_util', type=float, default=80.0)
     s.set_defaults(func=cmd_status)
     s = sub.add_parser('aggregate')
     s.add_argument('--plan', required=True)
