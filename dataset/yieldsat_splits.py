@@ -67,6 +67,11 @@ def load_field_table(artifact_root, source_root, countries, require_geometry=Fal
                 fl['physical_field_id'] = g['physical_field_id']
                 fl['centroid_lat'] = g['centroid_lat']
                 fl['centroid_lon'] = g['centroid_lon']
+                # first-level administrative unit (province/state) from Raw.zip
+                # metadata; candidate LORO region (Argentina: 8 provinces for
+                # soybean, matching the paper's 8 regions)
+                adm = g.get('adm_units') or {}
+                fl['province'] = '{}/{}'.format(fl['country'], adm.get('adm_unit0', adm.get('adm_1', 'unknown')))
                 fl['geometry_verified'] = True
             else:
                 if require_geometry:
@@ -336,7 +341,7 @@ def load_split(artifact_root, name, fingerprints=None):
 # ---- paper-compatible fold manifests (PC-01) -------------------------------
 
 def make_paper_folds(table, pair, protocol, k=10, group='season', policy='paper', seed=0,
-                     val_frac=0.1):
+                     val_frac=0.1, region='farm'):
     """Fold manifests for one country-crop pair under the YieldSAT paper's
     protocols (Pathak et al., CVPR 2026, §5):
 
@@ -362,13 +367,21 @@ def make_paper_folds(table, pair, protocol, k=10, group='season', policy='paper'
         raise ValueError('no field seasons for {}'.format(pair))
     rng = np.random.default_rng(seed)
     region_key = 'farm_id' if policy == 'paper' else 'farm_group_id'
+    if region not in ('farm', 'province'):
+        raise ValueError('region must be farm or province')
+    if region == 'province':
+        if any('province' not in f for f in fields):
+            raise ValueError('province regions need the geometry table (run the geometry step)')
+        loro_key = 'province'
+    else:
+        loro_key = region_key
     if protocol == 'cv':
         group_key = 'season_id' if group == 'season' else 'physical_field_id'
         test_folds = _stratified_group_folds(fields, group_key, region_key, k, seed)
     elif protocol == 'loro':
-        group_key = region_key
-        regions = sorted({f[region_key] for f in fields})
-        test_folds = [[f['season_id'] for f in fields if f[region_key] == r] for r in regions]
+        group_key = loro_key
+        regions = sorted({f[loro_key] for f in fields})
+        test_folds = [[f['season_id'] for f in fields if f[loro_key] == r] for r in regions]
     else:
         group_key = 'year'
         years = sorted({f['year'] for f in fields})
@@ -406,7 +419,8 @@ def make_paper_folds(table, pair, protocol, k=10, group='season', policy='paper'
             'countries': [country], 'crops': [crop], 'fingerprints': table['fingerprints'],
             'created': time.strftime('%Y-%m-%dT%H:%M:%S'),
             'geometry_verified': all(f['geometry_verified'] for f in fields),
-            'holdout': (sorted({by_season[s][region_key] for s in test}) if protocol == 'loro'
+            'loro_region': region if protocol == 'loro' else None,
+            'holdout': (sorted({by_season[s][loro_key] for s in test}) if protocol == 'loro'
                         else sorted({by_season[s]['year'] for s in test}) if protocol == 'loyo'
                         else None),
             'partitions': {p: sorted(s for s, a in assign.items() if a == p)

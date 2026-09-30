@@ -95,13 +95,16 @@ def expand_runs(suite, table, artifact_root):
             for policy_name in exp.get('policies', ['paper']):
                 group, policy = POLICY[policy_name]
                 k = exp.get('k', 10)
-                for pair in suite['pairs']:
-                    prefix = fold_prefix(pair, protocol, group, policy, exp.get('fold_seed', 0), k)
+                region = exp.get('loro_region', 'farm') if protocol == 'loro' else 'farm'
+                for pair in exp.get('pairs', suite['pairs']):
+                    prefix = fold_prefix(pair, protocol, group, policy, exp.get('fold_seed', 0), k,
+                                         region=region)
                     index = Path(artifact_root) / 'splits' / '{}.folds.json'.format(prefix)
                     if not index.exists():
                         save_folds(make_paper_folds(table, pair, protocol, k=k, group=group,
                                                     policy=policy, seed=exp.get('fold_seed', 0),
-                                                    val_frac=exp.get('val_frac', 0.1)),
+                                                    val_frac=exp.get('val_frac', 0.1),
+                                                    region=region),
                                    artifact_root, prefix)
                     folds = json.loads(index.read_text())['folds']
                     if exp.get('max_folds'):
@@ -114,15 +117,18 @@ def expand_runs(suite, table, artifact_root):
                                                     '{}.json'.format(split_name)).read_text())
                                 runs.append(_make_run(suite, exp, model, protocol, policy_name, group,
                                                       policy, k, inputs, seed, pair, country, crop,
-                                                      i, split_name, split))
+                                                      i, split_name, split, region))
     return runs
 
 
 def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs, seed, pair,
-              country, crop, fold, split_name, split):
+              country, crop, fold, split_name, split, region='farm'):
     proto = {'cv': 'cv{}'.format(k), 'loro': 'loro', 'loyo': 'loyo'}[protocol]
-    exp_group = '{}_{}_{}_s{}'.format(proto, group if protocol == 'cv' else 'na', policy,
+    region_tag = 'province' if protocol == 'loro' and region == 'province' else 'na'
+    exp_group = '{}_{}_{}_s{}'.format(proto, group if protocol == 'cv' else region_tag, policy,
                                       exp.get('fold_seed', 0))
+    if region_tag == 'province':
+        proto = 'loro-province'           # distinct run names/ids from farm-level LORO
     tag = exp['name']
     rel = Path('paper') / exp_group / inputs / '{}_seed{}'.format(tag, seed) / pair / 'fold{:02d}'.format(fold)
     readable = '{}|{}|{}|{}|{}|{}|fold{:02d}|seed{}'.format(
@@ -680,9 +686,11 @@ def run_pool(plan_dir, owner, **kw):
     reopened = claims.reopen_failed()
     if reopened:
         print('re-opened {} jobs closed with failures: {}'.format(len(reopened), reopened), flush=True)
-    order = sorted(range(plan['n_jobs']), key=lambda i: -plan['jobs'][i]['est_hours'])
     rc, ran = 0, 0
     while True:
+        # re-read the plan between jobs: `extend` may have appended jobs
+        plan, _ = _load_plan(plan_dir)
+        order = sorted(range(plan['n_jobs']), key=lambda i: -plan['jobs'][i]['est_hours'])
         if check_gpu:
             try:
                 print(gpu_health_check(), flush=True)
@@ -730,10 +738,80 @@ def cmd_worker(a):
     sys.exit(rc)
 
 
+def _write_atomic(path, text):
+    tmp = Path(str(path) + '.tmp{}'.format(os.getpid()))
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
+def extend_plan(plan_dir, suite_path):
+    """Append the runs of ``suite_path`` that the plan does not contain yet
+    (same suite name, so W&B names/tags stay consistent) as new jobs. Pods
+    pick them up between jobs (pools re-read the plan)."""
+    plan, runs = _load_plan(plan_dir)
+    suite = load_suite(suite_path)
+    if suite['suite'] != plan['suite']['suite']:
+        raise SystemExit('extension suite name {} != plan suite {}'.format(suite['suite'], plan['suite']['suite']))
+    data = plan['suite']['data']
+    countries = sorted({parse_pair(p)[0] for e in suite['experiments']
+                        for p in e.get('pairs', suite['pairs'])})
+    table = load_field_table(data['artifact_root'], data['source_root'], countries, require_geometry=True)
+    new = [r for r in expand_runs(suite, table, data['artifact_root']) if r['run_id'] not in runs]
+    if not new:
+        print('nothing new to add')
+        return []
+    jobs = make_jobs(suite, new)
+    for j in jobs:
+        j['job_index'] += plan['n_jobs']
+    plan['jobs'] += jobs
+    plan['n_jobs'] = len(plan['jobs'])
+    plan['n_runs'] += len(new)
+    plan.setdefault('extensions', []).append({'suite_file': str(suite_path), 'runs': len(new),
+                                              'jobs': len(jobs), 'time': time.strftime('%Y-%m-%dT%H:%M:%S')})
+    with open(Path(plan_dir) / 'runs.jsonl', 'a') as f:
+        for r in new:
+            f.write(json.dumps(r) + '\n')
+    _write_atomic(Path(plan_dir) / 'plan.json', json.dumps(plan, indent=1))
+    print('added {} runs in {} jobs ({:.1f} GPU-h); plan now {} runs / {} jobs'.format(
+        len(new), len(jobs), sum(j['est_hours'] for j in jobs), plan['n_runs'], plan['n_jobs']))
+    return new
+
+
+def skip_runs(plan_dir, pair_prefix=None, protocol=None, reason=''):
+    """Retire runs that are not done yet: a done marker with
+    ``skipped: true`` (running pods treat it as done and never start them)."""
+    _, runs = _load_plan(plan_dir)
+    n = 0
+    for r in runs.values():
+        if pair_prefix and not r['pair'].startswith(pair_prefix):
+            continue
+        if protocol and r['protocol'] != protocol:
+            continue
+        done, _ = _state_paths(plan_dir, r['run_id'])
+        if done.exists():
+            continue
+        done.write_text(json.dumps({'run_id': r['run_id'], 'name': r['name'], 'skipped': True,
+                                    'reason': reason, 'time': time.strftime('%Y-%m-%dT%H:%M:%S')}))
+        n += 1
+    print('skipped {} runs'.format(n))
+    return n
+
+
+def cmd_extend(a):
+    extend_plan(a.plan, a.suite)
+
+
+def cmd_skip(a):
+    skip_runs(a.plan, a.pair_prefix, a.protocol, a.reason)
+
+
 def cmd_status(a):
     plan, runs = _load_plan(a.plan)
     state = Path(a.plan) / 'state'
     done = {p.name.split('.')[0] for p in state.glob('*.done.json')}
+    skipped = {p.name.split('.')[0] for p in state.glob('*.done.json')
+               if '"skipped": true' in p.read_text()}
+    print('skipped (retired) runs: {}'.format(len(skipped)))
     failed = {p.name.split('.')[0] for p in state.glob('*.failed.json')} - done
     print('runs: {} done, {} failed, {} pending of {}'.format(
         len(done), len(failed), len(runs) - len(done) - len(failed), len(runs)))
@@ -958,6 +1036,16 @@ def main():
     s.add_argument('--exclude_nodes', nargs='*', default=[])
     s.add_argument('--out', required=True)
     s.set_defaults(func=cmd_pools)
+    s = sub.add_parser('extend', help='append a suite\'s new runs to an existing plan')
+    s.add_argument('--plan', required=True)
+    s.add_argument('--suite', required=True)
+    s.set_defaults(func=cmd_extend)
+    s = sub.add_parser('skip', help='retire not-yet-done runs (marked skipped)')
+    s.add_argument('--plan', required=True)
+    s.add_argument('--pair_prefix', default=None, help='e.g. ARG')
+    s.add_argument('--protocol', default=None, help='e.g. loro (farm-level only; province is loro-province)')
+    s.add_argument('--reason', default='')
+    s.set_defaults(func=cmd_skip)
     s = sub.add_parser('status')
     s.add_argument('--plan', required=True)
     s.add_argument('--min_util', type=float, default=80.0)

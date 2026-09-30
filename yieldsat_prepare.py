@@ -215,9 +215,10 @@ def cmd_folds(args):
                   sum(sp['physical_overlap_test_seasons'] for sp in splits))
 
 
-def fold_prefix(pair, protocol, group, policy, seed, k=10):
+def fold_prefix(pair, protocol, group, policy, seed, k=10, region='farm'):
     name = {'cv': 'cv{}'.format(k), 'loro': 'loro', 'loyo': 'loyo'}[protocol]
-    return 'paper_{}_{}_{}_{}_s{}'.format(name, pair, group if protocol == 'cv' else 'na', policy, seed)
+    tag = group if protocol == 'cv' else ('province' if protocol == 'loro' and region == 'province' else 'na')
+    return 'paper_{}_{}_{}_{}_s{}'.format(name, pair, tag, policy, seed)
 
 
 def main():

@@ -70,12 +70,14 @@ def _load_ours_raw(runs_root):
         proto = PROTOCOLS[proto_key]
         a = json.loads(agg.read_text())
         fm = a['fold_mean_std']
-        like_for_like = policy == 'paper' and group in ('season', 'na')
+        like_for_like = policy == 'paper' and group in ('season', 'na', 'province')
         for level, key in (('field', 'field'), ('pixel', 'pixel')):
             out.append({'protocol': proto, 'level': level, 'pair': pair_dir.name,
                         'modalities': INPUT_LABEL[inputs],
                         'model_dir': model,
                         'entry_base': ('re-run: ' if model.startswith('paper_') else 'ours: ') + model
+                                 + ({'province': ' [province regions]', 'na': ' [farm regions]'}.get(group, '')
+                                    if proto == 'LORO' else '')
                                  + ('' if like_for_like else
                                                             ' [{} grouping, {} policy]'.format(group, policy)),
                         'like_for_like': like_for_like,

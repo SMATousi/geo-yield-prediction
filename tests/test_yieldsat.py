@@ -709,3 +709,24 @@ def test_failed_jobs_are_retried_then_closed(tmp_path):
     d.mkdir()
     (d / 'done').write_text(json.dumps({'owner': 'x', 'rc': 1}))
     assert a.reopen_failed() == [5] and not a.is_done(5)
+
+
+def test_province_loro_folds_and_run_retirement(corpus, tmp_path):
+    import argparse
+    import yieldsat_cluster as yc
+    from dataset.yieldsat_splits import make_paper_folds
+    table = _pair_table()
+    for i, f in enumerate(table['fields']):
+        f['province'] = 'Germany/P{}'.format(i % 2)
+    folds = make_paper_folds(table, 'GER-R', 'loro', region='province')
+    assert len(folds) == 2 and all(sp['loro_region'] == 'province' for sp in folds)
+    assert all(len({s for s in sp['partitions']['test']}) == 6 for sp in folds)
+    root, art, _ = corpus
+    suite = _suite_file(tmp_path, root, art, pairs=['GER-R'], job_unit='pair')
+    plan_dir = tmp_path / 'plan'
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(plan_dir), gpus=1))
+    n = yc.skip_runs(plan_dir, pair_prefix='GER', protocol='loyo', reason='test')
+    _, runs = yc._load_plan(plan_dir)
+    assert n == len(runs)
+    assert yc.run_job(plan_dir, 0, use_wandb=False) == 0          # nothing left to run
+    assert yc.skip_runs(plan_dir, pair_prefix='GER', protocol='loyo') == 0

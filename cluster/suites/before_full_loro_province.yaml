@@ -1,0 +1,32 @@
+# Extension of before_full (same suite name): leave-one-region-out for the
+# Argentine pairs with regions = provinces (adm_unit0; 8 for ARG-S, matching the
+# paper's 8 regions), replacing the farm-level ARG LORO runs (retired with
+# `yieldsat_cluster.py skip --pair_prefix ARG --protocol loro`).
+#   python yieldsat_cluster.py extend --plan <PVC plan> --suite cluster/suites/before_full_loro_province.yaml
+suite: before_full
+wandb:
+  project: yieldsat-cvpr27
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs: [ARG-C, ARG-S, ARG-W]
+job_unit: pair_shard
+target_job_hours: 4.0
+runs_per_gpu: 4
+max_runs_per_gpu: 6
+target_gpu_util: 80
+num_workers: 1
+gpu_speed_factor: {ours: 0.226, paper_lstm: 0.2, test: 0.27}
+concurrency_speedup: 4.0
+stage_mb_per_s: 42
+experiments:
+  - name: ours
+    model: ours
+    fusion: perceiver_summary
+    protocols: [loro]
+    loro_region: province
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    budget: {epochs: 60, steps_per_epoch: 0, min_steps_per_epoch: 500, max_steps_per_epoch: 1500}
