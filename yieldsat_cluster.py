@@ -611,7 +611,9 @@ def render_k8s(suite_path, plan_name, n_jobs, parallelism, image, pvc, secret, g
         'metadata': {'name': '{}-{}'.format(name_prefix, plan_name.replace('_', '-'))},
         'spec': {
             'completionMode': 'Indexed', 'completions': n_jobs, 'parallelism': parallelism,
-            'backoffLimitPerIndex': 2, 'maxFailedIndexes': max(1, n_jobs // 10),
+            # pods rejected by nodes with failed GPUs (UnexpectedAdmissionError) count
+            # as failures before any work starts; allow generous retries per index
+            'backoffLimitPerIndex': 8, 'maxFailedIndexes': max(1, n_jobs // 10),
             'ttlSecondsAfterFinished': 7 * 86400,
             'template': {'spec': {
                 'restartPolicy': 'Never',

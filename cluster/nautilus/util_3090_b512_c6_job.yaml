@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-util-3090-b512
+  name: smatousi-yieldsat-util-3090-b512-c6
 spec:
   completionMode: Indexed
   completions: 1
@@ -36,14 +36,14 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          run --plan /data/YieldSAT/yieldsat_artifacts/cluster/util_3090_b512 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/util_3090_b512
+          run --plan /data/YieldSAT/yieldsat_artifacts/cluster/util_3090_b512_c6 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/util_3090_b512_c6
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         - name: YIELDSAT_SUITE
-          value: cluster/suites/util_3090_b512.yaml
+          value: cluster/suites/util_3090_b512_c6.yaml
         - name: YIELDSAT_PLAN_DIR
-          value: /data/YieldSAT/yieldsat_artifacts/cluster/util_3090_b512
+          value: /data/YieldSAT/yieldsat_artifacts/cluster/util_3090_b512_c6
         - name: YIELDSAT_SOURCE_ROOT
           value: /data/YieldSAT/preprocessed
         - name: YIELDSAT_ARTIFACT_ROOT
@@ -56,13 +56,13 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 32Gi
+            cpu: '6'
+            memory: 24Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 32Gi
+            cpu: '6'
+            memory: 24Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data
