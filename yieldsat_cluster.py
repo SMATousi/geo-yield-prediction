@@ -461,6 +461,7 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
     last_adapt = time.time()
     t_start = time.time()
     pending, running, failures = list(todo), [], 0
+    fast_fail_streak = 0
     trace = []
     try:
         while pending or running:
@@ -478,8 +479,17 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
                 running.remove(item)
                 ok = _finish(r, proc, log, out, plan_dir, results_root, keep_local)
                 failures += 0 if ok else 1
-                print('{} {} ({:.0f} s)'.format('ok' if ok else 'FAILED', r['name'], time.time() - t0),
+                elapsed = time.time() - t0
+                print('{} {} ({:.0f} s)'.format('ok' if ok else 'FAILED', r['name'], elapsed),
                       flush=True)
+                # circuit breaker: consecutive fast failures mean a broken GPU/pod,
+                # not a bad run; stop instead of draining the queue
+                fast_fail_streak = 0 if ok or elapsed > 120 else fast_fail_streak + 1
+                if fast_fail_streak >= 3:
+                    for item2 in running:
+                        item2[1].kill()
+                    monitor.stop()
+                    raise GpuFault('3 consecutive runs failed within 2 min each (last: {})'.format(r['name']))
             # adaptive concurrency: only after runs are past start-up
             if target and pending and k < k_max and time.time() - last_adapt > 10 * window + 60:
                 util = monitor.recent_util(window)
@@ -517,6 +527,63 @@ def cmd_run(a):
                      not a.no_wandb, a.keep_local, a.dry_run))
 
 
+# ---- GPU health ---------------------------------------------------------------------
+
+class GpuFault(RuntimeError):
+    pass
+
+
+def gpu_health_check():
+    """One real forward/backward pass of the point model on the GPU. A GPU
+    that fails it (e.g. 'illegal memory access' on a faulty device) must not
+    take jobs. Runs in a subprocess so a CUDA fault cannot poison this one."""
+    code = (
+        "import numpy\n"          # before torch: avoids the MKL/libgomp load-order error
+        "import torch\n"
+        "from dataset.yieldsat_dataset import stream_layout\n"
+        "from dataset.yieldsat_schema import STREAMS\n"
+        "from models_yieldsat import YieldSATPointModel\n"
+        "d = torch.device('cuda'); torch.manual_seed(0)\n"
+        "L = stream_layout(list(STREAMS)); m = YieldSATPointModel(L).to(d)\n"
+        "B, T = 512, 24\n"
+        "b = {'inputs': {}, 'masks': {}, 'available': {}}\n"
+        "for n, l in L.items():\n"
+        "    C = len(l['out_channels']); sh = (B, T, C) if l['temporal'] else (B, C)\n"
+        "    b['inputs'][n] = torch.randn(sh, device=d); b['masks'][n] = torch.rand(sh, device=d) > 0.3\n"
+        "    b['available'][n] = (torch.rand(B, device=d) > 0.2).float()\n"
+        "b['time_features'] = torch.randn(B, T, 3, device=d); b['time_valid'] = torch.rand(B, T, device=d) > 0.3\n"
+        "b['crop'] = torch.randint(0, 4, (B,), device=d); b['target'] = torch.randn(B, device=d)\n"
+        "b['target_valid'] = torch.ones(B, dtype=torch.bool, device=d)\n"
+        "with torch.autocast('cuda', dtype=torch.bfloat16):\n"
+        "    _, loss = m.loss(b)\n"
+        "loss.float().backward(); torch.cuda.synchronize()\n"
+        "assert torch.isfinite(loss), 'non-finite loss'\n"
+        "print('gpu ok', torch.cuda.get_device_name(0))\n")
+    try:
+        out = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, timeout=300)
+    except subprocess.TimeoutExpired:
+        raise GpuFault('GPU health check timed out')
+    if out.returncode != 0:
+        raise GpuFault('GPU health check failed: ' + (out.stderr or out.stdout)[-600:])
+    return out.stdout.strip()
+
+
+def record_bad_gpu(plan_dir, reason):
+    """Remember a faulty GPU (node + device UUID) on the shared volume."""
+    uuid = ''
+    try:
+        uuid = subprocess.run(['nvidia-smi', '--query-gpu=uuid', '--format=csv,noheader'],
+                              capture_output=True, text=True, timeout=30).stdout.strip()
+    except Exception:
+        pass
+    d = Path(plan_dir) / 'state' / 'bad_gpus'
+    d.mkdir(parents=True, exist_ok=True)
+    node = os.environ.get('NODE_NAME', os.uname().nodename)
+    (d / '{}_{}.json'.format(os.environ.get('HOSTNAME', node), int(time.time()))).write_text(json.dumps(
+        {'pod': os.environ.get('HOSTNAME'), 'node': node, 'gpu_uuid': uuid, 'reason': reason[-1000:],
+         'time': time.strftime('%Y-%m-%dT%H:%M:%S')}))
+
+
 # ---- worker pools: pods claim jobs from a shared queue ------------------------------
 
 class JobClaims:
@@ -538,7 +605,10 @@ class JobClaims:
     def _dir(self, idx):
         return self.root / 'job_{}'.format(idx)
 
+    MAX_ATTEMPTS = 3
+
     def is_done(self, idx):
+        """Finished for good: succeeded, or failed MAX_ATTEMPTS times."""
         return (self._dir(idx) / 'done').exists()
 
     def try_claim(self, idx):
@@ -569,18 +639,57 @@ class JobClaims:
             self._last_beat = time.time()
 
     def finish(self, idx, rc):
-        (self._dir(idx) / 'done').write_text(json.dumps({'owner': self.owner, 'rc': rc,
-                                                         'finished': time.strftime('%Y-%m-%dT%H:%M:%S')}))
+        """rc == 0: mark done. Otherwise count the attempt and release the
+        claim so another pod retries the job's unfinished runs; after
+        MAX_ATTEMPTS the job is closed with its failures recorded."""
+        d = self._dir(idx)
+        attempts_file = self.root / 'job_{}.attempts'.format(idx)
+        attempts = int(attempts_file.read_text()) + 1 if attempts_file.exists() else 1
+        if rc == 0 or attempts >= self.MAX_ATTEMPTS:
+            (d / 'done').write_text(json.dumps({'owner': self.owner, 'rc': rc, 'attempts': attempts,
+                                                'finished': time.strftime('%Y-%m-%dT%H:%M:%S')}))
+        else:
+            attempts_file.write_text(str(attempts))
+            self.release(idx)
         self.current = None
+
+    def release(self, idx):
+        """Give a claim back to the queue (e.g. this pod's GPU is faulty)."""
+        shutil.rmtree(self._dir(idx), ignore_errors=True)
+        self.current = None
+
+    def reopen_failed(self):
+        """Re-open jobs closed as done with rc != 0 before attempt counting
+        existed (one-off repair; returns reopened job indices)."""
+        reopened = []
+        for d in self.root.glob('job_*'):
+            done = d / 'done'
+            if d.is_dir() and done.exists():
+                info = json.loads(done.read_text())
+                if info.get('rc', 0) != 0 and 'attempts' not in info:
+                    shutil.rmtree(d, ignore_errors=True)
+                    reopened.append(int(d.name.split('_')[1]))
+        return sorted(reopened)
 
 
 def run_pool(plan_dir, owner, **kw):
     """Claim and run jobs (longest first) until the queue is exhausted."""
     plan, _ = _load_plan(plan_dir)
     claims = JobClaims(plan_dir, owner, kw.pop('stale_minutes', 30))
+    check_gpu = kw.pop('health_check', True)
+    reopened = claims.reopen_failed()
+    if reopened:
+        print('re-opened {} jobs closed with failures: {}'.format(len(reopened), reopened), flush=True)
     order = sorted(range(plan['n_jobs']), key=lambda i: -plan['jobs'][i]['est_hours'])
     rc, ran = 0, 0
     while True:
+        if check_gpu:
+            try:
+                print(gpu_health_check(), flush=True)
+            except GpuFault as exc:
+                record_bad_gpu(plan_dir, str(exc))
+                print('GPU FAULT, leaving the pool: {}'.format(exc), flush=True)
+                return 3
         claimed = None
         for idx in order:
             if not claims.is_done(idx) and claims.try_claim(idx):
@@ -588,7 +697,14 @@ def run_pool(plan_dir, owner, **kw):
                 break
         if claimed is None:
             break
-        code = run_job(plan_dir, claimed, heartbeat=claims.beat, **kw)
+        try:
+            code = run_job(plan_dir, claimed, heartbeat=claims.beat, **kw)
+        except GpuFault as exc:
+            claims.release(claimed)
+            record_bad_gpu(plan_dir, str(exc))
+            print('GPU FAULT during job {}, released it and leaving the pool: {}'.format(claimed, exc),
+                  flush=True)
+            return 3
         claims.finish(claimed, code)
         rc |= code
         ran += 1

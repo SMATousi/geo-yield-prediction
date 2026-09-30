@@ -683,7 +683,8 @@ def test_pool_workers_share_one_queue(corpus, tmp_path):
     yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(plan_dir), gpus=2))
     codes = []
     threads = [threading.Thread(target=lambda n=n: codes.append(yc.run_pool(
-        plan_dir, n, local_root=tmp_path / n, use_wandb=False))) for n in ('p1', 'p2')]
+        plan_dir, n, local_root=tmp_path / n, use_wandb=False, health_check=False)))
+        for n in ('p1', 'p2')]
     for t in threads:
         t.start()
     for t in threads:
@@ -693,3 +694,18 @@ def test_pool_workers_share_one_queue(corpus, tmp_path):
     assert len(list((plan_dir / 'state').glob('*.done.json'))) == len(runs)
     assert all((plan_dir / 'state' / 'claims' / 'job_{}'.format(i) / 'done').exists()
                for i in range(plan['n_jobs']))
+
+
+def test_failed_jobs_are_retried_then_closed(tmp_path):
+    from yieldsat_cluster import JobClaims
+    (tmp_path / 'state').mkdir()
+    a = JobClaims(tmp_path, 'pod-a')
+    for attempt in range(1, JobClaims.MAX_ATTEMPTS + 1):
+        assert a.try_claim(0)
+        a.finish(0, 1)
+        assert a.is_done(0) == (attempt == JobClaims.MAX_ATTEMPTS)
+    # legacy 'done' with rc != 0 and no attempt count is re-opened
+    d = tmp_path / 'state' / 'claims' / 'job_5'
+    d.mkdir()
+    (d / 'done').write_text(json.dumps({'owner': 'x', 'rc': 1}))
+    assert a.reopen_failed() == [5] and not a.is_done(5)
