@@ -127,3 +127,33 @@ origins and globally unique source rows within each country. Bounded tensor
 readbacks matched the prepared cache. The new tiling tests and existing YieldSAT
 tests passed (38 total). The output is an image *dataset*; image-model training
 is the remaining step 5 above.
+
+## Random GeoTIFF previews — 2026-09-30
+
+Twelve patches (three per country) were selected reproducibly from the image
+dataset with seed `20260930` and exported to the sibling directory
+`/home1/pupil/SMATousi/YieldSAT-Image-Samples`. Each selected patch has:
+
+- a 64×64, four-band RGBA GeoTIFF using S2 B04/B03/B02 at the temporal slot with
+  the most dated, valid RGB pixels. The RGB channels are stretched to the 2nd–98th
+  percentile **for display only**; transparent pixels lack valid RGB. The slot
+  index is stored in tags and `samples.json`. Different cells at one slot can have
+  different acquisition dates, so the TIFF is not necessarily a single-date scene;
+- a matching one-band float32 yield GeoTIFF in t/ha with internal validity mask
+  and `-9999` nodata. Both files retain the original patch CRS and affine.
+
+The previews are not the full 24-slot or 120-channel training tensors; that history
+remains in the HDF5 dataset. The visual previews apply no pre-harvest cutoff and
+must not be used as training input for a forecasting experiment.
+
+```bash
+.conda/phase0/bin/python -B yieldsat_export_tif_samples.py \
+  --dataset-root /home1/pupil/SMATousi/YieldSAT-Image \
+  --output-root /home1/pupil/SMATousi/YieldSAT-Image-Samples \
+  --per-country 3 --seed 20260930
+```
+
+The published `samples.json` lists exact country/patch IDs, chosen slots and TIFF
+paths. Readback verified all 24 TIFFs against the image dataset, including 64×64
+shape, CRS/affine, RGB alpha, yield mask and target pixel values. TIFFs are stored
+outside Git; the exporter and this documentation are committed.
