@@ -717,3 +717,8 @@ preprocessing hash; a mismatch refuses to load.
   - **Order:** 1 → 2 → 3 (check results, calibrate) → 4 → 5. Steps 4 and 5
     may overlap: German jobs wait for the donors. Plans are made by the
     first pod (`run_in_pod.sh`).
+- 2026-10-01 — **YI-08 step 1: image dataset built on the PVC.**
+  `image_build_job` (image-v1) wrote `/data/YieldSAT/YieldSAT-Image` in ~14 min.
+  It is identical in counts to the development copy: 2,437 tiles, 6,666,347
+  valid cells; Argentina 1,220 / 3,374,971, Brazil 920 / 2,550,502, Germany
+  68 / 174,698, Uruguay 229 / 566,176. The DINO cache job was then submitted.
