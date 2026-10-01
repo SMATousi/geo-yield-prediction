@@ -722,3 +722,12 @@ preprocessing hash; a mismatch refuses to load.
   It is identical in counts to the development copy: 2,437 tiles, 6,666,347
   valid cells; Argentina 1,220 / 3,374,971, Brazil 920 / 2,550,502, Germany
   68 / 174,698, Uruguay 229 / 566,176. The DINO cache job was then submitted.
+- 2026-10-01 — **YI-08 step 2: DINO cache on the PVC.**
+  `/data/YieldSAT/YieldSAT-Image/dino_cache/f692fa42_b764aff546ec` matches
+  the development cache exactly: entries 8,628 / 6,275 / 625 / 1,411, and
+  the same clip fractions. It was built on an RTX 3090 in ~30 min (CephFS
+  reads dominate).
+  - The first submission waited 2 h for an A10/3090, all taken by the point
+    suite. The one-off job now accepts any common GPU type.
+  - Smoke pool re-rendered for one A10 or 3090 (12 CPU, 32 GiB) and
+    submitted.
