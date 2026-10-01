@@ -1,0 +1,36 @@
+# YieldSAT image model v2 (plan v2: series branch, level head, full coverage): warm-start donors.
+# Pairs with < 100 tiles (GER-R 41, GER-W 27) fine-tune from a donor trained on
+# other countries only, so no target-fold data is seen:
+#   bra-w   all BRA-W tiles (same crop, wheat country with most tiles) -> GER-W
+#   pooled  all non-German tiles, all crops (crop token on)            -> GER-R
+# One run per donor x inputs x seed; each keeps checkpoint_best.pth in the
+# results root, which image_full's warm_start reads (data.donor_root).
+suite: image_v2_donors
+wandb:
+  project: yieldsat-cvpr27-image
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}         # v2 pods: /data/YieldSAT/YieldSAT-Image-full
+  stage_mode: sparse                         # per-job crop subset, uncompressed (donors: compressed copy)
+pairs: []
+job_unit: pair_shard
+target_job_hours: 2.0
+runs_per_gpu: 3                # measured: 3 concurrent runs on a 12-CPU A10 pod
+max_runs_per_gpu: 5
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor: {image: 0.64}  # smoke 2 (A10, 3 concurrent): ~75 tiles/s per run = 0.64 x REF
+concurrency_speedup: 3.0
+stage_mb_per_s: 42
+experiments:
+  - name: donor
+    model: image
+    donors:
+      - {name: bra-w, countries: [Brazil], crops: [wheat]}
+      - {name: pooled, countries: [Argentina, Brazil, Uruguay]}
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    train_min_valid: 2048          # train on full tiles; validate on all tiles
+    extra_args: [--series, --level_head, --slot_coverage, present]

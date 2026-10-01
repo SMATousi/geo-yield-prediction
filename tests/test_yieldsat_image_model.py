@@ -44,7 +44,8 @@ def _write_country(root, country, seasons, tiles_per_season=2, seed=0):
         name, crop = seasons[i // tiles_per_season]
         recs.append({'patch_index': i, 'country': country, 'field_shared_name': name, 'crop': crop,
                      'year': 2020, 'row0': 64 * (i % tiles_per_season), 'col0': 0,
-                     'physical_field_id': '{}/pf{}'.format(country, i // tiles_per_season)})
+                     'physical_field_id': '{}/pf{}'.format(country, i // tiles_per_season),
+                     'valid_pixels': int(valid[i].sum())})
     (d / 'patches.jsonl').write_text('\n'.join(json.dumps(r) for r in recs))
     return {'temporal': temporal, 'target': target}
 
@@ -399,3 +400,103 @@ def test_plan_refuses_warm_starts_without_donor_runs():
     with pytest.raises(SystemExit):
         yc.check_warm_starts({}, [donor, target])
     yc.check_warm_starts({}, [donor, dict(target, inputs='s2_adm')])
+
+
+# ---- v2 (plan v2: YI-09 series branch, YI-10 level head, YI-11 coverage) ----------
+
+def test_series_stream_masks_undated_and_post_cutoff_slots(image_root):
+    root, _, seasons = image_root
+    parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
+    norm = ImageNormalizer.fit(TileReader(root), parts['train'])
+    it = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), with_series=True)[0]
+    assert it['series'].shape == (24, 12, 64, 64) and it['series'].dtype == np.float16
+    m = it['series_mask']
+    assert m.shape == (24, 64, 64) and not m[:4].any() and not m[20:].any()   # undated slots
+    assert not m[:, 48:].any() and m[4:20, :48].all()                         # padded rows
+    assert float(it['series_days'][5, 0, 0]) == 20.0                          # slot 5 = seeding + 20
+    cut = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), with_series=True,
+                               cutoff_mode='before_harvest', cutoff_days=200)[0]   # cutoff = +100
+    assert cut['series_mask'][:10].any() and not cut['series_mask'][10:].any()
+    assert 'series' not in YieldSATImageDataset(root, parts['test'], norm, _days(seasons))[0]
+
+
+def test_slot_coverage_relative_to_present_cells():
+    from dataset.yieldsat_image_dataset import slot_dates
+    times = np.full((64, 64, 24), 100.0)
+    rgb_ok = np.zeros((64, 64, 24), bool)
+    rgb_ok[:8, :8, 3] = True                          # 64 of 4096 cells, all present cells
+    present = np.zeros((64, 64), bool)
+    present[:8, :8] = True
+    assert slot_dates(times, rgb_ok)[2][3] == 64 / 4096
+    assert slot_dates(times, rgb_ok, present)[2][3] == 1.0
+
+
+def test_series_encoder_ignores_masked_slots_and_empty_cells():
+    from models_yieldsat_image import SeriesEncoder
+    torch.manual_seed(0)
+    enc = SeriesEncoder().eval()
+    s = torch.randn(1, 24, 12, 4, 4)
+    m = torch.zeros(1, 24, 4, 4)
+    m[:, 5:15] = 1
+    m[:, :, 0, 0] = 0                                  # a cell never observed
+    d = torch.arange(24.0).view(1, 24, 1, 1).expand(1, 24, 4, 4) * 10
+    doy = torch.tensor([100.0])
+    with torch.no_grad():
+        a = enc(s, m, d, doy)
+        s2 = s.clone()
+        s2[:, 15:] += 3.0                              # change unobserved slots only
+        assert torch.allclose(a, enc(s2, m, d, doy), atol=1e-6)       # unobserved values ignored
+        s3 = s.clone()
+        s3[:, 7] += 3.0                                                     # observed slot changes
+        assert not torch.allclose(a, enc(s3, m, d, doy), atol=1e-4)
+    assert a.shape == (1, 32, 4, 4) and torch.all(a[0, :, 0, 0] == 0)
+
+
+def test_level_head_decomposes_prediction_and_trains():
+    m = _small(use_series=True, level_head=True).train()
+    b = _batch()
+    B = 2
+    b['series'] = torch.randn(B, 24, 12, 64, 64)
+    b['series_mask'] = torch.rand(B, 24, 64, 64) > 0.3
+    b['series_days'] = torch.arange(24.0).view(1, 24, 1, 1).expand(B, 24, 64, 64) * 10
+    b['seeding_doy'] = torch.tensor([100.0, 300.0])
+    b['cell_present'] = torch.ones(B, 64, 64)
+    b['cell_present'][1, 48:] = 0
+    b = {k: (v.float() if torch.is_tensor(v) and v.dtype == torch.bool and k != 'target_valid' else v)
+         for k, v in b.items()}
+    pred, level = m(b, return_level=True)
+    p = b['cell_present']
+    centered = (pred * p).flatten(1).sum(1) / p.flatten(1).sum(1)
+    assert torch.allclose(centered, level, atol=1e-4)                   # mean over present = level
+    _, loss = m.loss(b)
+    loss.backward()
+    for name in ('series_cell', 'series_enc', 'level'):
+        assert any(q.grad is not None and q.grad.abs().sum() > 0 for q in getattr(m, name).parameters()), name
+    assert 'series' in m.streams and 'series' in m.dense
+
+
+def test_image_entry_v2_flags_end_to_end(image_root, tmp_path, monkeypatch):
+    import sys
+    import main_yieldsat_image as mi
+    import yieldsat_image_dino_cache as dc
+    root, _, seasons = image_root
+    art = _artifacts(tmp_path, seasons)
+    cache = tmp_path / 'cache'
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(cache),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    args = ['--embed_dim', '32', '--num_latents', '4', '--depth', '2', '--num_heads', '4',
+            '--epochs', '1', '--batch_size', '2', '--min_steps_per_epoch', '2', '--num_workers', '0',
+            '--device', 'cpu', '--artifact_root', str(art), '--image_root', str(root),
+            '--dino_cache', str(next(p for p in cache.iterdir() if p.is_dir())), '--dino_revision',
+            'stub0000', '--countries', 'Germany', '--crops', 'rapeseed', '--split', 'fold_test',
+            '--output_dir', str(tmp_path / 'v2'), '--series', '--level_head', '--slot_coverage', 'present',
+            '--train_min_valid', '1000000']
+    fb = mi.main(mi.get_args_parser().parse_args(args))      # no tile that full: keep all tiles
+    assert fb['train_tile_filter'] == 'fallback: all tiles' and fb['tiles']['train'] == 4
+    args[-1] = '1'
+    args[args.index('--output_dir') + 1] = str(tmp_path / 'v2b')
+    rep = mi.main(mi.get_args_parser().parse_args(args))
+    assert rep['train_tile_filter'] == 'min_valid 1'
+    assert rep['model']['descriptor']['use_series'] and rep['model']['descriptor']['level_head']
+    assert 'series' in rep['streams'] and np.isfinite(rep['test']['overall']['pixel']['rmse'])

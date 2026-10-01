@@ -35,10 +35,11 @@ _SI = {c: i for i, c in enumerate(STATIC_CHANNELS)}
 RGB_IDX = [_TI[c] for c in RGB]
 EXTRA_IDX = [_TI[c] for c in EXTRA_BANDS]
 WEATHER_IDX = [_TI[c] for c in WEATHER]
+S2_IDX = sorted(RGB_IDX + EXTRA_IDX)                      # all 12 S2 bands (series stream, v2)
 DEM_IDX = [_SI['dem']]
 TERRAIN_IDX = [_SI[c] for c in TERRAIN]                   # aspect, curvature, slope, twi
 SOIL_IDX = [_SI[c] for c in SOIL]                         # property-major, depth-ordered
-MIN_SLOT_COVERAGE = 0.25                                  # fraction of tile cells with RGB
+MIN_SLOT_COVERAGE = 0.25                                  # fraction of present cells with RGB
 MAX_SLOT_DATE_SPREAD = 1.0                                # days, date coherence
 CUTOFF_MODES = ('all_slots', 'before_harvest', 'harvest')
 
@@ -103,15 +104,18 @@ class TileReader:
         self._files = {}
 
 
-def slot_dates(times, rgb_ok):
-    """Per slot: (median date of RGB-observed cells, spread in days, coverage)."""
+def slot_dates(times, rgb_ok, present=None):
+    """Per slot: (median date of RGB-observed cells, spread in days, coverage).
+    Coverage is relative to the tile's present (in-field) cells when given,
+    so small edge tiles of full-coverage builds still qualify (v2)."""
     dates = np.full(T, np.nan)
     spread = np.full(T, np.inf)
     coverage = np.zeros(T)
+    denom = max(int(present.sum()), 1) if present is not None else rgb_ok[..., 0].size
     for k in range(T):
         m = rgb_ok[..., k]
         n = int(m.sum())
-        coverage[k] = n / float(m.size)
+        coverage[k] = n / float(denom)
         if n:
             d = times[..., k][m]
             dates[k] = float(np.median(d))
@@ -270,7 +274,7 @@ class YieldSATImageDataset(Dataset):
 
     def __init__(self, image_root, tiles, normalizer, season_days, k_obs=4, train=False,
                  cutoff_mode='all_slots', cutoff_days=30, aspect_cyclic=True, seed=0,
-                 dino_cache=None):
+                 dino_cache=None, with_series=False, slot_coverage='tile'):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         self.reader = TileReader(image_root)
@@ -288,6 +292,12 @@ class YieldSATImageDataset(Dataset):
         self._season_index = {s: i for i, s in enumerate(self.seasons)}
         self.retrospective = cutoff_mode == 'all_slots'
         self.dino = dino_cache
+        # v2 options (defaults reproduce v1): full per-cell S2 series stream;
+        # optical slot coverage relative to the tile ('tile') or its present cells
+        if slot_coverage not in ('tile', 'present'):
+            raise ValueError('slot_coverage must be tile or present')
+        self.with_series = with_series
+        self.slot_coverage = slot_coverage
 
     def __len__(self):
         return len(self.tiles)
@@ -323,7 +333,8 @@ class YieldSATImageDataset(Dataset):
 
         # optical observations
         rgb_ok = np.isfinite(temporal[..., RGB_IDX]).all(axis=-1) & dated     # (64,64,24)
-        dates, spread, coverage = slot_dates(times, rgb_ok)
+        dates, spread, coverage = slot_dates(times, rgb_ok,
+                                             present if self.slot_coverage == 'present' else None)
         slots = qualifying_slots(dates, spread, coverage, cutoff)
         rng = np.random.default_rng((self.seed, epoch, i)) if self.train else None
         chosen = select_observations(slots, dates, coverage, self.k, seeding, harvest, rng)
@@ -361,6 +372,20 @@ class YieldSATImageDataset(Dataset):
         wtime = np.stack([_time_features(tile_dates[s], seeding) if np.isfinite(tile_dates[s])
                           else np.zeros(3, np.float32) for s in range(T)]).astype(np.float32)
 
+        item_series = {}
+        if self.with_series:
+            # full S2 series per cell (v2): 24 slots x 12 bands, slot-observed
+            # mask, per-cell days since seeding; masked like the point contract
+            x = temporal[..., S2_IDX]                                         # (64,64,24,12)
+            sv = np.isfinite(x) & dated[..., None]
+            series = np.where(sv, (x - mean[S2_IDX]) / std[S2_IDX], 0.0)
+            item_series = {
+                'series': np.ascontiguousarray(series.transpose(2, 3, 0, 1), dtype=np.float16),
+                'series_mask': np.ascontiguousarray(sv.any(axis=-1).transpose(2, 0, 1)),
+                'series_days': np.ascontiguousarray(np.where(dated, times - seeding, 0.0)
+                                                    .transpose(2, 0, 1), dtype=np.float16),
+                'seeding_doy': np.float32(float(seeding) % 365.2425)}
+
         # static layers (per cell)
         sn = self.norm.stats['static']
         svalid = np.isfinite(static) & present[..., None]
@@ -391,7 +416,7 @@ class YieldSATImageDataset(Dataset):
         # worker->trainer traffic); cast_batch() restores float32 on device
         h, m = np.float16, bool
         return {
-            **item_dino,
+            **item_dino, **item_series,
             'obs_slot': obs_slot, 'obs_valid': obs_valid, 'obs_time': obs_time,
             'rgb_mask': rgb_mask.astype(m), 'spec': spec.astype(h), 'spec_mask': spec_mask.astype(m),
             'weather': weather, 'weather_mask': weather_mask, 'weather_time': wtime,

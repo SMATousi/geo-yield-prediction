@@ -868,3 +868,54 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
 ### Progress log (v2)
 
 - 2026-10-01 — Plan v2 written.
+- 2026-10-01 — **YI-09, YI-10, YI-11 implemented (opt-in; defaults are v1).**
+  Running v1 pods clone `main` at start, so every v2 change sits behind a
+  flag. Against the committed v1 code, defaults give bit-identical items
+  (160 real items, train + eval) and an identical model (same parameters
+  and outputs from the same seed).
+  - **YI-09** `--series`:
+    - dataset `with_series` emits `series` (24, 12, 64, 64) float16,
+      `series_mask` (24, 64, 64) bool, `series_days` float16 and
+      `seeding_doy`. Undated, post-cutoff and padded cells are masked.
+    - `SeriesEncoder`: two temporal convolutions, then masked attention
+      pooling, giving 32 channels per cell → conv pyramid (16 tokens +
+      skips). Values of unobserved slots provably do not change its output
+      (test).
+  - **YI-10** `--level_head` (`--level_weight 1`): prediction = level
+    (MLP on pooled latents) + dense map centered over `cell_present`. The
+    loss adds (level − tile mean valid target)². Test: the mean over
+    present cells equals the level; gradients reach the series and level
+    modules.
+  - **YI-11:**
+    - **Builder:** `yieldsat_build_images.py --min-valid N` (default 2,048).
+      Local build with `--min-valid 1` (4.1 GB compressed):
+
+      | Country | Tiles | Valid cells | Point cells covered |
+      |---|---:|---:|---:|
+      | Argentina | 3,785 | 5,325,807 | 100.00% |
+      | Brazil | 3,277 | 4,260,262 | 100.00% |
+      | Germany | 607 | 609,645 | 100.00% |
+      | Uruguay | 2,504 | 2,177,206 | 100.00% |
+
+      Its tiles with ≥ 2,048 valid cells are exactly the v1 tile set in
+      every country.
+    - **Training filter:** `--train_min_valid 2048`. If a fold's training
+      seasons have no such tile, all their tiles are used; this happens only
+      for BRA-C LOYO strict fold 4, recorded as `train_tile_filter` in the
+      report.
+    - **Slot coverage:** `--slot_coverage present` makes optical slot
+      coverage relative to present cells.
+  - **Cluster:**
+    - suite `train_min_valid` (passed to runs and used in plan tile counts);
+    - `stage_mode: sparse`: per-job staging root holding only the job's crop
+      tiles, uncompressed (worst pair URG-S ~20 GB), with the previous job's
+      root removed; donor (multi-crop) jobs copy the compressed file;
+    - `pools --image_dir/--donor_plan` set the pods' `YIELDSAT_IMAGE_ROOT`
+      and `YIELDSAT_DONOR_ROOT`.
+  - **Suites** `image_v2_donors` and `image_v2` (tag `image2`): same matrix
+    plus `--series --level_head --slot_coverage present`,
+    `train_min_valid 2048`.
+    - Dry plan on the full build: 2,586 runs, the point suite's run set
+      exactly (v1 had 2,460), ~104 GPU-hours at the v1 rate, to be
+      re-measured (the series stream adds loader work); plus 12 donor runs.
+  - Tests: 23 image tests pass.

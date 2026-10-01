@@ -106,9 +106,14 @@ def _image_tiles(suite):
     return load_tile_table(suite['data']['image_root'], countries)
 
 
-def _tile_counts(tiles, split, crop):
+def _tile_counts(tiles, split, crop, train_min_valid=0):
+    """Tiles per partition; training tiles need ``train_min_valid`` valid
+    cells (full-coverage builds, plan v2), validation/test use all."""
     from dataset.yieldsat_image_dataset import tiles_for_split
-    return {k: len(v) for k, v in tiles_for_split(tiles, split, crops=[crop]).items()}
+    parts = tiles_for_split(tiles, split, crops=[crop])
+    full = [t for t in parts['train'] if t.get('valid_pixels', 0) >= train_min_valid]
+    parts['train'] = full or parts['train']          # same fallback as main_yieldsat_image.py
+    return {k: len(v) for k, v in parts.items()}
 
 
 def expand_runs(suite, table, artifact_root):
@@ -155,7 +160,7 @@ def expand_runs(suite, table, artifact_root):
                                                 policy, k, inputs, seed, pair, country, crop,
                                                 i, split_name, split, region)
                                 if model == 'image':
-                                    n = _tile_counts(tiles, split, crop)
+                                    n = _tile_counts(tiles, split, crop, exp.get('train_min_valid', 0))
                                     run['n_train'], run['n_test'] = n['train'], n['test']
                                     run['tiles'] = n
                                     if not n['train'] or not n['test']:
@@ -188,6 +193,8 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
     if model == 'ours':
         args += ['--fusion', exp.get('fusion', 'perceiver_summary')]
     args = _override(args, _budget_args(exp.get('budget', {})))
+    if model == 'image' and exp.get('train_min_valid'):
+        args = _override(args, ['--train_min_valid', str(exp['train_min_valid'])])
     donor = exp.get('warm_start', {}).get(pair) if model == 'image' else None
     init_ckpt = None
     if donor:
@@ -224,7 +231,10 @@ def _make_donor_run(suite, exp, donor, inputs, seed, tiles):
     args += INPUTS[inputs] + MODELS['image']
     args = _override(args, _budget_args(exp.get('budget', {})))
     args = _override(args, [str(a) for a in exp.get('extra_args', [])])
-    n = sum(1 for t in tiles if t['country'] in countries and (not crops or t['crop'] in crops))
+    n = sum(1 for t in tiles if t['country'] in countries and (not crops or t['crop'] in crops)
+            and t.get('valid_pixels', 0) >= exp.get('train_min_valid', 0))
+    if exp.get('train_min_valid'):
+        args = _override(args, ['--train_min_valid', str(exp['train_min_valid'])])
     return {'run_id': hashlib.sha1(readable.encode()).hexdigest()[:12], 'name': readable,
             'rel_path': _donor_rel(name, inputs, seed), 'pair': 'donor-' + name,
             'country': countries[0], 'countries': countries, 'crop': ','.join(crops or ['all']),
@@ -482,6 +492,37 @@ def _stage_tiles_uncompressed(src, dst):
     os.replace(tmp, dst)
 
 
+def _stage_tiles_sparse(src, dst, keep):
+    """Uncompressed copy holding only the tiles in ``keep`` (patch indices);
+    unwritten HDF5 chunks use no disk, so indices stay valid (plan v2: full-
+    coverage builds are ~4x larger than v1). Atomic via a .partial name."""
+    import h5py
+    if dst.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_name(dst.name + '.partial')
+    with h5py.File(src, 'r') as fs, h5py.File(tmp, 'w') as fd:
+        for k, v in fs.attrs.items():
+            fd.attrs[k] = v
+        for k, ds in fs.items():
+            out = fd.create_dataset(k, ds.shape, ds.dtype, chunks=ds.chunks)
+            for a, v in ds.attrs.items():
+                out.attrs[a] = v
+            for i in sorted(keep):
+                out[i] = ds[i]
+    os.replace(tmp, dst)
+
+
+def _job_crops(job, runs):
+    crops = set()
+    for rid in job['run_ids']:
+        crop = runs[rid]['crop']
+        if crop == 'all':
+            return None
+        crops.update(crop.split(','))
+    return crops
+
+
 def stage_image_local(plan, job, runs, local_root):
     """Image jobs: copy the countries' tiles, DINO features, index fields and
     the runs' splits to local disk. Returns (artifact_root, image_root)."""
@@ -490,6 +531,18 @@ def stage_image_local(plan, job, runs, local_root):
     data = plan['suite']['data']
     src_art, src_img = Path(data['artifact_root']), Path(data['image_root'])
     dst_art, dst_img = Path(local_root) / 'artifacts', Path(local_root) / 'images'
+    mode = data.get('stage_mode', 'uncompressed')      # v1 default; v2 suites: sparse
+    if mode == 'sparse':
+        # one staging root per job (a pod runs jobs one at a time): drop the
+        # previous job's tiles, keep only this job's crops, uncompressed;
+        # multi-crop donor jobs copy the compressed file instead
+        base = Path(local_root) / 'images_by_job'
+        dst_img = base / job['pair']
+        if base.exists():
+            for d in base.iterdir():
+                if d != dst_img:
+                    shutil.rmtree(d, ignore_errors=True)
+        crops = _job_crops(job, runs)
     dino = Path('dino_cache') / cache_tag(data.get('dino_revision', DINO_REVISION), preprocessing_hash())
     t0 = time.time()
     _copy_once(src_img / 'manifest.json', dst_img / 'manifest.json')
@@ -497,7 +550,11 @@ def stage_image_local(plan, job, runs, local_root):
     for c in job.get('countries', [job['country']]):
         for rel in (Path(c) / 'patches.jsonl', dino / '{}.h5'.format(c)):
             _copy_once(src_img / rel, dst_img / rel)
-        if data.get('stage_uncompressed', True):
+        if mode == 'sparse' and crops is not None:
+            keep = [json.loads(line)['patch_index'] for line in open(src_img / c / 'patches.jsonl')
+                    if json.loads(line)['crop'] in crops]
+            _stage_tiles_sparse(src_img / c / 'images.h5', dst_img / c / 'images.h5', keep)
+        elif mode == 'uncompressed' and data.get('stage_uncompressed', True):
             _stage_tiles_uncompressed(src_img / c / 'images.h5', dst_img / c / 'images.h5')
         else:
             _copy_once(src_img / c / 'images.h5', dst_img / c / 'images.h5')
@@ -1105,8 +1162,11 @@ def download_from_wandb(plan, runs, results_root):
 
 def render_k8s(suite_path, plan_name, n_jobs, parallelism, image, pvc, secret, gpus,
                data_mount='/data', data_subdir='YieldSAT', git_ref='main', cpu=8, memory_gi=32,
-               name_prefix='smatousi-yieldsat', exclude_nodes=()):
-    """Indexed Job running every job of a plan on the shared PVC."""
+               name_prefix='smatousi-yieldsat', exclude_nodes=(), image_dir='YieldSAT-Image',
+               donor_plan='image_donors'):
+    """Indexed Job running every job of a plan on the shared PVC.
+    ``image_dir``/``donor_plan`` set the image suites' YIELDSAT_IMAGE_ROOT
+    and YIELDSAT_DONOR_ROOT (which override a plan's recorded paths)."""
     base = '{}/{}'.format(data_mount, data_subdir)
     plan_dir = '{}/yieldsat_artifacts/cluster/{}'.format(base, plan_name)
     script = ('git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && '
@@ -1141,8 +1201,8 @@ def render_k8s(suite_path, plan_name, n_jobs, parallelism, image, pvc, secret, g
                         {'name': 'YIELDSAT_SOURCE_ROOT', 'value': base + '/preprocessed'},
                         {'name': 'YIELDSAT_ARTIFACT_ROOT', 'value': base + '/yieldsat_artifacts'},
                         # image suites: tiles + DINO cache, donor checkpoints
-                        {'name': 'YIELDSAT_IMAGE_ROOT', 'value': base + '/YieldSAT-Image'},
-                        {'name': 'YIELDSAT_DONOR_ROOT', 'value': base + '/yieldsat_results/image_donors'},
+                        {'name': 'YIELDSAT_IMAGE_ROOT', 'value': base + '/' + image_dir},
+                        {'name': 'YIELDSAT_DONOR_ROOT', 'value': base + '/yieldsat_results/' + donor_plan},
                         {'name': 'WANDB_API_KEY', 'valueFrom': {'secretKeyRef': {
                             'name': secret, 'key': 'WANDB_API_KEY'}}}],
                     'resources': {'limits': dict(res), 'requests': dict(res)},
@@ -1184,7 +1244,8 @@ def cmd_pools(a):
         docs.append(render_pool(a.suite, a.plan_name, name, int(pods), gpu.split(','), int(cpu),
                                 int(mem), int(k), int(kmax), int(workers),
                                 exclude_nodes=a.exclude_nodes, only=a.only, image=a.image, pvc=a.pvc,
-                                secret=a.secret, git_ref=a.git_ref))
+                                secret=a.secret, git_ref=a.git_ref, image_dir=a.image_dir,
+                                donor_plan=a.donor_plan))
     text = '# generated by yieldsat_cluster.py pools; no credentials inside\n' + '---\n'.join(
         yaml.safe_dump(d, sort_keys=False, width=200) for d in docs)
     Path(a.out).write_text(text)
@@ -1265,6 +1326,8 @@ def main():
     s.add_argument('--git_ref', default='main')
     s.add_argument('--exclude_nodes', nargs='*', default=[])
     s.add_argument('--only', nargs='*', default=None, help='job filter passed to the pool pods')
+    s.add_argument('--image_dir', default='YieldSAT-Image', help='image dataset dir under /data/YieldSAT')
+    s.add_argument('--donor_plan', default='image_donors', help='donor results dir under yieldsat_results')
     s.add_argument('--out', required=True)
     s.set_defaults(func=cmd_pools)
     s = sub.add_parser('extend', help='append a suite\'s new runs to an existing plan')

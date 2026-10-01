@@ -77,6 +77,14 @@ def get_args_parser():
     p.add_argument('--cross_attn_layers', type=int, default=2)
     p.add_argument('--modality_dropout', type=float, default=0.1)
     p.add_argument('--init_ckpt', default='', help='donor checkpoint_best.pth (warm start)')
+    # v2 (spec plan v2; defaults reproduce v1)
+    p.add_argument('--series', action='store_true', help='YI-09: per-pixel full S2 time-series branch')
+    p.add_argument('--level_head', action='store_true', help='YI-10: tile level + centered residual')
+    p.add_argument('--level_weight', type=float, default=1.0, help='weight of the level loss')
+    p.add_argument('--slot_coverage', default='tile', choices=['tile', 'present'],
+                   help='optical slot coverage relative to the tile (v1) or its present cells (v2)')
+    p.add_argument('--train_min_valid', type=int, default=0,
+                   help='YI-11: training tiles need >= this many valid cells (val/test use all)')
     p.add_argument('--epochs', type=int, default=60)
     p.add_argument('--steps_per_epoch', type=int, default=0,
                    help='0 = one pass over the training tiles, clamped by min/max')
@@ -204,6 +212,12 @@ def main(args):
         if not set(args.countries) <= set(split['countries']):
             raise SystemExit('split {} covers {}, not {}'.format(args.split, split['countries'], args.countries))
     parts = tiles_for_split(tiles, split, crops=args.crops)
+    train_filter = None
+    if args.train_min_valid > 0:
+        full = [t for t in parts['train'] if t['valid_pixels'] >= args.train_min_valid]
+        # a fold whose training seasons have no full tile keeps all its tiles
+        train_filter = 'min_valid {}'.format(args.train_min_valid) if full else 'fallback: all tiles'
+        parts['train'] = full or parts['train']
     if not parts['train']:
         raise SystemExit('no training tiles for this split')
     single_crop = args.crops is not None and len(args.crops) == 1
@@ -222,7 +236,8 @@ def main(args):
         dino = DinoFeatureCache(cache_dir, expected_revision=args.dino_revision,
                                 expected_prep_hash=prep_hash)
     common = dict(k_obs=args.k_obs, cutoff_mode=args.cutoff_mode, cutoff_days=args.cutoff_days,
-                  seed=args.seed, dino_cache=dino)
+                  seed=args.seed, dino_cache=dino, with_series=args.series,
+                  slot_coverage=args.slot_coverage)
     train_ds = YieldSATImageDataset(args.image_root, parts['train'], normalizer, season_days,
                                     train=True, **common)
     val_ds = (YieldSATImageDataset(args.image_root, parts['val'], normalizer, season_days, **common)
@@ -234,7 +249,8 @@ def main(args):
                                num_latents=args.num_latents, depth=args.depth, num_heads=args.num_heads,
                                cross_attn_layers=args.cross_attn_layers,
                                modality_dropout=args.modality_dropout, use_dino=dino is not None,
-                               use_crop=use_crop).to(device)
+                               use_crop=use_crop, use_series=args.series, level_head=args.level_head,
+                               level_weight=args.level_weight).to(device)
     transfer = load_donor(model, args.init_ckpt) if args.init_ckpt else None
     if transfer:
         print('warm start from {}: {} tensors'.format(args.init_ckpt, transfer['loaded']), flush=True)
@@ -317,6 +333,7 @@ def main(args):
         'val_seasons': len({t['season_id'] for t in parts['val']}),
         'test_seasons': len({t['season_id'] for t in parts['test']}),
         'tiles': {k: len(v) for k, v in parts.items()},
+        'train_tile_filter': train_filter,
         'history': history, 'best_val': best, 'transfer': transfer,
         'io': {'train_samples': seen, 'data_wait_seconds': round(data_time, 1),
                'samples_per_second': round(seen / max(1e-6, sum(h['seconds'] for h in history)), 1)},

@@ -31,6 +31,7 @@
 
 import hashlib
 import json
+import math
 
 import numpy as np
 import torch
@@ -187,6 +188,39 @@ class DepthAwareSoil(nn.Module):
         return self.out(z.flatten(1, 2))
 
 
+class SeriesEncoder(nn.Module):
+    """v2 per-pixel temporal branch: every cell's 24-slot S2 series
+    ([bands*mask, slot mask, days since seeding / 365, sin/cos day of year])
+    -> two temporal convolutions -> masked attention pooling over observed
+    slots -> ``out`` channels per cell (zero where nothing was observed)."""
+
+    def __init__(self, bands=12, hidden=32, out=32):
+        super().__init__()
+        self.conv = nn.Sequential(nn.Conv1d(bands + 4, hidden, 3, padding=1), nn.GELU(),
+                                  nn.Conv1d(hidden, hidden, 3, padding=1), nn.GELU())
+        self.score = nn.Conv1d(hidden, 1, 1)
+        self.proj = nn.Linear(hidden, out)
+
+    def forward(self, series, mask, days, seeding_doy):
+        """series (B,T,C,H,W), mask (B,T,H,W), days (B,T,H,W), seeding_doy (B,)
+        -> (B, out, H, W)."""
+        B, T, C, H, W = series.shape
+        m = mask.float()
+        doy = 2 * math.pi * ((seeding_doy.view(B, 1, 1, 1) + days) % 365.2425) / 365.2425
+        x = torch.cat([series * m.unsqueeze(2), m.unsqueeze(2), (days / 365.0).unsqueeze(2),
+                       torch.sin(doy).unsqueeze(2) * m.unsqueeze(2),
+                       torch.cos(doy).unsqueeze(2) * m.unsqueeze(2)], 2)      # (B,T,C+4,H,W)
+        x = x.permute(0, 3, 4, 2, 1).reshape(B * H * W, C + 4, T)
+        h = self.conv(x)                                                      # (N, hidden, T)
+        valid = m.permute(0, 2, 3, 1).reshape(B * H * W, T) > 0
+        logits = self.score(h).squeeze(1).masked_fill(~valid, float('-inf'))
+        any_valid = valid.any(1, keepdim=True)
+        w = torch.softmax(torch.where(any_valid, logits, torch.zeros_like(logits)), 1) * any_valid
+        pooled = (h * w.unsqueeze(1)).sum(-1)                                # (N, hidden)
+        out = self.proj(pooled) * any_valid
+        return out.view(B, H, W, -1).permute(0, 3, 1, 2)
+
+
 class SpatialQueryDecoder(nn.Module):
     """Perceiver-IO read-out: 16 learned 4x4 queries cross-attend to the latents."""
 
@@ -216,14 +250,15 @@ class YieldSATImageModel(nn.Module):
 
     def __init__(self, inputs='s2_adm', embed_dim=192, k_obs=4, dino_dim=1024, num_latents=32,
                  depth=4, num_heads=4, cross_attn_layers=2, modality_embed=32,
-                 modality_dropout=0.1, use_dino=True, use_crop=True, decoder_layers=2):
+                 modality_dropout=0.1, use_dino=True, use_crop=True, decoder_layers=2,
+                 use_series=False, level_head=False, level_weight=1.0):
         super().__init__()
         if inputs not in ('s2', 's2_adm'):
             raise ValueError('inputs must be s2 or s2_adm')
         D = embed_dim
         self.streams = (('dino',) if use_dino else ()) + ('spec',) + (
-            STREAMS_ADM if inputs == 's2_adm' else ())
-        self.dense = tuple(s for s in self.streams if s in ('spec', 'dem', 'terrain', 'soil'))
+            ('series',) if use_series else ()) + (STREAMS_ADM if inputs == 's2_adm' else ())
+        self.dense = tuple(s for s in self.streams if s in ('spec', 'series', 'dem', 'terrain', 'soil'))
         self.k = k_obs
         self.modality_dropout = modality_dropout
         self.use_crop = use_crop
@@ -231,6 +266,9 @@ class YieldSATImageModel(nn.Module):
         if use_dino:
             self.dino_proj = nn.Sequential(nn.LayerNorm(dino_dim), nn.Linear(dino_dim, D))
         self.spec_enc = MaskedConvPyramid(9, D)
+        if use_series:                    # v2: full per-pixel S2 time series
+            self.series_cell = SeriesEncoder()
+            self.series_enc = MaskedConvPyramid(0, D, stem_in=32)
         if inputs == 's2_adm':
             self.weather_enc = MaskedTemporalEncoder(4, D, time_dim=3, max_len=24)
             self.dem_enc = MaskedConvPyramid(1, D)
@@ -240,6 +278,7 @@ class YieldSATImageModel(nn.Module):
         if use_crop:
             self.crop_embed = nn.Embedding(len(CROPS), D)
         layout = {'dino': (GRID * GRID, k_obs), 'spec': (GRID * GRID, k_obs), 'weather': (1, 1),
+                  'series': (GRID * GRID, 1),
                   'dem': (GRID * GRID, 1), 'terrain': (GRID * GRID, 1), 'soil': (GRID * GRID, 1)}
         mods = {s: {'spatial': layout[s][0], 'temporal': layout[s][1]} for s in self.streams}
         if use_crop:
@@ -256,11 +295,15 @@ class YieldSATImageModel(nn.Module):
             cin = cout
         self.ups = nn.ModuleList(ups)
         self.head = nn.Conv2d(32, 1, 1)
+        self.level_weight = level_weight
+        if level_head:                    # v2: tile level from season-wide latents
+            self.level = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, D), nn.GELU(), nn.Linear(D, 1))
         self.config = dict(inputs=inputs, embed_dim=D, k_obs=k_obs, dino_dim=dino_dim,
                            num_latents=num_latents, depth=depth, num_heads=num_heads,
                            cross_attn_layers=cross_attn_layers, modality_embed=modality_embed,
                            modality_dropout=modality_dropout, use_dino=use_dino, use_crop=use_crop,
-                           decoder_layers=decoder_layers)
+                           decoder_layers=decoder_layers, use_series=use_series,
+                           level_head=level_head, level_weight=level_weight)
 
     def _obs_dates(self, b):
         return self.date_enc(b['obs_time'][..., 0] * 365.0, b['obs_valid'] > 0)   # (B, K, D)
@@ -284,6 +327,12 @@ class YieldSATImageModel(nn.Module):
             tmask['spec'] = (obs[..., None] & patch_valid(m).view(B, K, -1)).flatten(1)
             w = obs.float().view(B, K, 1, 1, 1)
             skips['spec'] = [(g.view(B, K, *g.shape[1:]) * w).sum(1) / w.sum(1).clamp(min=1) for g in f]
+        if 'series' in self.streams:
+            m = b['series_mask']                                              # (B, T, H, W)
+            cell = self.series_cell(b['series'], m, b['series_days'], b['seeding_doy'])
+            observed = m.amax(1, keepdim=True)                                # (B, 1, H, W)
+            tok['series'], skips['series'] = self.series_enc(cell, observed)
+            tmask['series'] = patch_valid(observed)
         if 'weather' in self.streams:
             wm = b['weather_mask']
             x = torch.cat([b['weather'] * wm, wm, b['weather_time']], -1)
@@ -320,20 +369,37 @@ class YieldSATImageModel(nn.Module):
                 k = (~drop[:, j]).float().view(B, 1, 1, 1)
                 skips[n] = [f * k for f in skips[n]]
 
-    def forward(self, b, apply_dropout=True):
-        """-> standardized yield (B, 64, 64) for every cell."""
+    def forward(self, b, apply_dropout=True, return_level=False):
+        """-> standardized yield (B, 64, 64) for every cell. With the level
+        head (v2): tile level + residual map centered over present cells."""
         tok, tmask, skips = self.encode(b, apply_dropout)
         latents = self.fusion(tok, token_mask=tmask)
         x = self.decoder(latents)                                             # (B, D, 4, 4)
         for up, res in zip(self.ups, (3, 2, 1, 0)):
             x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)
             x = up(torch.cat([x] + [skips[s][res] for s in self.dense], 1))
-        return self.head(x).squeeze(1)
+        dense = self.head(x).squeeze(1)
+        if not hasattr(self, 'level'):
+            return (dense, None) if return_level else dense
+        level = self.level(latents.mean(1)).squeeze(1)                       # (B,)
+        p = b['cell_present'].float()
+        center = (dense * p).flatten(1).sum(1) / p.flatten(1).sum(1).clamp(min=1)
+        pred = level.view(-1, 1, 1) + dense - center.view(-1, 1, 1)
+        return (pred, level) if return_level else pred
 
     def loss(self, b, apply_dropout=True):
-        """Tile-balanced MSE on valid cells of the standardized target."""
-        pred = self.forward(b, apply_dropout)
-        return pred, tile_balanced_mse(pred, b['target'], b['target_valid'])
+        """Tile-balanced MSE on valid cells of the standardized target (+ the
+        level loss: tile level vs the tile's mean valid target, v2)."""
+        pred, level = self.forward(b, apply_dropout, return_level=True)
+        loss = tile_balanced_mse(pred, b['target'], b['target_valid'])
+        if level is not None:
+            v = b['target_valid'].float()
+            n = v.flatten(1).sum(1)
+            mean_t = (torch.nan_to_num(b['target']) * v).flatten(1).sum(1) / n.clamp(min=1)
+            has = n > 0
+            if has.any():
+                loss = loss + self.level_weight * ((level - mean_t) ** 2)[has].mean()
+        return pred, loss
 
 
 def tile_balanced_mse(pred, target, valid):

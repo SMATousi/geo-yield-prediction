@@ -58,7 +58,7 @@ def load_geometry(path):
     return {(r['country'], r['field_shared_name']): r for r in records}
 
 
-def make_datasets(h5, n):
+def make_datasets(h5, n, min_valid=MIN_VALID):
     shape = (n, TILE, TILE)
     opts = dict(compression='lzf', shuffle=True, maxshape=(None, TILE, TILE))
     h5.create_dataset('target', shape=shape, chunks=(1, TILE, TILE), dtype='f4', **opts)
@@ -72,14 +72,14 @@ def make_datasets(h5, n):
                           compression='lzf', shuffle=True)
     h5.attrs['schema_version'] = VERSION
     h5.attrs['tile_size'] = TILE
-    h5.attrs['min_valid_pixels'] = MIN_VALID
+    h5.attrs['min_valid_pixels'] = min_valid
     h5.attrs['temporal_channels_json'] = json.dumps(TEMPORAL_CHANNELS)
     h5.attrs['static_channels_json'] = json.dumps(STATIC_CHANNELS)
     h5.attrs['time_units'] = 'days since 1970-01-01'
     h5.attrs['target_units'] = 't/ha'
 
 
-def build_country(country, source_root, artifact_root, output_root, geom):
+def build_country(country, source_root, artifact_root, output_root, geom, min_valid=MIN_VALID):
     index = load_country_index(artifact_root, source_root, country)
     cache_manifest = load_cache_manifest(artifact_root, source_root, country)
     before = fingerprint(source_path(source_root, country))
@@ -108,7 +108,8 @@ def build_country(country, source_root, artifact_root, output_root, geom):
         field_rows = rows['grid_row'][start:end]
         field_cols = rows['grid_col'][start:end]
         accepted = list(plan_field_windows(field_rows, field_cols,
-                                           rows['target'][start:end], g['width'], g['height']))
+                                           rows['target'][start:end], g['width'], g['height'],
+                                           min_valid=min_valid))
         excluded_windows += ((g['width'] + 63) // 64) * ((g['height'] + 63) // 64) - len(accepted)
         for row0, col0, relative in accepted:
             plans.append((field, g, row0, col0, start + relative))
@@ -121,7 +122,7 @@ def build_country(country, source_root, artifact_root, output_root, geom):
     json_tmp = country_dir / 'patches.jsonl.partial'
     records = []
     with h5py.File(h5_tmp, 'w') as out, json_tmp.open('w') as meta:
-        make_datasets(out, len(plans))
+        make_datasets(out, len(plans), min_valid)
         written = 0
         for field, g, row0, col0, ids in plans:
             local_r = rows['grid_row'][ids] - row0
@@ -133,7 +134,7 @@ def build_country(country, source_root, artifact_root, output_root, geom):
             sensor_valid = (np.isfinite(s[:, :-3]).any(axis=1)
                             | temporal_valid_mask(t, tm).any(axis=(1, 2)))
             valid_rows = np.isfinite(y) & sensor_valid
-            if int(valid_rows.sum()) < MIN_VALID:
+            if int(valid_rows.sum()) < min_valid:
                 continue
             dense_t = np.full((TILE, TILE, 24, len(TEMPORAL_CHANNELS)), np.nan, np.float32)
             dense_s = np.full((TILE, TILE, len(STATIC_CHANNELS)), np.nan, np.float32)
@@ -178,7 +179,7 @@ def build_country(country, source_root, artifact_root, output_root, geom):
     after = fingerprint(source_path(source_root, country))
     if not same_snapshot(before, after):
         raise RuntimeError('{} source changed during build'.format(country))
-    verify_country(h5_tmp, records, rows, temporal, static, times)
+    verify_country(h5_tmp, records, rows, temporal, static, times, min_valid)
     os.replace(h5_tmp, h5_final)
     os.replace(json_tmp, json_final)
     report = {'country': country, 'patches': len(records),
@@ -189,7 +190,7 @@ def build_country(country, source_root, artifact_root, output_root, geom):
     return report
 
 
-def verify_country(path, records, rows, temporal, static, times):
+def verify_country(path, records, rows, temporal, static, times, min_valid=MIN_VALID):
     """Read every mask/row map and bounded full-tensor probes before publication."""
     seen = set()
     with h5py.File(path, 'r') as f:
@@ -199,7 +200,7 @@ def verify_country(path, records, rows, temporal, static, times):
             src = f['source_row'][i]
             valid = f['valid_pixel'][i]
             present = src >= 0
-            if (int(valid.sum()) != rec['valid_pixels'] or valid.sum() < MIN_VALID
+            if (int(valid.sum()) != rec['valid_pixels'] or valid.sum() < min_valid
                     or int(present.sum()) != rec['occupied_pixels'] or np.any(valid & ~present)):
                 raise ValueError('patch validity/count mismatch: {}'.format(i))
             used = src[present]
@@ -232,16 +233,19 @@ def main():
     p.add_argument('--artifact-root', required=True)
     p.add_argument('--output-root', default='/home1/pupil/SMATousi/YieldSAT-Image')
     p.add_argument('--countries', nargs='+', default=list(COUNTRIES), choices=COUNTRIES)
+    p.add_argument('--min-valid', type=int, default=MIN_VALID,
+                   help='minimum valid cells per 64x64 window (1 = every cell with a target is '
+                        'covered; the grid is fixed, so smaller values give a superset)')
     args = p.parse_args()
     root = Path(args.output_root)
     if (root / 'manifest.json').exists():
         raise SystemExit('completed dataset already exists; choose a new output root')
     geometry = load_geometry(Path(args.artifact_root) / 'geometry' / GEOMETRY_FILE)
     root.mkdir(parents=True, exist_ok=True)
-    reports = [build_country(c, args.source_root, args.artifact_root, root, geometry)
+    reports = [build_country(c, args.source_root, args.artifact_root, root, geometry, args.min_valid)
                for c in args.countries]
     manifest = {'schema_version': VERSION, 'tile_size': TILE,
-                'min_valid_pixels': MIN_VALID, 'countries': args.countries,
+                'min_valid_pixels': args.min_valid, 'countries': args.countries,
                 'temporal_channels': TEMPORAL_CHANNELS,
                 'static_channels': STATIC_CHANNELS,
                 'time_units': 'days since 1970-01-01', 'target_units': 't/ha',

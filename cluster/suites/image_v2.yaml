@@ -1,0 +1,60 @@
+# YieldSAT image model v2, full comparison suite (spec/yieldsat-image-training.md, plan v2):
+# + per-pixel full S2 time-series branch (YI-09), level + residual head (YI-10),
+# full-coverage tiles: train on tiles with >= 2048 valid cells, validate/test on
+# every cell (YI-11). Otherwise identical to image_full (v1).
+# Same fold manifests, protocols, policies, inputs and seeds as the point suite
+# before_full (+ its province LORO extension), so image and point runs are
+# compared fold by fold on identical cells (yieldsat_image_compare.py):
+#   CV10 + LOYO: all pairs; LORO: farm regions except Argentina, provinces for
+#   ARG-C/S/W. GER-R / GER-W warm-start from the image_v2_donors checkpoints.
+suite: image_v2
+wandb:
+  project: yieldsat-cvpr27-image
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}         # v2 pods: /data/YieldSAT/YieldSAT-Image-full
+  stage_mode: sparse
+  donor_root: ${YIELDSAT_DONOR_ROOT}         # results root of the image_v2_donors plan
+donor_suite: cluster/suites/image_v2_donors.yaml  # plan checks every warm start has a donor run
+pairs: all
+job_unit: pair_shard
+target_job_hours: 3.0
+runs_per_gpu: 3
+max_runs_per_gpu: 5
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor: {image: 0.64}  # smoke 2 (A10, 3 concurrent): ~75 tiles/s per run = 0.64 x REF
+concurrency_speedup: 3.0
+stage_mb_per_s: 42
+experiments:
+  - name: image2
+    model: image
+    protocols: [cv, loyo]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    train_min_valid: 2048
+    extra_args: [--series, --level_head, --slot_coverage, present]
+    warm_start: {GER-R: pooled, GER-W: bra-w}
+  - name: image2
+    model: image
+    protocols: [loro]
+    pairs: [BRA-C, BRA-S, BRA-W, GER-R, GER-W, URG-S]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    train_min_valid: 2048
+    extra_args: [--series, --level_head, --slot_coverage, present]
+    warm_start: {GER-R: pooled, GER-W: bra-w}
+  - name: image2
+    model: image
+    protocols: [loro]
+    loro_region: province
+    pairs: [ARG-C, ARG-S, ARG-W]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    train_min_valid: 2048
+    extra_args: [--series, --level_head, --slot_coverage, present]
