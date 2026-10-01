@@ -730,3 +730,17 @@ def test_province_loro_folds_and_run_retirement(corpus, tmp_path):
     assert n == len(runs)
     assert yc.run_job(plan_dir, 0, use_wandb=False) == 0          # nothing left to run
     assert yc.skip_runs(plan_dir, pair_prefix='GER', protocol='loyo') == 0
+
+
+def test_pool_job_filter_claims_only_matching_jobs(corpus, tmp_path):
+    import argparse
+    import yieldsat_cluster as yc
+    root, art, _ = corpus
+    suite = _suite_file(tmp_path, root, art, pairs=['GER-R', 'GER-W'], job_unit='pair')
+    plan_dir = tmp_path / 'plan'
+    yc.cmd_plan(argparse.Namespace(suite=str(suite), out=str(plan_dir), gpus=1))
+    plan, runs = yc._load_plan(plan_dir)
+    assert yc.run_pool(plan_dir, 'p', only={'pair': 'GER-W'}, local_root=tmp_path / 'pod',
+                       use_wandb=False, health_check=False) == 0
+    done = {p.name.split('.')[0] for p in (plan_dir / 'state').glob('*.done.json')}
+    assert done == {rid for rid, r in runs.items() if r['pair'] == 'GER-W'}
