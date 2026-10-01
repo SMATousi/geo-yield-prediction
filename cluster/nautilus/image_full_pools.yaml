@@ -4,8 +4,8 @@ kind: Job
 metadata:
   name: smatousi-yieldsat-image-full-a10
 spec:
-  completions: 8
-  parallelism: 8
+  completions: 15
+  parallelism: 15
   ttlSecondsAfterFinished: 604800
   template:
     spec:
@@ -88,15 +88,15 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
-  backoffLimit: 400
+  backoffLimit: 750
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: smatousi-yieldsat-image-full-rtx3090
 spec:
-  completions: 8
-  parallelism: 8
+  completions: 15
+  parallelism: 15
   ttlSecondsAfterFinished: 604800
   template:
     spec:
@@ -179,4 +179,4 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
-  backoffLimit: 400
+  backoffLimit: 750

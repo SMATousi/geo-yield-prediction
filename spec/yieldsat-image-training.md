@@ -781,3 +781,18 @@ preprocessing hash; a mismatch refuses to load.
     utilization per pod is the expected level, not 80%. Reaching 80% would
     need ~2.5× more loader CPU per GPU or a lighter tile format. This
     differs from the point suite's ≥ 80% target.
+- 2026-10-01 — **YI-08 step 4: image suite submitted (user decision: start
+  now, 32 more GPUs).** Image `yieldsat:image-v1`, W&B project
+  `yieldsat-cvpr27-image`.
+  - `smatousi-yieldsat-image-donors-gpu`: 2 × A10/3090, 12 donor runs
+    (~1 h); results in `/data/YieldSAT/yieldsat_results/image_donors`.
+  - `smatousi-yieldsat-image-full-a10`: 15 × A10 (16 CPU, 32 GiB, 3 → 5
+    runs).
+  - `smatousi-yieldsat-image-full-rtx3090`: 15 × RTX 3090 (12 CPU, 32 GiB,
+    3 → 4 runs).
+  - Total 32 GPUs. The full suite has 2,460 runs; the 516 German runs
+    start once their donor checkpoints exist. Plans are made by the first
+    pod of each Job.
+  - At submission all pods were accepted by the admission webhooks and were
+    Pending for A10/3090 capacity, which the point suite (`before_full`,
+    ~1,000 runs left) also uses.
