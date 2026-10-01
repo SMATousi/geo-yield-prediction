@@ -919,3 +919,30 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
       exactly (v1 had 2,460), ~104 GPU-hours at the v1 rate, to be
       re-measured (the series stream adds loader work); plus 12 donor runs.
   - Tests: 23 image tests pass.
+- 2026-10-01 — **YI-12 preparation.**
+  - **Local DINO cache for the full build:** 68,873 (tile, slot) entries,
+    2.2 GB (Argentina 26,229, Brazil 22,028, Germany 4,992, Uruguay 15,624).
+  - **Local v2 smoke through `yieldsat_cluster.py run`** (no W&B): all 10
+    runs passed.
+    - Sparse staging: ARG-S 19 GB in 45 s; GER-R 2.4 GB in 5 s; pooled
+      donors 5.8 GB compressed copy.
+    - Warm starts loaded. Test cells per GER-R fold went from 10,420 (v1)
+      to 31,880 (all cells).
+    - Training throughput on this host: 17–23 tiles/s per run with 3–4
+      concurrent runs, GPU 7–13%. Single-process items: 13 ms with the
+      series stream vs 7 ms without. The host's memory-bandwidth ceiling
+      dominates at this concurrency (v1 also looked ~2× slower here than on
+      Nautilus), so the real rate comes from the Nautilus v2 smoke.
+    - Validation now covers all tiles of the validation seasons (ARG-S
+      ~195 vs 55 tiles).
+  - The series stream now uses the cell-major layout (H, W, T, C) as stored,
+    rearranged on the GPU.
+  - **Nautilus:**
+    - `image_full_build_job` (CPU, `--min-valid 1` → `YieldSAT-Image-full`)
+      submitted; a background chain then runs `image_full_dino_cache_job`
+      and the 1-GPU `image_v2_smoke_pool`.
+    - `image_v2_donors_pool` (2 GPUs) and `image_v2_pools` (15 A10, 16 CPU,
+      48 GiB + 15 RTX 3090, 12 CPU, 40 GiB) are rendered with
+      `YIELDSAT_IMAGE_ROOT=/data/YieldSAT/YieldSAT-Image-full` and
+      `YIELDSAT_DONOR_ROOT=…/image_v2_donors`, to be submitted after the
+      smoke run passes.
