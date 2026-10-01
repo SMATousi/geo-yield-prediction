@@ -485,3 +485,25 @@ A10s and 3090s were busy.
   order until they restart. The 29 new jobs are claimed by pods started on the
   new code: replacements, or the `v2` pools once the Nautilus utilization flag
   clears.
+
+### 12.3 Pool replacement (2026-10-01)
+
+- **Flag returned.** The Nautilus utilization flag cleared briefly on
+  2026-09-30 (23:29 UTC), then came back while the oversized original pools
+  kept running. A 4-pod province-LORO pool (`--only protocol=loro-province`)
+  was rejected.
+- **Original A10 pool deleted** (user decision) to remove the main source of
+  low CPU/memory utilization.
+- **Original RTX 3090 pool terminated by Kubernetes** at 00:42 UTC
+  (`BackoffLimitExceeded`). Node losses on `nautilus-ext-gpu01.fullerton.edu`
+  and admission errors (`ry-gpu-03`) used up its 8-failures-per-pod budget; the
+  earlier attempt to raise it was blocked by the flag.
+- **Replacements.** Rendered pools now allow 50 failures per pod and exclude
+  six faulty nodes. Waiting for the flag to clear:
+  - `before_full_pools_v2.yaml`: A10 16×(7 CPU / 16 GiB, 4→6 runs), RTX 3090
+    16×(5 CPU / 12 GiB, 3→5 runs);
+  - `before_full_province_pool.yaml`: 4 A10 pods, province LORO only.
+
+  A background watcher submits all three as soon as a server-side dry run is
+  accepted. Finished runs (≈1,160) and their markers stay on the PVC; only
+  in-progress runs restart.
