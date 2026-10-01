@@ -538,3 +538,57 @@ preprocessing hash; a mismatch refuses to load.
     rows, and all streams masked stay finite; masked observations have no
     effect on the output while valid ones do; tile balancing; end-to-end on
     a dataset batch with the stub cache.
+- 2026-10-01 — **DINO access granted; checkpoint validated (YI-02 closed).**
+  - Loaded `facebook/dinov3-vitl16-pretrain-sat493m` at revision `f692fa42`
+    with the token from the `smatousi-hf` secret:
+    - `DINOv3ViTModel`: 303M parameters, 0 trainable, hidden 1024, patch 16,
+      4 register tokens. Stays in eval mode after `train()`.
+    - A 64×64 input gives 21 tokens (1 class + 4 register + 16 patch); the
+      wrapper returns exactly the 4×4 patch tokens.
+  - **Real cache** built on the local RTX 3090 for all four countries in a
+    few minutes: `f692fa42_b764aff546ec`, 531 MB.
+
+    | Country | Tiles | (tile, slot) entries | Mean clip fraction |
+    |---|---:|---:|---:|
+    | Argentina | 1,220 | 8,628 | 0.05% |
+    | Brazil | 920 | 6,275 | 0.83% |
+    | Germany | 68 | 625 | 0.27% |
+    | Uruguay | 229 | 1,411 | 0.45% |
+
+    The low clip fractions confirm the reflectance/0.3 scaling. Tokens are
+    finite (std 0.25). Mean-token cosine is 0.78 for the same tile on
+    another date vs 0.68 across tiles.
+- 2026-10-01 — **YI-04 done.** `main_yieldsat_image.py`:
+  - **Cluster-compatible CLI:** accepts the point entry's flags
+    (`--data_contract yieldsat_preprocessed_v1`, `--streams` S2 or all five,
+    `--split`, `--countries`/`--crops`, budget, `--save_maps`, W&B; reuses
+    `WandbLogger`).
+  - **Training:** tiles inherit their season's partition from the point
+    manifest; normalization from training tiles; DINO cache checked against
+    revision and preprocessing hash. Season-balanced sampling (the sampler
+    carries the epoch, so persistent loader workers resample deterministically
+    per (seed, epoch, tile)); AdamW, cosine with warm-up, bf16; best
+    checkpoint by validation pixel RMSE.
+  - **Outputs:**
+    - `report.json` with the point fields plus tiles, DINO provenance and
+      transfer;
+    - `test_predictions.npz` in the point format: one row per valid test
+      cell, keyed by season + field-grid row/col. The builder's tiles don't
+      overlap and use the point grid, so cells match point predictions
+      exactly.
+  - **Donor and warm start:** `--donor` trains on all tiles of the
+    countries/crops with a 10% season validation split and no test.
+    `--init_ckpt` warm-starts from a donor, skipping the crop embedding and
+    shape mismatches.
+  - **Default budget:** 60 epochs × max(20, one pass) steps of 16 tiles,
+    lr 5e-4.
+  - **Real-data smoke** (GER-R CV fold 0, S2+ADM, real DINO cache): 33/4/4
+    tiles; 30 epochs ≈ 4 min on a 3090; 1.0 GB GPU memory. Test pixel RMSE
+    1.54 t/ha, R² 0.03; train loss 0.13 means it overfits with 33 tiles,
+    which is the case the donor warm start targets (YI-06).
+  - **Open (I/O):** training reads ~45 tiles/s. One item costs 28 ms
+    single-process and the standalone loader does ~105 tiles/s, but items
+    take ~85 ms inside training workers. Being investigated before the
+    cluster estimate (YI-07).
+  - Tests: 14 pass, including an end-to-end donor → warm-start fold run
+    and an S2-only run on the synthetic dataset.

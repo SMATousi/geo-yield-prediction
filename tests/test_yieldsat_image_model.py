@@ -259,3 +259,64 @@ def test_image_model_on_dataset_batch_with_stub_cache(image_root, tmp_path, monk
     pred, loss = _small().loss(b)
     loss.backward()
     assert pred.shape == (2, 64, 64) and torch.isfinite(loss)
+
+
+def _artifacts(tmp_path, seasons, split_name='fold_test'):
+    art = tmp_path / 'art'
+    (art / 'index' / 'Germany').mkdir(parents=True)
+    (art / 'splits').mkdir()
+    fields = [{'season_id': 'Germany/' + s, 'country': 'Germany', 'crop': c, 'field_shared_name': s,
+               'seeding_day': SEEDING, 'harvest_day': SEEDING + 300} for s, c in seasons]
+    (art / 'index' / 'Germany' / 'fields.json').write_text(json.dumps(fields))
+    split = dict(_split(seasons), label='synthetic fold', scheme='test', partition_hash='h')
+    (art / 'splits' / '{}.json'.format(split_name)).write_text(json.dumps(split))
+    return art
+
+
+def test_image_training_entry_end_to_end_with_donor_warm_start(image_root, tmp_path, monkeypatch):
+    import sys
+    import main_yieldsat_image as mi
+    import yieldsat_image_dino_cache as dc
+    root, _, seasons = image_root
+    art = _artifacts(tmp_path, seasons)
+    cache = tmp_path / 'cache'
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(cache),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    cache_dir = str(next(p for p in cache.iterdir() if p.is_dir()))
+    small = ['--embed_dim', '32', '--num_latents', '4', '--depth', '2', '--num_heads', '4',
+             '--epochs', '2', '--batch_size', '2', '--min_steps_per_epoch', '2', '--num_workers', '0',
+             '--device', 'cpu', '--artifact_root', str(art), '--image_root', str(root),
+             '--dino_cache', cache_dir, '--dino_revision', 'stub0000', '--countries', 'Germany']
+    donor = mi.main(mi.get_args_parser().parse_args(
+        small + ['--donor', '--output_dir', str(tmp_path / 'donor'), '--streams', *mi.S2_ADM]))
+    assert donor['mode'] == 'donor' and 'test' not in donor and donor['tiles']['val'] > 0
+    rep = mi.main(mi.get_args_parser().parse_args(
+        small + ['--crops', 'rapeseed', '--split', 'fold_test', '--output_dir', str(tmp_path / 'run'),
+                 '--streams', *mi.S2_ADM, '--init_ckpt', str(tmp_path / 'donor' / 'checkpoint_best.pth'),
+                 '--data_contract', 'yieldsat_preprocessed_v1', '--save_maps', '1']))
+    assert rep['transfer']['loaded'] > 0 and all('crop_embed' not in k for k in rep['transfer']['skipped'] if k)
+    assert rep['tiles'] == {'train': 4, 'val': 2, 'test': 2}
+    npz = np.load(tmp_path / 'run' / 'test_predictions.npz')
+    assert set(npz.files) == {'pred', 'target', 'season', 'grid_row', 'grid_col', 'season_names'}
+    assert len(npz['pred']) == rep['test']['rows_evaluated'] == 2 * 48 * 64   # valid cells only
+    assert np.isfinite(npz['pred']).all() and npz['grid_row'].max() == 64 + 47
+    assert rep['test']['overall']['pixel']['rmse'] > 0
+    s2 = mi.main(mi.get_args_parser().parse_args(
+        small + ['--crops', 'rapeseed', '--split', 'fold_test', '--output_dir', str(tmp_path / 's2'),
+                 '--streams', 'yieldsat_s2', '--epochs', '1']))
+    assert s2['inputs'] == 's2' and s2['streams'] == ['dino', 'spec']
+
+
+def test_sampler_carries_epoch_so_persistent_workers_resample(image_root):
+    from dataset.yieldsat_image_dataset import SeasonBalancedSampler
+    root, _, seasons = image_root
+    parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
+    s = SeasonBalancedSampler(parts['train'], 6, seed=0)
+    s.set_epoch(3)
+    idx = list(s)
+    assert all(e == 3 for _, e in idx)
+    norm = ImageNormalizer.fit(TileReader(root), parts['train'])
+    ds = YieldSATImageDataset(root, parts['train'], norm, _days(seasons), train=True)
+    picks = {tuple(ds[(0, e)]['obs_slot'].tolist()) for e in range(8)}
+    assert len(picks) > 1 and ds[(0, 2)]['obs_slot'].tolist() == ds[(0, 2)]['obs_slot'].tolist()

@@ -298,6 +298,9 @@ class YieldSATImageDataset(Dataset):
         return float(harvest - self.cutoff_days)
 
     def __getitem__(self, i):
+        epoch = self.epoch
+        if isinstance(i, tuple):                  # (index, epoch) from SeasonBalancedSampler:
+            i, epoch = i                          # works with persistent loader workers
         t = self.tiles[i]
         d = self.reader.get(t['country'], t['patch_index'])
         seeding, harvest = self.season_days[t['season_id']]
@@ -315,7 +318,7 @@ class YieldSATImageDataset(Dataset):
         rgb_ok = tvalid[..., RGB_IDX].all(axis=-1)                  # (64,64,24)
         dates, spread, coverage = slot_dates(times, rgb_ok)
         slots = qualifying_slots(dates, spread, coverage, cutoff)
-        rng = np.random.default_rng((self.seed, self.epoch, i)) if self.train else None
+        rng = np.random.default_rng((self.seed, epoch, i)) if self.train else None
         chosen = select_observations(slots, dates, coverage, self.k, seeding, harvest, rng)
         K = self.k
         obs_slot = np.full(K, -1, np.int64)
@@ -424,7 +427,7 @@ class SeasonBalancedSampler(Sampler):
     def __iter__(self):
         rng = np.random.default_rng((self.seed, self.epoch))
         for g in rng.integers(0, len(self.groups), self.n):
-            yield int(rng.choice(self.groups[g]))
+            yield int(rng.choice(self.groups[g])), self.epoch
 
 
 def audit_date_coherence(image_root, countries, max_tiles=None):
