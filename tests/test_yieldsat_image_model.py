@@ -409,14 +409,14 @@ def test_series_stream_masks_undated_and_post_cutoff_slots(image_root):
     parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
     norm = ImageNormalizer.fit(TileReader(root), parts['train'])
     it = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), with_series=True)[0]
-    assert it['series'].shape == (24, 12, 64, 64) and it['series'].dtype == np.float16
+    assert it['series'].shape == (64, 64, 24, 12) and it['series'].dtype == np.float16
     m = it['series_mask']
-    assert m.shape == (24, 64, 64) and not m[:4].any() and not m[20:].any()   # undated slots
-    assert not m[:, 48:].any() and m[4:20, :48].all()                         # padded rows
-    assert float(it['series_days'][5, 0, 0]) == 20.0                          # slot 5 = seeding + 20
+    assert m.shape == (64, 64, 24) and not m[..., :4].any() and not m[..., 20:].any()  # undated
+    assert not m[48:].any() and m[:48, :, 4:20].all()                         # padded rows
+    assert float(it['series_days'][0, 0, 5]) == 20.0                          # slot 5 = seeding + 20
     cut = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), with_series=True,
                                cutoff_mode='before_harvest', cutoff_days=200)[0]   # cutoff = +100
-    assert cut['series_mask'][:10].any() and not cut['series_mask'][10:].any()
+    assert cut['series_mask'][..., :10].any() and not cut['series_mask'][..., 10:].any()
     assert 'series' not in YieldSATImageDataset(root, parts['test'], norm, _days(seasons))[0]
 
 
@@ -435,19 +435,19 @@ def test_series_encoder_ignores_masked_slots_and_empty_cells():
     from models_yieldsat_image import SeriesEncoder
     torch.manual_seed(0)
     enc = SeriesEncoder().eval()
-    s = torch.randn(1, 24, 12, 4, 4)
-    m = torch.zeros(1, 24, 4, 4)
-    m[:, 5:15] = 1
-    m[:, :, 0, 0] = 0                                  # a cell never observed
-    d = torch.arange(24.0).view(1, 24, 1, 1).expand(1, 24, 4, 4) * 10
+    s = torch.randn(1, 4, 4, 24, 12)
+    m = torch.zeros(1, 4, 4, 24)
+    m[..., 5:15] = 1
+    m[:, 0, 0] = 0                                     # a cell never observed
+    d = torch.arange(24.0).view(1, 1, 1, 24).expand(1, 4, 4, 24) * 10
     doy = torch.tensor([100.0])
     with torch.no_grad():
         a = enc(s, m, d, doy)
         s2 = s.clone()
-        s2[:, 15:] += 3.0                              # change unobserved slots only
+        s2[..., 15:, :] += 3.0                         # change unobserved slots only
         assert torch.allclose(a, enc(s2, m, d, doy), atol=1e-6)       # unobserved values ignored
         s3 = s.clone()
-        s3[:, 7] += 3.0                                                     # observed slot changes
+        s3[..., 7, :] += 3.0                                                # observed slot changes
         assert not torch.allclose(a, enc(s3, m, d, doy), atol=1e-4)
     assert a.shape == (1, 32, 4, 4) and torch.all(a[0, :, 0, 0] == 0)
 
@@ -456,9 +456,9 @@ def test_level_head_decomposes_prediction_and_trains():
     m = _small(use_series=True, level_head=True).train()
     b = _batch()
     B = 2
-    b['series'] = torch.randn(B, 24, 12, 64, 64)
-    b['series_mask'] = torch.rand(B, 24, 64, 64) > 0.3
-    b['series_days'] = torch.arange(24.0).view(1, 24, 1, 1).expand(B, 24, 64, 64) * 10
+    b['series'] = torch.randn(B, 64, 64, 24, 12)
+    b['series_mask'] = torch.rand(B, 64, 64, 24) > 0.3
+    b['series_days'] = torch.arange(24.0).view(1, 1, 1, 24).expand(B, 64, 64, 24) * 10
     b['seeding_doy'] = torch.tensor([100.0, 300.0])
     b['cell_present'] = torch.ones(B, 64, 64)
     b['cell_present'][1, 48:] = 0

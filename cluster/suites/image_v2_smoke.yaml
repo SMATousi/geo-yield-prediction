@@ -1,0 +1,42 @@
+# Image model v2 smoke test (plan v2, YI-12): one GPU. Validates the full-
+# coverage tiles + DINO cache on the PVC, sparse per-job staging, the series
+# branch and level head, donor -> warm start, and measures v2 throughput.
+suite: image_v2_smoke
+wandb:
+  project: yieldsat-cvpr27-image-smoke
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}
+  stage_mode: sparse
+  donor_root: /data/YieldSAT/yieldsat_results/image_v2_smoke
+pairs: [ARG-S, GER-R]
+job_unit: pair
+runs_per_gpu: 3
+max_runs_per_gpu: 4
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor: {image: 0.64}
+concurrency_speedup: 3.0
+experiments:
+  - name: donor2
+    model: image
+    donors:
+      - {name: pooled, countries: [Argentina, Brazil, Uruguay]}
+    inputs: [s2, s2_adm]
+    seeds: [0]
+    train_min_valid: 2048
+    extra_args: [--series, --level_head, --slot_coverage, present]
+    budget: {epochs: 3}
+  - name: image2
+    model: image
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2, s2_adm]
+    seeds: [0]
+    max_folds: 2
+    warm_start: {GER-R: pooled}
+    train_min_valid: 2048
+    extra_args: [--series, --level_head, --slot_coverage, present]
+    budget: {epochs: 5}

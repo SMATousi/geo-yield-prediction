@@ -379,11 +379,12 @@ class YieldSATImageDataset(Dataset):
             x = temporal[..., S2_IDX]                                         # (64,64,24,12)
             sv = np.isfinite(x) & dated[..., None]
             series = np.where(sv, (x - mean[S2_IDX]) / std[S2_IDX], 0.0)
+            # cell-major layout (H, W, T[, C]) as stored: no transposed copies;
+            # the model rearranges on the GPU
             item_series = {
-                'series': np.ascontiguousarray(series.transpose(2, 3, 0, 1), dtype=np.float16),
-                'series_mask': np.ascontiguousarray(sv.any(axis=-1).transpose(2, 0, 1)),
-                'series_days': np.ascontiguousarray(np.where(dated, times - seeding, 0.0)
-                                                    .transpose(2, 0, 1), dtype=np.float16),
+                'series': series.astype(np.float16),                          # (64,64,24,12)
+                'series_mask': sv.any(axis=-1),                               # (64,64,24)
+                'series_days': np.where(dated, times - seeding, 0.0).astype(np.float16),
                 'seeding_doy': np.float32(float(seeding) % 365.2425)}
 
         # static layers (per cell)

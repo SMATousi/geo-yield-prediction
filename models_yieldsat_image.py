@@ -202,17 +202,16 @@ class SeriesEncoder(nn.Module):
         self.proj = nn.Linear(hidden, out)
 
     def forward(self, series, mask, days, seeding_doy):
-        """series (B,T,C,H,W), mask (B,T,H,W), days (B,T,H,W), seeding_doy (B,)
+        """series (B,H,W,T,C), mask (B,H,W,T), days (B,H,W,T), seeding_doy (B,)
         -> (B, out, H, W)."""
-        B, T, C, H, W = series.shape
-        m = mask.float()
+        B, H, W, T, C = series.shape
+        m = mask.float().unsqueeze(-1)                                        # (B,H,W,T,1)
         doy = 2 * math.pi * ((seeding_doy.view(B, 1, 1, 1) + days) % 365.2425) / 365.2425
-        x = torch.cat([series * m.unsqueeze(2), m.unsqueeze(2), (days / 365.0).unsqueeze(2),
-                       torch.sin(doy).unsqueeze(2) * m.unsqueeze(2),
-                       torch.cos(doy).unsqueeze(2) * m.unsqueeze(2)], 2)      # (B,T,C+4,H,W)
-        x = x.permute(0, 3, 4, 2, 1).reshape(B * H * W, C + 4, T)
+        x = torch.cat([series * m, m, (days / 365.0).unsqueeze(-1),
+                       torch.sin(doy).unsqueeze(-1) * m, torch.cos(doy).unsqueeze(-1) * m], -1)
+        x = x.reshape(B * H * W, T, C + 4).transpose(1, 2)                    # (N, C+4, T)
         h = self.conv(x)                                                      # (N, hidden, T)
-        valid = m.permute(0, 2, 3, 1).reshape(B * H * W, T) > 0
+        valid = m.reshape(B * H * W, T) > 0
         logits = self.score(h).squeeze(1).masked_fill(~valid, float('-inf'))
         any_valid = valid.any(1, keepdim=True)
         w = torch.softmax(torch.where(any_valid, logits, torch.zeros_like(logits)), 1) * any_valid
@@ -328,9 +327,9 @@ class YieldSATImageModel(nn.Module):
             w = obs.float().view(B, K, 1, 1, 1)
             skips['spec'] = [(g.view(B, K, *g.shape[1:]) * w).sum(1) / w.sum(1).clamp(min=1) for g in f]
         if 'series' in self.streams:
-            m = b['series_mask']                                              # (B, T, H, W)
+            m = b['series_mask']                                              # (B, H, W, T)
             cell = self.series_cell(b['series'], m, b['series_days'], b['seeding_doy'])
-            observed = m.amax(1, keepdim=True)                                # (B, 1, H, W)
+            observed = m.amax(-1).unsqueeze(1)                                # (B, 1, H, W)
             tok['series'], skips['series'] = self.series_enc(cell, observed)
             tmask['series'] = patch_valid(observed)
         if 'weather' in self.streams:
