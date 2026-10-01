@@ -29,6 +29,7 @@ spec:
                 - gpu-18.nrp.mghpcc.org
                 - nautilus-ext-gpu01.fullerton.edu
                 - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
       containers:
       - name: yieldsat
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1

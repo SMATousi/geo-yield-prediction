@@ -25,7 +25,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values: [hcc-chase-shor-c4715.unl.edu, ry-gpu-09.sdsc.optiputer.net, hcc-nrp-shor-c6017.unl.edu,
-                         gpu-18.nrp.mghpcc.org, nautilus-ext-gpu01.fullerton.edu, ry-gpu-03.sdsc.optiputer.net]
+                         gpu-18.nrp.mghpcc.org, nautilus-ext-gpu01.fullerton.edu, ry-gpu-03.sdsc.optiputer.net, uicnrp-fiona.evl.uic.edu]
       containers:
       - name: yieldsat
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
