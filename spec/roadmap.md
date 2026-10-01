@@ -221,6 +221,9 @@ Only worth doing once Phase 3 gives real unlabelled fields to pretrain on.
 - [~] **YS-10:** Evaluate YieldSAT scratch/pretrained transfer on matching grouped
       splits, with point/patch modes distinguished. Knowledge evaluation follows
       YS-07 and KP-01–KP-08 with country-specific tags, units and evidence policies.
+      The [YieldSAT image relational knowledge-pretraining branch](./yieldsat-image-knowledge-pretraining.md)
+      specifies **YIK-01–YIK-05** for the non-DINO image encoders; no reviewed
+      rules or knowledge-trained weights exist yet.
       *2026-09-28:* a first single-seed point-mode comparison (yield-free
       pretraining on pooled training farms → Uruguay fine-tuning at 10%/100% label
       budgets) is in §7 of the contract. Multi-seed runs, patch mode and knowledge

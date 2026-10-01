@@ -170,7 +170,7 @@ randomly initialized optical backbone; frozen versus partial fine-tuning;
 RGB versus RGB plus nine-band branch; optical/weather/terrain/soil removals;
 spatial context versus per-cell prediction. Distinguish DINO's external optical
 pretraining from optional YieldSAT sensor-only or [expert relationship
-pretraining](./knowledge_pretraining.md). The yield head never receives text
+pretraining](./yieldsat-image-knowledge-pretraining.md). The yield head never receives text
 at inference. Report size, GPU memory, throughput, seeds, split IDs and
 uncertainty in improvements.
 
