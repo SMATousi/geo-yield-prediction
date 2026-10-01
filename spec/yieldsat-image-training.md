@@ -460,3 +460,29 @@ preprocessing hash; a mismatch refuses to load.
 - 2026-10-01 — Plan v1 written (this section). Decisions: Perceiver aggregates
   all modality tokens; point fold manifests reused; GER-R ← pooled donor and
   GER-W ← BRA-W donor; DINO access via the user's HF token.
+- 2026-10-01 — **YI-01 done.** `dataset/yieldsat_image_dataset.py` implements:
+  - the tile table and `tiles_for_split` (partition inherited from a point
+    fold manifest by season ID; excluded seasons and other countries/crops
+    dropped);
+  - per-worker HDF5 reading;
+  - sensor masks from finiteness and dates, with first-dated-slot weather
+    invalid;
+  - cutoff modes `all_slots`, `before_harvest` and `harvest`;
+  - a train-tile-only `ImageNormalizer` (≤ 200 training tiles);
+  - optical observation selection (≥ 25% RGB coverage, date spread ≤ 1 day,
+    K = 4 seasonal bins; deterministic for evaluation, random within bins for
+    training);
+  - tile-level weather (mean over observed cells), cyclic aspect,
+    `cell_present` and `target_valid`;
+  - per-cell grid row/col for point-format outputs, a field-season-balanced
+    sampler and `audit_date_coherence`.
+
+  **Audit on the full dataset:** 2,437 tiles, 16,939 (tile, slot) pairs with
+  RGB, **0 date-incoherent** (all observed cells of a slot share one
+  acquisition date). On real data, a GER-R CV fold maps to 33/4/4
+  train/val/test tiles; one item loads in ~0.03 s. Tests:
+  `tests/test_yieldsat_image_model.py` (4).
+- 2026-10-01 — **DINO access.** The HF token is stored as the namespace secret
+  `smatousi-hf`, but download of the gated checkpoint returns HTTP 403: the
+  account still needs access approval on the model page. Until then the
+  pipeline is developed against a stub backbone with the same interface.
