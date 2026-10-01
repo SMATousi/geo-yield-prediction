@@ -946,3 +946,7 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
       `YIELDSAT_IMAGE_ROOT=/data/YieldSAT/YieldSAT-Image-full` and
       `YIELDSAT_DONOR_ROOT=…/image_v2_donors`, to be submitted after the
       smoke run passes.
+- 2026-10-01 — **User decision:** keep the v1 image suite running alongside
+  v2. Both sets of results are wanted (v1 = spatial-only ablation of v2).
+  v1 status at this point: 8/15 A10 pods running, the RTX 3090 pool still
+  pending, 1/2 donor pods running.
