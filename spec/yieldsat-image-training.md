@@ -678,3 +678,42 @@ preprocessing hash; a mismatch refuses to load.
     - GPU utilization was 10–14%: image runs are loader-bound, so pods need
       CPU rather than more runs per GPU.
   - Tests: image 17, point 35, all pass.
+- 2026-10-01 — **YI-07 done: image, manifests and operating order.**
+  - **Loader:** image jobs stage tiles uncompressed (tile by tile from the
+    PVC, `stage_uncompressed: true`). Training on the dev host goes from
+    45 to 118 tiles/s per run; LZF decompression dominated. Argentina needs
+    ~10 GB of pod scratch. `REF_THROUGHPUT['image'] = 118`.
+  - **Donor ordering:** pools skip warm-start jobs until their donor
+    checkpoints exist and wait (5-minute polls, ≤ 24 h) when only those
+    remain, so German runs never start early or trip the circuit breaker.
+  - **Pod environment:** pods get `YIELDSAT_IMAGE_ROOT=/data/YieldSAT/YieldSAT-Image`
+    and `YIELDSAT_DONOR_ROOT=/data/YieldSAT/yieldsat_results/image_donors`.
+  - **Container image** `gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1`
+    (pushed; digest `sha256:97b7036c…`):
+    - adds `transformers` and the DINOv3 class; the build runs the point and
+      image tests;
+    - a separate tag, so the running point pools (`:latest`) are unaffected;
+    - `.dockerignore` now excludes the gitignored credential YAML (it was
+      missing there). The pushed `:latest` was checked and does not contain
+      it (built before the file existed).
+  - **Manifests** (`cluster/nautilus/`, no credentials inside):
+    1. `image_build_job.yaml`: CPU Job (4 CPU, 16 GiB). Builds the tiles on
+       the PVC with `yieldsat_build_images.py` from the PVC's index, cache and
+       geometry; skips if the manifest exists; prints per-country counts to
+       compare with the development copy (1,220 / 920 / 68 / 229 tiles).
+    2. `image_dino_cache_job.yaml`: one A10/3090. `HF_TOKEN` from the
+       `smatousi-hf` secret; the checkpoint is downloaded once to
+       `/data/YieldSAT/hf_cache` and the cache written to
+       `YieldSAT-Image/dino_cache/f692fa42_b764aff546ec/`.
+    3. `image_smoke_pool.yaml` + `cluster/suites/image_smoke.yaml`: 1 A10,
+       9 runs. Pooled donor (3 epochs) → GER-R folds 0–1 warm-started, plus
+       ARG-S folds 0–1 for throughput; W&B `yieldsat-cvpr27-image-smoke`.
+    4. `image_donors_pool.yaml`: 2 A10 pods (16 CPU, 32 GiB, 3→4 runs);
+       12 donor runs.
+    5. `image_full_pools.yaml`: provisional, revised after the smoke run.
+       8 A10 (16 CPU, 32 GiB, 3→5 runs) + 8 RTX 3090 (12 CPU, 24 GiB,
+       2→4 runs). Image runs use ~1 GB GPU each and are loader-bound, so
+       utilization comes from concurrent runs with CPU-rich pods.
+  - **Order:** 1 → 2 → 3 (check results, calibrate) → 4 → 5. Steps 4 and 5
+    may overlap: German jobs wait for the donors. Plans are made by the
+    first pod (`run_in_pod.sh`).

@@ -1,0 +1,46 @@
+# YieldSAT image dataset on the PVC (spec/yieldsat-image-training.md, YI-07 step 1).
+# CPU only: builds the 64x64 tiles with yieldsat_build_images.py from the PVC's
+# point index, cache and geometry into /data/YieldSAT/YieldSAT-Image (the same
+# builder as the development copy). Skips if the dataset manifest exists.
+#   kubectl apply -f cluster/nautilus/image_build_job.yaml
+# No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-image-build
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: yieldsat
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - |
+          set -euo pipefail
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF"
+          echo "== host $(hostname) $(date -Is) code $(git rev-parse --short HEAD)"
+          OUT=/data/YieldSAT/YieldSAT-Image
+          if [ -f "$OUT/manifest.json" ]; then echo "dataset exists: $OUT"; else
+            python yieldsat_build_images.py --source-root "$YIELDSAT_SOURCE_ROOT" \
+              --artifact-root "$YIELDSAT_ARTIFACT_ROOT" --output-root "$OUT"
+          fi
+          python -c "import json; m = json.load(open('$OUT/manifest.json')); print(json.dumps({k: m[k] for k in ('total_patches', 'total_valid_pixels', 'min_valid_pixels')})); [print(r['country'], r['patches'], r['valid_pixels']) for r in m['reports']]"
+          echo "== done $(date -Is)"
+        env:
+        - {name: YIELDSAT_GIT_REF, value: main}
+        - {name: YIELDSAT_SOURCE_ROOT, value: /data/YieldSAT/preprocessed}
+        - {name: YIELDSAT_ARTIFACT_ROOT, value: /data/YieldSAT/yieldsat_artifacts}
+        resources:
+          limits: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+          requests: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}

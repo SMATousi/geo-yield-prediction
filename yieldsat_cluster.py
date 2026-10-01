@@ -51,9 +51,10 @@ PLAN_VERSION = 1
 # ours 30.6 k samples/s, paper LSTM 141.8 k samples/s, test 158 k cells/s,
 # ~4 s fixed start-up. Scaled by ``gpu_speed_factor`` for the target GPU.
 REF_THROUGHPUT = {'ours': 30600.0, 'paper_lstm': 141800.0,
-                  # image model: 64x64 tiles/s per run, data-bound, measured on
-                  # the development host (RTX 3090, 4 loader workers), 2026-10-01
-                  'image': 59.0}
+                  # image model: 64x64 tiles/s per run, loader-bound; measured in
+                  # training on the development host (RTX 3090, 3 loader workers,
+                  # uncompressed staged tiles), 2026-10-01
+                  'image': 118.0}
 SCRIPTS = {'image': 'main_yieldsat_image.py'}           # default: main_yieldsat_finetune.py
 IMAGE_DEFAULTS = {'epochs': 60, 'batch_size': 16, 'min_steps_per_epoch': 20, 'lr': 5e-4}
 WARM_START_LR_SCALE = 0.3
@@ -272,7 +273,7 @@ def estimate_seconds(run, speed_factor):
 
 
 STAGE_GB = {'Argentina': 11.0, 'Brazil': 8.7, 'Germany': 1.2, 'Uruguay': 4.4}   # cache + index
-IMAGE_STAGE_GB = {'Argentina': 1.2, 'Brazil': 0.95, 'Germany': 0.08, 'Uruguay': 0.25}  # tiles + DINO
+IMAGE_STAGE_GB = {'Argentina': 1.2, 'Brazil': 0.95, 'Germany': 0.08, 'Uruguay': 0.25}  # read: tiles + DINO
 
 
 def make_jobs(suite, runs):
@@ -442,6 +443,27 @@ def _copy_once(src, dst):
     os.replace(tmp, dst)
 
 
+def _stage_tiles_uncompressed(src, dst):
+    """Copy an image HDF5 tile by tile without LZF compression: loading a
+    tile drops from ~20 to ~8 ms (decompression dominated), for ~10x the
+    disk (Argentina ~10 GB on pod scratch). Atomic via a .partial name."""
+    import h5py
+    if dst.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_name(dst.name + '.partial')
+    with h5py.File(src, 'r') as fs, h5py.File(tmp, 'w') as fd:
+        for k, v in fs.attrs.items():
+            fd.attrs[k] = v
+        for k, ds in fs.items():
+            out = fd.create_dataset(k, ds.shape, ds.dtype, chunks=ds.chunks)
+            for a, v in ds.attrs.items():
+                out.attrs[a] = v
+            for i in range(ds.shape[0]):
+                out[i] = ds[i]
+    os.replace(tmp, dst)
+
+
 def stage_image_local(plan, job, runs, local_root):
     """Image jobs: copy the countries' tiles, DINO features, index fields and
     the runs' splits to local disk. Returns (artifact_root, image_root)."""
@@ -455,8 +477,12 @@ def stage_image_local(plan, job, runs, local_root):
     _copy_once(src_img / 'manifest.json', dst_img / 'manifest.json')
     _copy_once(src_img / dino / 'manifest.json', dst_img / dino / 'manifest.json')
     for c in job.get('countries', [job['country']]):
-        for rel in (Path(c) / 'images.h5', Path(c) / 'patches.jsonl', dino / '{}.h5'.format(c)):
+        for rel in (Path(c) / 'patches.jsonl', dino / '{}.h5'.format(c)):
             _copy_once(src_img / rel, dst_img / rel)
+        if data.get('stage_uncompressed', True):
+            _stage_tiles_uncompressed(src_img / c / 'images.h5', dst_img / c / 'images.h5')
+        else:
+            _copy_once(src_img / c / 'images.h5', dst_img / c / 'images.h5')
         _copy_once(src_art / 'index' / c / 'fields.json', dst_art / 'index' / c / 'fields.json')
     for rid in job['run_ids']:
         name = runs[rid]['split']
@@ -828,10 +854,18 @@ def _job_matches(job, runs, only):
     return all(all(str(runs[r].get(k)) == v for k, v in only.items()) for r in job['run_ids'])
 
 
-def run_pool(plan_dir, owner, only=None, **kw):
+def _job_ready(job, runs):
+    """A warm-started job waits until its donor checkpoints exist."""
+    return all(not runs[r].get('init_ckpt') or Path(runs[r]['init_ckpt']).exists()
+               for r in job['run_ids'])
+
+
+def run_pool(plan_dir, owner, only=None, donor_wait_hours=24.0, **kw):
     """Claim and run jobs (longest first) until the queue is exhausted.
     ``only`` restricts the pool to jobs whose runs all match, e.g.
-    ``{'protocol': 'loro-province'}``."""
+    ``{'protocol': 'loro-province'}``. Jobs whose donor checkpoints do not
+    exist yet are skipped; when only such jobs remain, the worker waits for
+    them (up to ``donor_wait_hours``)."""
     plan, _ = _load_plan(plan_dir)
     claims = JobClaims(plan_dir, owner, kw.pop('stale_minutes', 30))
     check_gpu = kw.pop('health_check', True)
@@ -839,6 +873,7 @@ def run_pool(plan_dir, owner, only=None, **kw):
     if reopened:
         print('re-opened {} jobs closed with failures: {}'.format(len(reopened), reopened), flush=True)
     rc, ran = 0, 0
+    wait_start = None
     while True:
         # re-read the plan between jobs: `extend` may have appended jobs
         plan, plan_runs = _load_plan(plan_dir)
@@ -852,13 +887,27 @@ def run_pool(plan_dir, owner, only=None, **kw):
                 record_bad_gpu(plan_dir, str(exc))
                 print('GPU FAULT, leaving the pool: {}'.format(exc), flush=True)
                 return 3
-        claimed = None
+        claimed, waiting = None, 0
         for idx in order:
-            if not claims.is_done(idx) and claims.try_claim(idx):
+            if claims.is_done(idx):
+                continue
+            if not _job_ready(plan['jobs'][idx], plan_runs):
+                waiting += 1
+                continue
+            if claims.try_claim(idx):
                 claimed = idx
                 break
         if claimed is None:
-            break
+            if not waiting:
+                break
+            wait_start = wait_start or time.time()
+            if time.time() - wait_start > donor_wait_hours * 3600:
+                print('{} jobs still wait for donor checkpoints; giving up'.format(waiting), flush=True)
+                return rc | 4
+            print('{} jobs wait for donor checkpoints; sleeping 5 min'.format(waiting), flush=True)
+            time.sleep(300)
+            continue
+        wait_start = None
         try:
             code = run_job(plan_dir, claimed, heartbeat=claims.beat, **kw)
         except GpuFault as exc:
@@ -1073,6 +1122,9 @@ def render_k8s(suite_path, plan_name, n_jobs, parallelism, image, pvc, secret, g
                         {'name': 'YIELDSAT_PLAN_DIR', 'value': plan_dir},
                         {'name': 'YIELDSAT_SOURCE_ROOT', 'value': base + '/preprocessed'},
                         {'name': 'YIELDSAT_ARTIFACT_ROOT', 'value': base + '/yieldsat_artifacts'},
+                        # image suites: tiles + DINO cache, donor checkpoints
+                        {'name': 'YIELDSAT_IMAGE_ROOT', 'value': base + '/YieldSAT-Image'},
+                        {'name': 'YIELDSAT_DONOR_ROOT', 'value': base + '/yieldsat_results/image_donors'},
                         {'name': 'WANDB_API_KEY', 'valueFrom': {'secretKeyRef': {
                             'name': secret, 'key': 'WANDB_API_KEY'}}}],
                     'resources': {'limits': dict(res), 'requests': dict(res)},

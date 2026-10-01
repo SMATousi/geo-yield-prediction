@@ -1,0 +1,39 @@
+# Image pipeline smoke test on Nautilus (YI-08): one GPU, under an hour.
+# Validates PVC tiles + DINO cache, uncompressed staging, donor -> warm start
+# (the GER-R job waits for the donor checkpoint), W&B logging and results,
+# and measures per-run tile throughput on the largest pair (ARG-S) to
+# calibrate gpu_speed_factor and pool shapes for image_full.
+suite: image_smoke
+wandb:
+  project: yieldsat-cvpr27-image-smoke
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}
+  donor_root: /data/YieldSAT/yieldsat_results/image_smoke
+pairs: [ARG-S, GER-R]
+job_unit: pair
+runs_per_gpu: 3
+max_runs_per_gpu: 4
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor: {image: 1.0}
+concurrency_speedup: 2.0
+experiments:
+  - name: donor
+    model: image
+    donors:
+      - {name: pooled, countries: [Argentina, Brazil, Uruguay]}
+    inputs: [s2_adm]
+    seeds: [0]
+    budget: {epochs: 3}
+  - name: image
+    model: image
+    protocols: [cv]
+    policies: [paper]
+    inputs: [s2, s2_adm]
+    seeds: [0]
+    max_folds: 2
+    warm_start: {GER-R: pooled}
+    budget: {epochs: 5}

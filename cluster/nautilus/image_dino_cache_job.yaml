@@ -1,0 +1,57 @@
+# Frozen DINOv3 SAT-493M patch tokens for every (tile, RGB slot) of the PVC
+# image dataset (spec/yieldsat-image-training.md, YI-07 step 2). One GPU, a few
+# minutes. Downloads the gated checkpoint once to /data/YieldSAT/hf_cache with
+# the token in the namespace secret smatousi-hf (key HF_TOKEN), pinned by
+# revision. Writes /data/YieldSAT/YieldSAT-Image/dino_cache/<rev8>_<prep>/.
+# Submit after image_build_job has completed. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-image-dino
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values: [hcc-chase-shor-c4715.unl.edu, ry-gpu-09.sdsc.optiputer.net, hcc-nrp-shor-c6017.unl.edu,
+                         gpu-18.nrp.mghpcc.org, nautilus-ext-gpu01.fullerton.edu, ry-gpu-03.sdsc.optiputer.net]
+      containers:
+      - name: yieldsat
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - |
+          set -euo pipefail
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF"
+          echo "== host $(hostname) $(date -Is) code $(git rev-parse --short HEAD)"
+          nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+          IMG=/data/YieldSAT/YieldSAT-Image
+          test -f "$IMG/manifest.json" || { echo "image dataset missing: run image_build_job first"; exit 1; }
+          python yieldsat_image_dino_cache.py --image-root "$IMG" --hf-cache /data/YieldSAT/hf_cache --device cuda
+          echo "== done $(date -Is)"
+        env:
+        - {name: YIELDSAT_GIT_REF, value: main}
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef: {name: smatousi-hf, key: HF_TOKEN}
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 20Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 20Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}

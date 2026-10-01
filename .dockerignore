@@ -11,3 +11,6 @@ wandb
 input/*.png
 Dockerfile
 .dockerignore
+# credentials (gitignored) must never enter an image
+cvpr_vlm_job.yaml
+*secret*.yaml

@@ -378,5 +378,15 @@ def test_cluster_image_runs_donors_and_warm_start():
     assert d['rel_path'] == 'donors/bra-w/s2_adm/seed0' and d['keep_files'] == ['checkpoint_best.pth']
     assert d['n_train'] == 27 and '--donor' in d['args'] and d['pair'] == 'donor-bra-w'
     d['est_seconds'] = yc.estimate_seconds(d, {'image': 1.0})
-    # 60 epochs x 20 steps x 16 tiles at 59 tiles/s (+ eval, start-up)
-    assert abs(d['est_seconds'] - (30 + 60 * (320 / 59.0 + 2))) < 1e-6
+    # 60 epochs x 20 steps x 16 tiles at the reference rate (+ eval, start-up)
+    assert abs(d['est_seconds'] - (30 + 60 * (320 / yc.REF_THROUGHPUT['image'] + 2))) < 1e-6
+
+
+def test_pool_defers_jobs_until_donor_checkpoints_exist(tmp_path):
+    import yieldsat_cluster as yc
+    ck = tmp_path / 'donor.pth'
+    runs = {'a': {'init_ckpt': str(ck)}, 'b': {'init_ckpt': None}}
+    assert yc._job_ready({'run_ids': ['b']}, runs)
+    assert not yc._job_ready({'run_ids': ['a', 'b']}, runs)
+    ck.write_bytes(b'x')
+    assert yc._job_ready({'run_ids': ['a', 'b']}, runs)
