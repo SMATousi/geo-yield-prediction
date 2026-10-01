@@ -1,6 +1,6 @@
 # Frozen DINOv3 SAT-493M patch tokens for every (tile, RGB slot) of the PVC
 # image dataset (spec/yieldsat-image-training.md, YI-07 step 2). One GPU, a few
-# minutes. Downloads the gated checkpoint once to /data/YieldSAT/hf_cache with
+# minutes on any GPU type listed below. Downloads the gated checkpoint once to /data/YieldSAT/hf_cache with
 # the token in the namespace secret smatousi-hf (key HF_TOKEN), pinned by
 # revision. Writes /data/YieldSAT/YieldSAT-Image/dino_cache/<rev8>_<prep>/.
 # Submit after image_build_job has completed. No credentials inside.
@@ -21,7 +21,7 @@ spec:
             - matchExpressions:
               - key: nvidia.com/gpu.product
                 operator: In
-                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090]
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090, NVIDIA-L40, NVIDIA-A40, NVIDIA-RTX-A6000, NVIDIA-RTX-A5000, NVIDIA-A100-80GB-PCIe, NVIDIA-A100-SXM4-80GB, Tesla-V100-SXM2-32GB, Tesla-T4]
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values: [hcc-chase-shor-c4715.unl.edu, ry-gpu-09.sdsc.optiputer.net, hcc-nrp-shor-c6017.unl.edu,
