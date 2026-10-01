@@ -31,7 +31,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset.yieldsat_image_dataset import (
-    DinoFeatureCache, ImageNormalizer, SeasonBalancedSampler, TileReader, YieldSATImageDataset,
+    DinoFeatureCache, ImageNormalizer, SeasonBalancedSampler, TileReader, YieldSATImageDataset, cast_batch,
     collate_tiles, load_tile_table, tiles_for_split,
 )
 from dataset.yieldsat_schema import COUNTRIES, CROPS
@@ -136,7 +136,8 @@ def _donor_split(tiles, countries, crops, frac, seed):
 
 
 def _to(batch, device):
-    return {k: (v.to(device, non_blocking=True) if torch.is_tensor(v) else v) for k, v in batch.items()}
+    return cast_batch({k: (v.to(device, non_blocking=True) if torch.is_tensor(v) else v)
+                       for k, v in batch.items()})
 
 
 def _loader(ds, args, sampler=None, batch_size=None):
@@ -211,6 +212,7 @@ def main(args):
 
     reader = TileReader(args.image_root)
     normalizer = ImageNormalizer.fit(reader, parts['train'], max_tiles=args.norm_tiles, seed=args.seed)
+    reader.close()                           # no HDF5 handles inherited by loader workers
     (out_dir / 'normalizer.json').write_text(json.dumps(normalizer.to_json()))
     dino = None
     if not args.no_dino:

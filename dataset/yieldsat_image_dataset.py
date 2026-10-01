@@ -97,6 +97,11 @@ class TileReader:
         return {k: f[k][index] for k in ('temporal', 'static', 'times', 'target', 'valid_pixel',
                                           'source_row')}
 
+    def close(self):
+        for f in self._files.values():
+            f.close()
+        self._files = {}
+
 
 def slot_dates(times, rgb_ok):
     """Per slot: (median date of RGB-observed cells, spread in days, coverage)."""
@@ -177,7 +182,7 @@ class DinoFeatureCache:
 
     def get(self, country, patch_index, slots):
         f, idx = self._open(country)
-        out = np.zeros((len(slots), 16, self.hidden_size), np.float32)
+        out = np.zeros((len(slots), 16, self.hidden_size), np.float16)
         valid = np.zeros(len(slots), np.float32)
         for j, s in enumerate(slots):
             row = idx.get((int(patch_index), int(s))) if s >= 0 else None
@@ -310,12 +315,14 @@ class YieldSATImageDataset(Dataset):
         dated = np.isfinite(times)
         if cutoff is not None:
             dated &= times <= cutoff
-        tvalid = temporal_valid(temporal, times) & dated[..., None]
+        # Only the channel groups that are used are validated/normalized (the
+        # full (64,64,24,16) array is never materialized twice): RGB validity
+        # for slot choice, the nine extra bands at the chosen slots, weather.
         tn = self.norm.stats['temporal']
-        tnorm = np.where(tvalid, (temporal - tn['mean']) / tn['std'], 0.0).astype(np.float32)
+        mean, std = np.asarray(tn['mean'], np.float32), np.asarray(tn['std'], np.float32)
 
         # optical observations
-        rgb_ok = tvalid[..., RGB_IDX].all(axis=-1)                  # (64,64,24)
+        rgb_ok = np.isfinite(temporal[..., RGB_IDX]).all(axis=-1) & dated     # (64,64,24)
         dates, spread, coverage = slot_dates(times, rgb_ok)
         slots = qualifying_slots(dates, spread, coverage, cutoff)
         rng = np.random.default_rng((self.seed, epoch, i)) if self.train else None
@@ -327,18 +334,26 @@ class YieldSATImageDataset(Dataset):
         spec = np.zeros((K, len(EXTRA_IDX), TILE, TILE), np.float32)
         spec_mask = np.zeros((K, len(EXTRA_IDX), TILE, TILE), np.float32)
         rgb_mask = np.zeros((K, TILE, TILE), np.float32)
+        em, es = mean[EXTRA_IDX], std[EXTRA_IDX]
         for j, s in enumerate(chosen):
+            x = temporal[:, :, s, EXTRA_IDX]                                  # (64,64,9)
+            v = np.isfinite(x) & dated[:, :, s, None]
             obs_slot[j] = s
             obs_valid[j] = 1.0
             obs_time[j] = _time_features(dates[s], seeding)
-            spec[j] = np.moveaxis(tnorm[:, :, s, EXTRA_IDX], -1, 0)
-            spec_mask[j] = np.moveaxis(tvalid[:, :, s, EXTRA_IDX], -1, 0)
+            spec[j] = np.moveaxis(np.where(v, (x - em) / es, 0.0), -1, 0)
+            spec_mask[j] = np.moveaxis(v, -1, 0)
             rgb_mask[j] = rgb_ok[:, :, s]
 
-        # weather: constant within a field -> tile-level series (mean over cells)
-        wv = tvalid[..., WEATHER_IDX]                                # (64,64,24,4)
+        # weather: constant within a field -> tile-level series (mean over
+        # cells); each cell's first dated slot is invalid (point contract)
+        w = temporal[..., WEATHER_IDX]                                        # (64,64,24,4)
+        wv = np.isfinite(w) & dated[..., None]
+        all_dated = np.isfinite(times)
+        rr, cc = np.nonzero(all_dated.any(axis=-1))
+        wv[rr, cc, np.argmax(all_dated, axis=-1)[rr, cc]] = False
         cnt = wv.sum(axis=(0, 1))
-        wsum = np.where(wv, tnorm[..., WEATHER_IDX], 0.0).sum(axis=(0, 1))
+        wsum = np.where(wv, (w - mean[WEATHER_IDX]) / std[WEATHER_IDX], 0.0).sum(axis=(0, 1))
         weather = np.where(cnt > 0, wsum / np.maximum(cnt, 1), 0.0).astype(np.float32)
         weather_mask = (cnt > 0).astype(np.float32)
         tile_dates = np.array([np.nanmedian(times[..., s][dated[..., s]]) if dated[..., s].any()
@@ -372,13 +387,17 @@ class YieldSATImageDataset(Dataset):
         if self.dino is not None:
             feats, fvalid = self.dino.get(t['country'], t['patch_index'], obs_slot)
             item_dino = {'dino': feats, 'dino_valid': fvalid * obs_valid}
+        # dense layers travel as float16 values + bool masks (~3.5x less
+        # worker->trainer traffic); cast_batch() restores float32 on device
+        h, m = np.float16, bool
         return {
             **item_dino,
             'obs_slot': obs_slot, 'obs_valid': obs_valid, 'obs_time': obs_time,
-            'rgb_mask': rgb_mask, 'spec': spec, 'spec_mask': spec_mask,
+            'rgb_mask': rgb_mask.astype(m), 'spec': spec.astype(h), 'spec_mask': spec_mask.astype(m),
             'weather': weather, 'weather_mask': weather_mask, 'weather_time': wtime,
-            'dem': dem, 'dem_mask': dem_mask, 'terrain': ter, 'terrain_mask': ter_mask,
-            'soil': soil, 'soil_mask': soil_mask, 'cell_present': present.astype(np.float32),
+            'dem': dem.astype(h), 'dem_mask': dem_mask.astype(m), 'terrain': ter.astype(h),
+            'terrain_mask': ter_mask.astype(m), 'soil': soil.astype(h), 'soil_mask': soil_mask.astype(m),
+            'cell_present': present,
             'target': target, 'target_raw': np.where(valid, d['target'], np.nan).astype(np.float32),
             'target_valid': valid, 'target_mean': np.float32(yn['mean'][0]),
             'target_std': np.float32(yn['std'][0]),
@@ -392,6 +411,20 @@ class YieldSATImageDataset(Dataset):
 def _time_features(day, seeding):
     doy = 2 * math.pi * (float(day) % 365.2425) / 365.2425
     return np.array([(float(day) - float(seeding)) / 365.0, math.sin(doy), math.cos(doy)], np.float32)
+
+
+KEEP_BOOL = ('target_valid',)
+
+
+def cast_batch(batch):
+    """float16 values and bool masks -> float32 (on whatever device the
+    batch is); ``target_valid`` stays bool."""
+    out = {}
+    for k, v in batch.items():
+        if torch.is_tensor(v) and (v.dtype == torch.float16 or (v.dtype == torch.bool and k not in KEEP_BOOL)):
+            v = v.float()
+        out[k] = v
+    return out
 
 
 def collate_tiles(items):

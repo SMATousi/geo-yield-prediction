@@ -592,3 +592,24 @@ preprocessing hash; a mismatch refuses to load.
     cluster estimate (YI-07).
   - Tests: 14 pass, including an end-to-end donor → warm-start fold run
     and an S2-only run on the synthetic dataset.
+- 2026-10-01 — **Loader I/O investigated and improved.**
+  - **Finding:** a pure-NumPy multi-process benchmark on the development host
+    stops scaling at ~2 processes (memory-bandwidth bound). The ~45 tiles/s
+    cap is not caused by NFS (local copy: same), HDF5 handles, pinned memory
+    or threads. An earlier 105 tiles/s reading was taken under different
+    host load.
+  - **Changes:**
+    - an item now validates and normalizes only the channel groups it uses
+      (RGB validity, the nine bands at the ≤ K chosen slots, weather) instead
+      of the whole (64,64,24,16) array: 29 → 20 ms per item;
+    - dense values travel as float16 and masks as bool (`cast_batch`
+      restores float32 on the GPU; `target_valid` stays bool), ~3.5× less
+      worker→trainer traffic;
+    - the normalizer's HDF5 handles are closed before workers fork.
+  - **Check vs the previous item on 450 real tiles** (Germany, Uruguay,
+    Brazil; training, evaluation and cutoff modes):
+    - every mask, slot choice, date, static layer and target is identical;
+    - spectral values differ by ≤ 1 float16 step (2e-3) and weather by ≤ 6e-5
+      (float32 vs float64 arithmetic).
+  - **Throughput** on this host: 45 → 59 tiles/s. Cluster rates will be
+    measured in the Nautilus smoke run (YI-08).

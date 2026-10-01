@@ -255,7 +255,11 @@ def test_image_model_on_dataset_batch_with_stub_cache(image_root, tmp_path, monk
     parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
     norm = ImageNormalizer.fit(TileReader(root), parts['train'])
     ds = YieldSATImageDataset(root, parts['train'], norm, _days(seasons), train=True, dino_cache=cache)
+    from dataset.yieldsat_image_dataset import cast_batch
     b = collate_tiles([ds[0], ds[1]])
+    assert b['soil'].dtype == torch.float16 and b['soil_mask'].dtype == torch.bool
+    b = cast_batch(b)
+    assert b['soil'].dtype == torch.float32 and b['target_valid'].dtype == torch.bool
     pred, loss = _small().loss(b)
     loss.backward()
     assert pred.shape == (2, 64, 64) and torch.isfinite(loss)
