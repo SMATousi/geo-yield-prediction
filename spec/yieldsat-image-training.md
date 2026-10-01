@@ -950,3 +950,10 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
   v2. Both sets of results are wanted (v1 = spatial-only ablation of v2).
   v1 status at this point: 8/15 A10 pods running, the RTX 3090 pool still
   pending, 1/2 donor pods running.
+- 2026-10-01 — **v2 data on the PVC.** `image_full_build_job` finished in
+  ~40 min. `/data/YieldSAT/YieldSAT-Image-full` holds 10,173 tiles and
+  12,372,920 valid cells: Argentina 3,785, Brazil 3,277, Germany 607,
+  Uruguay 2,504 tiles, all equal to the local build. The DINO cache (A10,
+  ~50 min) also matches the local one: entries 26,229 / 22,028 / 4,992 /
+  15,624 and the same clip fractions. The v2 smoke pool was submitted at
+  20:35 UTC.
