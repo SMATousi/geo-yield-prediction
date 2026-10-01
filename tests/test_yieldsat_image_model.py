@@ -324,3 +324,36 @@ def test_sampler_carries_epoch_so_persistent_workers_resample(image_root):
     ds = YieldSATImageDataset(root, parts['train'], norm, _days(seasons), train=True)
     picks = {tuple(ds[(0, e)]['obs_slot'].tolist()) for e in range(8)}
     assert len(picks) > 1 and ds[(0, 2)]['obs_slot'].tolist() == ds[(0, 2)]['obs_slot'].tolist()
+
+
+def test_image_vs_point_comparison_matches_identical_cells(tmp_path):
+    import yieldsat_image_compare as cmp
+    names = np.array(['GER_a', 'GER_b', 'GER_c'])
+    rng = np.random.default_rng(0)
+    # point: 3 seasons x 30 cells; image tiles cover 20 cells of each season
+    ps = np.repeat([0, 1, 2], 30)
+    pr = np.tile(np.arange(30), 3)
+    y = rng.uniform(2, 8, 90)
+    point = dict(pred=y + 0.5, target=y, season=ps, grid_row=pr, grid_col=np.zeros(90, int), season_names=names)
+    sel = pr < 20
+    # image lists seasons in another order
+    order = np.array([2, 0, 1])
+    inv = np.argsort(order)
+    image = dict(pred=y[sel] + 0.1, target=y[sel], season=inv[ps[sel]], grid_row=pr[sel],
+                 grid_col=np.zeros(sel.sum(), int), season_names=names[order])
+    rel = 'paper/cv10_season_paper_s0/s2_adm/{}_seed0/GER-R/fold00'
+    for root, tag, d in ((tmp_path / 'img', 'image', image), (tmp_path / 'pt', 'ours', point)):
+        f = root / rel.format(tag)
+        f.mkdir(parents=True)
+        np.savez(f / 'test_predictions.npz', **d)
+    rows, missing = cmp.collect(tmp_path / 'img', tmp_path / 'pt')
+    assert not missing and len(rows) == 1
+    r = rows[0]
+    assert r['n_matched'] == 60 and abs(r['point_coverage'] - 60 / 90) < 1e-9 and r['image_coverage'] == 1
+    assert abs(r['image']['pixel_rmse'] - 0.1) < 1e-9 and abs(r['point']['pixel_rmse'] - 0.5) < 1e-9
+    s = cmp.summarize(rows)[0]
+    assert s['folds'] == 1 and abs(s['delta_pixel_rmse'] + 0.4) < 1e-9
+    image['target'] = image['target'] + 1                    # different cells -> refuse
+    np.savez(tmp_path / 'img' / rel.format('image') / 'test_predictions.npz', **image)
+    with pytest.raises(ValueError):
+        cmp.collect(tmp_path / 'img', tmp_path / 'pt')

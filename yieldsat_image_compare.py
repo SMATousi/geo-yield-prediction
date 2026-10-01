@@ -1,0 +1,140 @@
+"""Matched-cell comparison of image runs against point runs (YI-05).
+
+Image and point runs share fold manifests and the results layout
+``paper/<protocol group>/<inputs>/<tag>_seed<s>/<pair>/foldNN/``. For every
+image fold with a point counterpart, both ``test_predictions.npz`` files are
+joined on (field season, grid row, grid col): the cells of test tiles. Both
+models are scored on exactly those cells (pixel and field level). Point
+coverage (the share of the point model's test cells that lie in tiles) is
+reported, because the point model's own whole-field scores are on more cells.
+
+    python yieldsat_image_compare.py --image-root /data/YieldSAT/yieldsat_results/image_full \
+        --point-root /data/YieldSAT/yieldsat_results/before_full --out results/yieldsat/image_vs_point
+"""
+
+import argparse
+import collections
+import csv
+import json
+import re
+from pathlib import Path
+
+import numpy as np
+
+from util.yieldsat_eval import _field_level, regression_metrics
+
+FOLD_RE = re.compile(r'paper/(?P<group>[^/]+)/(?P<inputs>[^/]+)/(?P<tag>.+)_seed(?P<seed>\d+)/'
+                     r'(?P<pair>[^/]+)/fold(?P<fold>\d+)$')
+
+
+def _keys(npz):
+    names = npz['season_names']
+    return np.char.add(np.char.add(names[npz['season']].astype(str), '|'),
+                       np.char.add(np.char.add(npz['grid_row'].astype(str), ','),
+                                   npz['grid_col'].astype(str)))
+
+
+def match_fold(image_npz, point_npz):
+    """-> dict of matched arrays and coverage, or None if nothing matches."""
+    ik, pk = _keys(image_npz), _keys(point_npz)
+    if len(np.unique(ik)) != len(ik) or len(np.unique(pk)) != len(pk):
+        raise ValueError('duplicate cells in a prediction file')
+    common, ii, pi = np.intersect1d(ik, pk, return_indices=True)
+    if not len(common):
+        return None
+    season = np.unique(np.char.partition(common, '|')[:, 0], return_inverse=True)[1]
+    y_img, y_pt = image_npz['target'][ii], point_npz['target'][pi]
+    if not np.allclose(y_img, y_pt, atol=1e-4, equal_nan=True):
+        raise ValueError('targets of matched cells disagree: not the same cells')
+    return {'target': y_img, 'image': image_npz['pred'][ii], 'point': point_npz['pred'][pi],
+            'season': season, 'n_image': len(ik), 'n_point': len(pk), 'n_matched': len(common)}
+
+
+def score(m):
+    out = {}
+    for model in ('image', 'point'):
+        px = regression_metrics(m['target'], m[model])
+        fl = _field_level(m['target'], m[model], m['season'])
+        out[model] = {'pixel_r2': px['r2'], 'pixel_rmse': px['rmse'], 'field_r2': fl.get('r2'),
+                      'field_rmse': fl.get('rmse'), 'fields': fl.get('n', 0)}
+    out['n_matched'] = m['n_matched']
+    out['point_coverage'] = m['n_matched'] / m['n_point']
+    out['image_coverage'] = m['n_matched'] / m['n_image']
+    return out
+
+
+def collect(image_root, point_root, image_tag='image', point_tag='ours'):
+    rows, missing = [], []
+    for f in sorted(Path(image_root).glob('paper/*/*/*/*/fold*/test_predictions.npz')):
+        rel = f.parent.relative_to(image_root).as_posix()
+        g = FOLD_RE.match(rel)
+        if not g or g['tag'] != image_tag:
+            continue
+        prel = rel.replace('/{}_seed'.format(image_tag), '/{}_seed'.format(point_tag), 1)
+        pf = Path(point_root) / prel / 'test_predictions.npz'
+        if not pf.exists():
+            missing.append(prel)
+            continue
+        m = match_fold(np.load(f), np.load(pf))
+        if m is None:
+            missing.append(prel + ' (no common cells)')
+            continue
+        rows.append(dict(group=g['group'], inputs=g['inputs'], seed=int(g['seed']), pair=g['pair'],
+                         fold=int(g['fold']), **score(m)))
+    return rows, missing
+
+
+def summarize(rows):
+    """Fold means per (protocol group, inputs, pair) over seeds and folds."""
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[(r['group'], r['inputs'], r['pair'])].append(r)
+    out = []
+    for (group, inputs, pair), rs in sorted(by.items()):
+        rec = {'group': group, 'inputs': inputs, 'pair': pair, 'folds': len(rs),
+               'point_coverage': float(np.mean([r['point_coverage'] for r in rs]))}
+        for model in ('image', 'point'):
+            for k in ('pixel_r2', 'pixel_rmse', 'field_rmse'):
+                vals = [r[model][k] for r in rs if r[model][k] is not None and np.isfinite(r[model][k])]
+                rec['{}_{}'.format(model, k)] = float(np.mean(vals)) if vals else float('nan')
+            # field R2 only where a fold has >= 3 field seasons
+            vals = [r[model]['field_r2'] for r in rs if r[model]['fields'] >= 3
+                    and r[model]['field_r2'] is not None and np.isfinite(r[model]['field_r2'])]
+            rec['{}_field_r2'.format(model)] = float(np.mean(vals)) if vals else float('nan')
+        rec['delta_pixel_rmse'] = rec['image_pixel_rmse'] - rec['point_pixel_rmse']
+        out.append(rec)
+    return out
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('--image-root', required=True)
+    p.add_argument('--point-root', required=True)
+    p.add_argument('--image-tag', default='image')
+    p.add_argument('--point-tag', default='ours')
+    p.add_argument('--out', required=True)
+    a = p.parse_args()
+    rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag)
+    summary = summarize(rows)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'folds.json').write_text(json.dumps(rows, indent=1))
+    (out / 'missing_point_folds.json').write_text(json.dumps(missing, indent=1))
+    if summary:
+        with open(out / 'summary.csv', 'w', newline='') as fh:
+            w = csv.DictWriter(fh, fieldnames=list(summary[0]))
+            w.writeheader()
+            w.writerows(summary)
+    print('{} matched folds, {} image folds without a point counterpart'.format(len(rows), len(missing)))
+    print('%-28s %-7s %-6s %5s %6s | %-13s | %-13s | %-13s' % (
+        'protocol group', 'inputs', 'pair', 'folds', 'cover', 'pixel R2 i/p', 'pixel RMSE i/p',
+        'field R2 i/p'))
+    for r in summary:
+        print('%-28s %-7s %-6s %5d %5.0f%% | %5.2f / %5.2f | %5.2f / %5.2f | %5.2f / %5.2f' % (
+            r['group'], r['inputs'], r['pair'], r['folds'], 100 * r['point_coverage'],
+            r['image_pixel_r2'], r['point_pixel_r2'], r['image_pixel_rmse'], r['point_pixel_rmse'],
+            r['image_field_r2'], r['point_field_r2']))
+
+
+if __name__ == '__main__':
+    main()

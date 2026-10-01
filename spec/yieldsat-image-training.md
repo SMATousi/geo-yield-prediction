@@ -613,3 +613,26 @@ preprocessing hash; a mismatch refuses to load.
       (float32 vs float64 arithmetic).
   - **Throughput** on this host: 45 → 59 tiles/s. Cluster rates will be
     measured in the Nautilus smoke run (YI-08).
+- 2026-10-01 — **YI-05 done.** `yieldsat_image_compare.py`:
+  - **Matching:** pairs each image fold with the point fold at the same
+    relative results path (`paper/<group>/<inputs>/<tag>_seed<s>/<pair>/foldNN`,
+    tags `image` vs `ours`). Cells are joined on (field season name, grid row,
+    grid col), independent of season index order. The tool refuses
+    duplicates, and refuses matched cells whose targets disagree.
+  - **Scoring:** both models on exactly those cells (pixel R²/RMSE;
+    field-level R² only for folds with ≥ 3 seasons). Fold means per (protocol
+    group, inputs, pair) go to `summary.csv`; per-fold rows to `folds.json`;
+    point folds still missing to `missing_point_folds.json`.
+  - **Test:** 15 pass.
+  - **Real check** (GER-R CV10 fold 0, S2+ADM): image smoke run vs the
+    earlier local point run.
+    - 10,420 cells matched; 100% of image test cells, all targets equal.
+    - Pixel RMSE: image 1.54, point 1.58 (one fold, early point run; not a
+      result).
+  - **Open point — coverage.** The image dataset keeps only grid-aligned,
+    non-overlapping 64×64 windows with ≥ 2,048 valid cells. It holds 63%
+    (Argentina), 60% (Brazil), 29% (Germany) and 26% (Uruguay) of the point
+    cells; GER-R fold 0 test: 33%. Image-vs-point tables are therefore on
+    the tiled subset, with the point model's whole-field scores reported
+    separately. Raising coverage (lower threshold, overlapping or edge tiles
+    for inference) would mean changing the dataset builder; the user decides.
