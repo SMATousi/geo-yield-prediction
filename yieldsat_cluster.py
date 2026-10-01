@@ -949,7 +949,9 @@ def render_pool(suite_path, plan_name, pool_name, pods, gpus, cpu, memory_gi, ru
     spec = m['spec']
     for key in ('completionMode', 'backoffLimitPerIndex', 'maxFailedIndexes'):
         spec.pop(key, None)
-    spec['backoffLimit'] = pods * 8          # admission rejections on faulty nodes
+    # admission rejections and node losses on faulty nodes count as failures;
+    # the rtx3090 pool died at 8 per pod (2026-10-01), so allow many
+    spec['backoffLimit'] = pods * 50
     c = spec['template']['spec']['containers'][0]
     c['args'] = [c['args'][0].replace(
         'run_in_pod.sh run --plan', 'run_in_pod.sh pool --plan').replace(

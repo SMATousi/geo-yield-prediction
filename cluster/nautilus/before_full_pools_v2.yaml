@@ -26,6 +26,8 @@ spec:
                 - ry-gpu-09.sdsc.optiputer.net
                 - hcc-nrp-shor-c6017.unl.edu
                 - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
       containers:
       - name: yieldsat
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest
@@ -81,7 +83,7 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
-  backoffLimit: 128
+  backoffLimit: 800
 ---
 apiVersion: batch/v1
 kind: Job
@@ -110,6 +112,8 @@ spec:
                 - ry-gpu-09.sdsc.optiputer.net
                 - hcc-nrp-shor-c6017.unl.edu
                 - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
       containers:
       - name: yieldsat
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:latest
@@ -165,4 +169,4 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
-  backoffLimit: 128
+  backoffLimit: 800
