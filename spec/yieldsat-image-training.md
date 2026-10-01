@@ -636,3 +636,45 @@ preprocessing hash; a mismatch refuses to load.
     the tiled subset, with the point model's whole-field scores reported
     separately. Raising coverage (lower threshold, overlapping or edge tiles
     for inference) would mean changing the dataset builder; the user decides.
+- 2026-10-01 — **YI-06 done; YI-07 driver and suites done.**
+  - **`yieldsat_cluster.py`:**
+    - Model preset `image` launches `main_yieldsat_image.py` with
+      `--image_root`. Point runs are unchanged.
+    - Image jobs stage only the country's tiles, its DINO cache file and
+      manifest, `index/<country>/fields.json` and the runs' splits. Copies are
+      atomic (`.partial` → rename), skipped when already present.
+    - `donors` experiments create one run per donor × inputs × seed under
+      `donors/<name>/<inputs>/seed<s>`, keeping `checkpoint_best.pth` in the
+      results root.
+    - `warm_start: {pair: donor}` adds `--init_ckpt
+      <donor_root>/donors/<donor>/<inputs>/seed<s>/checkpoint_best.pth` and
+      `--lr` × 0.3 (same seed and input set as the target run).
+    - Tile-based time estimates (59 tiles/s per run, dev host).
+    - Runs whose fold has no train or no test tiles are left out at plan
+      time and listed in `plan.json` (`suite.unrunnable`).
+    - `YIELDSAT_IMAGE_ROOT` overrides the planned image root.
+  - **Suites:**
+    - `cluster/suites/image_donors.yaml`: `bra-w` (BRA-W tiles) and `pooled`
+      (Argentina + Brazil + Uruguay, all crops) × S2, S2+ADM × seeds 0–2 →
+      12 runs.
+    - `cluster/suites/image_full.yaml`: CV10 + LOYO for all pairs, farm LORO
+      outside Argentina, province LORO for ARG-C/S/W, paper and strict
+      policies, S2 and S2+ADM, seeds 0–2. GER-R ← pooled and GER-W ← bra-w.
+      W&B project `yieldsat-cvpr27-image`.
+  - **Local dry plan against the real artifacts:**
+    - The (split, inputs, seed) set equals the point suite's `ours` runs
+      exactly (2,346 outside ARG LORO), plus 240 province-LORO runs.
+    - No fold manifest was created; all 667 are reused.
+    - 126 runs left out for lack of train/test tiles (e.g. BRA/URG farm-LORO
+      folds and GER-W LOYO folds whose held-out fields have no qualifying
+      window). Their comparison falls back to the point model only.
+    - 2,460 runs in 64 jobs, ~176 GPU-hours at the dev-host loader speed
+      (~5.5 h on 32 GPUs). To be recalibrated in YI-08.
+  - **Local end-to-end through `yieldsat_cluster.py run`:**
+    - pooled donor (S2, 1 epoch): staged Argentina+Brazil+Uruguay in 14 s,
+      ran in 50 s, checkpoint kept;
+    - warm-started GER-R CV fold 0: loaded 175 donor tensors at lr 1.5e-4,
+      results copied.
+    - GPU utilization was 10–14%: image runs are loader-bound, so pods need
+      CPU rather than more runs per GPU.
+  - Tests: image 17, point 35, all pass.

@@ -52,6 +52,11 @@ MODELS = {
                    '--fill_value', '-1', '--optimizer', 'adam', '--lr_schedule', 'constant',
                    '--weight_decay', '0', '--grad_clip', '0', '--field_alpha', '1.0',
                    '--batch_size', '1028', '--steps_per_epoch', '0', '--epochs', '15'],
+    # YieldSAT image model (spec/yieldsat-image-training.md): 64x64 tiles,
+    # frozen cached DINOv3 + per-modality encoders, run by main_yieldsat_image.py
+    # (cluster driver only). Default budget: 60 epochs x max(20, one pass)
+    # steps of 16 tiles.
+    'image': ['--cutoff_mode', 'all_slots'],
 }
 
 

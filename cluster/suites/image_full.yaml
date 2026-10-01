@@ -1,0 +1,49 @@
+# YieldSAT image model, full comparison suite (spec/yieldsat-image-training.md).
+# Same fold manifests, protocols, policies, inputs and seeds as the point suite
+# before_full (+ its province LORO extension), so image and point runs are
+# compared fold by fold on identical cells (yieldsat_image_compare.py):
+#   CV10 + LOYO: all pairs; LORO: farm regions except Argentina, provinces for
+#   ARG-C/S/W. GER-R / GER-W warm-start from the image_donors checkpoints.
+suite: image_full
+wandb:
+  project: yieldsat-cvpr27-image
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}
+  donor_root: ${YIELDSAT_DONOR_ROOT}         # results root of the image_donors plan
+pairs: all
+job_unit: pair_shard
+target_job_hours: 3.0
+runs_per_gpu: 2
+max_runs_per_gpu: 4
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor: {image: 1.0}
+concurrency_speedup: 2.0
+stage_mb_per_s: 42
+experiments:
+  - name: image
+    model: image
+    protocols: [cv, loyo]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    warm_start: {GER-R: pooled, GER-W: bra-w}
+  - name: image
+    model: image
+    protocols: [loro]
+    pairs: [BRA-C, BRA-S, BRA-W, GER-R, GER-W, URG-S]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]
+    warm_start: {GER-R: pooled, GER-W: bra-w}
+  - name: image
+    model: image
+    protocols: [loro]
+    loro_region: province
+    pairs: [ARG-C, ARG-S, ARG-W]
+    policies: [paper, strict]
+    inputs: [s2, s2_adm]
+    seeds: [0, 1, 2]

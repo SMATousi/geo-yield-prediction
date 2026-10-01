@@ -18,6 +18,13 @@
 # cache to local disk once and executes its runs (runs_per_gpu at a time),
 # each logging to W&B and writing a completion marker to the shared state
 # directory, so re-submitted jobs skip finished runs.
+#
+# Image suites (model ``image``, spec/yieldsat-image-training.md) run
+# main_yieldsat_image.py on the same fold manifests. Their jobs stage the
+# country's 64x64 tiles, DINO feature cache, index fields and splits instead
+# of the point cache. ``donors`` experiments train warm-start donors (one run
+# per donor x inputs x seed, checkpoint kept in the results root);
+# ``warm_start`` maps target pairs to a donor whose checkpoint they start from.
 # --------------------------------------------------------
 
 import argparse
@@ -43,7 +50,13 @@ PLAN_VERSION = 1
 # RTX 3090 single-run throughput measured 2026-09-29 (ARG-S, S2+ADM):
 # ours 30.6 k samples/s, paper LSTM 141.8 k samples/s, test 158 k cells/s,
 # ~4 s fixed start-up. Scaled by ``gpu_speed_factor`` for the target GPU.
-REF_THROUGHPUT = {'ours': 30600.0, 'paper_lstm': 141800.0}
+REF_THROUGHPUT = {'ours': 30600.0, 'paper_lstm': 141800.0,
+                  # image model: 64x64 tiles/s per run, data-bound, measured on
+                  # the development host (RTX 3090, 4 loader workers), 2026-10-01
+                  'image': 59.0}
+SCRIPTS = {'image': 'main_yieldsat_image.py'}           # default: main_yieldsat_finetune.py
+IMAGE_DEFAULTS = {'epochs': 60, 'batch_size': 16, 'min_steps_per_epoch': 20, 'lr': 5e-4}
+WARM_START_LR_SCALE = 0.3
 REF_TEST_ROWS_PER_S = 158000.0
 REF_STARTUP_S = 20.0            # index/cache open, normalizer, loaders (conservative)
 # aggregate speed-up of k concurrent runs on one GPU (3090: 3 runs -> ~1.45x)
@@ -83,14 +96,36 @@ def _override(args, extra):
     return list(args) + list(extra)
 
 
+def _image_tiles(suite):
+    """Tile table of the suite's image dataset (planning needs tile counts)."""
+    from dataset.yieldsat_image_dataset import load_tile_table
+    countries = sorted({parse_pair(p)[0] for p in suite['pairs']}
+                       | {c for e in suite['experiments'] for d in e.get('donors', [])
+                          for c in d['countries']})
+    return load_tile_table(suite['data']['image_root'], countries)
+
+
+def _tile_counts(tiles, split, crop):
+    from dataset.yieldsat_image_dataset import tiles_for_split
+    return {k: len(v) for k, v in tiles_for_split(tiles, split, crops=[crop]).items()}
+
+
 def expand_runs(suite, table, artifact_root):
     """All runs of the suite, with fold manifests created where missing."""
     runs = []
-    by_pair = {}
-    for f in table['fields']:
-        by_pair.setdefault((f['country'], f['crop']), []).append(f)
+    tiles = None
+    if any(e['model'] == 'image' for e in suite['experiments']):
+        if not suite['data'].get('image_root') or '$' in suite['data']['image_root']:
+            sys.exit('image suites need data.image_root (tile counts are planned from it)')
+        tiles = _image_tiles(suite)
     for exp in suite['experiments']:
         model = exp['model']
+        if exp.get('donors'):
+            for donor in exp['donors']:
+                for inputs in exp['inputs']:
+                    for seed in exp.get('seeds', [0]):
+                        runs.append(_make_donor_run(suite, exp, donor, inputs, seed, tiles))
+            continue
         for protocol in exp['protocols']:
             for policy_name in exp.get('policies', ['paper']):
                 group, policy = POLICY[policy_name]
@@ -115,9 +150,20 @@ def expand_runs(suite, table, artifact_root):
                             for i, split_name in enumerate(folds):
                                 split = json.loads((Path(artifact_root) / 'splits' /
                                                     '{}.json'.format(split_name)).read_text())
-                                runs.append(_make_run(suite, exp, model, protocol, policy_name, group,
-                                                      policy, k, inputs, seed, pair, country, crop,
-                                                      i, split_name, split, region))
+                                run = _make_run(suite, exp, model, protocol, policy_name, group,
+                                                policy, k, inputs, seed, pair, country, crop,
+                                                i, split_name, split, region)
+                                if model == 'image':
+                                    n = _tile_counts(tiles, split, crop)
+                                    run['n_train'], run['n_test'] = n['train'], n['test']
+                                    run['tiles'] = n
+                                    if not n['train'] or not n['test']:
+                                        # held-out fields without a qualifying 64x64
+                                        # window: no image metric possible
+                                        suite.setdefault('unrunnable', []).append(
+                                            {'name': run['name'], 'tiles': n})
+                                        continue
+                                runs.append(run)
     return runs
 
 
@@ -141,6 +187,15 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
     if model == 'ours':
         args += ['--fusion', exp.get('fusion', 'perceiver_summary')]
     args = _override(args, _budget_args(exp.get('budget', {})))
+    donor = exp.get('warm_start', {}).get(pair) if model == 'image' else None
+    init_ckpt = None
+    if donor:
+        root = suite['data'].get('donor_root')
+        if not root:
+            sys.exit('warm_start needs data.donor_root (results root of the donor plan)')
+        init_ckpt = str(Path(root) / _donor_rel(donor, inputs, seed) / 'checkpoint_best.pth')
+        lr = float(exp.get('budget', {}).get('lr', IMAGE_DEFAULTS['lr'])) * WARM_START_LR_SCALE
+        args = _override(args, ['--init_ckpt', init_ckpt, '--lr', '{:g}'.format(lr)])
     args = _override(args, [str(a) for a in exp.get('extra_args', [])])
     n_train = split['summary']['train']['rows']
     n_test = split['summary']['test']['rows']
@@ -148,10 +203,36 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
             'country': country, 'crop': crop, 'experiment': tag, 'model': model,
             'protocol': proto, 'policy': policy_name, 'inputs': inputs, 'seed': seed,
             'fold': fold, 'split': split_name, 'n_train': n_train, 'n_test': n_test,
-            'budget': exp.get('budget', {}), 'args': args,
+            'budget': exp.get('budget', {}), 'args': args, 'donor': donor, 'init_ckpt': init_ckpt,
             'wandb_group': '{}|{}|{}|{}|{}|{}'.format(suite['suite'], tag, proto, policy_name,
                                                       inputs, pair),
             'wandb_tags': [suite['suite'], tag, proto, policy_name, inputs, pair, 'seed{}'.format(seed)]}
+
+
+def _donor_rel(name, inputs, seed):
+    return 'donors/{}/{}/seed{}'.format(name, inputs, seed)
+
+
+def _make_donor_run(suite, exp, donor, inputs, seed, tiles):
+    """A warm-start donor: all tiles of ``countries`` (optionally ``crops``),
+    10% season validation, no test; keeps its checkpoint."""
+    name, countries, crops = donor['name'], list(donor['countries']), donor.get('crops')
+    readable = '{}|{}|donor|{}|{}|seed{}'.format(suite['suite'], exp['name'], name, inputs, seed)
+    args = ['--data_contract', 'yieldsat_preprocessed_v1', '--donor', '--countries', *countries,
+            '--seed', str(seed)] + (['--crops', *crops] if crops else [])
+    args += INPUTS[inputs] + MODELS['image']
+    args = _override(args, _budget_args(exp.get('budget', {})))
+    args = _override(args, [str(a) for a in exp.get('extra_args', [])])
+    n = sum(1 for t in tiles if t['country'] in countries and (not crops or t['crop'] in crops))
+    return {'run_id': hashlib.sha1(readable.encode()).hexdigest()[:12], 'name': readable,
+            'rel_path': _donor_rel(name, inputs, seed), 'pair': 'donor-' + name,
+            'country': countries[0], 'countries': countries, 'crop': ','.join(crops or ['all']),
+            'experiment': exp['name'], 'model': 'image', 'protocol': 'donor', 'policy': 'na',
+            'inputs': inputs, 'seed': seed, 'fold': 0, 'split': None,
+            'n_train': int(round(0.9 * n)), 'n_test': 0, 'budget': exp.get('budget', {}),
+            'args': args, 'keep_files': ['checkpoint_best.pth'],
+            'wandb_group': '{}|{}|donor|{}|{}'.format(suite['suite'], exp['name'], name, inputs),
+            'wandb_tags': [suite['suite'], exp['name'], 'donor', name, inputs, 'seed{}'.format(seed)]}
 
 
 def _factor(speed, model):
@@ -168,6 +249,14 @@ def estimate_seconds(run, speed_factor):
     directly via ``measured_per_run``."""
     b = run['budget']
     model = run['model']
+    if model == 'image':                  # n_train in tiles; test/val inference is cheap
+        b = dict(IMAGE_DEFAULTS, **b)
+        steps = b.get('steps_per_epoch', 0) or max(b['min_steps_per_epoch'],
+                                                   math.ceil(run['n_train'] / b['batch_size']))
+        if b.get('max_steps_per_epoch', 0) > 0:
+            steps = min(steps, b['max_steps_per_epoch'])
+        return 30.0 + b['epochs'] * (steps * b['batch_size'] / (REF_THROUGHPUT['image'] *
+                                                              _factor(speed_factor, 'image')) + 2.0)
     batch = b.get('batch_size', 1028 if model == 'paper_lstm' else 512)
     epochs = b.get('epochs', 15 if model == 'paper_lstm' else 20)
     steps = b.get('steps_per_epoch', 0 if model == 'paper_lstm' else 500)
@@ -183,6 +272,7 @@ def estimate_seconds(run, speed_factor):
 
 
 STAGE_GB = {'Argentina': 11.0, 'Brazil': 8.7, 'Germany': 1.2, 'Uruguay': 4.4}   # cache + index
+IMAGE_STAGE_GB = {'Argentina': 1.2, 'Brazil': 0.95, 'Germany': 0.08, 'Uruguay': 0.25}  # tiles + DINO
 
 
 def make_jobs(suite, runs):
@@ -196,7 +286,8 @@ def make_jobs(suite, runs):
     for r in runs:
         r['est_seconds'] = round(estimate_seconds(r, speed), 1)
     jobs = []
-    for pair in suite['pairs']:
+    pairs = list(suite['pairs']) + sorted({r['pair'] for r in runs} - set(suite['pairs']))
+    for pair in pairs:
         pr = sorted([r for r in runs if r['pair'] == pair], key=lambda r: -r['est_seconds'])
         if not pr:
             continue
@@ -209,10 +300,16 @@ def make_jobs(suite, runs):
             i = min(range(n), key=load.__getitem__)
             shards[i].append(r)
             load[i] += r['est_seconds']
-        stage_h = STAGE_GB.get(pr[0]['country'], 5.0) * 1024 / stage_rate / 3600
+        if pr[0]['model'] == 'image':
+            stage_gb = sum(IMAGE_STAGE_GB.get(c, 1.0) for c in pr[0].get('countries', [pr[0]['country']]))
+        else:
+            stage_gb = STAGE_GB.get(pr[0]['country'], 5.0)
+        stage_h = stage_gb * 1024 / stage_rate / 3600
         for i, shard in enumerate(shards):
             jobs.append({'job_index': len(jobs), 'pair': pair, 'shard': i, 'n_shards': n,
                          'country': shard[0]['country'],
+                         'countries': shard[0].get('countries', [shard[0]['country']]),
+                         'model': shard[0]['model'],
                          'run_ids': [r['run_id'] for r in shard],
                          'est_hours': round(sum(r['est_seconds'] for r in shard) / eff / 3600
                                             + stage_h, 2)})
@@ -236,7 +333,8 @@ def cmd_plan(a):
     for key in ('source_root', 'artifact_root'):
         if not data.get(key) or '$' in data[key]:
             sys.exit('suite data.{} is not set (export the env var it references)'.format(key))
-    countries = sorted({parse_pair(p)[0] for p in suite['pairs']})
+    countries = sorted({parse_pair(p)[0] for p in suite['pairs']}
+                       | {c for e in suite['experiments'] for d in e.get('donors', []) for c in d['countries']})
     needs_geo = any(pol == 'strict' for e in suite['experiments'] for pol in e.get('policies', []))
     table = load_field_table(data['artifact_root'], data['source_root'], countries,
                              require_geometry=needs_geo)
@@ -245,6 +343,9 @@ def cmd_plan(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / 'state').mkdir(exist_ok=True)
+    if suite.get('unrunnable'):
+        print('{} runs left out: no train or test tiles in their fold (listed in plan.json '
+              'suite.unrunnable)'.format(len(suite['unrunnable'])))
     plan = {'plan_version': PLAN_VERSION, 'suite': suite, 'suite_file': str(a.suite),
             'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'n_runs': len(runs), 'n_jobs': len(jobs),
             'jobs': jobs}
@@ -286,7 +387,8 @@ def _load_plan(plan_dir):
     on one machine runs where the shared volume is mounted elsewhere."""
     plan_dir = Path(plan_dir)
     plan = json.loads((plan_dir / 'plan.json').read_text())
-    for key, env in (('source_root', 'YIELDSAT_SOURCE_ROOT'), ('artifact_root', 'YIELDSAT_ARTIFACT_ROOT')):
+    for key, env in (('source_root', 'YIELDSAT_SOURCE_ROOT'), ('artifact_root', 'YIELDSAT_ARTIFACT_ROOT'),
+                     ('image_root', 'YIELDSAT_IMAGE_ROOT')):
         if os.environ.get(env):
             plan['suite']['data'][key] = os.environ[env]
     runs = {}
@@ -330,18 +432,57 @@ def stage_local(plan, job, runs, local_root):
     return dst
 
 
+def _copy_once(src, dst):
+    """Copy unless an identical-size copy exists; atomic via a .partial name."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists() and dst.stat().st_size == src.stat().st_size:
+        return
+    tmp = dst.with_name(dst.name + '.partial')
+    shutil.copy2(src, tmp)
+    os.replace(tmp, dst)
+
+
+def stage_image_local(plan, job, runs, local_root):
+    """Image jobs: copy the countries' tiles, DINO features, index fields and
+    the runs' splits to local disk. Returns (artifact_root, image_root)."""
+    from models_yieldsat_image import DINO_REVISION, preprocessing_hash
+    from yieldsat_image_dino_cache import cache_tag
+    data = plan['suite']['data']
+    src_art, src_img = Path(data['artifact_root']), Path(data['image_root'])
+    dst_art, dst_img = Path(local_root) / 'artifacts', Path(local_root) / 'images'
+    dino = Path('dino_cache') / cache_tag(data.get('dino_revision', DINO_REVISION), preprocessing_hash())
+    t0 = time.time()
+    _copy_once(src_img / 'manifest.json', dst_img / 'manifest.json')
+    _copy_once(src_img / dino / 'manifest.json', dst_img / dino / 'manifest.json')
+    for c in job.get('countries', [job['country']]):
+        for rel in (Path(c) / 'images.h5', Path(c) / 'patches.jsonl', dino / '{}.h5'.format(c)):
+            _copy_once(src_img / rel, dst_img / rel)
+        _copy_once(src_art / 'index' / c / 'fields.json', dst_art / 'index' / c / 'fields.json')
+    for rid in job['run_ids']:
+        name = runs[rid]['split']
+        if name:
+            _copy_once(src_art / 'splits' / '{}.json'.format(name), dst_art / 'splits' / '{}.json'.format(name))
+    print('staged image data for {} to {} in {:.0f} s'.format(job.get('countries'), local_root,
+                                                               time.time() - t0), flush=True)
+    return dst_art, dst_img
+
+
 def _state_paths(plan_dir, run_id):
     state = Path(plan_dir) / 'state'
     return state / '{}.done.json'.format(run_id), state / '{}.failed.json'.format(run_id)
 
 
-def _launch(run, plan, artifact_root, work_dir, use_wandb):
+def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None):
     out = Path(work_dir) / run['rel_path']
     out.mkdir(parents=True, exist_ok=True)
     wb = plan['suite']['wandb']
-    cmd = [sys.executable, 'main_yieldsat_finetune.py', '--source_root',
+    cmd = [sys.executable, SCRIPTS.get(run['model'], 'main_yieldsat_finetune.py'), '--source_root',
            plan['suite']['data']['source_root'], '--artifact_root', str(artifact_root),
            '--output_dir', str(out), '--num_workers', str(plan['suite'].get('num_workers', 4))]
+    if run['model'] == 'image':
+        cmd += ['--image_root', str(image_root or plan['suite']['data']['image_root'])]
+        if plan['suite']['data'].get('dino_revision'):
+            cmd += ['--dino_revision', plan['suite']['data']['dino_revision']]
     cmd += run['args']
     if use_wandb:
         cmd += ['--wandb', '--wandb_project', str(wb.get('project', 'yieldsat')),
@@ -365,7 +506,8 @@ def _finish(run, proc, log, out, plan_dir, results_root, keep_local):
         if results_root:
             dst = Path(results_root) / run['rel_path']
             dst.mkdir(parents=True, exist_ok=True)
-            for f in ('report.json', 'test_predictions.npz', 'normalizer.json', 'train.log'):
+            for f in ('report.json', 'test_predictions.npz', 'normalizer.json', 'train.log',
+                      *run.get('keep_files', [])):
                 if (out / f).exists():
                     shutil.copy2(out / f, dst / f)
         marker = {'run_id': run['run_id'], 'name': run['name'], 'finished': time.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -453,7 +595,10 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
     if dry_run or not todo:
         return 0
     artifact_root = plan['suite']['data']['artifact_root']
-    if local_root:
+    image_root = plan['suite']['data'].get('image_root')
+    if local_root and job.get('model') == 'image':
+        artifact_root, image_root = stage_image_local(plan, job, runs, local_root)
+    elif local_root:
         artifact_root = stage_local(plan, job, runs, local_root)
     work_dir = work_dir or (Path(local_root) / 'work' if local_root else Path(plan_dir) / 'work')
     suite = plan['suite']
@@ -473,7 +618,7 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
         while pending or running:
             while pending and len(running) < k:
                 r = pending.pop(0)
-                proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb)
+                proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb, image_root)
                 running.append((r, proc, log, out, time.time()))
             time.sleep(5)
             if heartbeat is not None:

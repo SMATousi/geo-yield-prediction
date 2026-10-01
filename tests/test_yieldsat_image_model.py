@@ -357,3 +357,26 @@ def test_image_vs_point_comparison_matches_identical_cells(tmp_path):
     np.savez(tmp_path / 'img' / rel.format('image') / 'test_predictions.npz', **image)
     with pytest.raises(ValueError):
         cmp.collect(tmp_path / 'img', tmp_path / 'pt')
+
+
+def test_cluster_image_runs_donors_and_warm_start():
+    import yieldsat_cluster as yc
+    suite = {'suite': 's', 'data': {'donor_root': '/pvc/donors'}}
+    exp = {'name': 'image', 'warm_start': {'GER-R': 'pooled'}, 'budget': {'epochs': 3}}
+    split = {'summary': {'train': {'rows': 1}, 'test': {'rows': 1}}}
+    r = yc._make_run(suite, exp, 'image', 'cv', 'paper', 'season', 'paper', 10, 's2', 1, 'GER-R',
+                     'Germany', 'rapeseed', 0, 'split0', split)
+    assert r['init_ckpt'] == '/pvc/donors/donors/pooled/s2/seed1/checkpoint_best.pth'
+    a = r['args']
+    assert a[a.index('--init_ckpt') + 1] == r['init_ckpt'] and a[a.index('--lr') + 1] == '0.00015'
+    other = yc._make_run(suite, exp, 'image', 'cv', 'paper', 'season', 'paper', 10, 's2', 1, 'GER-W',
+                         'Germany', 'wheat', 0, 'split0', split)
+    assert other['init_ckpt'] is None and '--init_ckpt' not in other['args']
+    tiles = [{'country': 'Brazil', 'crop': 'wheat'}] * 30 + [{'country': 'Brazil', 'crop': 'soybean'}] * 10
+    d = yc._make_donor_run(suite, {'name': 'donor'}, {'name': 'bra-w', 'countries': ['Brazil'],
+                                                      'crops': ['wheat']}, 's2_adm', 0, tiles)
+    assert d['rel_path'] == 'donors/bra-w/s2_adm/seed0' and d['keep_files'] == ['checkpoint_best.pth']
+    assert d['n_train'] == 27 and '--donor' in d['args'] and d['pair'] == 'donor-bra-w'
+    d['est_seconds'] = yc.estimate_seconds(d, {'image': 1.0})
+    # 60 epochs x 20 steps x 16 tiles at 59 tiles/s (+ eval, start-up)
+    assert abs(d['est_seconds'] - (30 + 60 * (320 / 59.0 + 2))) < 1e-6
