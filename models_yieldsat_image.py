@@ -11,6 +11,22 @@
 # is frozen, its tokens are precomputed once per (tile, slot) by
 # yieldsat_image_dino_cache.py; the cache key holds the revision and a hash of
 # the preprocessing.
+#
+# YI-03: YieldSATImageModel. One encoder per modality, each emitting D-wide
+# tokens on the tile's 4x4 patch grid (plus a 64/32/16/8 skip pyramid for the
+# dense streams):
+#   dino     cached frozen DINOv3 patch tokens -> LN -> Linear  (K x 16)
+#   spec     nine extra S2 bands, masked conv pyramid per obs   (K x 16)
+#   weather  point MaskedTemporalEncoder over the tile series   (1)
+#   dem      masked conv pyramid                                (16)
+#   terrain  masked conv pyramid (aspect as sin/cos)            (16)
+#   soil     per-cell depth-aware MLP -> masked conv pyramid    (16)
+#   crop     embedding                                          (1)
+# Optical tokens add the shared observation-date encoding. The point model's
+# LatentFusionTransformer (Perceiver) reads ALL tokens with per-token masks
+# (missing observations, empty patches, absent or dropped streams). A
+# Perceiver-IO decoder turns the latents into a 4x4 map via 16 learned spatial
+# queries, then four x2 U-Net stages with the skip pyramids reach 64x64.
 # --------------------------------------------------------
 
 import hashlib
@@ -18,7 +34,13 @@ import json
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
+
+from dataset.yieldsat_schema import CROPS, SOIL_DEPTHS, SOIL_PROPERTIES
+from models_latent_fusion import LatentFusionTransformer
+from models_multimodal_encoder import MaskedTemporalEncoder
+from models_yieldsat import DateEncoding
 
 DINO_REPO = 'facebook/dinov3-vitl16-pretrain-sat493m'
 DINO_REVISION = 'f692fa42da72c6797b67cd73494a168d1120d3ee'
@@ -104,3 +126,220 @@ class StubDino(nn.Module):
     @torch.no_grad()
     def forward(self, pixel_values):
         return self.proj(pixel_values).flatten(2).transpose(1, 2)
+
+
+# ---- YI-03: image model --------------------------------------------------------
+
+GRID = 4                                   # 64 / 16 patch grid
+STREAMS_S2 = ('dino', 'spec')
+STREAMS_ADM = ('weather', 'dem', 'terrain', 'soil')
+PYRAMID = (32, 48, 64, 96)                 # channels at 64, 32, 16, 8
+
+
+def _block(cin, cout, stride=1):
+    return nn.Sequential(nn.Conv2d(cin, cout, 3, stride, 1), nn.GroupNorm(8, cout), nn.GELU(),
+                         nn.Conv2d(cout, cout, 3, 1, 1), nn.GroupNorm(8, cout), nn.GELU())
+
+
+def patch_valid(mask):
+    """(N, C, 64, 64) cell mask -> (N, 16) bool: patch has any valid value."""
+    return F.adaptive_max_pool2d(mask.amax(1, keepdim=True), GRID).flatten(1) > 0
+
+
+class MaskedConvPyramid(nn.Module):
+    """[value*mask, mask] -> 64/32/16/8 skip features and 4x4 D-wide tokens.
+    Each level is zeroed where no input cell under it is valid."""
+
+    def __init__(self, in_ch, embed_dim, widths=PYRAMID, stem_in=None):
+        super().__init__()
+        self.stem = _block(stem_in or 2 * in_ch, widths[0])
+        self.downs = nn.ModuleList(_block(widths[i - 1], widths[i], 2) for i in range(1, len(widths)))
+        self.to_tokens = nn.Sequential(nn.Conv2d(widths[-1], embed_dim, 2, 2), nn.GroupNorm(1, embed_dim))
+
+    def forward(self, x, mask):
+        """x (N, Cin, 64, 64) already masked/packed, mask (N, 1, 64, 64)."""
+        feats = [self.stem(x)]
+        for d in self.downs:
+            feats.append(d(feats[-1]))
+        feats = [f * F.adaptive_max_pool2d(mask, f.shape[-1]) for f in feats]
+        tok = self.to_tokens(feats[-1]).flatten(2).transpose(1, 2)         # (N, 16, D)
+        return tok, feats
+
+
+class DepthAwareSoil(nn.Module):
+    """Per cell: a shared MLP per depth on [8 properties * mask, mask] plus a
+    learned depth embedding, depth features concatenated -> 32 channels."""
+
+    def __init__(self, hidden=16, out=32):
+        super().__init__()
+        self.P, self.Dp = len(SOIL_PROPERTIES), len(SOIL_DEPTHS)
+        self.mlp = nn.Sequential(nn.Conv2d(2 * self.P, hidden, 1), nn.GELU(), nn.Conv2d(hidden, hidden, 1))
+        self.depth = nn.Parameter(torch.zeros(1, self.Dp, hidden, 1, 1))
+        self.out = nn.Sequential(nn.Conv2d(self.Dp * hidden, out, 1), nn.GELU())
+        nn.init.trunc_normal_(self.depth, std=0.02)
+
+    def forward(self, soil, mask):
+        n, _, h, w = soil.shape
+        v = (soil * mask).view(n, self.P, self.Dp, h, w).transpose(1, 2)    # (n, depth, prop, h, w)
+        m = mask.view(n, self.P, self.Dp, h, w).transpose(1, 2)
+        z = self.mlp(torch.cat([v, m], 2).flatten(0, 1)).view(n, self.Dp, -1, h, w) + self.depth
+        z = z * (m.amax(2, keepdim=True) > 0)                                # absent depth -> 0
+        return self.out(z.flatten(1, 2))
+
+
+class SpatialQueryDecoder(nn.Module):
+    """Perceiver-IO read-out: 16 learned 4x4 queries cross-attend to the latents."""
+
+    def __init__(self, embed_dim, num_heads, layers=2):
+        super().__init__()
+        self.queries = nn.Parameter(torch.zeros(1, GRID * GRID, embed_dim))
+        nn.init.trunc_normal_(self.queries, std=0.02)
+        self.attn = nn.ModuleList(nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
+                                  for _ in range(layers))
+        self.qn = nn.ModuleList(nn.LayerNorm(embed_dim) for _ in range(layers))
+        self.mlp = nn.ModuleList(nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, 4 * embed_dim),
+                                               nn.GELU(), nn.Linear(4 * embed_dim, embed_dim))
+                                 for _ in range(layers))
+        self.norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, latents):
+        q = self.queries.expand(latents.shape[0], -1, -1)
+        for attn, qn, mlp in zip(self.attn, self.qn, self.mlp):
+            q = q + attn(qn(q), latents, latents)[0]
+            q = q + mlp(q)
+        q = self.norm(q)
+        return q.transpose(1, 2).reshape(q.shape[0], -1, GRID, GRID)        # (B, D, 4, 4)
+
+
+class YieldSATImageModel(nn.Module):
+    """Dense 64x64 yield from the YieldSAT image streams (see header)."""
+
+    def __init__(self, inputs='s2_adm', embed_dim=192, k_obs=4, dino_dim=1024, num_latents=32,
+                 depth=4, num_heads=4, cross_attn_layers=2, modality_embed=32,
+                 modality_dropout=0.1, use_dino=True, use_crop=True, decoder_layers=2):
+        super().__init__()
+        if inputs not in ('s2', 's2_adm'):
+            raise ValueError('inputs must be s2 or s2_adm')
+        D = embed_dim
+        self.streams = (('dino',) if use_dino else ()) + ('spec',) + (
+            STREAMS_ADM if inputs == 's2_adm' else ())
+        self.dense = tuple(s for s in self.streams if s in ('spec', 'dem', 'terrain', 'soil'))
+        self.k = k_obs
+        self.modality_dropout = modality_dropout
+        self.use_crop = use_crop
+        self.date_enc = DateEncoding(D)
+        if use_dino:
+            self.dino_proj = nn.Sequential(nn.LayerNorm(dino_dim), nn.Linear(dino_dim, D))
+        self.spec_enc = MaskedConvPyramid(9, D)
+        if inputs == 's2_adm':
+            self.weather_enc = MaskedTemporalEncoder(4, D, time_dim=3, max_len=24)
+            self.dem_enc = MaskedConvPyramid(1, D)
+            self.terrain_enc = MaskedConvPyramid(5, D)
+            self.soil_cell = DepthAwareSoil()
+            self.soil_enc = MaskedConvPyramid(0, D, stem_in=32)
+        if use_crop:
+            self.crop_embed = nn.Embedding(len(CROPS), D)
+        layout = {'dino': (GRID * GRID, k_obs), 'spec': (GRID * GRID, k_obs), 'weather': (1, 1),
+                  'dem': (GRID * GRID, 1), 'terrain': (GRID * GRID, 1), 'soil': (GRID * GRID, 1)}
+        mods = {s: {'spatial': layout[s][0], 'temporal': layout[s][1]} for s in self.streams}
+        if use_crop:
+            mods['crop'] = {'spatial': 1, 'temporal': 1}
+        self.fusion = LatentFusionTransformer(
+            embed_dim=D, num_latents=num_latents, depth=depth, num_heads=num_heads, modalities=mods,
+            modality_embed=modality_embed, cross_attn_layers=cross_attn_layers, norm_first=True,
+            input_norm=True, latent_init='trunc_normal')
+        self.decoder = SpatialQueryDecoder(D, num_heads, decoder_layers)
+        skip_ch = [w * len(self.dense) for w in PYRAMID]                    # 64, 32, 16, 8
+        ups, cin = [], D
+        for res, cout in zip((3, 2, 1, 0), (128, 96, 64, 32)):
+            ups.append(_block(cin + skip_ch[res], cout))
+            cin = cout
+        self.ups = nn.ModuleList(ups)
+        self.head = nn.Conv2d(32, 1, 1)
+        self.config = dict(inputs=inputs, embed_dim=D, k_obs=k_obs, dino_dim=dino_dim,
+                           num_latents=num_latents, depth=depth, num_heads=num_heads,
+                           cross_attn_layers=cross_attn_layers, modality_embed=modality_embed,
+                           modality_dropout=modality_dropout, use_dino=use_dino, use_crop=use_crop,
+                           decoder_layers=decoder_layers)
+
+    def _obs_dates(self, b):
+        return self.date_enc(b['obs_time'][..., 0] * 365.0, b['obs_valid'] > 0)   # (B, K, D)
+
+    def encode(self, b, apply_dropout=True):
+        """-> tokens {stream: (B, L, D)}, token masks {stream: (B, L) bool},
+        skips {stream: [64, 32, 16, 8 maps]}."""
+        B, K = b['obs_valid'].shape
+        tok, tmask, skips = {}, {}, {}
+        dates = self._obs_dates(b).unsqueeze(2)                               # (B, K, 1, D)
+        obs = b['obs_valid'] > 0
+        if 'dino' in self.streams:
+            x = self.dino_proj(b['dino'].float()) + dates                     # (B, K, 16, D)
+            rgb_patch = patch_valid(b['rgb_mask'].flatten(0, 1).unsqueeze(1)).view(B, K, -1)
+            tok['dino'] = x.flatten(1, 2)
+            tmask['dino'] = ((b['dino_valid'] > 0)[..., None] & rgb_patch).flatten(1)
+        if 'spec' in self.streams:
+            v, m = b['spec'].flatten(0, 1), b['spec_mask'].flatten(0, 1)      # (B*K, 9, 64, 64)
+            t, f = self.spec_enc(torch.cat([v * m, m], 1), m.amax(1, keepdim=True))
+            tok['spec'] = (t.view(B, K, -1, t.shape[-1]) + dates).flatten(1, 2)
+            tmask['spec'] = (obs[..., None] & patch_valid(m).view(B, K, -1)).flatten(1)
+            w = obs.float().view(B, K, 1, 1, 1)
+            skips['spec'] = [(g.view(B, K, *g.shape[1:]) * w).sum(1) / w.sum(1).clamp(min=1) for g in f]
+        if 'weather' in self.streams:
+            wm = b['weather_mask']
+            x = torch.cat([b['weather'] * wm, wm, b['weather_time']], -1)
+            tok['weather'] = self.weather_enc(x)
+            tmask['weather'] = self.weather_enc.token_mask(x)
+        for name, enc in (('dem', 'dem_enc'), ('terrain', 'terrain_enc')):
+            if name in self.streams:
+                v, m = b[name], b[name + '_mask']
+                tok[name], skips[name] = getattr(self, enc)(torch.cat([v * m, m], 1), m.amax(1, keepdim=True))
+                tmask[name] = patch_valid(m)
+        if 'soil' in self.streams:
+            m = b['soil_mask']
+            cell = self.soil_cell(b['soil'], m)
+            tok['soil'], skips['soil'] = self.soil_enc(cell, m.amax(1, keepdim=True))
+            tmask['soil'] = patch_valid(m)
+        if self.training and apply_dropout and self.modality_dropout > 0:
+            self._drop_streams(tmask, skips, B)
+        if self.use_crop:
+            tok['crop'] = self.crop_embed(b['crop']).unsqueeze(1)
+            tmask['crop'] = torch.ones(B, 1, dtype=torch.bool, device=b['crop'].device)
+        return tok, tmask, skips
+
+    def _drop_streams(self, tmask, skips, B):
+        """Drop whole streams per sample (never all of a sample's streams)."""
+        names = list(tmask)
+        dev = tmask[names[0]].device
+        drop = torch.rand(B, len(names), device=dev) < self.modality_dropout
+        has = torch.stack([tmask[n].any(1) for n in names], 1)
+        keep_one = (has & ~drop).any(1)
+        drop[~keep_one] = False
+        for j, n in enumerate(names):
+            tmask[n] = tmask[n] & ~drop[:, j:j + 1]
+            if n in skips:
+                k = (~drop[:, j]).float().view(B, 1, 1, 1)
+                skips[n] = [f * k for f in skips[n]]
+
+    def forward(self, b, apply_dropout=True):
+        """-> standardized yield (B, 64, 64) for every cell."""
+        tok, tmask, skips = self.encode(b, apply_dropout)
+        latents = self.fusion(tok, token_mask=tmask)
+        x = self.decoder(latents)                                             # (B, D, 4, 4)
+        for up, res in zip(self.ups, (3, 2, 1, 0)):
+            x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)
+            x = up(torch.cat([x] + [skips[s][res] for s in self.dense], 1))
+        return self.head(x).squeeze(1)
+
+    def loss(self, b, apply_dropout=True):
+        """Tile-balanced MSE on valid cells of the standardized target."""
+        pred = self.forward(b, apply_dropout)
+        return pred, tile_balanced_mse(pred, b['target'], b['target_valid'])
+
+
+def tile_balanced_mse(pred, target, valid):
+    v = valid.float()
+    n = v.flatten(1).sum(1)
+    err = torch.where(valid, (pred - torch.nan_to_num(target)) ** 2, torch.zeros_like(pred))
+    per_tile = err.flatten(1).sum(1) / n.clamp(min=1)
+    has = n > 0
+    return per_tile[has].mean() if has.any() else pred.sum() * 0.0

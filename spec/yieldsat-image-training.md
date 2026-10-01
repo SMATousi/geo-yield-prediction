@@ -506,3 +506,35 @@ preprocessing hash; a mismatch refuses to load.
   - Tests: 6 pass (stub cache build, lookup, mismatch refusal, dataset items).
   - Real cache: ~16.9k forward passes of ViT-L at 64×64 (a few minutes on
     one GPU); blocked only by the HF access approval.
+- 2026-10-01 — **YI-03 done.** `YieldSATImageModel` in `models_yieldsat_image.py`:
+  - **Encoders**, one per modality, each giving D-wide tokens on the 4×4
+    patch grid:
+    - `dino`: cached frozen tokens → LayerNorm → Linear.
+    - `spec`: masked conv pyramid over `[bands·mask, mask]` per observation.
+    - `weather`: the point model's `MaskedTemporalEncoder`, one summary token.
+    - `dem`, `terrain`: masked conv pyramids.
+    - `soil`: depth-aware per-cell MLP (shared over depths, plus a learned
+      depth embedding, depths concatenated), then a conv pyramid.
+    - `crop`: an embedding.
+    Optical tokens get the point model's `DateEncoding` of the observation
+    date. Dense streams also emit 64/32/16/8 skip maps, zeroed where no input
+    cell is valid; spectral skips are averaged over valid observations.
+  - **Fusion:** `LatentFusionTransformer` reads all tokens (K×16 DINO + K×16
+    spectral + 1 weather + 3×16 static + 1 crop = 178 at K = 4) with per-token
+    masks: invalid observation, patch with no valid cell, stream dropped.
+    32 latents, 2 reads, depth 4, pre-norm, input norm.
+  - **Training-time modality dropout:** p = 0.1 per stream and sample, never
+    dropping all of a sample's streams.
+  - **Decoder:** Perceiver-IO read-out (16 learned queries, 2 cross-attention
+    + MLP layers) → 4×4×D, then four ×2 U-Net stages concatenating the skips
+    → 1×1 conv. Output covers every cell.
+  - **Loss:** `tile_balanced_mse` (per-tile mean over valid cells, then mean
+    over tiles). NaN-safe on invalid cells; a test caught `0·NaN`.
+  - **Size:** S2 4.4M and S2+ADM 6.3M trainable parameters (DINO excluded,
+    cached). On an RTX 3090 at batch 16 with bf16: ~30 ms per step, ~1 GB
+    peak.
+  - **Tests (12 pass):** gradients reach every encoder, the fusion, decoder
+    and head; S2-only builds no ADM encoders; no optical observation, padded
+    rows, and all streams masked stay finite; masked observations have no
+    effect on the output while valid ones do; tile balancing; end-to-end on
+    a dataset batch with the stub cache.

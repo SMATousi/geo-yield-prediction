@@ -153,3 +153,109 @@ def test_dino_cache_build_and_lookup(image_root, tmp_path, monkeypatch):
     norm = ImageNormalizer.fit(TileReader(root), parts['train'])
     it = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), dino_cache=cache)[0]
     assert it['dino'].shape == (4, 16, 1024) and it['dino_valid'].sum() == it['obs_valid'].sum()
+
+
+def _batch(B=2, K=4, seed=0):
+    g = torch.Generator().manual_seed(seed)
+    r = lambda *s: torch.randn(*s, generator=g)
+    ones = lambda *s: torch.ones(*s)
+    b = {'dino': r(B, K, 16, 1024), 'dino_valid': ones(B, K), 'obs_valid': ones(B, K),
+         'obs_time': torch.rand(B, K, 3, generator=g), 'rgb_mask': ones(B, K, 64, 64),
+         'spec': r(B, K, 9, 64, 64), 'spec_mask': ones(B, K, 9, 64, 64),
+         'weather': r(B, 24, 4), 'weather_mask': ones(B, 24, 4), 'weather_time': torch.rand(B, 24, 3, generator=g),
+         'dem': r(B, 1, 64, 64), 'dem_mask': ones(B, 1, 64, 64),
+         'terrain': r(B, 5, 64, 64), 'terrain_mask': ones(B, 5, 64, 64),
+         'soil': r(B, 48, 64, 64), 'soil_mask': ones(B, 48, 64, 64),
+         'crop': torch.zeros(B, dtype=torch.long), 'target': r(B, 64, 64),
+         'target_valid': torch.ones(B, 64, 64, dtype=torch.bool)}
+    b['weather_mask'][:, :5] = 0
+    return b
+
+
+def _small(**kw):
+    from models_yieldsat_image import YieldSATImageModel
+    torch.manual_seed(0)
+    return YieldSATImageModel(embed_dim=64, num_latents=8, depth=2, num_heads=4, **kw)
+
+
+def test_image_model_shapes_and_gradients_reach_every_encoder():
+    m = _small()
+    b = _batch()
+    pred, loss = m.loss(b)
+    assert pred.shape == (2, 64, 64) and torch.isfinite(loss)
+    loss.backward()
+    for name in ('dino_proj', 'spec_enc', 'weather_enc', 'dem_enc', 'terrain_enc', 'soil_cell',
+                 'soil_enc', 'crop_embed', 'fusion', 'decoder', 'ups', 'head'):
+        grads = [p.grad for p in getattr(m, name).parameters() if p.requires_grad]
+        assert any(g is not None and g.abs().sum() > 0 for g in grads), name
+
+
+def test_image_model_s2_only_has_no_adm_encoders():
+    m = _small(inputs='s2')
+    assert m.streams == ('dino', 'spec') and not hasattr(m, 'soil_enc')
+    b = {k: v for k, v in _batch().items() if not k.startswith(('weather', 'dem', 'terrain', 'soil'))}
+    assert m(b).shape == (2, 64, 64)
+
+
+def test_image_model_handles_missing_observations_and_padded_cells():
+    m = _small().eval()
+    b = _batch()
+    for k in ('obs_valid', 'dino_valid'):
+        b[k][0] = 0                                    # tile 0: no optical observation at all
+    b['spec_mask'][0] = 0
+    b['rgb_mask'][0] = 0
+    for k in ('dem_mask', 'terrain_mask', 'soil_mask'):
+        b[k][1, :, 48:] = 0                            # tile 1: padded bottom rows
+    b['target_valid'][1, 48:] = False
+    b['target'][1, 48:] = float('nan')
+    with torch.no_grad():
+        pred, loss = m.loss(b)
+        assert torch.isfinite(pred).all() and torch.isfinite(loss)  # output covers padded cells too
+        # all streams of a sample masked -> fallback token, still finite
+        empty = {k: (torch.zeros_like(v) if k.endswith(('mask', 'valid')) and k != 'target_valid' else v)
+                 for k, v in b.items()}
+        assert torch.isfinite(m(empty)).all()
+
+
+def test_image_model_masked_tokens_do_not_matter_and_valid_ones_do():
+    m = _small().eval()
+    b = _batch()
+    b['obs_valid'][:, 3] = 0
+    b['dino_valid'][:, 3] = 0
+    b['spec_mask'][:, 3] = 0
+    with torch.no_grad():
+        base = m(b)
+        c = {k: v.clone() for k, v in b.items()}
+        c['dino'][:, 3] += torch.randn(2, 16, 1024)                        # masked observation changes
+        assert torch.allclose(m(c), base, atol=1e-5)
+        c['dino'][:, 0] += torch.randn(2, 16, 1024)                        # valid observation changes
+        assert not torch.allclose(m(c), base, atol=1e-4)
+
+
+def test_tile_balanced_mse_weights_tiles_equally():
+    from models_yieldsat_image import tile_balanced_mse
+    pred = torch.zeros(2, 64, 64)
+    target = torch.zeros(2, 64, 64)
+    target[0] = 1.0
+    valid = torch.zeros(2, 64, 64, dtype=torch.bool)
+    valid[0, :1, :1] = True                            # 1 cell, error 1
+    valid[1] = True                                    # 4096 cells, error 0
+    assert abs(tile_balanced_mse(pred, target, valid).item() - 0.5) < 1e-6
+
+
+def test_image_model_on_dataset_batch_with_stub_cache(image_root, tmp_path, monkeypatch):
+    import sys
+    import yieldsat_image_dino_cache as dc
+    from dataset.yieldsat_image_dataset import DinoFeatureCache
+    root, _, seasons = image_root
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(tmp_path),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    cache = DinoFeatureCache(next(p for p in tmp_path.iterdir() if p.is_dir()))
+    parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
+    norm = ImageNormalizer.fit(TileReader(root), parts['train'])
+    ds = YieldSATImageDataset(root, parts['train'], norm, _days(seasons), train=True, dino_cache=cache)
+    b = collate_tiles([ds[0], ds[1]])
+    pred, loss = _small().loss(b)
+    loss.backward()
+    assert pred.shape == (2, 64, 64) and torch.isfinite(loss)
