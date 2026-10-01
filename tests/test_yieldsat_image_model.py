@@ -390,3 +390,12 @@ def test_pool_defers_jobs_until_donor_checkpoints_exist(tmp_path):
     assert not yc._job_ready({'run_ids': ['a', 'b']}, runs)
     ck.write_bytes(b'x')
     assert yc._job_ready({'run_ids': ['a', 'b']}, runs)
+
+
+def test_plan_refuses_warm_starts_without_donor_runs():
+    import yieldsat_cluster as yc
+    donor = {'protocol': 'donor', 'pair': 'donor-pooled', 'inputs': 's2_adm', 'seed': 0}
+    target = {'protocol': 'cv10', 'donor': 'pooled', 'inputs': 's2', 'seed': 0}
+    with pytest.raises(SystemExit):
+        yc.check_warm_starts({}, [donor, target])
+    yc.check_warm_starts({}, [donor, dict(target, inputs='s2_adm')])

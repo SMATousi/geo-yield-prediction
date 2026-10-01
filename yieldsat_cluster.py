@@ -328,6 +328,23 @@ def simulate(jobs, gpus):
 
 # ---- plan ---------------------------------------------------------------------
 
+def check_warm_starts(suite, runs, suite_path=None):
+    """Every warm-started run needs a planned donor run (same donor, inputs
+    and seed): in this suite, or in ``donor_suite`` (path relative to the
+    repository). A missing donor would make the target job wait forever."""
+    have = {(r['pair'][len('donor-'):], r['inputs'], r['seed']) for r in runs if r['protocol'] == 'donor'}
+    if suite.get('donor_suite'):
+        other = load_suite(suite['donor_suite'])
+        for e in other['experiments']:
+            for d in e.get('donors', []):
+                for inputs in e['inputs']:
+                    for seed in e.get('seeds', [0]):
+                        have.add((d['name'], inputs, seed))
+    missing = sorted({(r['donor'], r['inputs'], r['seed']) for r in runs if r.get('donor')} - have)
+    if missing:
+        sys.exit('warm starts without a planned donor run (donor, inputs, seed): {}'.format(missing))
+
+
 def cmd_plan(a):
     suite = load_suite(a.suite)
     data = suite['data']
@@ -340,6 +357,7 @@ def cmd_plan(a):
     table = load_field_table(data['artifact_root'], data['source_root'], countries,
                              require_geometry=needs_geo)
     runs = expand_runs(suite, table, data['artifact_root'])
+    check_warm_starts(suite, runs)
     jobs = make_jobs(suite, runs)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)

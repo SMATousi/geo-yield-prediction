@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-image-smoke-gpu
+  name: smatousi-yieldsat-image-smoke2-gpu
 spec:
   completions: 1
   parallelism: 1
@@ -38,14 +38,14 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_smoke --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_smoke
+          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_smoke2 --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_smoke2
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         - name: YIELDSAT_SUITE
           value: cluster/suites/image_smoke.yaml
         - name: YIELDSAT_PLAN_DIR
-          value: /data/YieldSAT/yieldsat_artifacts/cluster/image_smoke
+          value: /data/YieldSAT/yieldsat_artifacts/cluster/image_smoke2
         - name: YIELDSAT_SOURCE_ROOT
           value: /data/YieldSAT/preprocessed
         - name: YIELDSAT_ARTIFACT_ROOT

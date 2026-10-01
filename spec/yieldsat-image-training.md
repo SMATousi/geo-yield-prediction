@@ -731,3 +731,28 @@ preprocessing hash; a mismatch refuses to load.
     suite. The one-off job now accepts any common GPU type.
   - Smoke pool re-rendered for one A10 or 3090 (12 CPU, 32 GiB) and
     submitted.
+- 2026-10-01 — **YI-08 step 3: smoke run 1 (1 A10, 12 CPU, 3 concurrent runs).**
+  - **Worked:**
+    - uncompressed staging (Argentina 73 s; Argentina+Brazil+Uruguay 78 s);
+    - ARG-S CV folds 0–1 (S2, S2+ADM) and the pooled donor;
+    - results and W&B logging; 0.6–1.0 GB GPU memory per run.
+
+    | Run | Tiles train/val/test | Tiles/s per run | Test pixel RMSE (5 epochs) |
+    |---|---|---|---|
+    | ARG-S f0 S2 | 569/55/79 | 66 | 1.08 |
+    | ARG-S f1 S2 | 578/55/70 | 66 | 1.15 |
+    | ARG-S f0 S2+ADM | 569/55/79 | 133 | 1.15 |
+    | ARG-S f1 S2+ADM | 578/55/70 | 66 | 1.13 |
+    | pooled donor S2+ADM | 2,135/234/– | 141 | – |
+
+    GPU utilization was 16–21% at 3 concurrent runs. These short runs are
+    start-up dominated; throughput is re-measured with the full budget.
+  - **Bug (mine):** the smoke suite planned the donor for S2+ADM only, but
+    GER-R has S2 runs too. Its job waited ~4 h for a checkpoint that would
+    never exist, then was stopped.
+  - **Fix:** `check_warm_starts` makes a plan refuse any warm start without
+    a planned donor run (same donor, inputs and seed), in the same suite or
+    in the suite named by `donor_suite` (`image_full` → `image_donors`). It
+    rejects the old smoke configuration and accepts the corrected one;
+    `image_full` passes. Test added (18 pass).
+  - Smoke run 2 (suite `image_smoke2`, donors for S2 and S2+ADM) submitted.
