@@ -796,3 +796,75 @@ preprocessing hash; a mismatch refuses to load.
   - At submission all pods were accepted by the admission webhooks and were
     Pending for A10/3090 capacity, which the point suite (`before_full`,
     ~1,000 runs left) also uses.
+
+## Implementation plan v2 — 2026-10-01
+
+**User decision (2026-10-01):** implement all three improvements proposed
+after the first point-suite results, then resubmit the image suite. Context:
+- point CV10 is on par with the paper's pixel LSTM but below its best models,
+  which use spatial context;
+- point LOYO/LORO trail the paper, with strongly negative field-level R² and
+  moderate pixel RMSE, i.e. a year/region-level bias;
+- the v1 image model sees only K = 4 optical dates and covers 26–63% of the
+  cells.
+
+The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
+
+### YI-09 — Full time series: per-pixel temporal branch
+
+- New dense stream `series`: for every cell, all 24 slots of the 12 S2 bands
+  (train-fold normalized, value·mask plus a per-slot observed flag), with
+  per-cell days since seeding and day-of-year features. Slots after the
+  cutoff and undated slots are masked, as in the point contract.
+- **Encoder:** per-cell temporal convolutions (kernel 3, two layers, 32
+  channels) over the 24 slots, then masked attention pooling over valid
+  slots → 32-d cell feature → masked conv pyramid. Like the other dense
+  streams, it gives 16 tokens to the Perceiver and 64/32/16/8 skips to the
+  decoder.
+- **Kept:** the K = 4 DINO + nine-band observation streams (pretrained
+  optical features).
+- **Loader:** the series travels as float16 values + a bool slot mask +
+  float16 per-cell days.
+
+### YI-10 — Level + residual decomposition (year/region bias)
+
+- **Prediction = tile level + centered residual map.**
+  - The level is a scalar from a "level head" reading the pooled Perceiver
+    latents. Those latents include the weather token, crop and season
+    timing, so the yield level of a year is modelled explicitly from
+    season-wide inputs.
+  - The residual is the dense decoder output minus its mean over present
+    cells (`cell_present`, from occupancy; no labels).
+- **Loss:** tile-balanced dense MSE + λ · (level − mean valid target of the
+  tile)², λ = 1 (auxiliary level loss).
+- Ablation flag `--no_level_head`.
+
+### YI-11 — Full coverage (every point cell evaluated)
+
+- **Builder:** `yieldsat_build_images.py --min-valid N` (default 2,048,
+  unchanged). A new build with `--min-valid 1` (`YieldSAT-Image-full`) uses
+  the same 64-cell grid, so it is a superset of the v1 tiles and covers every
+  point cell with a target.
+- **Training** still uses tiles with ≥ 2,048 valid cells
+  (`--train_min_valid 2048`, from `valid_pixels` in `patches.jsonl`).
+  **Validation and test** use all tiles of the held-out seasons, so image
+  metrics cover the same cells as the point model and the paper.
+- **Optical slot coverage** becomes relative to the tile's present cells
+  instead of 4,096, so small edge tiles still get optical observations.
+- A new DINO cache for the full dataset.
+- **Expected:** every v1 run becomes runnable (no fold without test tiles),
+  so the run set equals the point suite's exactly.
+
+### YI-12 — v2 suite and resubmission
+
+- `image_v2_donors` + `image_v2` suites (experiment tag `image2`, W&B project
+  `yieldsat-cvpr27-image`), same matrix as `image_full`. Donors are retrained
+  for the v2 architecture.
+- **Pipeline:** PVC build of `YieldSAT-Image-full`, DINO cache, a one-GPU
+  smoke run, then 32 GPUs.
+- **Comparison:** `yieldsat_image_compare.py` against point runs, now on
+  ~100% of the point cells.
+
+### Progress log (v2)
+
+- 2026-10-01 — Plan v2 written.
