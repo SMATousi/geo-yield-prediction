@@ -117,3 +117,39 @@ def test_normalizer_and_item_masks(image_root):
     assert all(s == -1 or SEEDING + (s - 4) * 20 <= SEEDING + 100 for s in it2['obs_slot'].tolist())
     batch = collate_tiles([ds[0], ds[1]])
     assert batch['spec'].shape == (2, 4, 9, 64, 64) and batch['country'] == ['Germany', 'Germany']
+
+
+def test_rgb_preprocessing_and_stub_dino_tokens():
+    from models_yieldsat_image import SAT_MEAN, SAT_STD, StubDino, rgb_to_dino_input
+    rgb = np.full((2, 64, 64, 3), 1500.0, np.float32)            # reflectance 0.15 -> 0.5
+    rgb[1, 0, 0] = 6000.0                                          # 0.6 / 0.3 = 2 -> clipped
+    valid = np.ones((2, 64, 64), bool)
+    valid[0, :8] = False
+    x, clip = rgb_to_dino_input(rgb, valid)
+    assert x.shape == (2, 3, 64, 64)
+    np.testing.assert_allclose(x[0, :, 20, 20], (0.5 - np.array(SAT_MEAN)) / np.array(SAT_STD), rtol=1e-5)
+    assert np.all(x[0, :, :8] == 0)                               # missing -> mean -> 0
+    assert clip[0] == 0 and clip[1] > 0
+    tok = StubDino()(torch.from_numpy(x))
+    assert tok.shape == (2, 16, 1024)                             # 4x4 patch tokens
+
+
+def test_dino_cache_build_and_lookup(image_root, tmp_path, monkeypatch):
+    import sys
+    import yieldsat_image_dino_cache as dc
+    from dataset.yieldsat_image_dataset import DinoFeatureCache
+    root, _, seasons = image_root
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(tmp_path),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    cache_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+    cache = DinoFeatureCache(cache_dir, expected_revision='stub0000')
+    feats, valid = cache.get('Germany', 0, [4, 9, 12, -1])
+    assert feats.shape == (4, 16, 1024)
+    assert valid.tolist() == [1, 0, 1, 0]                         # slot 9 has no RGB
+    with pytest.raises(ValueError):
+        DinoFeatureCache(cache_dir, expected_revision='f692fa42')
+    parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
+    norm = ImageNormalizer.fit(TileReader(root), parts['train'])
+    it = YieldSATImageDataset(root, parts['test'], norm, _days(seasons), dino_cache=cache)[0]
+    assert it['dino'].shape == (4, 16, 1024) and it['dino_valid'].sum() == it['obs_valid'].sum()

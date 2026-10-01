@@ -146,6 +146,47 @@ def select_observations(slots, dates, coverage, k, seeding_day, harvest_day, rng
     return sorted(chosen)
 
 
+# ---- frozen DINO feature cache ---------------------------------------------------
+
+class DinoFeatureCache:
+    """Reader for yieldsat_image_dino_cache.py output. Refuses a cache built
+    with a different checkpoint revision or preprocessing."""
+
+    def __init__(self, cache_dir, expected_revision=None, expected_prep_hash=None):
+        self.dir = Path(cache_dir)
+        self.manifest = json.loads((self.dir / 'manifest.json').read_text())
+        if expected_revision and self.manifest['revision'] != expected_revision:
+            raise ValueError('DINO cache revision {} != expected {}'.format(
+                self.manifest['revision'], expected_revision))
+        if expected_prep_hash and self.manifest['prep_hash'] != expected_prep_hash:
+            raise ValueError('DINO cache preprocessing {} != expected {}'.format(
+                self.manifest['prep_hash'], expected_prep_hash))
+        self.hidden_size = int(self.manifest['hidden_size'])
+        self._files, self._index, self._pid = {}, {}, None
+
+    def _open(self, country):
+        import os
+        if self._pid != os.getpid():
+            self._files, self._index, self._pid = {}, {}, os.getpid()
+        if country not in self._files:
+            f = h5py.File(self.dir / '{}.h5'.format(country), 'r')
+            self._files[country] = f
+            self._index[country] = {(int(p), int(s)): i for i, (p, s) in
+                                    enumerate(zip(f['patch_index'][:], f['slot'][:]))}
+        return self._files[country], self._index[country]
+
+    def get(self, country, patch_index, slots):
+        f, idx = self._open(country)
+        out = np.zeros((len(slots), 16, self.hidden_size), np.float32)
+        valid = np.zeros(len(slots), np.float32)
+        for j, s in enumerate(slots):
+            row = idx.get((int(patch_index), int(s))) if s >= 0 else None
+            if row is not None:
+                out[j] = f['features'][row]
+                valid[j] = 1.0
+        return out, valid
+
+
 # ---- normalization ------------------------------------------------------------
 
 class ImageNormalizer:
@@ -223,7 +264,8 @@ class YieldSATImageDataset(Dataset):
     """
 
     def __init__(self, image_root, tiles, normalizer, season_days, k_obs=4, train=False,
-                 cutoff_mode='all_slots', cutoff_days=30, aspect_cyclic=True, seed=0):
+                 cutoff_mode='all_slots', cutoff_days=30, aspect_cyclic=True, seed=0,
+                 dino_cache=None):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         self.reader = TileReader(image_root)
@@ -240,6 +282,7 @@ class YieldSATImageDataset(Dataset):
         self.seasons = sorted({t['season_id'] for t in self.tiles})
         self._season_index = {s: i for i, s in enumerate(self.seasons)}
         self.retrospective = cutoff_mode == 'all_slots'
+        self.dino = dino_cache
 
     def __len__(self):
         return len(self.tiles)
@@ -322,7 +365,12 @@ class YieldSATImageDataset(Dataset):
         target = np.where(valid, (d['target'] - yn['mean'][0]) / yn['std'][0], 0.0).astype(np.float32)
         rows = (t['row0'] + np.arange(TILE))[:, None].repeat(TILE, 1)
         cols = (t['col0'] + np.arange(TILE))[None, :].repeat(TILE, 0)
+        item_dino = {}
+        if self.dino is not None:
+            feats, fvalid = self.dino.get(t['country'], t['patch_index'], obs_slot)
+            item_dino = {'dino': feats, 'dino_valid': fvalid * obs_valid}
         return {
+            **item_dino,
             'obs_slot': obs_slot, 'obs_valid': obs_valid, 'obs_time': obs_time,
             'rgb_mask': rgb_mask, 'spec': spec, 'spec_mask': spec_mask,
             'weather': weather, 'weather_mask': weather_mask, 'weather_time': wtime,

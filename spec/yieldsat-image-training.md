@@ -486,3 +486,23 @@ preprocessing hash; a mismatch refuses to load.
   `smatousi-hf`, but download of the gated checkpoint returns HTTP 403: the
   account still needs access approval on the model page. Until then the
   pipeline is developed against a stub backbone with the same interface.
+- 2026-10-01 — **YI-02 done (pending checkpoint access).**
+  - `models_yieldsat_image.py`: `rgb_to_dino_input` (DN/10000 → reflectance →
+    /0.3 true-colour, clipped to [0, 1] with clip fraction → SAT-493M
+    mean/std; missing pixels → mean → 0), `preprocessing_spec`/`_hash`,
+    `FrozenDino` (pinned revision, no gradients, always eval, returns the 4×4
+    patch tokens after the class and register tokens) and `StubDino` (same
+    interface, fixed random patchify; tests and development only).
+  - `yieldsat_image_dino_cache.py`: caches tokens for every (tile, slot) with
+    any dated finite RGB to `dino_cache/<rev8>_<prep-hash>/<Country>.h5`
+    (float16 `features` (M, 16, 1024), `patch_index`, `slot`, `coverage`,
+    `clip_fraction`) plus `manifest.json`; atomic per country.
+  - `DinoFeatureCache` in the dataset: refuses a cache with a different
+    revision or preprocessing hash; `YieldSATImageDataset(dino_cache=...)`
+    adds `dino` (K, 16, 1024) and `dino_valid` per selected observation.
+  - `transformers`, `huggingface_hub` and `safetensors` added to
+    `requirements.txt` and `environment.yml` (the Docker image must be
+    rebuilt, YI-07).
+  - Tests: 6 pass (stub cache build, lookup, mismatch refusal, dataset items).
+  - Real cache: ~16.9k forward passes of ViT-L at 64×64 (a few minutes on
+    one GPU); blocked only by the HF access approval.
