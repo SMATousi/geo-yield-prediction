@@ -129,7 +129,7 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_full --runs_per_gpu 2 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_full
+          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_full --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_full
         env:
         - name: YIELDSAT_GIT_REF
           value: main
@@ -154,12 +154,12 @@ spec:
           limits:
             nvidia.com/gpu: 1
             cpu: '12'
-            memory: 24Gi
+            memory: 32Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
             cpu: '12'
-            memory: 24Gi
+            memory: 32Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data

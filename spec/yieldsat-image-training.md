@@ -756,3 +756,28 @@ preprocessing hash; a mismatch refuses to load.
     rejects the old smoke configuration and accepts the corrected one;
     `image_full` passes. Test added (18 pass).
   - Smoke run 2 (suite `image_smoke2`, donors for S2 and S2+ADM) submitted.
+- 2026-10-01 — **YI-08 step 3: smoke run 2 passed (1 A10, 12 CPU, 3 runs).**
+  - All 10 runs finished:
+    - ARG-S folds 0–1, S2 and S2+ADM;
+    - pooled donors for S2 and S2+ADM;
+    - GER-R folds 0–1 warm-started. Each run loaded its own input set's
+      donor (S2: 175 tensors, S2+ADM: 336) at lr 1.5e-4, and the GER-R job
+      started only once both donors existed.
+  - Staging: Argentina 137 s, Argentina+Brazil+Uruguay 145 s, Germany 12 s.
+  - Throughput per run at 3 concurrent: 66–128 tiles/s (median ~70; donors
+    ~100). GPU utilization 19–34%: runs are loader (CPU) bound and use
+    ≤ 1 GB GPU memory each.
+  - Pods were rejected on `uicnrp-fiona.evl.uic.edu` (UnexpectedAdmissionError
+    ×3); that node is now excluded.
+  - **Calibration:**
+    - `image_full`/`image_donors`: `gpu_speed_factor {image: 0.64}` (per-run
+      at 3 concurrent), `concurrency_speedup 3`, 3 → 5 runs per GPU.
+    - Estimate: donors 12 runs, ~1.1 h wall-clock (pooled donor is longest);
+      full 2,460 runs in 38 jobs, ~99 GPU-hours, ~7.6 h on 16 GPUs, ~4.8 h
+      on 32.
+    - Pools re-rendered: donors 2 × (A10/3090, 12 CPU, 32 GiB); full
+      8 × A10 (16 CPU, 3 → 5 runs) + 8 × RTX 3090 (12 CPU, 3 → 4 runs).
+  - **GPU-utilization caveat:** with CPU-bound loaders, ~30–40% GPU
+    utilization per pod is the expected level, not 80%. Reaching 80% would
+    need ~2.5× more loader CPU per GPU or a lighter tile format. This
+    differs from the point suite's ≥ 80% target.

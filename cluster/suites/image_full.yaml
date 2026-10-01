@@ -17,12 +17,12 @@ donor_suite: cluster/suites/image_donors.yaml  # plan checks every warm start ha
 pairs: all
 job_unit: pair_shard
 target_job_hours: 3.0
-runs_per_gpu: 2
-max_runs_per_gpu: 4
+runs_per_gpu: 3
+max_runs_per_gpu: 5
 target_gpu_util: 80
 num_workers: 3
-gpu_speed_factor: {image: 1.0}
-concurrency_speedup: 2.0
+gpu_speed_factor: {image: 0.64}  # smoke 2 (A10, 3 concurrent): ~75 tiles/s per run = 0.64 x REF
+concurrency_speedup: 3.0
 stage_mb_per_s: 42
 experiments:
   - name: image

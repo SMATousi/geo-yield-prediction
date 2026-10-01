@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-image-donors-a10
+  name: smatousi-yieldsat-image-donors-gpu
 spec:
   completions: 2
   parallelism: 2
@@ -19,6 +19,7 @@ spec:
                 operator: In
                 values:
                 - NVIDIA-A10
+                - NVIDIA-GeForce-RTX-3090
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
@@ -62,12 +63,12 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '16'
+            cpu: '12'
             memory: 32Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '16'
+            cpu: '12'
             memory: 32Gi
             ephemeral-storage: 50Gi
         volumeMounts:
