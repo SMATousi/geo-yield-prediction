@@ -309,3 +309,154 @@ The published output has 96 slot GeoTIFFs and four contact sheets. Readback
 verified file counts, 64×64 shape, alpha coverage and date tags against
 `sequences.json`. These are previews of the RGB part of the stored time series;
 the HDF5 retains all 12 optical bands, weather and per-cell timestamps.
+
+## Implementation plan v1 — 2026-10-01
+
+This section turns the planned contract above into concrete decisions for the
+first trainable version (tasks YI-01 to YI-08). Every step below is implemented,
+documented here and committed separately. Status per task is in the progress
+log at the end.
+
+### Comparability with the point model
+
+- **Same folds, same field seasons.** Image runs use the *point suite's fold
+  manifests* (`paper_<cv10|loro|loyo>_<pair>_<group>_<policy>_s0_foldNN`), not
+  new splits. A tile inherits the partition (train/val/test/excluded) of its
+  field season (`<Country>/<field_shared_name>`). Tiles never straddle seasons,
+  so this is exact. LORO uses province regions for ARG-C/S/W and farm regions
+  elsewhere, exactly as the point suite after 2026-09-30.
+- **Same matrix.** CV10, LORO and LOYO; `paper` and `strict` leakage
+  policies; seeds 0–2; the retrospective `all_slots` cutoff; train-fold
+  normalization.
+- **Inputs.**
+  - Image **S2** = RGB through DINO plus the nine-band spectral branch (all 12
+    S2 bands).
+  - Image **S2+ADM** additionally uses the weather, DEM, terrain and soil
+    encoders.
+  - Excluded, as in the point model: `coord_*`, soil uncertainty, `source_row`
+    and all target-side metadata.
+- **Same cells.** Image test metrics are computed on the valid pixels of test
+  tiles. `yieldsat_image_compare.py` re-scores the point model's
+  `test_predictions.npz` on exactly those cells (matched by field season,
+  grid row and grid col via `source_row`). Image-versus-point tables therefore
+  compare identical held-out cells; the point model's whole-field scores are
+  reported separately.
+- **Output format.** Image runs write `test_predictions.npz` in the point
+  format (`pred, target, season, grid_row, grid_col, season_names`) and the
+  same `report.json` fields, so `aggregate_folds`, `yieldsat_paper_compare.py`
+  and the cluster driver work unchanged.
+
+### Model (YI-02/YI-03): one encoder per modality, Perceiver aggregation
+
+Width `D = 192`. Tile `64×64`, `T = 24` slots, up to `K = 4` optical
+observations.
+
+| Stream | Encoder | Tokens to the Perceiver | Dense skip features |
+|---|---|---|---|
+| RGB (B04/B03/B02) | **Frozen** DINOv3 ViT-L/16 SAT-493M (pinned revision), run on each selected observation; 4×4 patch tokens (1024-d) → Linear → D, plus observation-date encoding | K × 16 | – |
+| 9 extra S2 bands | Per observation: `[value·mask, mask]` → 1×1 conv → 3×3 convs (32 ch at 64×64) → patchify(16) → D, plus date encoding | K × 16 | 64→8 pyramid (mean over observations) |
+| Weather (4 ch × 24 slots) | Point `MaskedTemporalEncoder` on the tile's weather history (constant within a field), first-dated-slot weather invalid | 1 | – |
+| DEM | Masked conv encoder (2 ch: value, mask) | 16 | pyramid |
+| Terrain (aspect as sin/cos, curvature, slope, TWI) | Masked conv encoder | 16 | pyramid |
+| Soil (8 properties × 6 depths) | Per cell depth-aware MLP (properties × depths + masks) → convs | 16 | pyramid |
+| Crop identity | Embedding (known at planting) | 1 | – |
+
+- **Fusion.** The point model's `LatentFusionTransformer` (Perceiver;
+  required) reads **all** tokens: up to 32 optical plus 50 others, with
+  per-token masks. Missing observations, padded or empty patches, and absent
+  streams are masked. It also gets modality-identity embeddings and a 4×4
+  spatial position per patch token. It has 32 latents, 2 cross-attention
+  reads, depth 4 and pre-norm.
+- **Decoder.** Perceiver-IO style: 16 learned spatial queries (4×4 grid)
+  cross-attend to the latents → 4×4×D map → four ×2 upsampling stages to 64×64,
+  each concatenating the pyramid skip features at matching resolution → 1×1
+  conv → yield. Outputs cover every cell; loss and metrics use `valid_pixel`
+  only.
+- **Loss.** MSE on the standardized target over valid cells, averaged per tile
+  and then over tiles, so large tiles don't dominate. Batches are sampled
+  field-balanced, by field season.
+
+### Data handling (YI-01)
+
+- **Masks** are built from feature finiteness and dates only. `valid_pixel` is
+  used only for the loss and metrics. Padded cells (`source_row == -1`) are
+  invalid inputs.
+- **Normalization** uses per-channel mean/std from the training tiles of each
+  run (valid values only) and target mean/std from the training tiles' valid
+  cells. Never the supplied `stats-*`.
+- **Observation selection.** Slots with ≥ 25% of the tile's cells carrying
+  finite RGB qualify. The season (seeding → harvest) is split into K equal
+  bins. Evaluation takes the slot with the most RGB coverage per bin,
+  deterministically, with fallback to the best remaining slots. Training
+  samples one qualifying slot per bin at random.
+- **Date coherence** is audited per (tile, slot): the spread of `times` among
+  observed cells must be ≤ 1 day for the slot to qualify, otherwise the slot
+  is dropped and counted in the audit.
+- **RGB scaling for DINO.** S2 L2A digital numbers are converted to
+  reflectance (÷10,000), mapped to `[0,1]` with the common true-colour scaling
+  reflectance/0.3, and clipped. The clip fraction is recorded per tile in the
+  feature cache. The checkpoint's mean/std are then applied, and missing RGB
+  pixels are filled with the mean (zero after normalization) plus a
+  pixel/token mask.
+
+### Frozen DINO feature cache (YI-02)
+
+Because DINO is frozen, its patch tokens depend only on the checkpoint and the
+RGB preprocessing, not on splits or labels. A one-off GPU job computes them for
+**every** (tile, qualifying slot): ≤ 2,437 × 24 × 16 × 1024 × fp16 ≈ 1.9 GB.
+They're stored per country in `dino_<rev>_<prep-hash>/<Country>.h5` next to the
+image dataset. Training reads cached tokens; evaluation reads the same cache
+deterministically. The cache key holds the checkpoint revision and the
+preprocessing hash; a mismatch refuses to load.
+
+### Small-country warm start (YI-06)
+
+- **Rule.** A pair with < 100 tiles is warm-started: GER-R (41 tiles) and
+  GER-W (27).
+- **Donors** (user decision, 2026-10-01):
+  - **GER-W** ← **BRA-W** donor: the same crop, from the wheat country with
+    the most tiles (242).
+  - **GER-R** ← **pooled multi-crop donor**: all non-German pairs, crop
+    token on. No other country grows rapeseed.
+- **Donor training.** Donors are trained per seed on all tiles of their donor
+  pairs, with a 10% validation carve-out for epoch selection. Donor countries
+  differ from the target, so no target-fold data is seen.
+- **Fine-tuning.** It starts from the donor's weights, except the crop
+  embedding and any shape-mismatched tensors. DINO stays frozen; lr ×0.3.
+  Reports record the donor checkpoint and seed.
+
+### Cluster execution (YI-07)
+
+- **Infrastructure.** The same `yieldsat_cluster.py` plans, pools, W&B logging
+  and completion markers. The model preset `image` calls
+  `main_yieldsat_image.py`.
+- **Order** on Nautilus:
+  1. a CPU pod builds the image dataset on the PVC with
+     `yieldsat_build_images.py`, from the PVC's index, cache and geometry;
+  2. a GPU job builds the DINO feature cache;
+  3. the donor plan;
+  4. the main image plan (German runs reference donor checkpoints on the PVC).
+- **Access.** W&B project `yieldsat-cvpr27-image`. The Hugging Face token is
+  the namespace secret `smatousi-hf` (key `HF_TOKEN`). The checkpoint is
+  downloaded once to the PVC and pinned by revision `f692fa42`.
+- **Image.** The container is rebuilt with `transformers` (DINOv3 support) and
+  `huggingface_hub`.
+
+### Tasks
+
+| ID | Deliverable |
+|---|---|
+| YI-01 | `dataset/yieldsat_image_dataset.py`: loader, fold mapping from point manifests, masks, train-only normalization, observation selection, date-coherence audit; tests |
+| YI-02 | `models_yieldsat_image.py` DINO wrapper (pinned, frozen) + `yieldsat_image_dino_cache.py`; RGB preprocessing; tests with a stub backbone |
+| YI-03 | Spectral, weather, DEM, terrain and soil encoders; Perceiver aggregation; spatial decoder; dense head; shape/gradient/missingness tests |
+| YI-04 | `main_yieldsat_image.py`: training/eval entry (W&B, reports, point-format predictions, donor init) |
+| YI-05 | `yieldsat_image_compare.py`: matched-cell image-vs-point tables per protocol/pair |
+| YI-06 | Donor suite and warm-start wiring |
+| YI-07 | Cluster: suites, presets, dataset/DINO-cache pod and job manifests, image rebuild |
+| YI-08 | Nautilus smoke run (one GPU), then submission |
+
+### Progress log
+
+- 2026-10-01 — Plan v1 written (this section). Decisions: Perceiver aggregates
+  all modality tokens; point fold manifests reused; GER-R ← pooled donor and
+  GER-W ← BRA-W donor; DINO access via the user's HF token.
