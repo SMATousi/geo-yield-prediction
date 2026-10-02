@@ -106,15 +106,56 @@ def summarize(rows):
     return out
 
 
+PROTO_TITLE = (('cv10', 'CV10'), ('loro_province', 'LORO, provinces (Argentina)'), ('loro_na', 'LORO, farm regions'),
+               ('loyo', 'LOYO'))
+
+
+def write_markdown(summary, path, title, note=''):
+    """One table per protocol group: image vs point on identical cells."""
+    lines = ['# {}'.format(title), '', note, '',
+             '- Both models are scored on **exactly the same cells**: the valid cells of the image '
+             'test tiles, matched by field season and grid row/col. "Coverage" is the share of the '
+             'point model\'s test cells that lie in image tiles.',
+             '- Values are means over matched folds × seeds; field R² only over folds with ≥ 3 test '
+             'field seasons. RMSE in t/ha. **Δ RMSE** = image − point (negative: image better).', '']
+    for prefix, name in PROTO_TITLE:
+        rows = [r for r in summary if r['group'].startswith(prefix)]
+        if not rows:
+            continue
+        lines += ['## {}'.format(name), '',
+                  '| Pair | Policy | Inputs | Folds | Coverage | Pixel R² image / point | '
+                  'Pixel RMSE image / point | Δ RMSE | Field R² image / point | Field RMSE image / point |',
+                  '|---|---|---|---|---|---|---|---|---|---|']
+        for r in sorted(rows, key=lambda r: (r['group'].split('_')[-2], r['inputs'], r['pair'])):
+            policy = r['group'].split('_')[-2]
+            lines.append('| {} | {} | {} | {} | {:.0f}% | {:.2f} / {:.2f} | {:.2f} / {:.2f} | {:+.2f} | '
+                         '{:.2f} / {:.2f} | {:.2f} / {:.2f} |'.format(
+                             r['pair'], policy, {'s2': 'S2', 's2_adm': 'S2+ADM'}[r['inputs']], r['folds'],
+                             100 * r['point_coverage'], r['image_pixel_r2'], r['point_pixel_r2'],
+                             r['image_pixel_rmse'], r['point_pixel_rmse'], r['delta_pixel_rmse'],
+                             r['image_field_r2'], r['point_field_r2'], r['image_field_rmse'],
+                             r['point_field_rmse']))
+        lines.append('')
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text('\n'.join(lines).replace('nan', '–'))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('--image-root', required=True)
-    p.add_argument('--point-root', required=True)
+    p.add_argument('--image-root', default=None)
+    p.add_argument('--point-root', default=None)
     p.add_argument('--image-tag', default='image')
     p.add_argument('--point-tag', default='ours')
     p.add_argument('--out', required=True)
+    p.add_argument('--from_folds', default=None, help='rebuild tables from a saved folds.json')
+    p.add_argument('--md', default=None, help='also write a markdown report here')
+    p.add_argument('--title', default='Image vs point on identical cells')
+    p.add_argument('--note', default='')
     a = p.parse_args()
-    rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag)
+    if a.from_folds:
+        rows, missing = json.loads(Path(a.from_folds).read_text()), []
+    else:
+        rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag)
     summary = summarize(rows)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -125,6 +166,8 @@ def main():
             w = csv.DictWriter(fh, fieldnames=list(summary[0]))
             w.writeheader()
             w.writerows(summary)
+    if a.md:
+        write_markdown(summary, a.md, a.title, a.note)
     print('{} matched folds, {} image folds without a point counterpart'.format(len(rows), len(missing)))
     print('%-28s %-7s %-6s %5s %6s | %-13s | %-13s | %-13s' % (
         'protocol group', 'inputs', 'pair', 'folds', 'cover', 'pixel R2 i/p', 'pixel RMSE i/p',

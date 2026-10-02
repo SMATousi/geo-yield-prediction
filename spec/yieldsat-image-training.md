@@ -957,3 +957,17 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
   ~50 min) also matches the local one: entries 26,229 / 22,028 / 4,992 /
   15,624 and the same clip fractions. The v2 smoke pool was submitted at
   20:35 UTC.
+- 2026-10-02 — **YI-12: v2 smoke on Nautilus passed; v2 submitted.**
+  - The first smoke pod waited 3.5 h for an A10/3090 (cluster-wide
+    shortage). Resubmitted to accept any common GPU type, it ran on
+    `gpu-15.nrp.mghpcc.org`.
+  - All 10 runs finished.
+    - Staging: Argentina 249 s; Argentina+Brazil+Uruguay 158 s (compressed);
+      Germany 46 s.
+    - ARG-S folds 82–152 s (v1 50–77 s); donors 277–282 s; GER-R
+      warm-started 50–81 s; GPU utilization 14–27%.
+  - Calibration: v2 runs are ~2× slower than v1 (series stream, validation
+    on all tiles), so `gpu_speed_factor {image: 0.32}`.
+  - Estimate: 2,586 runs in 61 jobs, ~172 GPU-hours, ~5.7 h on 32 GPUs.
+  - Submitted `image_v2_donors_pool` (2) and `image_v2_pools` (15 A10 +
+    15 RTX 3090).

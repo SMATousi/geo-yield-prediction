@@ -1,0 +1,25 @@
+# CPU pod for result aggregation on the PVC (no GPU): clones the repository,
+# then idles for 6 h so `kubectl exec` can run yieldsat_cluster.py status,
+# yieldsat_image_compare.py and the results-table scripts against
+# /data/YieldSAT. No credentials inside.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smatousi-yieldsat-results
+spec:
+  restartPolicy: Never
+  containers:
+  - name: yieldsat
+    image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+    imagePullPolicy: Always
+    command: [/bin/bash, -c]
+    args:
+    - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && sleep 21600
+    resources:
+      limits: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+      requests: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+    volumeMounts:
+    - {name: data, mountPath: /data}
+  volumes:
+  - name: data
+    persistentVolumeClaim: {claimName: ali-vol-1tera}

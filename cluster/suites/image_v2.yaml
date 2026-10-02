@@ -25,7 +25,7 @@ runs_per_gpu: 3
 max_runs_per_gpu: 5
 target_gpu_util: 80
 num_workers: 3
-gpu_speed_factor: {image: 0.64}  # smoke 2 (A10, 3 concurrent): ~75 tiles/s per run = 0.64 x REF
+gpu_speed_factor: {image: 0.32}  # v2 smoke (Nautilus, 3-4 concurrent): ~2x slower than v1 (series stream, all-tile validation)
 concurrency_speedup: 3.0
 stage_mb_per_s: 42
 experiments:

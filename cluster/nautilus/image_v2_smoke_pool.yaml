@@ -20,6 +20,11 @@ spec:
                 values:
                 - NVIDIA-A10
                 - NVIDIA-GeForce-RTX-3090
+                - NVIDIA-GeForce-RTX-4090
+                - NVIDIA-L40
+                - NVIDIA-A40
+                - NVIDIA-RTX-A6000
+                - NVIDIA-RTX-A5000
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
