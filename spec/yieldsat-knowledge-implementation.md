@@ -144,8 +144,15 @@ The initial implementation does not invent deterministic physical thresholds or
 unit conversions. Those can only follow a separate semantics/reference audit.
 
 The frozen text cache encodes both concept descriptions and qualified rule
-statements using a pinned 40-character model revision, attention-mask mean
-pooling, maximum 256 tokens and L2 normalization. Random mock vectors are only
+statements using frozen `CLIPTextModelWithProjection`, default checkpoint
+`openai/clip-vit-base-patch32`, and a pinned 40-character model revision. Use
+CLIP's pooled end-of-text output and pretrained text projection, followed by L2
+normalization. Only the text tower is loaded. Respect the checkpoint context
+length (77 tokens including special tokens for the default); reject overlong
+text with record IDs rather than silently truncating rule qualifications. Cache
+metadata records the encoder class, pooling, dimension and context limit. Old
+mean-pooled caches and geometry policies must be rebuilt and revalidated. See
+[the CLIP API](https://huggingface.co/docs/transformers/model_doc/clip). Random mock vectors are only
 for offline smoke tests and are rejected by production training.
 
 Only `directed_displacement_v1` is implemented:
@@ -238,9 +245,12 @@ datasets, temporal/occupancy masks, mirrored draft refusal, malformed teacher
 responses, dry-run/no-network/cache behavior, unbalanced expert gold rejection,
 non-DINO gradient flow, training/resume, strict encoder transfer, preservation of
 normalization/cutoffs, text-free model forward and collapse/coverage diagnostics.
-The offline suite contains 13 passing tests; all nine command entry points pass
+The offline suite contains 15 passing tests; all nine command entry points pass
 `--help` checks. Tests ran with PyTorch 2.5.1 on CPU. CUDA was not available
 to this process, so GPU/AMP execution remains a cluster verification step.
+CLIP-specific tests use a tiny offline random CLIP text model to check frozen
+projected outputs, normalization and rejection of overlong text. No pretrained
+CLIP weights were downloaded or production embeddings generated in this check.
 Synthetic approvals are explicitly test-only and never copied into production
 assets. All test artifacts are temporary.
 

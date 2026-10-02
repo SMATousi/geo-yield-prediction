@@ -153,11 +153,14 @@ geography evidence; do not mix their responses in one cache.
 
 ## 5. Freeze and validate text relation geometry
 
-Choose a text encoder compatible with masked-mean pooling. Pin its Hugging Face
-repository to an immutable 40-character commit (or use a local snapshot and
+Use the frozen CLIP text tower and its pretrained text projection. The default
+checkpoint is `openai/clip-vit-base-patch32`; `--model` can select another compatible
+CLIP checkpoint. Pin its Hugging Face repository to an immutable 40-character commit (or use a local snapshot and
 record its matching revision). No remote model code is enabled.
 
 ```bash
+export TEXT_MODEL=openai/clip-vit-base-patch32
+# Set TEXT_REVISION to the approved immutable checkpoint commit.
 python -m yieldsat_knowledge.text_cache \
   --library "$RUN/library.reviewed.json" --model "$TEXT_MODEL" \
   --revision "$TEXT_REVISION" --output-dir "$RUN/text" --device cpu
@@ -165,6 +168,13 @@ python -m yieldsat_knowledge.audit geometry \
   --library "$RUN/library.reviewed.json" --text-cache "$RUN/text" \
   --examples "$RUN/geometry_examples.json" --output "$RUN/geometry_audit.json"
 ```
+
+CLIP uses its pooled end-of-text representation plus learned projection, followed
+by L2 normalization; it does not use generic token mean pooling. Only the text
+tower is instantiated. Text longer than the checkpoint context (77 tokens for
+the default, including special tokens) fails with the affected IDs; shorten and
+re-review it instead of silently truncating qualifications. Existing text caches
+and geometry policies must be rebuilt for this encoder.
 
 Follow `templates/geometry_examples.json`: each rule needs positive/counterexample
 pairs in separate calibration and audit partitions. Audit pairs cannot be the
