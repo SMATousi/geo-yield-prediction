@@ -53,7 +53,12 @@ to give every non-DINO encoder an eligible training path; do not invent a rule
 merely to give a stream a loss. Frozen DINO tokens may be evaluated as context
 or a fixed reference, but no knowledge gradient or optimizer step may update
 the DINO backbone/cache. Fusion, decoder, and yield heads are not trained by
-the first knowledge stage; a later fused objective needs its own contract.
+the first knowledge stage. In particular, the planned S2 band-channel attention
+and DEM–S2 cross-attention are **fusion fine-tuning modules only**, specified
+in [YI-13–YI-14](./yieldsat-image-training.md#planned-fusion-contributions--2026-10-02).
+No concept relation is applied to those attention weights, and no gradient from
+the knowledge loss trains either module. A later fused knowledge objective
+would need its own contract.
 
 ## YieldSAT concept and relation library
 
@@ -169,8 +174,11 @@ Save sensor encoder weights separately from text/projectors/scorers with
 explicit stream names and architecture hashes. The image model's DINO revision
 and cache contract remain pinned, but its backbone is not overwritten. Transfer
 the six non-DINO encoder groups above into the same v2 supervised image model;
-initialize fusion, spatial decoder, level head and yield head by the matched
-control protocol. At fine-tuning and inference, load **sensor inputs only**:
+initialize fusion, including S2 band-channel attention and DEM–S2
+cross-attention when enabled, spatial decoder, level head and yield head by
+the matched control protocol. The new attention modules are learned solely
+from supervised yield fine-tuning; the knowledge checkpoint contains no
+weights for them. At fine-tuning and inference, load **sensor inputs only**:
 remove the text encoder, concept projectors, rules, applicability estimator,
 and knowledge loss. A checkpoint must load and predict without access to any
 knowledge artifact.
@@ -184,7 +192,7 @@ must not be compared as the same protocol. Fit normalization, calibration,
 reference populations and hyperparameters without held-out information.
 
 Compare at identical data/splits, DINO cache, cutoff, seeds and supervised
-label budgets: image model from scratch except the common frozen DINO;
+label budgets and fusion configuration: image model from scratch except the common frozen DINO;
 sensor self-supervision only; concept grounding only; grounding plus reviewed
 relation distillation; and shuffled/incorrect relation assignments as a
 diagnostic control. Include a no-text/constant-reference control, relation
@@ -194,6 +202,9 @@ grounding quality, relation scores on expert-reviewed held-out supports,
 encoder gradient/variance checks, resource and annotation costs, and sensor-only
 yield RMSE/MAE by field, country and crop. A gain in concept-head metrics
 alone is not a successful transfer result.
+Cross the knowledge/no-knowledge comparison with the four fusion settings in
+YI-13–YI-14 so any gain is not attributed to relational pretraining when it
+comes from the new supervised attention capacity.
 
 ## Implementation tasks and acceptance
 

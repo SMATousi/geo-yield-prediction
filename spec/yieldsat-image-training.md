@@ -1027,3 +1027,77 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
     negative in several rows.
   - **Image v1 vs point on identical cells (pooled):** image worse in 95 of
     108 rows.
+
+## Planned fusion contributions — 2026-10-02
+
+These modules enter **supervised YieldSAT image fine-tuning**, after any
+[relational knowledge pretraining](./yieldsat-image-knowledge-pretraining.md)
+has transferred the non-DINO sensor encoders. They are not knowledge-pretraining
+objectives, do not receive concept/text inputs, and are not part of the
+knowledge-pretrained checkpoint. The frozen DINO backbone/cache remains
+unchanged. Both mechanisms are disabled in the existing v1/v2 runs so their
+published comparisons retain their original architecture.
+
+### YI-13 — S2 band-channel attention at fusion
+
+The current `spec_enc` and `series_cell` compress their input channels before
+fusion. Add a separate **fusion-side** S2 channel-token adapter that retains
+the identity of all 12 Sentinel-2 bands: B01, B02, B03, B04, B05, B06, B07,
+B08, B8A, B09, B11, B12. Derive masked, date-aware summaries from the same
+pre-cutoff `(64,64,24,12)` optical tensor for each band and each 16×16 spatial
+region, producing 12 channel tokens per region. Carry true per-band validity
+from the HDF5 values; a missing band must not receive attention weight merely
+because another band was observed at that slot. Include fixed band identity
+and spatial/date position information. This adapter is **new fusion capacity**,
+not a rewrite of the pretrained `series_cell`/`series_enc` or `spec_enc`.
+
+At each region, channel attention uses the existing optical context
+(date-aligned DINO/spec tokens and full-series token) to weight the available
+band tokens. A masked softmax excludes unavailable channels; an all-missing
+region contributes a zero residual and a false validity mask. Project the
+attended channel summary to the common fusion width and add it by a learnable
+residual gate to the S2 token stream before the Perceiver. Initialize the gate
+near zero so the new module initially preserves v2 predictions. The 12 gates
+may be conditional on region and season; they must not be interpreted as
+causal band importance. DINO's RGB input and weights remain exactly as pinned.
+
+### YI-14 — Elevation–S2 cross-attention at fusion
+
+After channel attention, align the S2 tokens (selected-date DINO/spec tokens
+and full-series tokens) with `dem_enc`'s 4×4 elevation tokens using shared
+spatial positions, optical dates and independent validity masks. Add a small
+bidirectional, residual cross-attention block **before** the existing Perceiver:
+
+```text
+S2'  = S2  + gate_s2  · CrossAttn(query=S2,  key/value=DEM)
+DEM' = DEM + gate_dem · CrossAttn(query=DEM, key/value=S2)
+Perceiver([S2', DEM', weather, terrain, soil, crop]) → spatial decoder → yield
+```
+
+Use multihead attention with spatial position/bias so a query can distinguish
+its colocated DEM region from another region; preserve date positions on S2
+queries. Mask absent S2 dates/regions and absent DEM regions. If either stream
+is wholly unavailable, bypass that cross-attention path with a zero residual
+instead of attending to padded tokens. Initialize both gates near zero. Terrain
+remains its own stream: the elevation endpoint here is **DEM**, not an
+unreviewed slope/TWI proxy. The Perceiver and decoder keep their existing
+interfaces; updated tokens enter the same supervised yield loss and level
+head. No rule, concept or text embedding enters this block.
+
+Train the channel adapter and cross-attention only with supervised
+fine-tuning (same optimizer schedule as the fusion, with explicitly recorded
+learning rates). In knowledge-pretrained runs, load only the non-DINO encoder
+weights, then initialize these fusion modules exactly as in matched controls.
+Verify gradient flow to both new modules and to transferred encoders, while
+DINO stays frozen. Check missing-modality/edge-tile cases, no post-cutoff
+inputs, 4×4 alignment, all-missing attention stability and checkpoint
+compatibility. Report parameter count and memory/throughput cost.
+
+Evaluate on identical grouped folds, seeds, label budgets, DINO cache and
+cutoffs with four fusion configurations: neither addition, channel attention
+only, elevation–S2 cross-attention only, and both. Repeat the comparison with
+and without knowledge-pretrained non-DINO encoders to separate the fusion
+contribution from pretraining. Report pooled out-of-fold pixel and field-level
+metrics plus per-country/crop results; retain the v2 baseline as an explicit
+control. Neither contribution is considered validated by attention maps or a
+single favorable fold alone.

@@ -185,13 +185,14 @@ YieldSAT pilot acceptance and limitations are in the YieldSAT contract. Retain t
 original downloader/native-grid exit criteria below independently.
 
 The [YieldSAT 64×64 image training branch](./yieldsat-image-training.md)
-continues the built four-country image dataset with planned **YI-01–YI-05**:
-audit/load the images with grouped splits and cutoffs; integrate a pinned
-satellite-pretrained DINO optical backbone and separate nine-band S2 encoder;
-add weather, DEM, terrain and soil encoders with spatial fusion and a dense
-yield head; train with a frozen-then-optionally-partial backbone protocol; and
-evaluate on held-out physical fields against the point model. These tasks are
-specified, not yet implemented or trained.
+uses the built four-country image dataset. **YI-01–YI-12** cover the image
+loader, pinned frozen satellite DINO features, separate sensor encoders,
+dense fusion/training/evaluation, full temporal series and full point-cell
+coverage; the v1 and v2 suites have been submitted and are documented there.
+Planned **YI-13–YI-14** extend the supervised image fusion with attention over
+all 12 S2 bands and bidirectional DEM–S2 token cross-attention. These additions
+are trained at yield fine-tuning, after optional encoder-only relational
+knowledge pretraining; DINO and the knowledge objective do not train them.
 
 **Exit:** real pretraining and supervised fine-tuning run through the intended
 handoff, with an honest spatially held-out yield RMSE. Full-layer compliance also
