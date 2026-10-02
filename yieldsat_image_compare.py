@@ -27,22 +27,24 @@ FOLD_RE = re.compile(r'paper/(?P<group>[^/]+)/(?P<inputs>[^/]+)/(?P<tag>.+)_seed
                      r'(?P<pair>[^/]+)/fold(?P<fold>\d+)$')
 
 
-def _keys(npz):
-    names = npz['season_names']
-    return np.char.add(np.char.add(names[npz['season']].astype(str), '|'),
-                       np.char.add(np.char.add(npz['grid_row'].astype(str), ','),
-                                   npz['grid_col'].astype(str)))
+def _keys(npz, codes):
+    """Integer cell keys: shared season-name code, grid row and col packed."""
+    names = npz['season_names'].astype(str)
+    season_code = np.array([codes.setdefault(n, len(codes)) for n in names], np.int64)
+    return (season_code[npz['season']] << 40) | (npz['grid_row'].astype(np.int64) << 20) \
+        | npz['grid_col'].astype(np.int64)
 
 
 def match_fold(image_npz, point_npz):
     """-> dict of matched arrays and coverage, or None if nothing matches."""
-    ik, pk = _keys(image_npz), _keys(point_npz)
+    codes = {}
+    ik, pk = _keys(image_npz, codes), _keys(point_npz, codes)
     if len(np.unique(ik)) != len(ik) or len(np.unique(pk)) != len(pk):
         raise ValueError('duplicate cells in a prediction file')
     common, ii, pi = np.intersect1d(ik, pk, return_indices=True)
     if not len(common):
         return None
-    season = np.unique(np.char.partition(common, '|')[:, 0], return_inverse=True)[1]
+    season = np.unique(common >> 40, return_inverse=True)[1]
     y_img, y_pt = image_npz['target'][ii], point_npz['target'][pi]
     if not np.allclose(y_img, y_pt, atol=1e-4, equal_nan=True):
         raise ValueError('targets of matched cells disagree: not the same cells')
@@ -81,6 +83,8 @@ def collect(image_root, point_root, image_tag='image', point_tag='ours'):
             continue
         rows.append(dict(group=g['group'], inputs=g['inputs'], seed=int(g['seed']), pair=g['pair'],
                          fold=int(g['fold']), **score(m)))
+        if len(rows) % 100 == 0:
+            print('matched', len(rows), 'folds', flush=True)
     return rows, missing
 
 
