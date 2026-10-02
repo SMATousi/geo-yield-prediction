@@ -971,3 +971,15 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
   - Estimate: 2,586 runs in 61 jobs, ~172 GPU-hours, ~5.7 h on 32 GPUs.
   - Submitted `image_v2_donors_pool` (2) and `image_v2_pools` (15 A10 +
     15 RTX 3090).
+- 2026-10-02 — **Results tables (`results/`).**
+  - **Status at generation:** point suite 3,036 of 3,087 active runs done;
+    image v1 2,451 of 2,460; donors 12 of 12.
+  - **Tables:** `point_suite.md` and `image_v1_suite.md` are built from W&B
+    by `yieldsat_results_tables.py`. `image_vs_point.md` is built by
+    `yieldsat_image_compare.py`, run on the PVC in
+    `cluster/nautilus/results_pod.yaml`; it now uses integer cell keys
+    (string keys were CPU-bound) and supports `--from_folds` / `--md`.
+  - **Image v1 vs point on identical cells** (2,449 matched folds): image v1
+    is worse in 97 of 108 rows. Median Δ pixel RMSE: CV10 +0.14, farm LORO
+    +0.10, province LORO +0.19, LOYO +0.09 t/ha. It is better only in LOYO
+    for Brazil and GER-W (10 rows) and one CV10 row.
