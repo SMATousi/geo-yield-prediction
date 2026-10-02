@@ -9,10 +9,11 @@ cluster's prediction files. Earlier single-machine pilot results are in
 | [point_suite.md](point_suite.md) | Point model (`before_full`): CV10, LORO, LOYO × paper/strict policy × S2, S2+ADM × 3 seeds, plus our re-run of the paper's pixel LSTM (CV10), next to the paper's numbers |
 | [image_v1_suite.md](image_v1_suite.md) | Image model v1 (`image_full`): same matrix, metrics on the valid cells of the image test tiles |
 | [image_vs_point.md](image_vs_point.md) | Image v1 vs point model scored on **identical cells** (fair comparison) |
+| [image_v2_suite.md](image_v2_suite.md) | Image model v2 (`image_v2`): + per-pixel time series, level head, full coverage; metrics on **all** cells, directly comparable with the paper |
+| [image_v2_vs_point.md](image_v2_vs_point.md) | Image v2 vs point model on the same (all) cells |
+| [image_v2_vs_v1.md](image_v2_vs_v1.md) | Image v2 vs image v1 on v1's tiled cells |
 | [negative_r2_investigation.md](negative_r2_investigation.md) | Why per-fold R² is negative in LOYO/LORO: metric mismatch with the paper (pooled vs per-fold), training and image-model causes, candidate solutions |
 
-Image model v2 (per-pixel time series, level head, full coverage; suite
-`image_v2`) is running; its tables will be added here.
 
 **How to read them**
 - **All R² and RMSE values are pooled out-of-fold scores, the paper's
