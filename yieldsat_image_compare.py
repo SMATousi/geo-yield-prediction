@@ -45,11 +45,14 @@ def match_fold(image_npz, point_npz):
     if not len(common):
         return None
     season = np.unique(common >> 40, return_inverse=True)[1]
+    inv = {v: k for k, v in codes.items()}
+    season_name = np.array([inv[int(c)] for c in (common >> 40)])
     y_img, y_pt = image_npz['target'][ii], point_npz['target'][pi]
     if not np.allclose(y_img, y_pt, atol=1e-4, equal_nan=True):
         raise ValueError('targets of matched cells disagree: not the same cells')
     return {'target': y_img, 'image': image_npz['pred'][ii], 'point': point_npz['pred'][pi],
-            'season': season, 'n_image': len(ik), 'n_point': len(pk), 'n_matched': len(common)}
+            'season': season, 'season_name': season_name, 'n_image': len(ik), 'n_point': len(pk),
+            'n_matched': len(common)}
 
 
 def score(m):
@@ -65,8 +68,22 @@ def score(m):
     return out
 
 
+def pool(matches):
+    """Pool matched cells of all folds of one experiment (the paper's metric:
+    one R²/RMSE over every held-out cell; field level over field seasons)."""
+    names = np.concatenate([m['season_name'] for m in matches])
+    season = np.unique(names, return_inverse=True)[1]
+    cat = lambda k: np.concatenate([m[k] for m in matches])
+    m = {'target': cat('target'), 'image': cat('image'), 'point': cat('point'), 'season': season,
+         'n_matched': sum(x['n_matched'] for x in matches), 'n_point': sum(x['n_point'] for x in matches),
+         'n_image': sum(x['n_image'] for x in matches)}
+    return score(m)
+
+
 def collect(image_root, point_root, image_tag='image', point_tag='ours'):
-    rows, missing = [], []
+    """One row per experiment (group, inputs, seed, pair), pooled over the
+    folds where both an image and a point prediction exist."""
+    by_exp, missing, n = {}, [], 0
     for f in sorted(Path(image_root).glob('paper/*/*/*/*/fold*/test_predictions.npz')):
         rel = f.parent.relative_to(image_root).as_posix()
         g = FOLD_RE.match(rel)
@@ -81,30 +98,29 @@ def collect(image_root, point_root, image_tag='image', point_tag='ours'):
         if m is None:
             missing.append(prel + ' (no common cells)')
             continue
-        rows.append(dict(group=g['group'], inputs=g['inputs'], seed=int(g['seed']), pair=g['pair'],
-                         fold=int(g['fold']), **score(m)))
-        if len(rows) % 100 == 0:
-            print('matched', len(rows), 'folds', flush=True)
+        key = (g['group'], g['inputs'], int(g['seed']), g['pair'])
+        by_exp.setdefault(key, []).append(m)
+        n += 1
+        if n % 100 == 0:
+            print('matched', n, 'folds', flush=True)
+    rows = [dict(group=k[0], inputs=k[1], seed=k[2], pair=k[3], folds=len(v), **pool(v))
+            for k, v in sorted(by_exp.items())]
     return rows, missing
 
 
 def summarize(rows):
-    """Fold means per (protocol group, inputs, pair) over seeds and folds."""
+    """Mean over seeds of the pooled scores, per (protocol group, inputs, pair)."""
     by = collections.defaultdict(list)
     for r in rows:
         by[(r['group'], r['inputs'], r['pair'])].append(r)
     out = []
     for (group, inputs, pair), rs in sorted(by.items()):
-        rec = {'group': group, 'inputs': inputs, 'pair': pair, 'folds': len(rs),
+        rec = {'group': group, 'inputs': inputs, 'pair': pair, 'seeds': len(rs),
                'point_coverage': float(np.mean([r['point_coverage'] for r in rs]))}
         for model in ('image', 'point'):
-            for k in ('pixel_r2', 'pixel_rmse', 'field_rmse'):
+            for k in ('pixel_r2', 'pixel_rmse', 'field_r2', 'field_rmse'):
                 vals = [r[model][k] for r in rs if r[model][k] is not None and np.isfinite(r[model][k])]
                 rec['{}_{}'.format(model, k)] = float(np.mean(vals)) if vals else float('nan')
-            # field R2 only where a fold has >= 3 field seasons
-            vals = [r[model]['field_r2'] for r in rs if r[model]['fields'] >= 3
-                    and r[model]['field_r2'] is not None and np.isfinite(r[model]['field_r2'])]
-            rec['{}_field_r2'.format(model)] = float(np.mean(vals)) if vals else float('nan')
         rec['delta_pixel_rmse'] = rec['image_pixel_rmse'] - rec['point_pixel_rmse']
         out.append(rec)
     return out
@@ -120,21 +136,23 @@ def write_markdown(summary, path, title, note=''):
              '- Both models are scored on **exactly the same cells**: the valid cells of the image '
              'test tiles, matched by field season and grid row/col. "Coverage" is the share of the '
              'point model\'s test cells that lie in image tiles.',
-             '- Values are means over matched folds × seeds; field R² only over folds with ≥ 3 test '
-             'field seasons. RMSE in t/ha. **Δ RMSE** = image − point (negative: image better).', '']
+             '- **Metric = the paper\'s computation:** per experiment (pair × protocol × policy × inputs '
+             '× seed) the matched cells of all folds are pooled and R²/RMSE computed once (pixel: every '
+             'cell; field: season means). Values are means over seeds. RMSE in t/ha. **Δ RMSE** = image '
+             '− point (negative: image better).', '']
     for prefix, name in PROTO_TITLE:
         rows = [r for r in summary if r['group'].startswith(prefix)]
         if not rows:
             continue
         lines += ['## {}'.format(name), '',
-                  '| Pair | Policy | Inputs | Folds | Coverage | Pixel R² image / point | '
+                  '| Pair | Policy | Inputs | Seeds | Coverage | Pixel R² image / point | '
                   'Pixel RMSE image / point | Δ RMSE | Field R² image / point | Field RMSE image / point |',
                   '|---|---|---|---|---|---|---|---|---|---|']
         for r in sorted(rows, key=lambda r: (r['group'].split('_')[-2], r['inputs'], r['pair'])):
             policy = r['group'].split('_')[-2]
             lines.append('| {} | {} | {} | {} | {:.0f}% | {:.2f} / {:.2f} | {:.2f} / {:.2f} | {:+.2f} | '
                          '{:.2f} / {:.2f} | {:.2f} / {:.2f} |'.format(
-                             r['pair'], policy, {'s2': 'S2', 's2_adm': 'S2+ADM'}[r['inputs']], r['folds'],
+                             r['pair'], policy, {'s2': 'S2', 's2_adm': 'S2+ADM'}[r['inputs']], r['seeds'],
                              100 * r['point_coverage'], r['image_pixel_r2'], r['point_pixel_r2'],
                              r['image_pixel_rmse'], r['point_pixel_rmse'], r['delta_pixel_rmse'],
                              r['image_field_r2'], r['point_field_r2'], r['image_field_rmse'],
@@ -172,13 +190,14 @@ def main():
             w.writerows(summary)
     if a.md:
         write_markdown(summary, a.md, a.title, a.note)
-    print('{} matched folds, {} image folds without a point counterpart'.format(len(rows), len(missing)))
+    print('{} experiments (pooled over matched folds), {} image folds without a point counterpart'.format(
+        len(rows), len(missing)))
     print('%-28s %-7s %-6s %5s %6s | %-13s | %-13s | %-13s' % (
-        'protocol group', 'inputs', 'pair', 'folds', 'cover', 'pixel R2 i/p', 'pixel RMSE i/p',
+        'protocol group', 'inputs', 'pair', 'seeds', 'cover', 'pixel R2 i/p', 'pixel RMSE i/p',
         'field R2 i/p'))
     for r in summary:
         print('%-28s %-7s %-6s %5d %5.0f%% | %5.2f / %5.2f | %5.2f / %5.2f | %5.2f / %5.2f' % (
-            r['group'], r['inputs'], r['pair'], r['folds'], 100 * r['point_coverage'],
+            r['group'], r['inputs'], r['pair'], r['seeds'], 100 * r['point_coverage'],
             r['image_pixel_r2'], r['point_pixel_r2'], r['image_pixel_rmse'], r['point_pixel_rmse'],
             r['image_field_r2'], r['point_field_r2']))
 

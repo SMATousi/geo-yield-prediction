@@ -352,8 +352,9 @@ def test_image_vs_point_comparison_matches_identical_cells(tmp_path):
     r = rows[0]
     assert r['n_matched'] == 60 and abs(r['point_coverage'] - 60 / 90) < 1e-9 and r['image_coverage'] == 1
     assert abs(r['image']['pixel_rmse'] - 0.1) < 1e-9 and abs(r['point']['pixel_rmse'] - 0.5) < 1e-9
+    assert r['folds'] == 1
     s = cmp.summarize(rows)[0]
-    assert s['folds'] == 1 and abs(s['delta_pixel_rmse'] + 0.4) < 1e-9
+    assert s['seeds'] == 1 and abs(s['delta_pixel_rmse'] + 0.4) < 1e-9
     image['target'] = image['target'] + 1                    # different cells -> refuse
     np.savez(tmp_path / 'img' / rel.format('image') / 'test_predictions.npz', **image)
     with pytest.raises(ValueError):
@@ -500,3 +501,26 @@ def test_image_entry_v2_flags_end_to_end(image_root, tmp_path, monkeypatch):
     assert rep['train_tile_filter'] == 'min_valid 1'
     assert rep['model']['descriptor']['use_series'] and rep['model']['descriptor']['level_head']
     assert 'series' in rep['streams'] and np.isfinite(rep['test']['overall']['pixel']['rmse'])
+
+
+def test_pooled_metrics_pool_folds_not_average_them(tmp_path):
+    import yieldsat_pooled_metrics as pm
+    from util.yieldsat_eval import regression_metrics
+    rng = np.random.default_rng(0)
+    exp = tmp_path / 'paper' / 'loyo_na_paper_s0' / 's2' / 'ours_seed0' / 'ARG-W'
+    ys, ps, per_fold = [], [], []
+    for i, level in enumerate((2.0, 7.0)):                    # two "years" with different levels
+        y = level + rng.normal(0, 0.3, 200)
+        p = level + 0.4 + rng.normal(0, 0.3, 200)             # good level, small offset
+        d = exp / 'fold{:02d}'.format(i)
+        d.mkdir(parents=True)
+        np.savez(d / 'test_predictions.npz', pred=p, target=y, season=np.repeat([0, 1], 100),
+                 grid_row=np.arange(200), grid_col=np.zeros(200, int),
+                 season_names=np.array(['y{}_a'.format(i), 'y{}_b'.format(i)]))
+        ys.append(y)
+        ps.append(p)
+        per_fold.append(regression_metrics(y, p)['r2'])
+    out = pm.pooled(exp)
+    assert max(per_fold) < 0 < out['pixel_r2']                # per-fold negative, pooled positive
+    assert abs(out['pixel_r2'] - regression_metrics(np.concatenate(ys), np.concatenate(ps))['r2']) < 1e-12
+    assert out['n_seasons'] == 4 and out['folds'] == ['fold00', 'fold01']
