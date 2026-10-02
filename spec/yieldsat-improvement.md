@@ -89,3 +89,34 @@ below.
 ## 4. Progress log
 
 - 2026-10-02 — Plan written. DEV subset and success criterion fixed.
+- 2026-10-02 — **Implementation** (commit `f5b7cd0`): `models_yieldsat_hybrid.py`
+  (`CellEncoder` S4, `LevelHead` S5, `LocalContext` S6, map branch S10 =
+  `YieldSATImageModel` restricted to DINO + nine bands + DEM, via
+  `adm_streams` and `features()`, with S9 `dem_rgb_xattn`); `augment_tile`
+  (S7: flips/rotations of every map, target, masks, grid row/col and the DINO
+  token grid; aspect sin/cos rotated with the map); `main_yieldsat_image.py
+  --arch hybrid --cell_fusion --context --level_head --dem_rgb_xattn
+  --augment`.
+  - Tests: 31 image + 36 point tests pass. They cover each variant's
+    gradients, absent cells never predicted, augmentation identity and
+    aspect rotation, and hybrid runs end to end. Image-model defaults are
+    unchanged (same parameters and outputs).
+  - Small spec deviation: S9's DEM tokens are on the 4×4 token grid (the
+    same grid as the DINO tokens), not 8×8.
+- 2026-10-02 — **Local calibration** (GER-R CV10 fold 0, S2+ADM, RTX 3090;
+  test = the same 31,880 cells as the point run):
+
+  | Setting | Test pixel R² | Pixel RMSE | Field R² | Wall |
+  |---|---|---|---|---|
+  | Point model (`before_full` recipe) | 0.226 | 1.485 | 0.440 | – |
+  | Hybrid early fusion, batch 8, lr 5e-4, 40 ep | 0.026 | 1.665 | 0.097 | 3 min |
+  | … batch 4, lr 1e-3, 40 ep | 0.242 | 1.469 | 0.598 | 6.5 min |
+  | … **batch 8, lr 2e-3, 80 ep** | **0.293** | **1.419** | **0.649** | 10 min |
+  | Maps + S9 + S5 + S7, batch 8, lr 5e-4, 8 ep (smoke) | 0.090 | 1.610 | 0.323 | 1 min |
+
+  - The default image recipe (lr 5e-4, 60 epochs) under-trains the hybrid:
+    validation R² was still rising, and the best epoch was 33 of 40.
+  - With lr 2e-3 and 80 epochs, early fusion alone beats the point model on
+    this fold (+0.07 pixel R², +0.21 field R²).
+  - The DEV recipe is therefore batch 8 tiles, lr 2e-3, 80 epochs, with all
+    tiles of the training seasons (`--train_min_valid 0`).
