@@ -1,12 +1,11 @@
 # Image model v2 vs point model (all cells)
 
-Generated 2026-10-02 16:02 UTC from the pooled cluster results (image_v2 vs before_full). Image v2 covers every point cell, so both models are scored on the same cells. One exception: ARG-C with S2+ADM, where one field season (1,981 cells, 0.16%) has no Sentinel-2 data and is in the point test set only. 318 of 324 v2 experiments are complete (6 URG-S farm-LORO experiments were still running) and are shown.
+Generated 2026-10-02 22:41 UTC from the pooled cluster results (image_v2 vs before_full), all 324 v2 experiments. Image v2 covers every point cell, so both models are scored on the same cells. One exception: ARG-C with S2+ADM, where one field season (1,981 cells, 0.16%) has no Sentinel-2 data and is in the point test set only.
 
-**Summary (pooled scores, all cells).** Image v2 is worse than the point
-model in 89 of 106 rows. Median Δ pixel RMSE: CV10 +0.28, farm LORO +0.03,
-province LORO +0.38, LOYO +0.09 t/ha. It is better only in 17 Brazilian and
-German LORO/LOYO rows. It is never better in CV10 or province LORO, and in
-CV10 its field-level R² is far lower (e.g. GER-R −0.11 vs 0.64).
+**Summary (pooled scores, all cells, all 324 experiments).** Image v2 is
+worse than the point model in 91 of 108 rows. Median Δ pixel RMSE: CV10 +0.28,
+farm LORO +0.03, province LORO +0.38, LOYO +0.09 t/ha. It is better only in
+17 Brazilian and German LORO/LOYO rows, never in CV10 or province LORO.
 
 - Both models are scored on **exactly the same cells**: the valid cells of the image test tiles, matched by field season and grid row/col. "Coverage" is the share of the point model's test cells that lie in image tiles.
 - **Metric = the paper's computation:** per experiment (pair × protocol × policy × inputs × seed) the matched cells of all folds are pooled and R²/RMSE computed once (pixel: every cell; field: season means). Values are means over seeds. RMSE in t/ha. **Δ RMSE** = v2 − point (negative: v2 better).
@@ -90,11 +89,13 @@ CV10 its field-level R² is far lower (e.g. GER-R −0.11 vs 0.64).
 | BRA-W | strict | S2 | 3 | 100% | -0.03 / 0.09 | 1.59 / 1.50 | +0.09 | -0.08 / 0.17 | 0.83 / 0.72 |
 | GER-R | strict | S2 | 3 | 100% | -0.14 / -0.20 | 1.79 / 1.83 | -0.04 | -0.37 / -0.08 | 1.57 / 1.39 |
 | GER-W | strict | S2 | 3 | 100% | -0.22 / -0.05 | 3.25 / 3.01 | +0.24 | -0.61 / -0.30 | 2.39 / 2.16 |
+| URG-S | strict | S2 | 3 | 100% | 0.16 / 0.29 | 1.44 / 1.33 | +0.12 | 0.31 / 0.56 | 0.89 / 0.71 |
 | BRA-C | strict | S2+ADM | 3 | 100% | 0.13 / 0.12 | 2.69 / 2.70 | -0.02 | 0.17 / 0.13 | 1.61 / 1.65 |
 | BRA-S | strict | S2+ADM | 3 | 100% | 0.08 / 0.13 | 1.15 / 1.12 | +0.03 | 0.13 / 0.23 | 0.64 / 0.61 |
 | BRA-W | strict | S2+ADM | 3 | 100% | -0.06 / 0.05 | 1.62 / 1.53 | +0.09 | -0.07 / 0.10 | 0.82 / 0.75 |
 | GER-R | strict | S2+ADM | 3 | 100% | -0.12 / -0.12 | 1.77 / 1.77 | +0.01 | -0.35 / -0.10 | 1.56 / 1.41 |
 | GER-W | strict | S2+ADM | 3 | 100% | -0.27 / -0.11 | 3.32 / 3.10 | +0.22 | -0.69 / -0.37 | 2.46 / 2.21 |
+| URG-S | strict | S2+ADM | 3 | 100% | 0.15 / 0.30 | 1.45 / 1.32 | +0.13 | 0.30 / 0.58 | 0.89 / 0.69 |
 
 ## LOYO
 

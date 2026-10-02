@@ -1,7 +1,7 @@
 # Image model v2 results (image_v2 suite)
 
-Generated 2026-10-02 15:50 UTC by `yieldsat_results_tables.py` from pooled out-of-fold predictions (cluster results, image_v2).
-**318 of 324 experiments (pair × protocol × policy × inputs × seed) complete.**
+Generated 2026-10-02 22:41 UTC by `yieldsat_results_tables.py` from pooled out-of-fold predictions (cluster results, image_v2).
+**324 of 324 experiments (pair × protocol × policy × inputs × seed) complete.**
 
 - **Metric = the paper's computation:** for each experiment, the held-out predictions of all folds are pooled (each cell is held out exactly once) and R²/RMSE are computed once. Values are mean ± std of these pooled scores over seeds; a seed counts only when all its folds are finished.
 - **Pixel**: every held-out 10 m cell. **Field**: per field season, mean prediction vs mean target. R² = 1 − SSE/SST; RMSE in t/ha.
@@ -89,13 +89,13 @@ Image model v2 (plan v2 in spec/yieldsat-image-training.md): v1 + per-pixel full
 | BRA-W | Image v2 | strict | S2 | 3/3 | -0.03 ± 0.02 | 1.59 ± 0.01 | -0.08 ± 0.08 | 0.83 ± 0.03 | 0.11 / 1.48 | 0.20 / 1.41 (3D-LSTM) | 0.48 / 0.57 (3D-LSTM) |
 | GER-R | Image v2 | strict | S2 | 3/3 | -0.14 ± 0.13 | 1.79 ± 0.10 | -0.37 ± 0.22 | 1.57 ± 0.13 | -0.05 / 1.71 | 0.17 / 1.52 (3D-LSTM) | 0.26 / 1.16 (3D-LSTM) |
 | GER-W | Image v2 | strict | S2 | 3/3 | -0.22 ± 0.22 | 3.25 ± 0.29 | -0.61 ± 0.44 | 2.39 ± 0.32 | -0.78 / 3.93 | 0.10 / 2.79 (Transformer) | 0.14 / 1.76 (3D-ConvLSTM) |
-| URG-S | Image v2 | strict | S2 | 0/3 (+3 running) | – | – | – | – | 0.34 / 1.28 | 0.36 / 1.26 (3D-ConvLSTM) | 0.68 / 0.61 (3D-ConvLSTM) |
+| URG-S | Image v2 | strict | S2 | 3/3 | 0.16 ± 0.01 | 1.44 ± 0.00 | 0.31 ± 0.05 | 0.89 ± 0.03 | 0.34 / 1.28 | 0.36 / 1.26 (3D-ConvLSTM) | 0.68 / 0.61 (3D-ConvLSTM) |
 | BRA-C | Image v2 | strict | S2+ADM | 3/3 | 0.13 ± 0.02 | 2.69 ± 0.02 | 0.17 ± 0.05 | 1.61 ± 0.05 | 0.27 / 2.46 | 0.37 / 2.29 (3D-LSTM) | 0.65 / 1.05 (3D-LSTM) |
 | BRA-S | Image v2 | strict | S2+ADM | 3/3 | 0.08 ± 0.02 | 1.15 ± 0.01 | 0.13 ± 0.09 | 0.64 ± 0.03 | 0.16 / 1.10 | 0.35 / 0.97 (AFF) | 0.63 / 0.42 (AFF) |
 | BRA-W | Image v2 | strict | S2+ADM | 3/3 | -0.06 ± 0.04 | 1.62 ± 0.03 | -0.07 ± 0.09 | 0.82 ± 0.03 | 0.11 / 1.48 | 0.18 / 1.42 (AFF) | 0.52 / 0.55 (AFF) |
 | GER-R | Image v2 | strict | S2+ADM | 3/3 | -0.12 ± 0.05 | 1.77 ± 0.04 | -0.35 ± 0.13 | 1.56 ± 0.08 | -0.05 / 1.71 | 0.15 / 1.55 (AFF) | 0.25 / 1.16 (3D-ConvLSTM) |
 | GER-W | Image v2 | strict | S2+ADM | 3/3 | -0.27 ± 0.14 | 3.32 ± 0.18 | -0.69 ± 0.29 | 2.46 ± 0.21 | -0.78 / 3.93 | 0.07 / 2.84 (3D-ConvLSTM) | 0.14 / 1.76 (3D-ConvLSTM) |
-| URG-S | Image v2 | strict | S2+ADM | 0/3 (+3 running) | – | – | – | – | 0.34 / 1.28 | 0.36 / 1.26 (3D-ConvLSTM) | 0.68 / 0.61 (3D-ConvLSTM) |
+| URG-S | Image v2 | strict | S2+ADM | 3/3 | 0.15 ± 0.01 | 1.45 ± 0.01 | 0.30 ± 0.03 | 0.89 ± 0.02 | 0.34 / 1.28 | 0.36 / 1.26 (3D-ConvLSTM) | 0.68 / 0.61 (3D-ConvLSTM) |
 
 ## LOYO (leave one year out)
 

@@ -1,14 +1,12 @@
 # Image model v2 vs image model v1 on identical cells
 
-Generated 2026-10-02 16:10 UTC from the cluster prediction files (image_v2 vs image_full). Cells = the valid cells of v1's test tiles (v1 covers only tiles with >= 2,048 valid cells), where both models predict; 'Coverage' is the share of v1's test cells matched. Only complete v2 experiments are shown.
+Generated 2026-10-02 22:41 UTC from the cluster prediction files (image_v2 vs image_full). Cells = the valid cells of v1's test tiles (v1 covers only tiles with >= 2,048 valid cells), where both models predict. Experiments where v1 lacks folds (folds without qualifying tiles) are not shown.
 
 **Summary (pooled scores, v1's cells).** v2 is better than v1 in 55 of 86
 rows, but only slightly. Median Δ pixel RMSE: CV10 −0.02, province LORO −0.01,
-LOYO −0.02 t/ha. Mean pixel R² is nearly unchanged (CV10 0.26 vs 0.25, LOYO
-0.07 vs 0.07). The clearest gain is in farm LORO (8/8 rows, median −0.13 t/ha;
-R² −0.19 vs −0.38). The time-series branch, level head and full-coverage
-training therefore helped only marginally on comparable cells. Experiments
-where v1 lacks folds (folds without qualifying tiles) are not shown.
+LOYO −0.02 t/ha. The clearest gain is in farm LORO (median −0.13 t/ha). The
+time-series branch, level head and full-coverage training helped only
+marginally on comparable cells.
 
 - Both models are scored on **exactly the same cells**: the valid cells of the image test tiles, matched by field season and grid row/col. "Coverage" is the share of the point model's test cells that lie in image tiles.
 - **Metric = the paper's computation:** per experiment (pair × protocol × policy × inputs × seed) the matched cells of all folds are pooled and R²/RMSE computed once (pixel: every cell; field: season means). Values are means over seeds. RMSE in t/ha. **Δ RMSE** = v2 − v1 (negative: v2 better).
