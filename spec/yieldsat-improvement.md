@@ -120,3 +120,11 @@ below.
     this fold (+0.07 pixel R², +0.21 field R²).
   - The DEV recipe is therefore batch 8 tiles, lr 2e-3, 80 epochs, with all
     tiles of the training seasons (`--train_min_valid 0`).
+- 2026-10-02 — **Round 1 submitted** (`cluster/suites/dev_r1.yaml`,
+  `cluster/nautilus/dev_r1_pools.yaml`; W&B project `yieldsat-cvpr27-improve`).
+  - **Configurations:** h1-early (S4), h2-level (+S5), h3-local (+S6), h4-maps
+    (+S10), h5-maps-xattn (+S9), h6a-local-aug (h3 + S7), h6b-maps-xattn-aug
+    (h5 + S7).
+  - **Size:** 7 × 94 = 658 runs, ~119 GPU-hours (≈ 4–5.5 h on 30 A10s);
+    2 × 15 A10 pods (16 CPU, 48 GiB).
+  - **Data:** `YieldSAT-Image-full` on the PVC; sparse per-job staging.

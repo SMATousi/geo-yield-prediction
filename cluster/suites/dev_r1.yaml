@@ -1,0 +1,361 @@
+# Improvement plan round 1 on the DEV subset (spec/yieldsat-improvement.md):
+# hybrid model variants E1-E6 (S4 early fusion, S5 level term, S6 local context,
+# S10 S2/DEM maps, S9 DEM<->RGB cross-attention, S7 augmentation) on ARG-W, BRA-C,
+# GER-R, URG-S x CV10/LOYO/LORO (provinces for ARG-W) x paper policy x S2+ADM x seed 0.
+# Recipe from the local calibration: 80 epochs, 8 tiles per batch, lr 2e-3, all tiles.
+suite: dev_r1
+wandb:
+  project: yieldsat-cvpr27-improve
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+  image_root: ${YIELDSAT_IMAGE_ROOT}
+  stage_mode: sparse
+pairs:
+- ARG-W
+- BRA-C
+- GER-R
+- URG-S
+job_unit: pair_shard
+target_job_hours: 2.0
+runs_per_gpu: 3
+max_runs_per_gpu: 4
+target_gpu_util: 80
+num_workers: 3
+gpu_speed_factor:
+  image: 0.32
+concurrency_speedup: 3.0
+stage_mb_per_s: 42
+experiments:
+- name: h1-early
+  model: image
+  policies: &id001
+  - paper
+  inputs: &id002
+  - s2_adm
+  seeds: &id003
+  - 0
+  budget: &id004
+    epochs: 80
+    batch_size: 8
+    lr: 0.002
+  extra_args: &id005
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  protocols:
+  - cv
+  - loyo
+- name: h1-early
+  model: image
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h1-early
+  model: image
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h2-level
+  model: image
+  policies: &id006
+  - paper
+  inputs: &id007
+  - s2_adm
+  seeds: &id008
+  - 0
+  budget: *id004
+  extra_args: &id009
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  protocols:
+  - cv
+  - loyo
+- name: h2-level
+  model: image
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h2-level
+  model: image
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h3-local
+  model: image
+  policies: &id010
+  - paper
+  inputs: &id011
+  - s2_adm
+  seeds: &id012
+  - 0
+  budget: *id004
+  extra_args: &id013
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  - --context
+  - local
+  protocols:
+  - cv
+  - loyo
+- name: h3-local
+  model: image
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h3-local
+  model: image
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h4-maps
+  model: image
+  policies: &id014
+  - paper
+  inputs: &id015
+  - s2_adm
+  seeds: &id016
+  - 0
+  budget: *id004
+  extra_args: &id017
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  - --context
+  - maps
+  protocols:
+  - cv
+  - loyo
+- name: h4-maps
+  model: image
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h4-maps
+  model: image
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h5-maps-xattn
+  model: image
+  policies: &id018
+  - paper
+  inputs: &id019
+  - s2_adm
+  seeds: &id020
+  - 0
+  budget: *id004
+  extra_args: &id021
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  - --context
+  - maps
+  - --dem_rgb_xattn
+  protocols:
+  - cv
+  - loyo
+- name: h5-maps-xattn
+  model: image
+  policies: *id018
+  inputs: *id019
+  seeds: *id020
+  budget: *id004
+  extra_args: *id021
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h5-maps-xattn
+  model: image
+  policies: *id018
+  inputs: *id019
+  seeds: *id020
+  budget: *id004
+  extra_args: *id021
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h6a-local-aug
+  model: image
+  policies: &id022
+  - paper
+  inputs: &id023
+  - s2_adm
+  seeds: &id024
+  - 0
+  budget: *id004
+  extra_args: &id025
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  - --context
+  - local
+  - --augment
+  protocols:
+  - cv
+  - loyo
+- name: h6a-local-aug
+  model: image
+  policies: *id022
+  inputs: *id023
+  seeds: *id024
+  budget: *id004
+  extra_args: *id025
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h6a-local-aug
+  model: image
+  policies: *id022
+  inputs: *id023
+  seeds: *id024
+  budget: *id004
+  extra_args: *id025
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: h6b-maps-xattn-aug
+  model: image
+  policies: &id026
+  - paper
+  inputs: &id027
+  - s2_adm
+  seeds: &id028
+  - 0
+  budget: *id004
+  extra_args: &id029
+  - --arch
+  - hybrid
+  - --slot_coverage
+  - present
+  - --cell_fusion
+  - early
+  - --level_head
+  - --context
+  - maps
+  - --dem_rgb_xattn
+  - --augment
+  protocols:
+  - cv
+  - loyo
+- name: h6b-maps-xattn-aug
+  model: image
+  policies: *id026
+  inputs: *id027
+  seeds: *id028
+  budget: *id004
+  extra_args: *id029
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: h6b-maps-xattn-aug
+  model: image
+  policies: *id026
+  inputs: *id027
+  seeds: *id028
+  budget: *id004
+  extra_args: *id029
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
