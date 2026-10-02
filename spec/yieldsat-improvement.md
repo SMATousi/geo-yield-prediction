@@ -128,3 +128,18 @@ below.
   - **Size:** 7 × 94 = 658 runs, ~119 GPU-hours (≈ 4–5.5 h on 30 A10s);
     2 × 15 A10 pods (16 CPU, 48 GiB).
   - **Data:** `YieldSAT-Image-full` on the PVC; sparse per-job staging.
+- 2026-10-02 — **DEV evaluator** `yieldsat_dev_eval.py`: per configuration
+  and DEV row, pooled pixel and field R² next to the point model and the
+  paper's best; DEV means, per-protocol means and the success test. Only
+  complete experiments count.
+  - Validated with the point model's own pooled results as a fake
+    configuration: seed 0 gives 0.305 / 0.470 vs 0.309 / 0.472 over 3
+    seeds.
+  - **Paper-best DEV means (S2+ADM): pixel 0.460, field 0.686.** Targets
+    with the 0.03 margin: pixel ≥ 0.490 and field ≥ 0.716, with each of
+    CV10/LOYO/LORO at or above the paper's per-protocol means.
+  - The paper-best per-protocol DEV means are CV10 0.56, LOYO 0.41,
+    LORO 0.42 (pixel).
+- 2026-10-02 — Final image v2 results committed (`results/image_v2_*.md`;
+  324/324 experiments): v2 worse than point in 91/108 rows, marginally
+  better than v1 (55/86 rows).
