@@ -1116,3 +1116,20 @@ single favorable fold alone.
       with S2;
     - v2 is 0.11–0.27 below the point model on identical cells;
     - v2 is below the paper's LSTM on ARG-S.
+- 2026-10-02 — **Image v2 results gathered (pooled; `results/`).**
+  - **Status:** 2,562/2,586 runs done; 318/324 experiments complete (6 URG-S
+    farm-LORO experiments still running); donors 12/12.
+  - **Tables:** `image_v2_suite.md` (all cells, directly comparable with the
+    paper); `image_v2_vs_point.md` (from the pooled files; same cells except
+    one ARG-C season with no S2 data, 0.16%); `image_v2_vs_v1.md` (on v1's
+    cells, 4 parallel shards, `--shard`).
+  - **v2 vs point (all cells):** v2 worse in 89/106 rows. Median Δ pixel
+    RMSE: CV10 +0.28, farm LORO +0.03, province LORO +0.38, LOYO +0.09 t/ha.
+    CV10 pixel R²: v2 0.24 vs point 0.43 (paper LSTM 0.37). German pairs
+    ≈ 0.
+  - **v2 vs v1 (v1's cells):** v2 better in 55/86 rows, but only marginally
+    (median −0.02 t/ha), except farm LORO (8/8, −0.13).
+  - **Conclusion:** the v2 changes did not close the image-vs-point gap; the
+    image approach remains well below the point model and the paper. This
+    is consistent with the investigation (C7: overfitting and noisy model
+    selection with few tiles).
