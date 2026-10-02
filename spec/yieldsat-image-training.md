@@ -998,3 +998,32 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
     - year-level bias;
     - image v1 overfitting with noisy checkpoint selection.
   - Tools added: `yieldsat_r2_diagnostics.py`.
+- 2026-10-02 — **Results switched to pooled out-of-fold metrics (user
+  decision).** Every R²/RMSE in `results/` is now the paper's computation:
+  pooled over all folds of an experiment, mean ± std over seeds.
+  `negative_r2_investigation.md` keeps per-fold values only as evidence.
+  - **Tools:** `yieldsat_pooled_metrics.py` (on the PVC; matches the fold
+    aggregator exactly); `yieldsat_results_tables.py --pooled --runs`;
+    `yieldsat_image_compare.py` pools matched cells per experiment, one
+    experiment at a time (a first version held all folds in memory and was
+    OOM-killed); `yieldsat_paper_compare.py` (pilot comparison) uses pooled
+    values.
+  - **Complete:** point suite 342/342 experiments; image v1 324/324.
+  - **Point model, pooled pixel R², paper policy, mean over pairs:**
+
+    | Protocol | Inputs | Ours | Paper LSTM | Paper best |
+    |---|---|---|---|---|
+    | CV10 | S2 | 0.43 | 0.37 | 0.49 |
+    | CV10 | S2+ADM | 0.45 | 0.46 | 0.53 |
+    | LOYO | S2 | 0.17 | 0.15 | 0.32 |
+    | LOYO | S2+ADM | 0.21 | 0.31 | 0.37 |
+    | Province LORO | S2 | 0.44 | 0.53 | 0.61 |
+    | Province LORO | S2+ADM | 0.46 | 0.52 | 0.66 |
+    | Farm LORO | S2 | 0.07 | 0.01 | 0.23 |
+    | Farm LORO | S2+ADM | 0.05 | 0.09 | 0.25 |
+
+    We are below the paper's best in every row. 19 of 126 rows remain
+    negative, mostly German LORO/LOYO, where the paper's LSTM is also
+    negative in several rows.
+  - **Image v1 vs point on identical cells (pooled):** image worse in 95 of
+    108 rows.
