@@ -136,7 +136,7 @@ PROTO_TITLE = (('cv10', 'CV10'), ('loro_province', 'LORO, provinces (Argentina)'
                ('loyo', 'LOYO'))
 
 
-def write_markdown(summary, path, title, note=''):
+def write_markdown(summary, path, title, note='', labels=('image', 'point')):
     """One table per protocol group: image vs point on identical cells."""
     lines = ['# {}'.format(title), '', note, '',
              '- Both models are scored on **exactly the same cells**: the valid cells of the image '
@@ -144,15 +144,16 @@ def write_markdown(summary, path, title, note=''):
              'point model\'s test cells that lie in image tiles.',
              '- **Metric = the paper\'s computation:** per experiment (pair × protocol × policy × inputs '
              '× seed) the matched cells of all folds are pooled and R²/RMSE computed once (pixel: every '
-             'cell; field: season means). Values are means over seeds. RMSE in t/ha. **Δ RMSE** = image '
-             '− point (negative: image better).', '']
+             'cell; field: season means). Values are means over seeds. RMSE in t/ha. **Δ RMSE** = {a} '
+             '− {b} (negative: {a} better).'.format(a=labels[0], b=labels[1]), '']
     for prefix, name in PROTO_TITLE:
         rows = [r for r in summary if r['group'].startswith(prefix)]
         if not rows:
             continue
         lines += ['## {}'.format(name), '',
-                  '| Pair | Policy | Inputs | Seeds | Coverage | Pixel R² image / point | '
-                  'Pixel RMSE image / point | Δ RMSE | Field R² image / point | Field RMSE image / point |',
+                  '| Pair | Policy | Inputs | Seeds | Coverage | Pixel R² {a} / {b} | '
+                  'Pixel RMSE {a} / {b} | Δ RMSE | Field R² {a} / {b} | Field RMSE {a} / {b} |'.format(
+                      a=labels[0], b=labels[1]),
                   '|---|---|---|---|---|---|---|---|---|---|']
         for r in sorted(rows, key=lambda r: (r['group'].split('_')[-2], r['inputs'], r['pair'])):
             policy = r['group'].split('_')[-2]
@@ -177,13 +178,27 @@ def main():
     p.add_argument('--out', required=True)
     p.add_argument('--from_folds', default=None, help='rebuild tables from a saved folds.json')
     p.add_argument('--md', default=None, help='also write a markdown report here')
+    p.add_argument('--runs', default=None,
+                   help="image plan's runs.jsonl: keep only experiments whose folds are all finished")
     p.add_argument('--title', default='Image vs point on identical cells')
+    p.add_argument('--labels', default='image,point', help='names of the two models in the markdown')
     p.add_argument('--note', default='')
     a = p.parse_args()
     if a.from_folds:
         rows, missing = json.loads(Path(a.from_folds).read_text()), []
     else:
         rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag)
+    if a.runs:
+        expected = {}
+        for line in open(a.runs):
+            r = json.loads(line)
+            g = FOLD_RE.match(r['rel_path'])
+            if g:
+                k = (g['group'], g['inputs'], int(g['seed']), g['pair'])
+                expected[k] = expected.get(k, 0) + 1
+        before = len(rows)
+        rows = [r for r in rows if r['folds'] >= expected.get((r['group'], r['inputs'], r['seed'], r['pair']), 1)]
+        print('{} of {} experiments complete'.format(len(rows), before))
     summary = summarize(rows)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -195,7 +210,7 @@ def main():
             w.writeheader()
             w.writerows(summary)
     if a.md:
-        write_markdown(summary, a.md, a.title, a.note)
+        write_markdown(summary, a.md, a.title, a.note, tuple(a.labels.split(',')))
     print('{} experiments (pooled over matched folds), {} image folds without a point counterpart'.format(
         len(rows), len(missing)))
     print('%-28s %-7s %-6s %5s %6s | %-13s | %-13s | %-13s' % (
