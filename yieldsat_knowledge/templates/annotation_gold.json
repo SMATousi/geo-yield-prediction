@@ -1,0 +1,10 @@
+{
+  "reviewer": null,
+  "reviewed_at": null,
+  "instructions": "Replace all examples with independent expert labels. Every active concept and rule needs positive AND negative estimated examples. Stratify country/crop/season/quality; do not copy model outputs as gold.",
+  "labels": [
+    {"sample_id": "Germany:REPLACE", "kind": "concepts", "id": "rain_supported", "score": 0.9},
+    {"sample_id": "Germany:REPLACE_OTHER", "kind": "concepts", "id": "rain_supported", "score": 0.1},
+    {"sample_id": "Germany:REPLACE", "kind": "rules", "id": "REPLACE_RULE_ID", "score": 0.8}
+  ]
+}

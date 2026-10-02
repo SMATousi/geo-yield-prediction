@@ -1,0 +1,11 @@
+{
+  "reviewer": null,
+  "reviewed_at": null,
+  "instructions": "For EVERY rule provide expert positive and negative pairs in BOTH partitions. Audit pairs must use independently reviewed alternative concepts, not the original endpoints or their reversal. Add concepts to the reviewed library first if necessary; rebuild text/annotation caches when it changes. Names below are placeholders.",
+  "examples": [
+    {"rule": "REPLACE_RULE_ID", "a": "CONCEPT_A", "b": "CONCEPT_B", "label": 1, "partition": "calibration"},
+    {"rule": "REPLACE_RULE_ID", "a": "CONCEPT_B", "b": "CONCEPT_A", "label": 0, "partition": "calibration"},
+    {"rule": "REPLACE_RULE_ID", "a": "ALTERNATE_A", "b": "ALTERNATE_B", "label": 1, "partition": "audit"},
+    {"rule": "REPLACE_RULE_ID", "a": "COUNTEREXAMPLE_A", "b": "COUNTEREXAMPLE_B", "label": 0, "partition": "audit"}
+  ]
+}

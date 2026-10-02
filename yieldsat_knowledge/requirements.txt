@@ -1,0 +1,4 @@
+# Reuse the project's environment and existing model dependencies.
+# Install a cluster-compatible torch build before this file.
+-r ../requirements.txt
+# OpenRouter calls use Python's standard library; no separate SDK needed.
