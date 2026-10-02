@@ -983,3 +983,18 @@ The v1 image suite (`image_full`) keeps running as the "spatial only" ablation.
     is worse in 97 of 108 rows. Median Δ pixel RMSE: CV10 +0.14, farm LORO
     +0.10, province LORO +0.19, LOYO +0.09 t/ha. It is better only in LOYO
     for Brazil and GER-W (10 rows) and one CV10 row.
+- 2026-10-02 — **Negative-R² investigation** (user request); report in
+  `results/negative_r2_investigation.md`, nothing changed yet.
+  - **Main cause:** our tables average per-fold R², while the paper's
+    LOYO/LORO means behave like R² pooled over folds.
+    - 31 paper rows have a mean ± std that is impossible as a per-fold mean.
+    - Our pooled LOYO R² matches the paper's LSTM row by row.
+    - Our validated re-run of the paper LSTM on ARG-W LOYO gives per-fold
+      mean −0.94 but pooled 0.51 (paper 0.61).
+  - **Other causes:**
+    - the point model is below the paper's best models (~0.05–0.2);
+    - weak gain from weather/terrain/soil;
+    - best checkpoints at epoch 4–7 of 60;
+    - year-level bias;
+    - image v1 overfitting with noisy checkpoint selection.
+  - Tools added: `yieldsat_r2_diagnostics.py`.
