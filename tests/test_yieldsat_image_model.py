@@ -524,3 +524,87 @@ def test_pooled_metrics_pool_folds_not_average_them(tmp_path):
     assert max(per_fold) < 0 < out['pixel_r2']                # per-fold negative, pooled positive
     assert abs(out['pixel_r2'] - regression_metrics(np.concatenate(ys), np.concatenate(ps))['r2']) < 1e-12
     assert out['n_seasons'] == 4 and out['folds'] == ['fold00', 'fold01']
+
+
+# ---- improvement plan: hybrid model S4-S10, augmentation S7 --------------------------
+
+def _hybrid_batch(B=2, seed=0):
+    b = _batch(B, seed=seed)
+    g = torch.Generator().manual_seed(seed)
+    b['series'] = torch.randn(B, 64, 64, 24, 12, generator=g)
+    b['series_mask'] = (torch.rand(B, 64, 64, 24, generator=g) > 0.3).float()
+    b['series_days'] = torch.arange(24.0).view(1, 1, 1, 24).expand(B, 64, 64, 24) * 10
+    b['seeding_doy'] = torch.tensor([100.0, 300.0])[:B]
+    b['cell_present'] = torch.ones(B, 64, 64)
+    b['cell_present'][1, 40:] = 0
+    b['target_valid'] = b['target_valid'] & (b['cell_present'] > 0)
+    return b
+
+
+@pytest.mark.parametrize('kw', [dict(cell_fusion='s2'), dict(cell_fusion='early'),
+                                dict(cell_fusion='early', level_head=True),
+                                dict(cell_fusion='early', level_head=True, context='local'),
+                                dict(cell_fusion='early', level_head=True, context='maps', dem_rgb_xattn=True)])
+def test_hybrid_variants_train_and_predict_only_present_cells(kw):
+    from models_yieldsat_hybrid import YieldSATHybridModel
+    torch.manual_seed(0)
+    m = YieldSATHybridModel(dim=32, map_dim=32, **kw)
+    b = _hybrid_batch()
+    pred, loss = m.loss(b)
+    assert pred.shape == (2, 64, 64) and torch.isfinite(loss)
+    assert torch.all(pred[1, 40:] == 0)                       # absent cells are not predicted
+    loss.backward()
+    for name, mod in m.named_children():
+        if name == 'maps':
+            mod = mod.dem_enc
+        assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in mod.parameters()), name
+    if kw.get('dem_rgb_xattn'):
+        assert m.maps.xattn_dem.in_proj_weight.grad.abs().sum() > 0
+
+
+def test_augment_tile_moves_everything_together_and_rotates_aspect():
+    from dataset.yieldsat_image_dataset import augment_tile
+    rng = np.random.default_rng(0)
+    H = 64
+    target = rng.normal(size=(H, H)).astype(np.float32)
+    a = np.deg2rad(30.0)
+    item = {'target': target, 'grid_row': np.arange(H)[:, None].repeat(H, 1),
+            'grid_col': np.arange(H)[None, :].repeat(H, 0),
+            'terrain': np.stack([np.full((H, H), np.sin(a)), np.full((H, H), np.cos(a)),
+                                 np.zeros((H, H)), np.zeros((H, H)), np.zeros((H, H))]).astype(np.float32),
+            'series': rng.normal(size=(H, H, 24, 12)).astype(np.float16),
+            'dino': rng.normal(size=(4, 16, 8)).astype(np.float16)}
+    for k in range(4):
+        for flip in (False, True):
+            out = augment_tile(item, k, flip)
+            # every cell keeps its own target and series wherever it moved
+            r, c = out['grid_row'][5, 7], out['grid_col'][5, 7]
+            assert out['target'][5, 7] == target[r, c]
+            assert np.array_equal(out['series'][5, 7], item['series'][r, c])
+            exp = (-30.0 if flip else 30.0) - 90.0 * k
+            assert np.allclose(out['terrain'][0], np.sin(np.deg2rad(exp)), atol=1e-6)
+            assert np.allclose(out['terrain'][1], np.cos(np.deg2rad(exp)), atol=1e-6)
+    same = augment_tile(augment_tile(item, 2, False), 2, False)
+    assert np.array_equal(same['dino'], item['dino']) and np.array_equal(same['target'], target)
+
+
+def test_image_entry_hybrid_end_to_end(image_root, tmp_path, monkeypatch):
+    import sys
+    import main_yieldsat_image as mi
+    import yieldsat_image_dino_cache as dc
+    root, _, seasons = image_root
+    art = _artifacts(tmp_path, seasons)
+    cache = tmp_path / 'cache'
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(cache),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    base = ['--epochs', '1', '--batch_size', '2', '--min_steps_per_epoch', '2', '--num_workers', '0',
+            '--device', 'cpu', '--artifact_root', str(art), '--image_root', str(root),
+            '--dino_cache', str(next(p for p in cache.iterdir() if p.is_dir())), '--dino_revision', 'stub0000',
+            '--countries', 'Germany', '--crops', 'rapeseed', '--split', 'fold_test', '--arch', 'hybrid',
+            '--hybrid_dim', '32', '--slot_coverage', 'present']
+    for i, extra in enumerate((['--context', 'none'], ['--context', 'local', '--level_head', '--augment'],
+                               ['--context', 'maps', '--dem_rgb_xattn', '--level_head'])):
+        rep = mi.main(mi.get_args_parser().parse_args(base + extra + ['--output_dir', str(tmp_path / str(i))]))
+        assert rep['model']['descriptor']['arch'] == 'hybrid'
+        assert rep['test']['rows_evaluated'] == 2 * 48 * 64 and np.isfinite(rep['test']['overall']['pixel']['rmse'])

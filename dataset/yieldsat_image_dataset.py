@@ -274,7 +274,7 @@ class YieldSATImageDataset(Dataset):
 
     def __init__(self, image_root, tiles, normalizer, season_days, k_obs=4, train=False,
                  cutoff_mode='all_slots', cutoff_days=30, aspect_cyclic=True, seed=0,
-                 dino_cache=None, with_series=False, slot_coverage='tile'):
+                 dino_cache=None, with_series=False, slot_coverage='tile', augment=False):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         self.reader = TileReader(image_root)
@@ -298,6 +298,7 @@ class YieldSATImageDataset(Dataset):
             raise ValueError('slot_coverage must be tile or present')
         self.with_series = with_series
         self.slot_coverage = slot_coverage
+        self.augment = augment and train          # S7: training only
 
     def __len__(self):
         return len(self.tiles)
@@ -416,7 +417,7 @@ class YieldSATImageDataset(Dataset):
         # dense layers travel as float16 values + bool masks (~3.5x less
         # worker->trainer traffic); cast_batch() restores float32 on device
         h, m = np.float16, bool
-        return {
+        item = {
             **item_dino, **item_series,
             'obs_slot': obs_slot, 'obs_valid': obs_valid, 'obs_time': obs_time,
             'rgb_mask': rgb_mask.astype(m), 'spec': spec.astype(h), 'spec_mask': spec_mask.astype(m),
@@ -432,11 +433,57 @@ class YieldSATImageDataset(Dataset):
             'grid_row': rows.astype(np.int32), 'grid_col': cols.astype(np.int32),
             'country': t['country'], 'patch_index': np.int64(t['patch_index']),
         }
+        if self.augment:
+            arng = np.random.default_rng((self.seed, epoch, i, 7))
+            item = augment_tile(item, int(arng.integers(4)), bool(arng.integers(2)), self.aspect_cyclic)
+        return item
 
 
 def _time_features(day, seeding):
     doy = 2 * math.pi * (float(day) % 365.2425) / 365.2425
     return np.array([(float(day) - float(seeding)) / 365.0, math.sin(doy), math.cos(doy)], np.float32)
+
+
+# ---- S7 augmentation (spec/yieldsat-improvement.md) ------------------------------
+
+_MAP_KEYS = ('rgb_mask', 'spec', 'spec_mask', 'dem', 'dem_mask', 'terrain', 'terrain_mask', 'soil',
+             'soil_mask', 'cell_present', 'target', 'target_raw', 'target_valid', 'grid_row', 'grid_col')
+_CELL_MAJOR = ('series', 'series_mask', 'series_days')          # (H, W, ...)
+
+
+def augment_tile(item, k, flip, aspect_cyclic=True):
+    """Flip left-right (optional) then rotate by k x 90 deg counter-clockwise,
+    consistently for every map, the target, masks, grid row/col and the 4x4
+    DINO token grid. Aspect (terrain channels 0/1 = sin/cos, clockwise from
+    north) is rotated with the map: a flip maps a -> -a, each CCW quarter
+    turn maps a -> a - 90 deg."""
+    out = dict(item)
+
+    def tf(a, axes):
+        if flip:
+            a = np.flip(a, axis=axes[1])
+        return np.ascontiguousarray(np.rot90(a, k, axes=axes))
+
+    for key in _MAP_KEYS:
+        if key in out:
+            out[key] = tf(out[key], (-2, -1))
+    for key in _CELL_MAJOR:
+        if key in out:
+            out[key] = tf(out[key], (0, 1))
+    if 'dino' in out:
+        d = out['dino']
+        g = d.reshape(d.shape[0], 4, 4, d.shape[-1])
+        out['dino'] = tf(g, (1, 2)).reshape(d.shape)
+    if aspect_cyclic and 'terrain' in out:
+        t = out['terrain'].copy()
+        sin, cos = t[0].astype(np.float32), t[1].astype(np.float32)
+        if flip:
+            sin = -sin
+        for _ in range(k % 4):
+            sin, cos = -cos, sin                      # a -> a - 90 deg
+        t[0], t[1] = sin.astype(t.dtype), cos.astype(t.dtype)
+        out['terrain'] = t
+    return out
 
 
 KEEP_BOOL = ('target_valid',)

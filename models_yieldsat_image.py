@@ -250,13 +250,15 @@ class YieldSATImageModel(nn.Module):
     def __init__(self, inputs='s2_adm', embed_dim=192, k_obs=4, dino_dim=1024, num_latents=32,
                  depth=4, num_heads=4, cross_attn_layers=2, modality_embed=32,
                  modality_dropout=0.1, use_dino=True, use_crop=True, decoder_layers=2,
-                 use_series=False, level_head=False, level_weight=1.0):
+                 use_series=False, level_head=False, level_weight=1.0, adm_streams=STREAMS_ADM,
+                 dem_rgb_xattn=False):
         super().__init__()
         if inputs not in ('s2', 's2_adm'):
             raise ValueError('inputs must be s2 or s2_adm')
         D = embed_dim
         self.streams = (('dino',) if use_dino else ()) + ('spec',) + (
-            ('series',) if use_series else ()) + (STREAMS_ADM if inputs == 's2_adm' else ())
+            ('series',) if use_series else ()) + (
+            tuple(s for s in STREAMS_ADM if s in adm_streams) if inputs == 's2_adm' else ())
         self.dense = tuple(s for s in self.streams if s in ('spec', 'series', 'dem', 'terrain', 'soil'))
         self.k = k_obs
         self.modality_dropout = modality_dropout
@@ -268,10 +270,13 @@ class YieldSATImageModel(nn.Module):
         if use_series:                    # v2: full per-pixel S2 time series
             self.series_cell = SeriesEncoder()
             self.series_enc = MaskedConvPyramid(0, D, stem_in=32)
-        if inputs == 's2_adm':
+        if 'weather' in self.streams:
             self.weather_enc = MaskedTemporalEncoder(4, D, time_dim=3, max_len=24)
+        if 'dem' in self.streams:
             self.dem_enc = MaskedConvPyramid(1, D)
+        if 'terrain' in self.streams:
             self.terrain_enc = MaskedConvPyramid(5, D)
+        if 'soil' in self.streams:
             self.soil_cell = DepthAwareSoil()
             self.soil_enc = MaskedConvPyramid(0, D, stem_in=32)
         if use_crop:
@@ -297,12 +302,17 @@ class YieldSATImageModel(nn.Module):
         self.level_weight = level_weight
         if level_head:                    # v2: tile level from season-wide latents
             self.level = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, D), nn.GELU(), nn.Linear(D, 1))
+        if dem_rgb_xattn:                 # S9: elevation <-> RGB cross-attention on the token grid
+            self.xattn_dem = nn.MultiheadAttention(D, num_heads, batch_first=True)
+            self.xattn_rgb = nn.MultiheadAttention(D, num_heads, batch_first=True)
+            self.xattn_norm = nn.ModuleList(nn.LayerNorm(D) for _ in range(4))
         self.config = dict(inputs=inputs, embed_dim=D, k_obs=k_obs, dino_dim=dino_dim,
                            num_latents=num_latents, depth=depth, num_heads=num_heads,
                            cross_attn_layers=cross_attn_layers, modality_embed=modality_embed,
                            modality_dropout=modality_dropout, use_dino=use_dino, use_crop=use_crop,
                            decoder_layers=decoder_layers, use_series=use_series,
-                           level_head=level_head, level_weight=level_weight)
+                           level_head=level_head, level_weight=level_weight,
+                           adm_streams=list(adm_streams), dem_rgb_xattn=dem_rgb_xattn)
 
     def _obs_dates(self, b):
         return self.date_enc(b['obs_time'][..., 0] * 365.0, b['obs_valid'] > 0)   # (B, K, D)
@@ -347,12 +357,41 @@ class YieldSATImageModel(nn.Module):
             cell = self.soil_cell(b['soil'], m)
             tok['soil'], skips['soil'] = self.soil_enc(cell, m.amax(1, keepdim=True))
             tmask['soil'] = patch_valid(m)
+        if hasattr(self, 'xattn_dem') and 'dem' in tok and 'dino' in tok:
+            self._dem_rgb_cross(tok, tmask)
         if self.training and apply_dropout and self.modality_dropout > 0:
             self._drop_streams(tmask, skips, B)
         if self.use_crop:
             tok['crop'] = self.crop_embed(b['crop']).unsqueeze(1)
             tmask['crop'] = torch.ones(B, 1, dtype=torch.bool, device=b['crop'].device)
         return tok, tmask, skips
+
+    def _dem_rgb_cross(self, tok, tmask):
+        """S9: DEM tokens attend to the RGB (DINO) tokens and vice versa
+        (pre-norm, residual). Samples without any valid key keep their tokens."""
+        n = self.xattn_norm
+
+        def attend(attn, q_norm, kv_norm, q, kv, kv_mask):
+            ok = kv_mask.any(1)
+            pad = ~kv_mask.clone()
+            pad[~ok, 0] = False                   # avoid all-masked rows (NaN)
+            out = attn(q_norm(q), kv_norm(kv), kv_norm(kv), key_padding_mask=pad)[0]
+            return q + out * ok.view(-1, 1, 1).to(out.dtype)
+
+        dem, rgb = tok['dem'], tok['dino']
+        tok['dem'] = attend(self.xattn_dem, n[0], n[1], dem, rgb, tmask['dino'])
+        tok['dino'] = attend(self.xattn_rgb, n[2], n[3], rgb, dem, tmask['dem'])
+
+    def features(self, b, apply_dropout=True):
+        """Decoder features before the yield head: (B, 32, 64, 64), plus the
+        fused latents (used by the hybrid model's map branch, S10)."""
+        tok, tmask, skips = self.encode(b, apply_dropout)
+        latents = self.fusion(tok, token_mask=tmask)
+        x = self.decoder(latents)
+        for up, res in zip(self.ups, (3, 2, 1, 0)):
+            x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=False)
+            x = up(torch.cat([x] + [skips[s][res] for s in self.dense], 1))
+        return x, latents
 
     def _drop_streams(self, tmask, skips, B):
         """Drop whole streams per sample (never all of a sample's streams)."""

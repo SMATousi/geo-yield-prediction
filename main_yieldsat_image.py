@@ -85,6 +85,14 @@ def get_args_parser():
                    help='optical slot coverage relative to the tile (v1) or its present cells (v2)')
     p.add_argument('--train_min_valid', type=int, default=0,
                    help='YI-11: training tiles need >= this many valid cells (val/test use all)')
+    # improvement plan (spec/yieldsat-improvement.md)
+    p.add_argument('--arch', default='image', choices=['image', 'hybrid'],
+                   help='hybrid: per-cell point branch + optional spatial context (S4-S10)')
+    p.add_argument('--cell_fusion', default='early', choices=['early', 's2'], help='S4 (hybrid)')
+    p.add_argument('--context', default='none', choices=['none', 'local', 'maps'], help='S6 / S10 (hybrid)')
+    p.add_argument('--dem_rgb_xattn', action='store_true', help='S9: DEM <-> RGB cross-attention')
+    p.add_argument('--augment', action='store_true', help='S7: random flips / 90-deg rotations (training)')
+    p.add_argument('--hybrid_dim', type=int, default=96)
     p.add_argument('--epochs', type=int, default=60)
     p.add_argument('--steps_per_epoch', type=int, default=0,
                    help='0 = one pass over the training tiles, clamped by min/max')
@@ -229,6 +237,8 @@ def main(args):
     reader.close()                           # no HDF5 handles inherited by loader workers
     (out_dir / 'normalizer.json').write_text(json.dumps(normalizer.to_json()))
     dino = None
+    if args.arch == 'hybrid' and args.context != 'maps':
+        args.no_dino = True                   # only the S10 map branch uses DINO features
     if not args.no_dino:
         prep_hash = preprocessing_hash(preprocessing_spec())
         cache_dir = args.dino_cache or str(Path(args.image_root) / 'dino_cache' /
@@ -236,21 +246,28 @@ def main(args):
         dino = DinoFeatureCache(cache_dir, expected_revision=args.dino_revision,
                                 expected_prep_hash=prep_hash)
     common = dict(k_obs=args.k_obs, cutoff_mode=args.cutoff_mode, cutoff_days=args.cutoff_days,
-                  seed=args.seed, dino_cache=dino, with_series=args.series,
+                  seed=args.seed, dino_cache=dino, with_series=args.series or args.arch == 'hybrid',
                   slot_coverage=args.slot_coverage)
     train_ds = YieldSATImageDataset(args.image_root, parts['train'], normalizer, season_days,
-                                    train=True, **common)
+                                    train=True, augment=args.augment, **common)
     val_ds = (YieldSATImageDataset(args.image_root, parts['val'], normalizer, season_days, **common)
               if parts['val'] else None)
     val_loader = _loader(val_ds, args, batch_size=args.eval_batch_size) if val_ds else None
 
-    model = YieldSATImageModel(inputs=inputs, embed_dim=args.embed_dim, k_obs=args.k_obs,
-                               dino_dim=dino.hidden_size if dino else 1024,
-                               num_latents=args.num_latents, depth=args.depth, num_heads=args.num_heads,
-                               cross_attn_layers=args.cross_attn_layers,
-                               modality_dropout=args.modality_dropout, use_dino=dino is not None,
-                               use_crop=use_crop, use_series=args.series, level_head=args.level_head,
-                               level_weight=args.level_weight).to(device)
+    if args.arch == 'hybrid':
+        from models_yieldsat_hybrid import YieldSATHybridModel
+        model = YieldSATHybridModel(inputs=inputs, cell_fusion=args.cell_fusion, context=args.context,
+                                    level_head=args.level_head, level_weight=args.level_weight,
+                                    dem_rgb_xattn=args.dem_rgb_xattn, dim=args.hybrid_dim, k_obs=args.k_obs,
+                                    dino_dim=dino.hidden_size if dino else 1024).to(device)
+    else:
+        model = YieldSATImageModel(inputs=inputs, embed_dim=args.embed_dim, k_obs=args.k_obs,
+                                   dino_dim=dino.hidden_size if dino else 1024,
+                                   num_latents=args.num_latents, depth=args.depth, num_heads=args.num_heads,
+                                   cross_attn_layers=args.cross_attn_layers,
+                                   modality_dropout=args.modality_dropout, use_dino=dino is not None,
+                                   use_crop=use_crop, use_series=args.series, level_head=args.level_head,
+                                   level_weight=args.level_weight, dem_rgb_xattn=args.dem_rgb_xattn).to(device)
     transfer = load_donor(model, args.init_ckpt) if args.init_ckpt else None
     if transfer:
         print('warm start from {}: {} tensors'.format(args.init_ckpt, transfer['loaded']), flush=True)
