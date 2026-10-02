@@ -82,29 +82,35 @@ def pool(matches):
 
 def collect(image_root, point_root, image_tag='image', point_tag='ours'):
     """One row per experiment (group, inputs, seed, pair), pooled over the
-    folds where both an image and a point prediction exist."""
-    by_exp, missing, n = {}, [], 0
+    folds where both an image and a point prediction exist. Experiments are
+    processed one at a time, so memory holds one experiment's cells."""
+    groups, missing, rows, n = {}, [], [], 0
     for f in sorted(Path(image_root).glob('paper/*/*/*/*/fold*/test_predictions.npz')):
         rel = f.parent.relative_to(image_root).as_posix()
         g = FOLD_RE.match(rel)
         if not g or g['tag'] != image_tag:
             continue
-        prel = rel.replace('/{}_seed'.format(image_tag), '/{}_seed'.format(point_tag), 1)
-        pf = Path(point_root) / prel / 'test_predictions.npz'
-        if not pf.exists():
-            missing.append(prel)
-            continue
-        m = match_fold(np.load(f), np.load(pf))
-        if m is None:
-            missing.append(prel + ' (no common cells)')
-            continue
         key = (g['group'], g['inputs'], int(g['seed']), g['pair'])
-        by_exp.setdefault(key, []).append(m)
-        n += 1
-        if n % 100 == 0:
-            print('matched', n, 'folds', flush=True)
-    rows = [dict(group=k[0], inputs=k[1], seed=k[2], pair=k[3], folds=len(v), **pool(v))
-            for k, v in sorted(by_exp.items())]
+        groups.setdefault(key, []).append((f, rel))
+    for key, files in sorted(groups.items()):
+        matches = []
+        for f, rel in files:
+            prel = rel.replace('/{}_seed'.format(image_tag), '/{}_seed'.format(point_tag), 1)
+            pf = Path(point_root) / prel / 'test_predictions.npz'
+            if not pf.exists():
+                missing.append(prel)
+                continue
+            m = match_fold(np.load(f), np.load(pf))
+            if m is None:
+                missing.append(prel + ' (no common cells)')
+                continue
+            matches.append(m)
+            n += 1
+        if matches:
+            rows.append(dict(group=key[0], inputs=key[1], seed=key[2], pair=key[3], folds=len(matches),
+                             **pool(matches)))
+        if len(rows) % 50 == 0:
+            print('experiments', len(rows), 'folds', n, flush=True)
     return rows, missing
 
 
