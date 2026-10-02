@@ -80,7 +80,7 @@ def pool(matches):
     return score(m)
 
 
-def collect(image_root, point_root, image_tag='image', point_tag='ours'):
+def collect(image_root, point_root, image_tag='image', point_tag='ours', shard=(0, 1)):
     """One row per experiment (group, inputs, seed, pair), pooled over the
     folds where both an image and a point prediction exist. Experiments are
     processed one at a time, so memory holds one experiment's cells."""
@@ -92,7 +92,9 @@ def collect(image_root, point_root, image_tag='image', point_tag='ours'):
             continue
         key = (g['group'], g['inputs'], int(g['seed']), g['pair'])
         groups.setdefault(key, []).append((f, rel))
-    for key, files in sorted(groups.items()):
+    for j, (key, files) in enumerate(sorted(groups.items())):
+        if j % shard[1] != shard[0]:
+            continue
         matches = []
         for f, rel in files:
             prel = rel.replace('/{}_seed'.format(image_tag), '/{}_seed'.format(point_tag), 1)
@@ -182,12 +184,16 @@ def main():
                    help="image plan's runs.jsonl: keep only experiments whose folds are all finished")
     p.add_argument('--title', default='Image vs point on identical cells')
     p.add_argument('--labels', default='image,point', help='names of the two models in the markdown')
+    p.add_argument('--shard', default='0/1', help='i/n: process every n-th experiment starting at i')
     p.add_argument('--note', default='')
     a = p.parse_args()
     if a.from_folds:
-        rows, missing = json.loads(Path(a.from_folds).read_text()), []
+        rows, missing = [], []
+        for f in a.from_folds.split(','):          # several shard outputs may be merged
+            rows += json.loads(Path(f).read_text())
     else:
-        rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag)
+        i, n = (int(x) for x in a.shard.split('/'))
+        rows, missing = collect(a.image_root, a.point_root, a.image_tag, a.point_tag, (i, n))
     if a.runs:
         expected = {}
         for line in open(a.runs):
