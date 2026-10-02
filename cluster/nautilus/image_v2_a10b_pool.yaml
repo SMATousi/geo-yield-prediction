@@ -2,10 +2,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-image-v2-donors-a10
+  name: smatousi-yieldsat-image-v2-a10b
 spec:
-  completions: 2
-  parallelism: 2
+  completions: 15
+  parallelism: 15
   ttlSecondsAfterFinished: 604800
   template:
     spec:
@@ -38,14 +38,14 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_v2_donors --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_v2_donors
+          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/image_v2 --runs_per_gpu 3 --max_runs_per_gpu 5 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/image_v2
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         - name: YIELDSAT_SUITE
-          value: cluster/suites/image_v2_donors.yaml
+          value: cluster/suites/image_v2.yaml
         - name: YIELDSAT_PLAN_DIR
-          value: /data/YieldSAT/yieldsat_artifacts/cluster/image_v2_donors
+          value: /data/YieldSAT/yieldsat_artifacts/cluster/image_v2
         - name: YIELDSAT_SOURCE_ROOT
           value: /data/YieldSAT/preprocessed
         - name: YIELDSAT_ARTIFACT_ROOT
@@ -88,4 +88,4 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
-  backoffLimit: 100
+  backoffLimit: 750

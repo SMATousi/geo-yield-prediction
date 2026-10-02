@@ -1101,3 +1101,18 @@ contribution from pretraining. Report pooled out-of-fold pixel and field-level
 metrics plus per-country/crop results; retain the v2 baseline as an explicit
 control. Neither contribution is considered validated by attention maps or a
 single favorable fold alone.
+- 2026-10-02 — **Pod clean-up and A10-only v2 (user request).**
+  - Deleted the 55 completed pods.
+  - Deleted the RTX 3090 Jobs: `before-full-rtx3090v2` (finished suite;
+    removed its stale Unknown pod), `image-full-rtx3090` (v1 complete, queue
+    empty) and `image-v2-rtx3090` (15 pods pending, none running). Also
+    deleted the A10/3090 v2 donor Job (2 pending).
+  - Resubmitted as A10 only: `image-v2-donors-a10` (2 × 16 CPU, 48 GiB) and
+    a second v2 pool `image-v2-a10b` (15 × 16 CPU, 48 GiB, 3 → 5 runs), in
+    addition to `image-v2-a10` (15). v2 now uses 30 A10 + 2 donor A10.
+  - Early v2 results (5 complete ARG-S experiments, 1 seed each; pooled
+    pixel R², all cells):
+    - v2 beats v1 on v1's cells with S2+ADM by +0.09 to +0.18, and ties it
+      with S2;
+    - v2 is 0.11–0.27 below the point model on identical cells;
+    - v2 is below the paper's LSTM on ARG-S.
