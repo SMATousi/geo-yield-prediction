@@ -156,3 +156,14 @@ below.
     - pools re-rendered as 2 × 15 A10 (12 CPU, 40 GiB, 4 loader workers per
       run) and resubmitted.
   - Finished runs keep their markers; failed runs are retried.
+- 2026-10-03 — **Cluster blocked.** After the old round-1 jobs were deleted,
+  the resubmission (and even the small CPU results pod) was refused by
+  Nautilus's admission webhooks: "pods resources utilization is too low".
+  - Likely cause: image/hybrid runs are loader-bound and keep A10s at only
+    15–30% utilization.
+  - State at the block (W&B): 98 of 658 round-1 runs finished (h1 16, h2 17,
+    h3 14, h4 13, h5 13, h6a 14, h6b 11); the rest will run when jobs are
+    accepted again.
+  - Lesson: never delete running jobs before a replacement is accepted.
+  - **Next:** make the hybrid pipeline GPU-bound so it uses what it
+    requests, then resubmit when the flag clears.
