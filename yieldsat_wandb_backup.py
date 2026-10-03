@@ -31,7 +31,10 @@ def backup_one(art, out):
     if marker.exists():
         return 'skip', json.loads(marker.read_text())
     d.mkdir(parents=True, exist_ok=True)
-    art.download(root=str(d))
+    try:
+        art.download(root=str(d), skip_cache=True)   # no copy in ~/.cache (pod disk limits)
+    except TypeError:                                # older wandb without skip_cache
+        art.download(root=str(d))
     files = sorted(p for p in d.iterdir() if p.is_file() and not p.name.startswith('.'))
     rec = {'artifact': art.qualified_name, 'version': art.version, 'digest': art.digest, 'size': art.size,
            'dir': str(d), 'files': {p.name: p.stat().st_size for p in files}}

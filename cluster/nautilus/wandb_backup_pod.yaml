@@ -1,6 +1,7 @@
 # Back up W&B model artifacts to the PVC (yieldsat_wandb_backup.py), then verify.
 # Point-suite checkpoints -> /data/YieldSAT/yieldsat_results/before_full_checkpoints.
 # W&B key from the namespace secret smatousi-wandb; no credentials inside.
+# Downloads skip W&B's local cache (a first attempt was evicted at the 10 GiB disk limit).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -23,12 +24,13 @@ spec:
       python yieldsat_wandb_backup.py --project x --out $OUT --verify
       echo BACKUP_DONE
     env:
+    - {name: WANDB_CACHE_DIR, value: /data/YieldSAT/wandb_cache}   # fallback: cache on the PVC, not pod disk
     - name: WANDB_API_KEY
       valueFrom:
         secretKeyRef: {name: smatousi-wandb, key: WANDB_API_KEY}
     resources:
-      limits: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
-      requests: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+      limits: {cpu: '4', memory: 16Gi, ephemeral-storage: 20Gi}
+      requests: {cpu: '4', memory: 16Gi, ephemeral-storage: 20Gi}
     volumeMounts:
     - {name: data, mountPath: /data}
   volumes:
