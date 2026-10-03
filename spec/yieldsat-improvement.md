@@ -273,3 +273,32 @@ below.
     fields), while the point model's batches mix cells from many fields.
     The level/bias signal per step is therefore noisy, and best epochs vary
     widely (1–48).
+- 2026-10-03 — **Round 1 results** (`results/dev_r1.md`): pooled, 657/658
+  runs, scored from W&B results artifacts while the PVC was unreachable.
+
+  | Config | DEV pixel R² | DEV field R² |
+  |---|---|---|
+  | h1-early (S4) | 0.212 | 0.310 |
+  | h2-level (+S5) | 0.114 | 0.070 |
+  | h3-local (+S6) | 0.179 | 0.251 |
+  | h4-maps (+S10) | 0.159 | 0.213 |
+  | h5-maps-xattn (+S9) | 0.125 | 0.150 |
+  | h6a-local-aug (+S7; 11/12 rows) | 0.079 | 0.077 |
+  | h6b-maps-xattn-aug (+S7) | 0.161 | 0.228 |
+  | **Point model** | **0.309** | **0.472** |
+  | **Paper best** | **0.460** | **0.686** |
+
+  - **No configuration passes**, and all are below our point model. The
+    point model wins every DEV row except GER-R LORO, where h3 (−0.19) and
+    h6b (−0.10) are less negative than the point model (−0.25).
+  - **The S5 level term hurts most** (field R² 0.07). A tile-level head
+    trained on a few hundred tiles per fold mispredicts the level.
+  - **Spatial context (S6/S10), cross-attention (S9) and augmentation (S7)
+    do not compensate** for the weaker per-cell learning of tile-batched
+    training.
+  - **Conclusion:** the tile-batched hybrid is the wrong training regime.
+    The strongest learner is the point model's field-balanced sampling of
+    cells from many fields per step.
+  - **Round 2 direction:** bring S4/S5/S6 into the point pipeline (early
+    fusion, a season-level term, and neighbourhood features as extra
+    per-cell streams). Train the spatial variants with many fields per step.
