@@ -327,3 +327,9 @@ below.
   - **Pools** `cluster/nautilus/dev_r2_pools.yaml`: 2 × 15 A10 (7 CPU,
     16 GiB, 4 → 6 runs), the shape that ran at ~96% utilization in
     `before_full`.
+- 2026-10-03 — **Round 2 submitted.** The neighbourhood stream was built on
+  the PVC (`neighbourhood_build_job`; Argentina ~9 min, all four countries
+  ~20 min, 3.6 GiB memory). The first pod was lost on its node and the
+  retry succeeded. Then `dev_r2_pools.yaml` was submitted (2 × 15 A10).
+  The W&B → PVC backup pod of the point checkpoints was relaunched now that
+  pods are accepted again.
