@@ -167,3 +167,36 @@ below.
   - Lesson: never delete running jobs before a replacement is accepted.
   - **Next:** make the hybrid pipeline GPU-bound so it uses what it
     requests, then resubmit when the flag clears.
+- 2026-10-03 — **GPU data path** (`dataset/yieldsat_image_gpu.py`;
+  `YieldSATImageDataset(gpu_prep=True)`; default for `--arch hybrid`,
+  `--no_gpu_prep` to disable).
+  - **Split of work:** a loader worker only reads a tile, picks the optical
+    observations (skipped when no map branch is used), looks up DINO
+    features and draws the augmentation; it ships raw arrays (S2, weather
+    and static as float32, since some values exceed the float16 range;
+    times as float16 days since seeding). `prepare_batch` builds every
+    model input on the GPU with the CPU item's semantics, and
+    `augment_batch` is the GPU twin of `augment_tile`.
+  - **Equivalence on 288 real tiles** (4 countries; training + augmentation,
+    evaluation, before-harvest cutoff):
+    - identical masks, NaN patterns, slot choices, targets, grid row/col and
+      DINO tokens;
+    - values within 0.008, from the CPU path's float16 storage (the GPU path
+      keeps float32).
+    - A first attempt shipped float16 raw values; weather temperatures
+      (~1.6e4) and rare S2 outliers overflowed. Caught by this check and
+      fixed.
+    - Unit test `test_gpu_prep_matches_cpu_items`.
+  - **Throughput** (URG-S fold 0, hybrid h2, dev host, 1 run, uncompressed
+    tiles as staged on the cluster):
+
+    | Path | Tiles/s | GPU util |
+    |---|---|---|
+    | CPU path | 74 | 21% |
+    | GPU path | 91 | 41% |
+    | GPU path, observation selection skipped | **118** | **50%** |
+
+  - **Pods:** 2 runs per A10, so ~100% GPU expected; requests sized to use:
+    8 CPU, 32 GiB, 4 loader workers per run.
+  - Runs from the first attempt (98 done) used the CPU path. The remaining
+    runs use the GPU path; the inputs are equivalent within 0.008.

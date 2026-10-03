@@ -62,13 +62,13 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 40Gi
+            cpu: '8'
+            memory: 32Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 40Gi
+            cpu: '8'
+            memory: 32Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data
@@ -153,13 +153,13 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 40Gi
+            cpu: '8'
+            memory: 32Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '12'
-            memory: 40Gi
+            cpu: '8'
+            memory: 32Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data

@@ -274,7 +274,8 @@ class YieldSATImageDataset(Dataset):
 
     def __init__(self, image_root, tiles, normalizer, season_days, k_obs=4, train=False,
                  cutoff_mode='all_slots', cutoff_days=30, aspect_cyclic=True, seed=0,
-                 dino_cache=None, with_series=False, slot_coverage='tile', augment=False):
+                 dino_cache=None, with_series=False, slot_coverage='tile', augment=False, gpu_prep=False,
+                 with_obs=True):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         self.reader = TileReader(image_root)
@@ -299,6 +300,8 @@ class YieldSATImageDataset(Dataset):
         self.with_series = with_series
         self.slot_coverage = slot_coverage
         self.augment = augment and train          # S7: training only
+        self.gpu_prep = gpu_prep                  # raw item; dataset.yieldsat_image_gpu builds inputs
+        self.with_obs = with_obs                  # gpu_prep without observation maps: skip slot choice
 
     def __len__(self):
         return len(self.tiles)
@@ -332,6 +335,8 @@ class YieldSATImageDataset(Dataset):
         tn = self.norm.stats['temporal']
         mean, std = np.asarray(tn['mean'], np.float32), np.asarray(tn['std'], np.float32)
 
+        if self.gpu_prep and not self.with_obs:
+            return self._raw_item(i, t, d, epoch, seeding, cutoff, None, [])
         # optical observations
         rgb_ok = np.isfinite(temporal[..., RGB_IDX]).all(axis=-1) & dated     # (64,64,24)
         dates, spread, coverage = slot_dates(times, rgb_ok,
@@ -346,6 +351,8 @@ class YieldSATImageDataset(Dataset):
         spec = np.zeros((K, len(EXTRA_IDX), TILE, TILE), np.float32)
         spec_mask = np.zeros((K, len(EXTRA_IDX), TILE, TILE), np.float32)
         rgb_mask = np.zeros((K, TILE, TILE), np.float32)
+        if self.gpu_prep:
+            return self._raw_item(i, t, d, epoch, seeding, cutoff, dates, chosen)
         em, es = mean[EXTRA_IDX], std[EXTRA_IDX]
         for j, s in enumerate(chosen):
             x = temporal[:, :, s, EXTRA_IDX]                                  # (64,64,9)
@@ -437,6 +444,48 @@ class YieldSATImageDataset(Dataset):
             arng = np.random.default_rng((self.seed, epoch, i, 7))
             item = augment_tile(item, int(arng.integers(4)), bool(arng.integers(2)), self.aspect_cyclic)
         return item
+
+
+def _raw_item(self, i, t, d, epoch, seeding, cutoff, dates, chosen):
+    """GPU data path: raw float16 arrays + observation selection; see
+    dataset/yieldsat_image_gpu.prepare_batch for the input construction."""
+    K = self.k
+    obs_slot = np.full(K, -1, np.int64)
+    obs_valid = np.zeros(K, np.float32)
+    obs_time = np.zeros((K, 3), np.float32)
+    for j, s in enumerate(chosen):
+        obs_slot[j], obs_valid[j] = s, 1.0
+        obs_time[j] = _time_features(dates[s], seeding)
+    yn = self.norm.stats['target']
+    rows = (t['row0'] + np.arange(TILE))[:, None].repeat(TILE, 1)
+    cols = (t['col0'] + np.arange(TILE))[None, :].repeat(TILE, 0)
+    item = {
+        # float32: rare S2 outliers and weather values (temperatures ~1.6e4) exceed the float16 range,
+        # and slope (up to ~1.8e4) loses precision; exactness over transfer size
+        'raw_s2': d['temporal'][..., S2_IDX].astype(np.float32),
+        'raw_weather': d['temporal'][..., WEATHER_IDX].astype(np.float32),
+        'raw_static': d['static'].astype(np.float32),
+        'rel_times': (d['times'] - np.float32(seeding)).astype(np.float16),
+        'target': d['target'].astype(np.float32), 'valid_pixel': d['valid_pixel'],
+        'cell_present': d['source_row'] >= 0,
+        'obs_slot': obs_slot, 'obs_valid': obs_valid, 'obs_time': obs_time,
+        'seeding': np.float64(seeding), 'cutoff_rel': np.float32(np.inf if cutoff is None else cutoff - seeding),
+        'target_mean': np.float32(yn['mean'][0]), 'target_std': np.float32(yn['std'][0]),
+        'crop': np.int64(CROPS.index(t['crop'])), 'tile': np.int64(i),
+        'season': np.int64(self._season_index[t['season_id']]),
+        'grid_row': rows.astype(np.int32), 'grid_col': cols.astype(np.int32),
+        'country': t['country'], 'patch_index': np.int64(t['patch_index']),
+    }
+    if self.dino is not None:
+        feats, fvalid = self.dino.get(t['country'], t['patch_index'], obs_slot)
+        item['dino'], item['dino_valid'] = feats, fvalid * obs_valid
+    if self.augment:
+        arng = np.random.default_rng((self.seed, epoch, i, 7))       # same draw as augment_tile
+        item['aug_k'], item['aug_flip'] = np.int64(arng.integers(4)), np.int64(arng.integers(2))
+    return item
+
+
+YieldSATImageDataset._raw_item = _raw_item
 
 
 def _time_features(day, seeding):

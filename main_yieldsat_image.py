@@ -96,6 +96,10 @@ def get_args_parser():
     p.add_argument('--dem_rgb_xattn', action='store_true', help='S9: DEM <-> RGB cross-attention')
     p.add_argument('--augment', action='store_true', help='S7: random flips / 90-deg rotations (training)')
     p.add_argument('--hybrid_dim', type=int, default=96)
+    p.add_argument('--gpu_prep', action='store_true',
+                   help='loader ships raw tiles; masks/normalization/augmentation run on the GPU '
+                        '(default for --arch hybrid)')
+    p.add_argument('--no_gpu_prep', action='store_true', help='hybrid: build inputs on the CPU instead')
     p.add_argument('--epochs', type=int, default=60)
     p.add_argument('--steps_per_epoch', type=int, default=0,
                    help='0 = one pass over the training tiles, clamped by min/max')
@@ -174,19 +178,31 @@ def predict(model, loader, args, device):
     amp = device.type == 'cuda' and not args.no_amp
     pred, target, season, row, col = [], [], [], [], []
     for batch in loader:
-        b = _to(batch, device)
+        b = _prep(_to(batch, device), args, train=False)
         with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp):
             p = model(b, apply_dropout=False).float()
         p = (p * b['target_std'].view(-1, 1, 1) + b['target_mean'].view(-1, 1, 1)).cpu().numpy()
-        v = batch['target_valid'].numpy()
-        s = np.broadcast_to(batch['season'].numpy()[:, None, None], v.shape)
+        v = b['target_valid'].bool().cpu().numpy()
+        s = np.broadcast_to(b['season'].cpu().numpy()[:, None, None], v.shape)
         pred.append(p[v])
-        target.append(batch['target_raw'].numpy()[v])
+        target.append(b['target_raw'].float().cpu().numpy()[v])
         season.append(s[v])
-        row.append(batch['grid_row'].numpy()[v])
-        col.append(batch['grid_col'].numpy()[v])
+        row.append(b['grid_row'].cpu().numpy()[v])
+        col.append(b['grid_col'].cpu().numpy()[v])
     cat = np.concatenate
     return cat(pred), cat(target), cat(season), cat(row), cat(col)
+
+
+_GPU_STATS = {}
+
+
+def _prep(b, args, train):
+    """GPU data path (--gpu_prep): build the model inputs from raw tiles."""
+    if not args.gpu_prep:
+        return b
+    from dataset.yieldsat_image_gpu import prepare_batch
+    return prepare_batch(b, _GPU_STATS['st'], with_series=_GPU_STATS['series'], with_obs=_GPU_STATS['obs'],
+                         aspect_cyclic=True, augment=train)
 
 
 def load_donor(model, path):
@@ -242,6 +258,8 @@ def main(args):
     dino = None
     if args.arch == 'hybrid' and args.context != 'maps':
         args.no_dino = True                   # only the S10 map branch uses DINO features
+    if args.arch == 'hybrid' and not args.no_gpu_prep:
+        args.gpu_prep = True                  # GPU data path (equivalent inputs, GPU-bound)
     if not args.no_dino:
         prep_hash = preprocessing_hash(preprocessing_spec())
         cache_dir = args.dino_cache or str(Path(args.image_root) / 'dino_cache' /
@@ -250,7 +268,12 @@ def main(args):
                                 expected_prep_hash=prep_hash)
     common = dict(k_obs=args.k_obs, cutoff_mode=args.cutoff_mode, cutoff_days=args.cutoff_days,
                   seed=args.seed, dino_cache=dino, with_series=args.series or args.arch == 'hybrid',
-                  slot_coverage=args.slot_coverage)
+                  slot_coverage=args.slot_coverage, gpu_prep=args.gpu_prep,
+                  with_obs=not (args.gpu_prep and args.arch == 'hybrid' and args.context != 'maps'))
+    if args.gpu_prep:
+        from dataset.yieldsat_image_gpu import stats_tensors
+        _GPU_STATS.update(st=stats_tensors(normalizer, device), series=common['with_series'],
+                          obs=dino is not None or args.arch == 'image')
     train_ds = YieldSATImageDataset(args.image_root, parts['train'], normalizer, season_days,
                                     train=True, augment=args.augment, **common)
     val_ds = (YieldSATImageDataset(args.image_root, parts['val'], normalizer, season_days, **common)
@@ -302,7 +325,7 @@ def main(args):
             data_time += time.time() - tl
             for g in opt.param_groups:
                 g['lr'] = lr_at(step)
-            b = _to(batch, device)
+            b = _prep(_to(batch, device), args, train=True)
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp):
                 _, loss = model.loss(b)
             opt.zero_grad(set_to_none=True)

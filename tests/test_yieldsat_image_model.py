@@ -608,3 +608,35 @@ def test_image_entry_hybrid_end_to_end(image_root, tmp_path, monkeypatch):
         rep = mi.main(mi.get_args_parser().parse_args(base + extra + ['--output_dir', str(tmp_path / str(i))]))
         assert rep['model']['descriptor']['arch'] == 'hybrid'
         assert rep['test']['rows_evaluated'] == 2 * 48 * 64 and np.isfinite(rep['test']['overall']['pixel']['rmse'])
+
+
+def test_gpu_prep_matches_cpu_items(image_root, tmp_path, monkeypatch):
+    import sys
+    import yieldsat_image_dino_cache as dc
+    from dataset.yieldsat_image_dataset import DinoFeatureCache, cast_batch
+    from dataset.yieldsat_image_gpu import prepare_batch, stats_tensors
+    root, _, seasons = image_root
+    monkeypatch.setattr(sys, 'argv', ['x', '--image-root', str(root), '--out', str(tmp_path),
+                                      '--countries', 'Germany', '--device', 'cpu', '--stub'])
+    dc.main()
+    dino = DinoFeatureCache(next(p for p in tmp_path.iterdir() if p.is_dir()))
+    parts = tiles_for_split(load_tile_table(root, ['Germany']), _split(seasons))
+    tiles = parts['train'] + parts['test']
+    norm = ImageNormalizer.fit(TileReader(root), parts['train'])
+    st = stats_tensors(norm, 'cpu')
+    for kw in (dict(train=True, augment=True), dict(train=False),
+               dict(train=False, cutoff_mode='before_harvest', cutoff_days=200)):
+        a = YieldSATImageDataset(root, tiles, norm, _days(seasons), with_series=True, dino_cache=dino, **kw)
+        g = YieldSATImageDataset(root, tiles, norm, _days(seasons), with_series=True, dino_cache=dino,
+                                 gpu_prep=True, **kw)
+        ca = cast_batch(collate_tiles([a[(i, 2)] for i in range(len(tiles))]))
+        cg = prepare_batch(cast_batch(collate_tiles([g[(i, 2)] for i in range(len(tiles))])), st,
+                           augment=kw.get('augment', False))
+        for k, v in ca.items():
+            if not torch.is_tensor(v):
+                continue
+            x, y = v.float(), cg[k].float()
+            assert x.shape == y.shape, k
+            assert torch.equal(torch.isfinite(x), torch.isfinite(y)), k
+            ok = torch.isfinite(x)
+            assert torch.allclose(x[ok], y[ok], atol=2e-2), (k, (x[ok] - y[ok]).abs().max())
