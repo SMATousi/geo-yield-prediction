@@ -340,3 +340,7 @@ below.
   Copies now exist on the PVC, on the dev machine and on W&B.
 - 2026-10-03 — Round 2 pods run at 99–100% GPU utilization (point model,
   4 runs per A10, 3–5 GB).
+- 2026-10-03 — **Follow-on task specified:** a pooled foundation model across
+  all countries/crops, with sensor self-supervised and expert-validated
+  knowledge pretraining ([yieldsat-foundation-model.md](./yieldsat-foundation-model.md),
+  FM-01–FM-08). It uses the round-2 winner as its backbone.

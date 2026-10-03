@@ -50,6 +50,8 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 | [yieldsat_cluster_runs.md](./yieldsat_cluster_runs.md) | Running the full YieldSAT suite on a GPU cluster: suites, plans, jobs (country–crop pair shards), shared data layout, W&B logging, submission and runtime estimate. |
 | [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
 | [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v2 direction for expert-validated relationships constraining sensor embeddings, optional VLM/LLM applicability estimation, and KP-01–KP-08 tasks; planned, not implemented. |
+| [yieldsat-improvement.md](./yieldsat-improvement.md) | Plan and log for beating the YieldSAT paper's best models: DEV subset, success criterion, hybrid (round 1) and point-model (round 2) variants S4–S10. |
+| [yieldsat-foundation-model.md](./yieldsat-foundation-model.md) | Pooled foundation model across all countries/crops with leak-free joint folds, sensor SSL and expert-validated knowledge pretraining; arms, controls and FM-01–FM-08 tasks. |
 | [status.md](./status.md) | You want the honest state: what is verified, what is orphaned, and the defect list with file:line. |
 | [tech_stack.md](./tech_stack.md) | You are provisioning an environment or resolving dependencies. |
 | [roadmap.md](./roadmap.md) | You are deciding what to do next. Prioritized, with the blocking order made explicit. |
