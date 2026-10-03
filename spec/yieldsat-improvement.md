@@ -200,3 +200,10 @@ below.
     8 CPU, 32 GiB, 4 loader workers per run.
   - Runs from the first attempt (98 done) used the CPU path. The remaining
     runs use the GPU path; the inputs are equivalent within 0.008.
+- 2026-10-03 — **Round 1 resubmitted.** A server-side dry run first
+  confirmed that admission works again; then 2 × 15 A10 pods (8 CPU,
+  32 GiB, 2 runs each) were submitted.
+  - First runs succeed on the GPU path (GER-R runs 7–9 min; URG-S staging
+    129–186 s).
+  - Sampled GPU utilization: 70–100% on pods with 2 runs (45–53% while the
+    second run starts), vs 15–30% before. GPU memory 8–9.5 GB for 2 runs.
