@@ -207,3 +207,24 @@ below.
     129–186 s).
   - Sampled GPU utilization: 70–100% on pods with 2 runs (45–53% while the
     second run starts), vs 15–30% before. GPU memory 8–9.5 GB for 2 runs.
+- 2026-10-03 — **W&B storage (user decision: all three steps).** W&B was
+  running out of space.
+  - **Estimated usage** (25-artifact sample per group): image project model
+    checkpoints ~113 GB, point project models ~20 GB, results ~6.5 GB.
+  - **Where things were kept:** checkpoints existed only on W&B (except the
+    image donors); results are on the PVC for every cluster run.
+  - **(3) No more model uploads** (commit `34c0463`): cluster runs pass
+    `--wandb_no_model_artifacts` (only the results artifact is uploaded), and
+    `_finish` copies `checkpoint_best.pth` to the PVC results root. Applies
+    to pods started after the commit.
+  - **(2) Backup of the point checkpoints:** `yieldsat_wandb_backup.py`
+    downloads every model artifact to
+    `/data/YieldSAT/yieldsat_results/before_full_checkpoints/<rel_path>/<artifact>/`
+    with a manifest and `--verify`; it resumes. Pod
+    `cluster/nautilus/wandb_backup_pod.yaml` runs it. Tested on the smoke
+    project: 43/43 artifacts verified. A first version put retried runs
+    into one folder; now each artifact gets its own.
+  - **(1) Deleting the image v1/v2 model artifacts** with
+    `yieldsat_wandb_backup.py --delete --confirm yieldsat-cvpr27-image` runs
+    after the backup is verified. The delete mode was tested on a
+    throwaway project: model artifacts removed, results kept.
