@@ -127,6 +127,8 @@ def get_args_parser():
     p.add_argument('--wandb_job_type', default=None)
     p.add_argument('--wandb_meta', default='{}')
     p.add_argument('--wandb_no_artifacts', action='store_true')
+    p.add_argument('--wandb_no_model_artifacts', action='store_true',
+                   help='upload only the results artifact (checkpoints stay local / on the PVC)')
     return p
 
 

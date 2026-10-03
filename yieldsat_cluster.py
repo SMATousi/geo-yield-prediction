@@ -586,7 +586,7 @@ def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None):
             cmd += ['--dino_revision', plan['suite']['data']['dino_revision']]
     cmd += run['args']
     if use_wandb:
-        cmd += ['--wandb', '--wandb_project', str(wb.get('project', 'yieldsat')),
+        cmd += ['--wandb', '--wandb_no_model_artifacts', '--wandb_project', str(wb.get('project', 'yieldsat')),
                 '--wandb_group', run['wandb_group'], '--wandb_name', run['name'],
                 '--wandb_job_type', 'finetune', '--wandb_tags', *run['wandb_tags'],
                 '--wandb_meta', json.dumps({k: run[k] for k in (
@@ -607,8 +607,9 @@ def _finish(run, proc, log, out, plan_dir, results_root, keep_local):
         if results_root:
             dst = Path(results_root) / run['rel_path']
             dst.mkdir(parents=True, exist_ok=True)
+            # checkpoints are kept on the PVC, not uploaded to W&B (storage, 2026-10-03)
             for f in ('report.json', 'test_predictions.npz', 'normalizer.json', 'train.log',
-                      *run.get('keep_files', [])):
+                      'checkpoint_best.pth', *run.get('keep_files', [])):
                 if (out / f).exists():
                     shutil.copy2(out / f, dst / f)
         marker = {'run_id': run['run_id'], 'name': run['name'], 'finished': time.strftime('%Y-%m-%dT%H:%M:%S'),

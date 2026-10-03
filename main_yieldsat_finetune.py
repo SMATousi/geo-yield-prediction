@@ -122,6 +122,8 @@ def get_args_parser():
     p.add_argument('--wandb_job_type', default=None)
     p.add_argument('--wandb_meta', default='{}',
                    help='JSON dict of job metadata added to the W&B config')
+    p.add_argument('--wandb_no_model_artifacts', action='store_true',
+                   help='upload only the results artifact (checkpoints stay local / on the PVC)')
     p.add_argument('--wandb_no_artifacts', action='store_true',
                    help='log metrics only, do not upload models/results')
     return p
@@ -233,8 +235,9 @@ class WandbLogger:
         self.run.summary.update(summary)
         if not self.args.wandb_no_artifacts:
             safe = ''.join(ch if ch.isalnum() or ch in '-_.' else '-' for ch in (self.run.name or self.run.id))
-            for kind, files, pattern in (('model', self.MODEL_FILES, None),
-                                         ('results', self.RESULT_FILES, 'pred_*.tif')):
+            kinds = (() if getattr(self.args, 'wandb_no_model_artifacts', False)
+                     else (('model', self.MODEL_FILES, None),)) + (('results', self.RESULT_FILES, 'pred_*.tif'),)
+            for kind, files, pattern in kinds:
                 paths = [self.out_dir / f for f in files if (self.out_dir / f).exists()]
                 if pattern:
                     paths += sorted(self.out_dir.glob(pattern))
