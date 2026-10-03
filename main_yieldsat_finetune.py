@@ -77,6 +77,13 @@ def get_args_parser():
                    help='how per-stream encodings are fused (YS-11)')
     p.add_argument('--cross_attn_layers', type=int, default=None,
                    help='Perceiver reads (perceiver_tokens only; default 2)')
+    # improvement plan round 2 (spec/yieldsat-improvement.md)
+    p.add_argument('--level_head', action='store_true', help='S5: season-level term + field-mean loss')
+    p.add_argument('--level_weight', type=float, default=1.0)
+    p.add_argument('--early_hidden', type=int, default=192, help='S4 early-fusion encoder width')
+    p.add_argument('--early_depth', type=int, default=3)
+    p.add_argument('--neighbourhood', action='store_true',
+                   help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
@@ -299,7 +306,8 @@ def main(args):
 
     common = dict(streams=args.streams, backend=args.backend, cutoff_mode=args.cutoff_mode,
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
-                  aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value)
+                  aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
+                  neighbourhood_root=str(Path(args.artifact_root) / 'neighbourhood') if args.neighbourhood else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
                                   max_rows_per_field=args.val_rows_per_field, **common) if parts['val'] else None
@@ -315,7 +323,9 @@ def main(args):
                                    num_heads=args.num_heads, modality_embed=args.modality_embed,
                                    modality_dropout=args.modality_dropout,
                                    use_crop_context=use_crop, fusion=args.fusion,
-                                   cross_attn_layers=args.cross_attn_layers).to(device)
+                                   cross_attn_layers=args.cross_attn_layers, level_head=args.level_head,
+                                   level_weight=args.level_weight, early_hidden=args.early_hidden,
+                                   early_depth=args.early_depth).to(device)
     # cuDNN LSTMs do not run under bf16 autocast
     amp = device.type == 'cuda' and not args.no_amp and args.model != 'paper_lstm'
     if args.steps_per_epoch <= 0:

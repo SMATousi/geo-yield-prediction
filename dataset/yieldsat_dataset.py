@@ -270,7 +270,7 @@ class YieldSATPointDataset(Dataset):
     def __init__(self, source_root, artifact_root, seasons, normalizer, streams=None,
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
-                 seed=0, check_source=True, fill_value=0.0):
+                 seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None):
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         if backend not in ('cache', 'h5'):
@@ -310,6 +310,18 @@ class YieldSATPointDataset(Dataset):
         self.season_ranges = list(zip(np.concatenate([[0], bounds]).tolist(),
                                       np.concatenate([bounds, [len(self.row)]]).tolist()))
         self._crop_ids = np.array([CROPS.index(s['crop']) for s in self.seasons], dtype=np.int64)
+        # field-season mean target (raw t/ha), for the S5 season-level loss only
+        self._season_target = np.array([s.get('target_mean', np.nan) for s in self.seasons], dtype=np.float32)
+        # S6: per-cell 5x5 neighbourhood mean of the S2 bands (yieldsat_build_neighbourhood.py),
+        # aligned with the cache rows; one more temporal stream
+        self.neighbourhood = None
+        if neighbourhood_root:
+            self.neighbourhood = {c: np.load(Path(neighbourhood_root) / c / 's2_nbr5.npy', mmap_mode='r')
+                                  for c in self.countries}
+            s2 = list(STREAMS['yieldsat_s2']['channels'])
+            self.layout['yieldsat_s2_nbr'] = {'temporal': True, 'channels': s2,
+                                              'positions': np.array([_T_POS[c] for c in s2], dtype=np.int64),
+                                              'out_channels': ['nbr5_' + c for c in s2]}
 
     def __len__(self):
         return len(self.row)
@@ -339,6 +351,8 @@ class YieldSATPointDataset(Dataset):
         meta = {k: np.empty(B, dtype=np.int64) for k in ('seeding_day', 'harvest_day', 'grid_row',
                                                          'grid_col', 'field_code')}
         target_raw = np.empty(B, dtype=np.float32)
+        nbr = (np.full((B, NUM_TIME_SLOTS, len(STREAMS['yieldsat_s2']['channels'])), np.nan, np.float32)
+               if self.neighbourhood is not None else None)
         t_mean = np.empty((B, N_T), dtype=np.float32)
         t_std = np.empty((B, N_T), dtype=np.float32)
         s_mean = np.empty((B, N_S), dtype=np.float32)
@@ -358,6 +372,9 @@ class YieldSATPointDataset(Dataset):
             meta['grid_col'][sel] = r['grid_col'][rows]
             meta['field_code'][sel] = r['field_code'][rows]
             target_raw[sel] = r['target'][rows]
+            if nbr is not None:
+                order = np.argsort(rows)
+                nbr[sel[order]] = np.asarray(self.neighbourhood[country][rows[order]], dtype=np.float32)
             st = self.normalizer.get(country)
             t_mean[sel], t_std[sel] = st['temporal_mean'], st['temporal_std']
             s_mean[sel], s_std[sel] = st['static_mean'], st['static_std']
@@ -382,7 +399,11 @@ class YieldSATPointDataset(Dataset):
         inputs, masks, available = {}, {}, {}
         for name, lay in self.layout.items():
             pos = lay['positions']
-            if lay['temporal']:
+            if name == 'yieldsat_s2_nbr':
+                nv = np.isfinite(nbr) & time_valid[:, :, None]
+                v = np.where(nv, (nbr - t_mean[:, None, pos]) / t_std[:, None, pos], self.fill_value)
+                m = nv
+            elif lay['temporal']:
                 v, m = t_norm[:, :, pos], t_valid[:, :, pos]
             else:
                 v, m = s_norm[:, pos], s_valid[:, pos]
@@ -413,6 +434,7 @@ class YieldSATPointDataset(Dataset):
             'target_mean': torch.from_numpy(y_mean),
             'target_std': torch.from_numpy(y_std),
             'crop': torch.from_numpy(self._crop_ids[season]),
+            'season_target': torch.from_numpy(((self._season_target[season] - y_mean) / y_std).astype(np.float32)),
             'season': torch.from_numpy(season.astype(np.int64)),
             'item': torch.from_numpy(idx),
             'grid_row': torch.from_numpy(meta['grid_row']),

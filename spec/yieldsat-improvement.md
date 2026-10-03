@@ -302,3 +302,28 @@ below.
   - **Round 2 direction:** bring S4/S5/S6 into the point pipeline (early
     fusion, a season-level term, and neighbourhood features as extra
     per-cell streams). Train the spatial variants with many fields per step.
+- 2026-10-03 — **Round 2(a) implemented** (user decision: point-model
+  variants).
+  - **S4** `--fusion early`: one `MaskedTemporalEncoder` (width 192, depth 3)
+    over the per-slot concatenation of every temporal stream and every
+    static stream (masked on undated slots), plus date features.
+  - **S5** `--level_head`: a season-level scalar from the field's weather
+    series and the crop, added to the prediction. The auxiliary loss ties it
+    to the field-season mean target (`season_target`). Point batches mix
+    many fields, so the term sees many seasons per step.
+  - **S6** `--neighbourhood`: new temporal stream `yieldsat_s2_nbr`, the
+    5×5 masked mean of the 12 S2 bands (centre excluded) per cache row,
+    from `yieldsat_build_neighbourhood.py` → `<artifact_root>/neighbourhood/`
+    (Germany locally: 12 s). Point jobs stage it with the cache;
+    `cluster/nautilus/neighbourhood_build_job.yaml` builds it on the PVC.
+  - **Checks:** 3 new tests (`tests/test_yieldsat_round2.py`): neighbourhood
+    = brute force; level = prediction − head; static masked on undated
+    slots. The existing fusions are unchanged (identical parameters and
+    outputs); 36 point tests pass. Smoke runs of all variants on real
+    GER-R data.
+  - **Suite** `cluster/suites/dev_r2.yaml`: p1-early, p2-level, p3-nbr,
+    p4-early-level, p5-early-nbr, p6-all; same DEV matrix; point-suite
+    budget. 564 runs, ~215 GPU-hours (~9 h on 30 A10s).
+  - **Pools** `cluster/nautilus/dev_r2_pools.yaml`: 2 × 15 A10 (7 CPU,
+    16 GiB, 4 → 6 runs), the shape that ran at ~96% utilization in
+    `before_full`.

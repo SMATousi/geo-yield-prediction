@@ -1,0 +1,285 @@
+# Improvement plan round 2(a) on the DEV subset (spec/yieldsat-improvement.md): the point
+# model (field-balanced cell sampling, which beat every round-1 hybrid) with S4 early fusion,
+# S5 season-level term and S6 5x5 neighbourhood S2 stream, alone and combined. Same DEV
+# subset/matrix as round 1; budget as the point suite (before_full).
+suite: dev_r2
+wandb:
+  project: yieldsat-cvpr27-improve
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs:
+- ARG-W
+- BRA-C
+- GER-R
+- URG-S
+job_unit: pair_shard
+target_job_hours: 3.0
+runs_per_gpu: 4
+max_runs_per_gpu: 6
+target_gpu_util: 80
+num_workers: 1
+gpu_speed_factor:
+  ours: 0.226
+  paper_lstm: 0.2
+  test: 0.27
+concurrency_speedup: 4.0
+stage_mb_per_s: 42
+experiments:
+- name: p1-early
+  model: ours
+  fusion: early
+  policies: &id001
+  - paper
+  inputs: &id002
+  - s2_adm
+  seeds: &id003
+  - 0
+  budget: &id004
+    epochs: 60
+    steps_per_epoch: 0
+    min_steps_per_epoch: 500
+    max_steps_per_epoch: 1500
+  extra_args: &id005 []
+  protocols:
+  - cv
+  - loyo
+- name: p1-early
+  model: ours
+  fusion: early
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p1-early
+  model: ours
+  fusion: early
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: p2-level
+  model: ours
+  fusion: perceiver_summary
+  policies: &id006
+  - paper
+  inputs: &id007
+  - s2_adm
+  seeds: &id008
+  - 0
+  budget: *id004
+  extra_args: &id009
+  - --level_head
+  protocols:
+  - cv
+  - loyo
+- name: p2-level
+  model: ours
+  fusion: perceiver_summary
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p2-level
+  model: ours
+  fusion: perceiver_summary
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: p3-nbr
+  model: ours
+  fusion: perceiver_summary
+  policies: &id010
+  - paper
+  inputs: &id011
+  - s2_adm
+  seeds: &id012
+  - 0
+  budget: *id004
+  extra_args: &id013
+  - --neighbourhood
+  protocols:
+  - cv
+  - loyo
+- name: p3-nbr
+  model: ours
+  fusion: perceiver_summary
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p3-nbr
+  model: ours
+  fusion: perceiver_summary
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: p4-early-level
+  model: ours
+  fusion: early
+  policies: &id014
+  - paper
+  inputs: &id015
+  - s2_adm
+  seeds: &id016
+  - 0
+  budget: *id004
+  extra_args: &id017
+  - --level_head
+  protocols:
+  - cv
+  - loyo
+- name: p4-early-level
+  model: ours
+  fusion: early
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p4-early-level
+  model: ours
+  fusion: early
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: p5-early-nbr
+  model: ours
+  fusion: early
+  policies: &id018
+  - paper
+  inputs: &id019
+  - s2_adm
+  seeds: &id020
+  - 0
+  budget: *id004
+  extra_args: &id021
+  - --neighbourhood
+  protocols:
+  - cv
+  - loyo
+- name: p5-early-nbr
+  model: ours
+  fusion: early
+  policies: *id018
+  inputs: *id019
+  seeds: *id020
+  budget: *id004
+  extra_args: *id021
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p5-early-nbr
+  model: ours
+  fusion: early
+  policies: *id018
+  inputs: *id019
+  seeds: *id020
+  budget: *id004
+  extra_args: *id021
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: p6-all
+  model: ours
+  fusion: early
+  policies: &id022
+  - paper
+  inputs: &id023
+  - s2_adm
+  seeds: &id024
+  - 0
+  budget: *id004
+  extra_args: &id025
+  - --level_head
+  - --neighbourhood
+  protocols:
+  - cv
+  - loyo
+- name: p6-all
+  model: ours
+  fusion: early
+  policies: *id022
+  inputs: *id023
+  seeds: *id024
+  budget: *id004
+  extra_args: *id025
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: p6-all
+  model: ours
+  fusion: early
+  policies: *id022
+  inputs: *id023
+  seeds: *id024
+  budget: *id004
+  extra_args: *id025
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W

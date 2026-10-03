@@ -1,0 +1,33 @@
+# S6 neighbourhood stream on the PVC (yieldsat_build_neighbourhood.py; round 2 of
+# spec/yieldsat-improvement.md): 5x5 neighbourhood mean of the S2 bands per cache row.
+# CPU only. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-neighbourhood-build
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: yieldsat
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - |
+          set -euo pipefail
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code
+          cd /workspace/code && echo "code $(git rev-parse --short HEAD)"
+          python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts
+          echo "== done $(date -Is)"
+        resources:
+          limits: {cpu: '2', memory: 8Gi, ephemeral-storage: 5Gi}
+          requests: {cpu: '2', memory: 8Gi, ephemeral-storage: 5Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}

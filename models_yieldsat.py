@@ -32,10 +32,10 @@ from torch import nn
 from dataset.yieldsat_schema import CONTRACT_KEY, CROPS, SOIL_DEPTHS
 from models_heads import build_head, masked_yield_loss
 from models_latent_fusion import LatentFusionTransformer
-from models_multimodal_encoder import MultiModalEncoder
+from models_multimodal_encoder import MaskedTemporalEncoder, MultiModalEncoder
 
 CROP_CONTEXT = 'crop_context'
-FUSIONS = ('perceiver_summary', 'perceiver_tokens', 'concat_mlp', 'token_transformer')
+FUSIONS = ('perceiver_summary', 'perceiver_tokens', 'concat_mlp', 'token_transformer', 'early')
 # descriptor keys that must match for fusion weights to be transferable
 FUSION_LAYOUT_KEYS = ('fusion', 'encoder_output', 'num_latents', 'depth', 'num_heads',
                       'cross_attn_layers')
@@ -107,13 +107,16 @@ class YieldSATPointModel(nn.Module):
     def __init__(self, layout, embed_dim=128, num_latents=8, depth=2, num_heads=4,
                  modality_embed=32, modality_dropout=0.1, use_crop_context=True,
                  head_dropout=0.0, loss='mse', time_dim=3, num_slots=24,
-                 fusion='perceiver_summary', cross_attn_layers=None):
+                 fusion='perceiver_summary', cross_attn_layers=None, level_head=False, level_weight=1.0,
+                 early_hidden=192, early_depth=3):
         super().__init__()
         if fusion not in FUSIONS:
             raise ValueError('fusion must be one of {}'.format(FUSIONS))
         tokens = fusion == 'perceiver_tokens'
         if cross_attn_layers is None:
             cross_attn_layers = 2 if tokens else 1
+        if fusion == 'early':
+            cross_attn_layers = 1
         if fusion != 'perceiver_tokens' and cross_attn_layers != 1:
             raise ValueError('cross_attn_layers only applies to perceiver_tokens')
         self.layout = layout
@@ -123,6 +126,18 @@ class YieldSATPointModel(nn.Module):
         self.encoder_output = 'tokens' if tokens else 'summary'
         # Creation order (encoders, crop, fusion, head) is kept identical to the
         # original model so perceiver_summary reproduces it exactly.
+        if fusion == 'early':
+            self._build_early(layout, embed_dim, time_dim, num_slots, use_crop_context, early_hidden,
+                              early_depth, head_dropout, loss)
+            self._build_level(level_head, level_weight, embed_dim, time_dim, num_slots)
+            self.config = {'embed_dim': embed_dim, 'num_latents': num_latents, 'depth': depth,
+                           'num_heads': num_heads, 'modality_embed': modality_embed,
+                           'modality_dropout': modality_dropout, 'use_crop_context': use_crop_context,
+                           'head_dropout': head_dropout, 'loss': loss, 'time_dim': time_dim,
+                           'num_slots': num_slots, 'fusion': fusion, 'encoder_output': 'early',
+                           'cross_attn_layers': 1, 'level_head': level_head, 'level_weight': level_weight,
+                           'early_hidden': early_hidden, 'early_depth': early_depth}
+            return
         self.encoders = MultiModalEncoder(
             encoder_config(layout, embed_dim, time_dim=time_dim, num_slots=num_slots,
                            output=self.encoder_output),
@@ -173,9 +188,67 @@ class YieldSATPointModel(nn.Module):
                        'loss': loss, 'time_dim': time_dim, 'num_slots': num_slots,
                        'fusion': fusion, 'encoder_output': self.encoder_output,
                        'cross_attn_layers': cross_attn_layers}
+        self._build_level(level_head, level_weight, embed_dim, time_dim, num_slots)
+        if level_head:
+            self.config.update(level_head=True, level_weight=level_weight)
+
+    # ---- S4 early fusion / S5 season level (spec/yieldsat-improvement.md) ----
+    def _build_early(self, layout, embed_dim, time_dim, num_slots, use_crop_context, hidden, depth,
+                     head_dropout, loss):
+        """S4: one temporal encoder over the per-slot concatenation of every
+        temporal stream and every static stream (repeated over the dated
+        slots), each with its validity mask, plus the date features."""
+        n = sum(len(l['out_channels']) for l in layout.values())
+        self.early_enc = MaskedTemporalEncoder(n, embed_dim, time_dim=time_dim, max_len=num_slots,
+                                               hidden_dim=hidden, depth=depth)
+        if use_crop_context:
+            self.crop_embed = nn.Embedding(len(CROPS), embed_dim)
+        self.head = build_head('scalar_cell_yield', embed_dim=embed_dim, dropout=head_dropout, loss=loss)
+
+    def _early_input(self, batch):
+        tv = batch['time_valid'].unsqueeze(-1)
+        vals, masks = [], []
+        for name, lay in self.layout.items():
+            v = batch['inputs'][name]
+            m = batch['masks'][name].to(v.dtype)
+            if not lay['temporal']:                       # static: repeat over the dated slots
+                T = tv.shape[1]
+                v = v.unsqueeze(1).expand(-1, T, -1)
+                m = m.unsqueeze(1).expand(-1, T, -1) * tv.to(v.dtype)
+            vals.append(v * m)
+            masks.append(m)
+        return torch.cat(vals + masks + [batch['time_features'].to(vals[0].dtype)], -1)
+
+    def _build_level(self, level_head, level_weight, embed_dim, time_dim, num_slots):
+        """S5: season-level term from season-wide inputs only (the field's
+        weather series and the crop), tied to the field-season mean target."""
+        self.level_weight = level_weight
+        if not level_head:
+            return
+        self.level_has_weather = 'yieldsat_weather' in self.layout
+        if self.level_has_weather:
+            n = len(self.layout['yieldsat_weather']['out_channels'])
+            self.level_weather = MaskedTemporalEncoder(n, embed_dim, time_dim=time_dim, max_len=num_slots,
+                                                       hidden_dim=64, depth=2)
+        self.level_crop = nn.Embedding(len(CROPS), embed_dim)
+        self.level_mlp = nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, embed_dim), nn.GELU(),
+                                       nn.Linear(embed_dim, 1))
+
+    def season_level(self, batch):
+        h = self.level_crop(batch['crop'])
+        if self.level_has_weather:
+            v = batch['inputs']['yieldsat_weather']
+            m = batch['masks']['yieldsat_weather'].to(v.dtype)
+            h = h + self.level_weather(torch.cat([v * m, m, batch['time_features'].to(v.dtype)], -1))[:, 0]
+        return self.level_mlp(h).squeeze(-1)
 
     def forward_features(self, batch, apply_dropout=True):
         """Returns fused tokens (B, L, D) for the head and the stream mask."""
+        if self.fusion_type == 'early':
+            h = self.early_enc(self._early_input(batch))                    # (B, 1, D)
+            if self.use_crop_context:
+                h = h + self.crop_embed(batch['crop']).unsqueeze(1)
+            return h, None
         inputs = pack_inputs(batch, self.layout)
         available = {name: batch['available'][name] for name in self.streams}
         embeddings, mask, token_mask = self.encoders.forward_with_missing(
@@ -205,13 +278,23 @@ class YieldSATPointModel(nn.Module):
         h = self.fusion['layers'](x, src_key_padding_mask=pad)
         return self.fusion['norm'](h[:, :1]), mask
 
-    def forward(self, batch, apply_dropout=True):
+    def forward(self, batch, apply_dropout=True, return_level=False):
         latents, _ = self.forward_features(batch, apply_dropout=apply_dropout)
-        return self.head(latents)
+        pred = self.head(latents)
+        level = None
+        if hasattr(self, 'level_mlp'):
+            level = self.season_level(batch)
+            pred = pred + level
+        return (pred, level) if return_level else pred
 
     def loss(self, batch, apply_dropout=True):
-        pred = self.forward(batch, apply_dropout=apply_dropout)
-        return pred, self.head.compute_loss(pred, batch['target'], valid_mask=batch['target_valid'])
+        pred, level = self.forward(batch, apply_dropout=apply_dropout, return_level=True)
+        loss = self.head.compute_loss(pred, batch['target'], valid_mask=batch['target_valid'])
+        if level is not None:
+            ok = batch['target_valid'] & torch.isfinite(batch['season_target'])
+            if ok.any():
+                loss = loss + self.level_weight * ((level - batch['season_target'])[ok] ** 2).mean()
+        return pred, loss
 
     # ---- checkpoint transfer --------------------------------------------
     def descriptor(self):

@@ -437,9 +437,14 @@ def stage_local(plan, job, runs, local_root):
     dst = Path(local_root) / 'artifacts'
     c = job['country']
     t0 = time.time()
-    for rel in ('index/{}'.format(c), 'cache/{}'.format(c)):
+    rels = ['index/{}'.format(c), 'cache/{}'.format(c)]
+    if (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
+        rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2)
+    manifests = {'cache': 'cache_manifest.json', 'index': 'index_manifest.json',
+                 'neighbourhood': 'neighbourhood_manifest.json'}
+    for rel in rels:
         target = dst / rel
-        if (target / ('cache_manifest.json' if rel.startswith('cache') else 'index_manifest.json')).exists():
+        if (target / manifests[rel.split('/')[0]]).exists():
             continue                          # already staged by an earlier job on this pod
         target.mkdir(parents=True, exist_ok=True)
         for f in (src / rel).iterdir():
