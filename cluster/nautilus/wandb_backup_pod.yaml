@@ -1,0 +1,36 @@
+# Back up W&B model artifacts to the PVC (yieldsat_wandb_backup.py), then verify.
+# Point-suite checkpoints -> /data/YieldSAT/yieldsat_results/before_full_checkpoints.
+# W&B key from the namespace secret smatousi-wandb; no credentials inside.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smatousi-yieldsat-wandb-backup
+spec:
+  restartPolicy: Never
+  containers:
+  - name: yieldsat
+    image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+    imagePullPolicy: Always
+    command: [/bin/bash, -c]
+    args:
+    - |
+      set -euo pipefail
+      git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code
+      cd /workspace/code && echo "code $(git rev-parse --short HEAD)"
+      OUT=/data/YieldSAT/yieldsat_results/before_full_checkpoints
+      python yieldsat_wandb_backup.py --project yieldsat-cvpr27 --out $OUT --workers 8
+      python yieldsat_wandb_backup.py --project yieldsat-cvpr27 --out $OUT --workers 8
+      python yieldsat_wandb_backup.py --project x --out $OUT --verify
+      echo BACKUP_DONE
+    env:
+    - name: WANDB_API_KEY
+      valueFrom:
+        secretKeyRef: {name: smatousi-wandb, key: WANDB_API_KEY}
+    resources:
+      limits: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+      requests: {cpu: '4', memory: 16Gi, ephemeral-storage: 10Gi}
+    volumeMounts:
+    - {name: data, mountPath: /data}
+  volumes:
+  - name: data
+    persistentVolumeClaim: {claimName: ali-vol-1tera}
