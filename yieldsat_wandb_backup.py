@@ -43,6 +43,30 @@ def backup_one(art, out):
     return 'ok', rec
 
 
+def delete_all(project, kind, workers=8):
+    """Delete every version (and its aliases) of artifact type ``kind``."""
+    import wandb
+    api = wandb.Api(timeout=300)
+    path = '{}/{}'.format(api.default_entity, project)
+    versions = [v for col in api.artifact_type(kind, path).collections() for v in col.artifacts()]
+    total = sum(v.size for v in versions)
+    print('deleting {} {} artifact versions ({:.2f} GB) in {}'.format(len(versions), kind, total / 1e9, path),
+          flush=True)
+    done = failed = 0
+    with ThreadPoolExecutor(workers) as ex:
+        futs = [ex.submit(v.delete, delete_aliases=True) for v in versions]
+        for fut in as_completed(futs):
+            try:
+                fut.result()
+                done += 1
+            except Exception as exc:
+                failed += 1
+                print('FAIL', exc, flush=True)
+            if (done + failed) % 500 == 0:
+                print(done + failed, 'processed', flush=True)
+    print('deleted {}, failed {}'.format(done, failed), flush=True)
+
+
 def main():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument('--project', required=True)
@@ -50,7 +74,15 @@ def main():
     a.add_argument('--out', required=True)
     a.add_argument('--workers', type=int, default=8)
     a.add_argument('--verify', action='store_true')
+    a.add_argument('--delete', action='store_true',
+                   help='DELETE every version of this artifact type in the project (needs --confirm)')
+    a.add_argument('--confirm', default='', help='must equal --project for --delete')
     args = a.parse_args()
+    if args.delete:
+        if args.confirm != args.project:
+            raise SystemExit('--delete needs --confirm {}'.format(args.project))
+        delete_all(args.project, args.type, args.workers)
+        return
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     if args.verify:
