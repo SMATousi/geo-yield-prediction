@@ -19,8 +19,8 @@ pairs:
 - URG-S
 job_unit: pair_shard
 target_job_hours: 2.0
-runs_per_gpu: 3
-max_runs_per_gpu: 4
+runs_per_gpu: 2
+max_runs_per_gpu: 2   # hybrid runs peak at ~9 GB on dense tiles (3-4 per A10 ran out of memory)
 target_gpu_util: 80
 num_workers: 3
 gpu_speed_factor:

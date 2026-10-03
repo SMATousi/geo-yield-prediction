@@ -143,3 +143,16 @@ below.
 - 2026-10-02 — Final image v2 results committed (`results/image_v2_*.md`;
   324/324 experiments): v2 worse than point in 91/108 rows, marginally
   better than v1 (55/86 rows).
+- 2026-10-03 — **Round 1, first attempt: CUDA out of memory.**
+  - 42 runs failed within ~45 s, all with `torch.OutOfMemoryError`. 3–4
+    concurrent hybrid runs per A10 do not fit: a run on dense tiles (BRA-C,
+    URG-S) peaks at ~9 GB, vs ~3 GB on sparse GER-R tiles in the local test.
+  - The pool's circuit breaker mistook these for GPU faults and retired 6
+    pods.
+  - **Fix:**
+    - 2 runs per GPU (`runs_per_gpu = max_runs_per_gpu = 2`);
+    - `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` set in
+      `main_yieldsat_image.py`;
+    - pools re-rendered as 2 × 15 A10 (12 CPU, 40 GiB, 4 loader workers per
+      run) and resubmitted.
+  - Finished runs keep their markers; failed runs are retried.

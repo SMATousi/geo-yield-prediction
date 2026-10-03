@@ -38,7 +38,7 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/dev_r1 --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/dev_r1
+          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/dev_r1 --runs_per_gpu 2 --max_runs_per_gpu 2 --num_workers 4 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/dev_r1
         env:
         - name: YIELDSAT_GIT_REF
           value: main
@@ -62,13 +62,13 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '16'
-            memory: 48Gi
+            cpu: '12'
+            memory: 40Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '16'
-            memory: 48Gi
+            cpu: '12'
+            memory: 40Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data
@@ -129,7 +129,7 @@ spec:
         - -c
         args:
         - git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" && exec cluster/nautilus/run_in_pod.sh
-          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/dev_r1 --runs_per_gpu 3 --max_runs_per_gpu 4 --num_workers 3 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/dev_r1
+          pool --plan /data/YieldSAT/yieldsat_artifacts/cluster/dev_r1 --runs_per_gpu 2 --max_runs_per_gpu 2 --num_workers 4 --local_root /scratch/yieldsat --results_root /data/YieldSAT/yieldsat_results/dev_r1
         env:
         - name: YIELDSAT_GIT_REF
           value: main
@@ -153,13 +153,13 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: '16'
-            memory: 48Gi
+            cpu: '12'
+            memory: 40Gi
             ephemeral-storage: 50Gi
           requests:
             nvidia.com/gpu: 1
-            cpu: '16'
-            memory: 48Gi
+            cpu: '12'
+            memory: 40Gi
             ephemeral-storage: 50Gi
         volumeMounts:
         - name: data

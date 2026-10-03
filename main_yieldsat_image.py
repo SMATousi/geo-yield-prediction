@@ -22,6 +22,9 @@ import argparse
 import json
 import math
 import os
+
+# less CUDA fragmentation when several runs share a GPU (hybrid runs peak at ~9 GB)
+os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF', 'expandable_segments:True')
 import resource
 import time
 from pathlib import Path
