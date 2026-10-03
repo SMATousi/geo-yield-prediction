@@ -228,3 +228,15 @@ below.
     `yieldsat_wandb_backup.py --delete --confirm yieldsat-cvpr27-image` runs
     after the backup is verified. The delete mode was tested on a
     throwaway project: model artifacts removed, results kept.
+- 2026-10-03 — **Backup, attempt 1:** the PVC backup pod downloaded about
+  1,400 of 3,090 point checkpoints, then was evicted ("ephemeral local
+  storage usage exceeds … 10Gi"): W&B caches every download under
+  `~/.cache/wandb`.
+  - **Fix** (`bcb477c`): download with `skip_cache=True`, `WANDB_CACHE_DIR`
+    on the PVC, 20 GiB disk.
+  - The relaunch was refused: the low-utilization flag again blocks new
+    pods. Round 1's running pods are unaffected (29 running).
+  - **Fallback:** the backup continues to the dev machine's local disk
+    (`/root/yieldsat_backups/before_full_checkpoints`, same tool, manifest
+    and verify), to be copied to the PVC when the flag clears. The image
+    model deletion runs only after this local backup verifies.
