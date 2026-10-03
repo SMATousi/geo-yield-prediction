@@ -333,3 +333,10 @@ below.
   retry succeeded. Then `dev_r2_pools.yaml` was submitted (2 × 15 A10).
   The W&B → PVC backup pod of the point checkpoints was relaunched now that
   pods are accepted again.
+- 2026-10-03 — **Point checkpoints now also on the PVC:**
+  `/data/YieldSAT/yieldsat_results/before_full_checkpoints`. The relaunched
+  backup pod resumed (1,566 already present from the evicted attempt,
+  1,524 new) and verified 3,090/3,090 artifacts, 22.20 GB, 0 bad files.
+  Copies now exist on the PVC, on the dev machine and on W&B.
+- 2026-10-03 — Round 2 pods run at 99–100% GPU utilization (point model,
+  4 runs per A10, 3–5 GB).
