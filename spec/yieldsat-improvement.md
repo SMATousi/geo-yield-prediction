@@ -240,3 +240,11 @@ below.
     (`/root/yieldsat_backups/before_full_checkpoints`, same tool, manifest
     and verify), to be copied to the PVC when the flag clears. The image
     model deletion runs only after this local backup verifies.
+- 2026-10-03 — **W&B clean-up done.**
+  - **Point checkpoints backed up locally:** 3,090/3,090 artifacts,
+    22.20 GB, verified (0 bad files) in
+    `/root/yieldsat_backups/before_full_checkpoints`. They remain on W&B
+    too, and are to be copied to the PVC when the flag clears.
+  - **Image v1/v2 models deleted:** all 5,070 model artifact versions in
+    `yieldsat-cvpr27-image` (115.09 GB), 0 failures. Results artifacts and
+    PVC results are kept.
