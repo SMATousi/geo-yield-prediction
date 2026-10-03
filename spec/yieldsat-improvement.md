@@ -248,3 +248,28 @@ below.
   - **Image v1/v2 models deleted:** all 5,070 model artifact versions in
     `yieldsat-cvpr27-image` (115.09 GB), 0 failures. Results artifacts and
     PVC results are kept.
+- 2026-10-03 — **Round 1, interim (190/658 runs; W&B, since the PVC is
+  unreachable while the flag is active).** Only 3 of 84 experiments are
+  complete, too few for pooled DEV scores. Paired per-fold comparison with
+  the point model on the same fold/inputs/seed (test pixel RMSE):
+
+  | Config | Folds | Median ΔRMSE vs point | Better folds (pixel / field) |
+  |---|---|---|---|
+  | h1-early | 32 | +0.075 | 8 / 8 |
+  | h2-level | 34 | +0.105 | 4 / 8 |
+  | h3-local | 29 | +0.119 | 5 / 5 |
+  | h4-maps | 26 | +0.098 | 6 / 6 |
+  | h5-maps-xattn | 25 | +0.228 | 4 / 4 |
+  | h6a-local-aug | 25 | +0.222 | 2 / 3 |
+  | h6b-maps-xattn-aug | 19 | +0.096 | 2 / 5 |
+
+  - Folds are mostly GER-R and URG-S so far. No configuration beats the
+    point model; LOYO is the worst (median +0.07 to +0.34).
+  - **The local calibration win was seed luck, not a GPU-path bug.** On
+    GER-R CV10 fold 0, with otherwise identical settings: CPU path seed 0
+    R² 0.293, CPU path seed 1 0.117, GPU path seed 0 0.223 (point model
+    0.226). Single folds on small pairs cannot separate configurations.
+  - **Likely structural cause:** a hybrid step sees only 8 tiles (≈ 8
+    fields), while the point model's batches mix cells from many fields.
+    The level/bias signal per step is therefore noisy, and best epochs vary
+    widely (1–48).
