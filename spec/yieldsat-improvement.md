@@ -344,3 +344,25 @@ below.
   all countries/crops, with sensor self-supervised and expert-validated
   knowledge pretraining ([yieldsat-foundation-model.md](./yieldsat-foundation-model.md),
   FM-01–FM-08). It uses the round-2 winner as its backbone.
+- 2026-10-04 — **Round 2, interim** (`results/dev_r2.md`; 546/564 runs,
+  pooled, from W&B):
+
+  | Config | Rows | DEV pixel R² | DEV field R² |
+  |---|---|---|---|
+  | p1-early (S4) | 12/12 | 0.274 | 0.407 |
+  | p2-level (S5) | 10/12 | 0.124 | 0.185 |
+  | p3-nbr (S6) | 6/12 | 0.237 | 0.403 |
+  | p4-early-level | 11/12 | 0.119 | 0.138 |
+  | **p5-early-nbr** | 12/12 | **0.298** | **0.447** |
+  | p6-all | 10/12 | 0.179 | 0.256 |
+  | Point model (seed 0 / 3 seeds) | 12 | 0.305 / 0.309 | 0.470 / 0.472 |
+
+  - **No configuration passes or beats the point model.** p5 (early fusion
+    + neighbourhood) is within 0.01 of it; early fusion alone loses 0.03.
+  - **The season-level term (S5) hurts in every combination, as in round
+    1.** Likely mechanism: a field season's weather series is nearly
+    unique, so a head that sees only weather + crop and is trained against
+    the season mean can memorize training seasons, and the error transfers
+    to held-out seasons (even CV10 drops from 0.45 to 0.30).
+  - Neighbourhood features help on top of early fusion (+0.02 pixel,
+    +0.04 field).
