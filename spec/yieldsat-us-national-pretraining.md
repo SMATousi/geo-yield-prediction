@@ -163,8 +163,37 @@ one Missouri AOI, 2025, 13.2M cropland points.
 |---|---|---|
 | D13 | The pretraining view reproduces the measured YieldSAT conventions of §A (monthly 24-slot harvest-year grid, harmonized L2A DN, nearest native pixel, ERA5-Land inclusive interval sums, SRTM/RichDEM, SoilGrids mapped units) | Proposed 2026-10-04 (follows D11) |
 | D14 | S2 is acquired pixel-only: COG range reads from the STAC archive (primary), GEE `S2_SR_HARMONIZED` as parity check/fallback; no scene downloads or scene staging | Proposed 2026-10-04 |
-| D15 | Clustered sampling (block-sized clusters as primary sampling units, D05 quotas at cluster level) to make pixel-only reads efficient | Proposed 2026-10-04; needs confirmation because it changes the sampling frame of D03–D05 |
+| D15 | Clustered sampling (block-sized clusters as primary sampling units, D05 quotas at cluster level) to make pixel-only reads efficient | **Confirmed 2026-10-04** |
 | D16 | Season dates for US points come from NASS Crop Progress state × crop × year medians, marked as calendar estimates | Proposed 2026-10-04 |
+
+### D2. Pilot decisions (2026-10-04, project lead)
+
+| ID | Decision |
+|---|---|
+| D17 | Pilot strata: **NOAA's nine US climate regions** (state-based) × crop strata. The allocation is about 125 clusters of ~2,000 points (≈ 250k points), spread over 2021–2025 and balanced across years within each region: Upper Midwest 15, Ohio Valley 20, Northern Rockies & Plains 25, South 25, Southeast 10, Northwest 12, Northeast 8, Southwest 5, West 5 |
+| D18 | **All CDL cropland classes are kept** (codes 1–61, 66–80, 200–255), not only the YieldSAT crops. Pretraining selects crops at training time (a crop filter in the training script) |
+| D19 | Output: `/home1/pupil/SMATousi/YieldSAT-US-Pilot/`. That volume had 120 GB free on 2026-10-04, so national CDL downloads are transient (one year at a time, deleted after use) and S2 is pixel-only |
+
+### D3. YieldSAT terrain conventions recovered from `Raw.zip` (2026-10-04)
+
+The raw per-field rasters (`dem/{dem,slope,aspect,curvature,twi}`, 10 m)
+show that the terrain derivatives were computed on the **native SRTM lat/lon
+grid** and then upsampled:
+- **slope** = 84,000 ± 3% × the true rise/run on every field checked. That is
+  RichDEM `slope_riserun` with horizontal units in degrees (≈ 111 km per
+  degree, latitude-scaled), which explains the "unresolved scale" of 1e3–1e4.
+- **aspect**: downslope azimuth, clockwise from north. It matches a 10 m
+  recomputation within 10–19° median (differences come from upsampling).
+- **curvature**: correlates −0.65 to −0.83 with metre-based
+  Zevenbergen–Thorne curvature, with a field-dependent scale (×1.1–2.2),
+  consistent with computation at native resolution.
+- **TWI**: NaN in most fields (100% of the German fields checked).
+
+The US build computes slope (degree-unit rise/run) and aspect the same way
+on native NASADEM 1-arcsecond tiles, then samples with cubic interpolation.
+- Curvature: Zevenbergen–Thorne at native resolution, with its scale
+  calibrated to the YieldSAT distribution in NP-04a.
+- TWI: stored as NaN, as in most of YieldSAT.
 
 ### E. Pilot build tasks (NP-04, YieldSAT-aligned)
 
@@ -220,7 +249,7 @@ locally retained points are not automatically included in the 100M budget.
 | D12 | Stage 0 = knowledge pretraining on YieldSAT inputs before any US data is used | Confirmed 2026-10-04 |
 | D13 | Pretraining view reproduces measured YieldSAT conventions (monthly harvest-year slots, harmonized DN, nearest native pixel, ERA5-Land inclusive sums, SRTM/RichDEM, SoilGrids) | Proposed 2026-10-04; see "YieldSAT-aligned acquisition design" |
 | D14 | Pixel-only S2 (COG range reads; GEE harmonized as parity/fallback); no scene downloads | Proposed 2026-10-04 |
-| D15 | Clustered sampling with block-sized clusters as primary sampling units | Proposed 2026-10-04; changes D03–D05 frame, needs confirmation |
+| D15 | Clustered sampling with block-sized clusters as primary sampling units | **Confirmed 2026-10-04** |
 | D16 | Season dates from NASS Crop Progress state × crop × year medians | Proposed 2026-10-04 |
 
 Additional proposed defaults, open to revision: annual CDL crop eligibility
