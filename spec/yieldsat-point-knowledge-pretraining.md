@@ -200,6 +200,32 @@ The same DEV subset, matrix and pooled metric as the improvement plan
 
 ## 8. Open points
 
+- **Corrupt terrain curvature in one Argentina field season** (found
+  2026-10-04 from the phase-1 validation losses; decision for the project
+  lead).
+  - All 1,981 cells of `Argentina_DUP1_farm45_field596_corn_2020` have
+    curvature 1e8–3e9 (every other cell: p1–p99 ±0.97).
+  - When the season is in a training set, Argentina's curvature std becomes
+    2.5e7, which silences the channel for every Argentina cell. Pretraining
+    unit `cv_k00` measured mean 33,727 / std 2.5e7, vs 0.003 / 0.42 without
+    the season.
+  - When it is held out, its standardized inputs reach ~1e10. The phase-1
+    unit `cv_k09` validation loss is 1.3e14.
+  - Affected:
+    - every pretraining unit, through normalization or validation;
+    - ARG-C rows of the paper suite (`before_full`), where this season is a
+      test or training season.
+  - Not affected: the DEV fine-tuning rows, since ARG-W uses only wheat
+    seasons and per-pair statistics.
+  - Proposed fix: validity rule v+1, i.e. |curvature| > 1,000 is invalid in
+    the dataset and the field statistics. Then recompute Argentina's field
+    statistics and restart phase 1. This must not change the PVC statistics
+    while phase-1 pods are still staging, or pools would mix normalizations.
+  - Other extremes found by a full cache scan are plausible, not fixed:
+    - S2 bands up to 70σ in Argentina (≈ 10k cells per band) and up to 239σ
+      in Uruguay (B01, 46 cells);
+    - soil pH up to 58σ in Brazil.
+
 - **ARG-W LORO folds split one province under two spellings.** The source
   metadata spells some provinces two ways ("Buenos Aires" / "Buenos_Aires",
   "Santa Fe" / "Santa_Fe"). The existing paper LORO folds treat them as
@@ -350,3 +376,13 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - Pool a (16 × A10) submitted, results in
     `/data/YieldSAT/yieldsat_results/pk_dev1`. Pool b follows once
     checkpoints exist.
+- 2026-10-04 — **Phase 1, first results (8 A2 units, ≈ 41 min per run at
+  6 concurrent runs per A10).**
+  - Most validation curves decrease smoothly, e.g. masked observation 0.33
+    → 0.11 on `cv_k01`.
+  - The noisy or exploding ones trace to the corrupt Argentina curvature
+    season (§8).
+  - Diagnostics failed for the SSL arms because pods staged the concept
+    indices only for knowledge runs, and the I3 probes need them for every
+    arm. Fixed in `stage_local` (764b43e) for new pods; A2/A6 diagnostics
+    from pool a are backfilled after pretraining.
