@@ -443,3 +443,7 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - **Pretraining runs now save resumable state every epoch** to the shared
     results folder (`--resume_dir`; the driver passes it, and it is removed
     when the run finishes), so a pod loss no longer discards progress.
+  - The utilization flag was raised again (starved pods idling their GPUs)
+    and refused pool `c`. Per the project lead, pool `a` was deleted first.
+    Its claims expire after 30 min; pool `c` is retried every 10 min until
+    admitted.
