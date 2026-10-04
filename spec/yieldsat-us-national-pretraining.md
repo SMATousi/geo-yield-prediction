@@ -38,7 +38,7 @@ locally retained points are not automatically included in the 100M budget.
 | D01 | 2021–2025; 20M location-years/year; 100M total | Confirmed |
 | D02 | Contiguous 48 states; Alaska, Hawaii and territories excluded | Confirmed |
 | D03 | Shared-location cohort plus new annual locations | Confirmed |
-| D04 | Hybrid fraction | Proposed: nominal 10M shared + annual replenishment to 20M |
+| D04 | 10M shared locations + annual replenishment to 20M accepted samples | Confirmed |
 | D05 | Balanced climate-region and crop-type sampling, with weights | Confirmed |
 | D06 | Points, not stored images; same 12 S2 bands as YieldSAT | Confirmed |
 | D07 | 24 growing-season slots with aligned weather; versioned crop- and region-specific calendars; harvest-year sample identity | Confirmed |
@@ -99,9 +99,10 @@ IDs and spatial support for every source family.
 
 ### Hybrid annual sample
 
-Proposed initial setting: a nominal **10M-location shared cohort**, chosen from
-the 2021 sampling frame, plus replenishment each year to **20M accepted samples**.
-The 50/50 fraction is not yet confirmed.
+Confirmed design: a **10M-location shared cohort**, chosen from the 2021 sampling
+frame, plus replenishment each year to **20M accepted samples**. When all shared
+locations remain eligible, replenishment contributes 10M samples; otherwise it
+increases to cover that year's shared-cohort shortfall.
 
 - Revisit shared locations while they remain cropland-eligible in that year and
   meet the declared minimum evidence policy. Preserve their stable location IDs.
@@ -385,7 +386,7 @@ launch unbounded pointwise calls.
 
 | Task | Work and deliverable | Acceptance |
 |---|---|---|
-| NP-00 | Resolve the hybrid fraction and evaluation boundaries; pin calendar products/mappings and freeze the release charter | Confirmed year/count scope, selection policy, modalities, evaluation and resource limits |
+| NP-00 | Resolve evaluation boundaries; pin calendar products/mappings and freeze the release charter | Confirmed year/count scope, selection policy, modalities, evaluation and resource limits |
 | NP-01 | Audit source products and license/access paths by year/region | Versioned coverage matrix; required-source gaps, auth needs and unit/calendar tests documented |
 | NP-02 | Build national annual cropland frames and spatial exclusions | Native metadata pinned; zone-edge deduplication and class masks validated; no yield-dependent selection |
 | NP-03 | Implement hybrid, stratified deterministic sampling and reserve queues | Quota sums 20M/year; feasible caps; reproducibility, cohort eligibility and replacement accounting |
