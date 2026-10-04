@@ -391,7 +391,7 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - Validity rule v3 (`static_valid_mask`, `FIELD_STATS_VERSION = 3`):
     |curvature| > 1,000 is invalid. It applies in the point dataset and in
     the field statistics.
-  - v2 statistics backed up to `cache/<Country>/field_stats_v2_backup/`; the
+  - v2 statistics backed up to `field_stats_v2_backup/<Country>/` (moved out of `cache/` after it broke staging); the
     v3 recompute runs from a separate clone inside a running pool pod.
   - The restart suite is `pk_dev1r` (new plan and results directories), with
     pools sized to measured usage: 5 CPU / 32 Gi, measured 1.4–5.8 CPU and
@@ -414,3 +414,8 @@ The same DEV subset, matrix and pooled metric as the improvement plan
 - 2026-10-04 — **Utilization flag cleared; `pk_dev1r` pool a submitted**
   (16 × A10, 5 CPU / 32 Gi). All 16 pods are running. Pool b is added once
   pretraining checkpoints exist.
+- 2026-10-04 — **pk_dev1r staging failure.** 15 of 16 pods crashed in
+  `stage_local` (IsADirectoryError) on the v2 statistics backup folder
+  inside `cache/<Country>/`.
+  - Backups moved to `<artifact_root>/field_stats_v2_backup/`.
+  - `stage_local` now skips subfolders. Replacement pods clone the fix.

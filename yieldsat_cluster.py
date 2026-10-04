@@ -535,6 +535,8 @@ def stage_local(plan, job, runs, local_root):
             continue                          # already staged by an earlier job on this pod
         target.mkdir(parents=True, exist_ok=True)
         for f in (src / rel).iterdir():
+            if not f.is_file():
+                continue                      # e.g. backups kept beside the data
             if f.name == 'uuids.npy':
                 continue                      # not read by training
             if f.name.endswith('_manifest.json'):
