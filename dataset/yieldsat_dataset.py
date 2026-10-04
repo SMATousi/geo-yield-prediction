@@ -26,7 +26,7 @@ from torch.utils.data import Dataset, Sampler
 
 from dataset.yieldsat_cache import (
     FIELD_STATS_VERSION, N_S, N_T, SourceLayout, canonicalize_block, load_cache_manifest,
-    temporal_valid_mask,
+    static_valid_mask, temporal_valid_mask,
 )
 from dataset.yieldsat_schema import (
     CROPS, NUM_TIME_SLOTS, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS, SOIL_UNCERTAINTY,
@@ -387,7 +387,7 @@ class YieldSATPointDataset(Dataset):
         t_valid = temporal_valid_mask(temporal, times) & time_valid[:, :, None]
         t_norm = np.where(t_valid, (temporal - t_mean[:, None, :]) / t_std[:, None, :],
                           self.fill_value)
-        s_valid = np.isfinite(static)
+        s_valid = static_valid_mask(static)
         s_norm = np.where(s_valid, (static - s_mean) / s_std, self.fill_value)
 
         with np.errstate(invalid='ignore'):

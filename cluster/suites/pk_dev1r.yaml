@@ -1,0 +1,256 @@
+# Restart of pk_dev1 after the curvature validity fix (FIELD_STATS_VERSION 3, 2026-10-04).
+# Knowledge pretraining DEV round, phase 1 (spec/yieldsat-point-knowledge-pretraining.md §6,
+# criteria spec/pretraining/success-criteria.md). Stage 1: yield-free pretraining of the point
+# model's sensor side on 46 leakage-audited units (all 4 countries, inputs only) for arms
+# A2 (SSL), A3 (SSL + knowledge), A6 (ssl_long, 1.55x steps = compute-matched to A3) and
+# A7 (knowledge with random_targets). Stage 2: the DEV fine-tuning matrix (94 runs per arm,
+# same budget as dev_r2 / before_full) from each fold's unit checkpoint; jobs wait for their
+# checkpoints. A0 = existing before_full seed-0 results. Phase 2 (A4 shuffled, A5 notext,
+# label efficiency) follows if phase 1 is healthy.
+suite: pk_dev1r
+wandb:
+  project: yieldsat-cvpr27-pretrain
+  entity: null
+data:
+  source_root: ${YIELDSAT_SOURCE_ROOT}
+  artifact_root: ${YIELDSAT_ARTIFACT_ROOT}
+pairs:
+- ARG-W
+- BRA-C
+- GER-R
+- URG-S
+job_unit: pair_shard
+target_job_hours: 3.0
+runs_per_gpu: 4
+max_runs_per_gpu: 6
+target_gpu_util: 80
+num_workers: 1
+gpu_speed_factor:
+  ours: 0.226
+  paper_lstm: 0.2
+  test: 0.27
+  pretrain_ssl: 0.226
+  pretrain_knowledge: 0.226
+concurrency_speedup: 4.0
+stage_mb_per_s: 42
+pretrain:
+  unit_index: pretrain_units_dev_s0
+  results_root: /data/YieldSAT/yieldsat_results/pk_dev1r
+  inputs: s2_adm
+  fusion: perceiver_summary
+  seed: 0
+  budget:
+    epochs: 30
+    steps_per_epoch: 500
+    batch_size: 512
+  arms:
+    a2:
+      args:
+      - --num_workers
+      - '3'
+    a3:
+      args:
+      - --knowledge
+      - --num_workers
+      - '3'
+    a6:
+      args:
+      - --num_workers
+      - '3'
+      steps_factor: 1.55
+    a7:
+      args:
+      - --knowledge
+      - --knowledge_control
+      - random_targets
+      - --num_workers
+      - '3'
+experiments:
+- name: pk-a2
+  model: ours
+  fusion: perceiver_summary
+  policies: &id001
+  - paper
+  inputs: &id002
+  - s2_adm
+  seeds: &id003
+  - 0
+  budget: &id004
+    epochs: 60
+    steps_per_epoch: 0
+    min_steps_per_epoch: 500
+    max_steps_per_epoch: 1500
+  extra_args: &id005
+  - --norm_pooling
+  - per_country
+  init_from: a2
+  protocols:
+  - cv
+  - loyo
+- name: pk-a2
+  model: ours
+  fusion: perceiver_summary
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  init_from: a2
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: pk-a2
+  model: ours
+  fusion: perceiver_summary
+  policies: *id001
+  inputs: *id002
+  seeds: *id003
+  budget: *id004
+  extra_args: *id005
+  init_from: a2
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: pk-a3
+  model: ours
+  fusion: perceiver_summary
+  policies: &id006
+  - paper
+  inputs: &id007
+  - s2_adm
+  seeds: &id008
+  - 0
+  budget: *id004
+  extra_args: &id009
+  - --norm_pooling
+  - per_country
+  init_from: a3
+  protocols:
+  - cv
+  - loyo
+- name: pk-a3
+  model: ours
+  fusion: perceiver_summary
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  init_from: a3
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: pk-a3
+  model: ours
+  fusion: perceiver_summary
+  policies: *id006
+  inputs: *id007
+  seeds: *id008
+  budget: *id004
+  extra_args: *id009
+  init_from: a3
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: pk-a6
+  model: ours
+  fusion: perceiver_summary
+  policies: &id010
+  - paper
+  inputs: &id011
+  - s2_adm
+  seeds: &id012
+  - 0
+  budget: *id004
+  extra_args: &id013
+  - --norm_pooling
+  - per_country
+  init_from: a6
+  protocols:
+  - cv
+  - loyo
+- name: pk-a6
+  model: ours
+  fusion: perceiver_summary
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  init_from: a6
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: pk-a6
+  model: ours
+  fusion: perceiver_summary
+  policies: *id010
+  inputs: *id011
+  seeds: *id012
+  budget: *id004
+  extra_args: *id013
+  init_from: a6
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W
+- name: pk-a7
+  model: ours
+  fusion: perceiver_summary
+  policies: &id014
+  - paper
+  inputs: &id015
+  - s2_adm
+  seeds: &id016
+  - 0
+  budget: *id004
+  extra_args: &id017
+  - --norm_pooling
+  - per_country
+  init_from: a7
+  protocols:
+  - cv
+  - loyo
+- name: pk-a7
+  model: ours
+  fusion: perceiver_summary
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  init_from: a7
+  protocols:
+  - loro
+  pairs:
+  - BRA-C
+  - GER-R
+  - URG-S
+- name: pk-a7
+  model: ours
+  fusion: perceiver_summary
+  policies: *id014
+  inputs: *id015
+  seeds: *id016
+  budget: *id004
+  extra_args: *id017
+  init_from: a7
+  protocols:
+  - loro
+  loro_region: province
+  pairs:
+  - ARG-W

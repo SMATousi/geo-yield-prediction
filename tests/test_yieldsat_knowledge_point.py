@@ -331,3 +331,13 @@ def test_check_unit_detects_leaks(tmp_path):
     leaked['partitions']['val'].append('S0')
     with pytest.raises(ValueError, match='test seasons'):
         pu.check_unit(leaked, tmp_path, fields)
+
+
+def test_static_validity_rejects_corrupt_curvature():
+    from dataset.yieldsat_cache import static_valid_mask
+    st = np.zeros((3, len(STATIC_CHANNELS)), dtype=np.float32)
+    st[:, S['curvature']] = [0.5, -2.0e9, np.nan]
+    st[2, S['dem']] = np.nan
+    v = static_valid_mask(st)
+    assert v[0, S['curvature']] and not v[1, S['curvature']] and not v[2, S['curvature']]
+    assert v[1, S['dem']] and not v[2, S['dem']]

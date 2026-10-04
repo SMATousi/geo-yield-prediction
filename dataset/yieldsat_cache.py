@@ -41,8 +41,14 @@ from dataset.yieldsat_schema import (
 from dataset.yieldsat_source import fingerprint, open_source, same_snapshot, source_path
 
 CACHE_VERSION = 1
-# Version of the per-field statistics' validity rule (see temporal_valid_mask).
-FIELD_STATS_VERSION = 2
+# Version of the per-field statistics' validity rule (see temporal_valid_mask,
+# static_valid_mask). v3 (2026-10-04): implausible terrain curvature is invalid.
+FIELD_STATS_VERSION = 3
+# Static channels with a physical bound: values beyond it are corrupt and invalid.
+# RichDEM curvature: cells are within +-1 at p1-p99, but one Argentina season
+# (field596 corn 2020, all 1,981 cells) stores 1e8-3e9 (spec/yieldsat-point-
+# knowledge-pretraining.md §8).
+STATIC_BOUNDS = {'curvature': 1000.0}
 STATIC_RTOL = 1e-5
 STATIC_ATOL = 1e-6
 FLAG_STATIC_CONFLICT = 1
@@ -90,6 +96,17 @@ def canonicalize_block(sample, times, layout):
     flags |= np.where((~any_finite).any(axis=1), FLAG_STATIC_MISSING, 0).astype(np.uint8)
     flags |= np.where(~np.isfinite(t).any(axis=1), FLAG_NO_VALID_TIME, 0).astype(np.uint8)
     return temporal, static, t.astype(np.float32), flags, conflict.sum(axis=0)
+
+
+def static_valid_mask(static):
+    """Validity of canonical static values: finite and within STATIC_BOUNDS."""
+    from dataset.yieldsat_schema import STATIC_CHANNELS
+    valid = np.isfinite(static)
+    for name, bound in STATIC_BOUNDS.items():
+        i = STATIC_CHANNELS.index(name)
+        with np.errstate(invalid='ignore'):
+            valid[..., i] &= np.abs(static[..., i]) <= bound
+    return valid
 
 
 def temporal_valid_mask(temporal, times):
@@ -226,7 +243,7 @@ def build_country_cache(source_root, country, artifact_root, block_rows=4096,
                 sel = codes == code
                 slot = code_to_slot[int(code)]
                 acc_t.add(slot, tmask[sel].reshape(-1, N_T))
-                acc_s.add(slot, static[sel])
+                acc_s.add(slot, np.where(static_valid_mask(static[sel]), static[sel], np.nan))
             if log_every and bi % log_every == 0:
                 rate = e * sample[0].nbytes / 1e6 / max(1e-6, time.time() - t0)
                 print('[{}] {}/{} rows, {:.0f} MB/s'.format(country, e, n, rate), flush=True)
@@ -287,7 +304,8 @@ def recompute_field_stats(artifact_root, source_root, country, block_rows=65536)
             t = np.asarray(temporal[s:e])
             valid = temporal_valid_mask(t, np.asarray(times[s:e]))
             acc_t.add(slot, np.where(valid, t, np.nan).reshape(-1, N_T))
-            acc_s.add(slot, np.asarray(static[s:e]))
+            st = np.asarray(static[s:e])
+            acc_s.add(slot, np.where(static_valid_mask(st), st, np.nan))
     np.savez(d / 'field_stats.npz',
              field_codes=np.array([fl['field_code'] for fl in fields]),
              temporal_count=acc_t.count, temporal_sum=acc_t.sum, temporal_sumsq=acc_t.sumsq,
