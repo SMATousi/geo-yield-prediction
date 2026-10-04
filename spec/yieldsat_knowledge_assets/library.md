@@ -1,6 +1,6 @@
 # YieldSAT concept and relationship drafts
 
-All entries are **drafts requiring human expert review**. No agronomic approval or validated geometry is claimed.
+**Review status (2026-10-04):** all 12 concepts and 6 relationships are recorded as **approved** by the project lead for point-model knowledge pretraining with rule-based estimators (see `spec/yieldsat-point-knowledge-pretraining.md`, decision K1). `ys_r05` abstains by its own qualification until within-field thermal evidence exists.
 
 Unobservable qualifications require abstention. These candidates deliberately include difficult cases for the pilot; none is automatically activated.
 

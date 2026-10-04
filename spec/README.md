@@ -51,6 +51,9 @@ Both systems live in the same tree and share almost nothing but `util/`. Read
 | [layer_integration.md](./layer_integration.md) | Full downloader/PlanetScope inventory, target model contracts, and LI-01–LI-15 compliance tasks. |
 | [knowledge_pretraining.md](./knowledge_pretraining.md) | Approved v2 direction for expert-validated relationships constraining sensor embeddings, optional VLM/LLM applicability estimation, and KP-01–KP-08 tasks; planned, not implemented. |
 | [yieldsat-improvement.md](./yieldsat-improvement.md) | Plan and log for beating the YieldSAT paper's best models: DEV subset, success criterion, hybrid (round 1) and point-model (round 2) variants S4–S10. |
+| [yieldsat-point-knowledge-pretraining.md](./yieldsat-point-knowledge-pretraining.md) | Knowledge pretraining on the point model: approved 6 rules, rule-based concept estimators, SSL + grounding + relational losses, pretraining units, arms and PK tasks. |
+| [pretraining/success-criteria.md](./pretraining/success-criteria.md) | How we decide that pretraining is healthy, that the model learns the knowledge, and that it helps yield prediction (P/I/E criteria and decision rules). |
+| [yieldsat-us-national-pretraining.md](./yieldsat-us-national-pretraining.md) | Nationwide US unlabeled pretraining corpus: staged, gated scaling in YieldSAT-compatible semantics. |
 | [yieldsat-foundation-model.md](./yieldsat-foundation-model.md) | Pooled foundation model across all countries/crops with leak-free joint folds, sensor SSL and expert-validated knowledge pretraining; arms, controls and FM-01–FM-08 tasks. |
 | [status.md](./status.md) | You want the honest state: what is verified, what is orphaned, and the defect list with file:line. |
 | [tech_stack.md](./tech_stack.md) | You are provisioning an environment or resolving dependencies. |

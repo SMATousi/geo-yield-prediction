@@ -85,10 +85,17 @@ def annotations(artifacts):
     return cache,policy,audit,gp,geometry
 
 
-def test_draft_library_rejected_and_mirrors_identical():
+def test_draft_library_rejected_and_mirrors_identical(tmp_path):
     root=Path(__file__).parents[1]
     assert file_hash(root/'assets/library.json')==file_hash(root.parent/'spec/yieldsat_knowledge_assets/library.json')
-    with pytest.raises(ValueError,match='expert review'):library(root/'assets/library.json',True)
+    # the shipped library is approved by the project lead (2026-10-04, decision K1) ...
+    lib=library(root/'assets/library.json',True)
+    assert len(lib['rules'])==6
+    # ... and any draft entry is still refused for training
+    raw=json.loads((root/'assets/library.json').read_text())
+    raw['rules'][0]['review']={'status':'draft','reviewer':None,'reviewed_at':None,'evidence':None}
+    draft=tmp_path/'draft.json';draft.write_text(json.dumps(raw))
+    with pytest.raises(ValueError,match='expert review'):library(draft,True)
 
 
 def test_yield_free_preparation_cutoff_and_masks(artifacts):

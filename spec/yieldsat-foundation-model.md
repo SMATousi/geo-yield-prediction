@@ -215,6 +215,20 @@ on real data waits for G1.
 - **D4 — teacher:** use the optional VLM/LLM teacher (OpenRouter model and
   credentials as a namespace secret) or deterministic estimators only.
 
+### Decisions taken (2026-10-04)
+
+- **D3 resolved:** the project lead declared the 6 relationships and 12
+  concepts verified (G1 satisfied for these entries; recorded in the library).
+- **D4 resolved:** informed rule-based concept estimators first; no VLM/LLM
+  teacher for now.
+- **Point model first:** knowledge pretraining is implemented and validated on
+  the point model ([yieldsat-point-knowledge-pretraining.md](./yieldsat-point-knowledge-pretraining.md))
+  before pooled fine-tuning. Success is judged by
+  [pretraining/success-criteria.md](./pretraining/success-criteria.md).
+- **Pretraining data:** stage 0 is YieldSAT inputs of all pairs; the US
+  national corpus follows in gated stages
+  ([yieldsat-us-national-pretraining.md](./yieldsat-us-national-pretraining.md)).
+
 ## 11. Progress log
 
 - 2026-10-03 — Specified (this document). Waits on the round-2 DEV results

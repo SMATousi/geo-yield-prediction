@@ -5,6 +5,56 @@ it does not launch downloads, reserve infrastructure, or modify training code.
 Confirmed decisions and proposed defaults are distinguished below. Outstanding
 user choices must be incorporated before the acquisition plan is finalized.
 
+## Revised plan (2026-10-04, user decision)
+
+The corpus is built **in measured stages, not committed to 100M up front**,
+and only after the knowledge-pretraining pipeline has been validated on data
+we already have. This revision takes precedence over conflicting statements
+below. The 100M target (D01) stays the ceiling, not a commitment.
+
+1. **Point model first.** All pretraining, adapters and evaluation use the
+   point model ([yieldsat-point-knowledge-pretraining.md](./yieldsat-point-knowledge-pretraining.md)).
+   The image model comes back later; nothing here needs image tiles (D06
+   already stores points).
+2. **Stage 0 — YieldSAT inputs only.** Knowledge pretraining is first
+   validated on the YieldSAT inputs of all 9 pairs (~12M cells, labels
+   never used), judged by [pretraining/success-criteria.md](./pretraining/success-criteria.md).
+   US collection proceeds in parallel only through the pilot.
+3. **Pilot (NP-04, 250k location-years)** in exactly YieldSAT-compatible
+   semantics (point 4), then **1M → 5M → 20M** location-years. Each stage is
+   kept only if it passes the **scale-up gate** of the success criteria:
+   a DEV-mean gain ≥ +0.005 pixel R² against the previous stage with a CI
+   excluding 0, and no regression of intrinsic criteria I1/I3. Scaling stops
+   at the first stage that fails, and the result is reported. Diversity is
+   expected to saturate well before 100M: ERA5-Land CONUS cropland is
+   roughly 10⁴ cells, ~10⁵ cell-years over 2021–2025, so later points mostly
+   repeat weather/soil cells.
+4. **Feature semantics must match the YieldSAT contract**, or pretraining will
+   not transfer:
+   - The released training view must carry **exactly the YieldSAT point
+     semantics**: the 24-slot scheme of `yieldsat_preprocessed_v1`, S2 in L2A
+     digital numbers in the same 12-band order, and weather as interval sums
+     with YieldSAT's operator (temperatures as Kelvin-day sums,
+     precipitation as metre sums over the interval since the previous dated
+     slot; the first dated slot is invalid), plus the same static channels
+     and units (SoilGrids units as in the YieldSAT cache).
+   - The physical view recommended in "Growing-season temporal contract"
+     (daily means in °C, precipitation in mm) may be stored as well. The
+     view used for pretraining is the YieldSAT-compatible one, or an
+     explicit, tested adapter converts both corpora to one semantics.
+     Silently mixing semantics is not allowed.
+   - **Terrain must be fixed before use:** TWI is finite for only 0.1% of
+     the local pilot's points, and slope's scale is unresolved in YieldSAT
+     as well.
+5. **Evaluation exclusion (D08):** all current evaluation sets (YieldSAT:
+   Argentina, Brazil, Germany, Uruguay) lie outside the US, so a CONUS
+   corpus cannot leak them. D08 only matters for a future US benchmark; until
+   one is declared, the exclusion manifest is empty by decision, and that is
+   recorded in the release manifest.
+6. **Knowledge supervision on US points** uses the same rule-based estimators
+   (with US strata: state/climate region × crop) and the same 6 approved
+   rules as the YieldSAT stage.
+
 ## Objective and confirmed scope
 
 Build an unlabeled, multimodal corpus spanning **2021–2025**, with exactly
@@ -42,8 +92,11 @@ locally retained points are not automatically included in the 100M budget.
 | D05 | Balanced climate-region and crop-type sampling, with weights | Confirmed |
 | D06 | Points, not stored images; same 12 S2 bands as YieldSAT | Confirmed |
 | D07 | 24 growing-season slots with aligned weather; versioned crop- and region-specific calendars; harvest-year sample identity | Confirmed |
-| D08 | Exclude evaluation regions across all years | Exclusion policy confirmed; region list/boundaries intentionally undecided by user |
+| D08 | Exclude evaluation regions across all years | Exclusion policy confirmed; current evaluation sets are outside the US, so the manifest is empty until a US benchmark is declared (2026-10-04) |
 | D09 | Storage, acquisition budget, compute environment and deadline | Intentionally blank, at user request |
+| D10 | Staged scaling (pilot → 1M → 5M → 20M location-years), each stage gated by measured DEV gains; 100M is a ceiling | Confirmed 2026-10-04 |
+| D11 | Point model first; pretraining view in exact YieldSAT point semantics (or a tested adapter) | Confirmed 2026-10-04 |
+| D12 | Stage 0 = knowledge pretraining on YieldSAT inputs before any US data is used | Confirmed 2026-10-04 |
 
 Additional proposed defaults, open to revision: annual CDL crop eligibility
 including hay/alfalfa, tree crops and fallow; a 10 m metric grid; a common mandatory

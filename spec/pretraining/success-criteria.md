@@ -1,0 +1,75 @@
+# Success criteria: is pretraining helping, and is the knowledge doing its job?
+
+**Status:** defined 2026-10-04 (user request). Applies to the point-model
+pretraining in [../yieldsat-point-knowledge-pretraining.md](../yieldsat-point-knowledge-pretraining.md)
+and later to the pooled foundation model and the US corpus stages. Arms
+(A0, A2–A6) are defined in that spec. All held-out measurements use seasons
+that were **excluded from the pretraining unit** (its DEV test seasons),
+never pretraining or fine-tuning data.
+
+The criteria answer three separate questions, in order. A "yes" to a later
+question requires "yes" to the earlier ones.
+
+1. **Is pretraining healthy?** (P) — it trains, does not collapse and covers
+   the knowledge it is meant to learn.
+2. **Does the model learn the knowledge?** (I) — intrinsic, on held-out
+   seasons, without yield.
+3. **Does it help yield prediction?** (E) — extrinsic, the DEV pooled
+   metric, paired against matched controls.
+
+## P — Pretraining health (every run; automatic)
+
+| ID | Criterion | Pass |
+|---|---|---|
+| P1 | Convergence | Total, SSL, grounding and relation losses decrease; the last-epoch validation loss is within 5% of its minimum (no divergence) |
+| P2 | No representation collapse | For every stream, the per-dimension variance of the summary embeddings over a held-out sample stays ≥ 0.5× its value at initialization, and the effective rank (exp of the entropy of normalized singular values) is ≥ 25% of the embedding width |
+| P3 | Knowledge coverage | Each non-abstaining concept has known targets for ≥ 20% of training field seasons. Each active rule (r01–r04, r06; r05 abstains by design) has ≥ 200 applicable training field seasons per pretraining unit. Concepts or rules below this are reported and excluded from I/E claims |
+| P4 | Estimator sanity | Each concept's raw index has non-degenerate spread within its strata (IQR > 0) and < 50% missing among rows with the source stream present |
+
+## I — Intrinsic: does the model learn the knowledge? (held-out seasons)
+
+| ID | Criterion | Pass |
+|---|---|---|
+| I1 | **Concept grounding** | For each concept, AUROC of the model's concept score against the estimator target binarized at 0.5 is ≥ 0.70 on held-out seasons, and ≥ the `shuffled` control (A4) + 0.10. Reported per concept and per country |
+| I2 | **Relational alignment** | On held-out applicable pairs of each active rule, mean `cos(normalize(z_B − z_A), r_AB)` is higher for A3 than for A4 (`shuffled`) and for A3 at initialization. Paired bootstrap over field seasons, 95% CI above 0 |
+| I3 | **No information loss** | Linear probes from frozen sensor embeddings to physical properties (mid-season precipitation and temperature, peak NDVI, NDMI, clay, SOC, relative elevation; ridge regression fitted on training seasons and scored on held-out seasons) reach R² for A3 ≥ R² for A2 − 0.02 on every property |
+| I4 | **Sensor preservation** | The masked-observation and forecast losses of A3 on held-out seasons are ≤ 1.05× those of A2 |
+| I5 | **Knowledge specificity** | The I1 gain over A4 is larger for concepts in an active rule than for concepts whose rules abstain (r05: `pole_facing_aspect`, `cool_regime`). Supporting evidence that the relational structure, not just more supervision, is learned |
+
+## E — Extrinsic: does it help yield prediction? (DEV, pooled metric)
+
+Paired comparisons use the same DEV rows (pair × protocol), folds, seed and
+cells. "Δ" is the DEV-mean pooled R² difference. Confidence intervals come
+from a paired bootstrap over DEV folds.
+
+| ID | Criterion | Pass |
+|---|---|---|
+| E1 | **Pretraining helps** | A2 (SSL) ≥ A0 (from scratch) on DEV pixel and field R²: Δ ≥ 0, with no protocol worse by > 0.02 |
+| E2 | **Knowledge helps beyond SSL and controls** | A3 > A2, A4 and A6, each with Δ ≥ +0.01 pixel R² and the 95% CI of Δ excluding 0; field R² not worse |
+| E3 | **Label efficiency** | At 10% and 25% of training labels, the A3 − A0 gain is ≥ the gain at 100% (pretraining matters more when labels are scarce) and positive |
+| E4 | **Out-of-distribution benefit** | The A3 − A2 gain on LOYO and LORO is ≥ its gain on CV10 (knowledge should help most under year and region shift) |
+| E5 | **No harm** | No DEV row is worse than A2 by more than 0.05 pixel R² |
+| E6 | **Toward the paper** | The selected arm moves the DEV mean toward the paper's best; the final bar is the improvement plan's criterion (paper best + 0.03), checked on the full dataset |
+
+## Decision rules
+
+- **"Pretraining is healthy"** — P1–P4 pass for every pretraining unit of an
+  arm. Otherwise the arm is debugged, not evaluated.
+- **"The knowledge is doing its job"** — I1, I2, I4 pass, plus E2 against A4
+  (`shuffled`). With only intrinsic success the knowledge is learned but not
+  useful; with only E2 against A6 the benefit may be regularization.
+- **"Pretraining is helping"** — E1 and E2 pass, plus E3 or E4, plus E5.
+- **Scale-up gate for the US corpus** (stages 250k → 1M → 5M → 20M): a stage
+  is kept only if, against the previous stage, E2-style Δ on the DEV mean is
+  ≥ +0.005 pixel R² with a CI excluding 0, and I1/I3 do not regress.
+  Otherwise scaling stops and the result is reported.
+
+## Reporting
+
+Every evaluation writes `results/pretrain_<round>.md` with:
+- P/I/E tables per arm;
+- the decision-rule verdicts;
+- per-concept and per-rule coverage;
+- the arms' compute (GPU-hours, steps).
+
+Failed criteria are reported as failures, not omitted.

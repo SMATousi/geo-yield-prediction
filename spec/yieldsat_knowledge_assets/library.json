@@ -1,656 +1,656 @@
 {
-  "concepts": [
-    {
-      "channels": [
-        "total_prec"
-      ],
-      "description": "A crop-stage interval with precipitation sufficient to ease water limitation relative to a reviewed local seasonal reference.",
-      "family": "weather",
-      "id": "rain_supported",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "weather",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "irrigation or water balance unknown",
-        "first weather interval",
-        "reference or interval conversion unreviewed"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "B04",
-        "B08"
-      ],
-      "description": "An increase in canopy vegetation optical response during the reviewed crop growth window, supported by the dated red and near-infrared series.",
-      "family": "optical",
-      "id": "optical_growth",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "series",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "cloud/shadow contamination",
-        "fewer than two valid dates",
-        "crop stage not established"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "temp_mean",
-        "temp_max",
-        "temp_min"
-      ],
-      "description": "A warmer observed temperature regime relative to a reviewed crop- and season-specific reference, within that crop's non-stress range.",
-      "family": "weather",
-      "id": "warm_regime",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "weather",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "Kelvin-day interval semantics unverified",
-        "crop thermal range unknown"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A"
-      ],
-      "description": "A red-edge and near-infrared spectral state consistent with active vegetation in the reviewed crop stage.",
-      "family": "optical",
-      "id": "active_spectral_state",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "spec",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "cloud/shadow contamination",
-        "band scaling uncertain",
-        "phenological context missing"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "clay_0-5",
-        "clay_5-15",
-        "clay_15-30"
-      ],
-      "description": "Relatively clay-rich mineral soil in the upper 0\u201330 cm against a reviewed local soil reference.",
-      "family": "soil",
-      "id": "clay_rich_surface",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "soil",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "soil scale/depth mapping unverified",
-        "reference unknown"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "B04",
-        "B08",
-        "B11",
-        "B12"
-      ],
-      "description": "A relatively persistent canopy optical signal through a reviewed dry interval.",
-      "family": "optical",
-      "id": "persistent_canopy",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "series",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "dry interval not established",
-        "irrigation/management unknown",
-        "too few valid optical dates"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "dem"
-      ],
-      "description": "A relatively low elevation position within a verified local landscape reference, not globally low altitude.",
-      "family": "terrain",
-      "id": "low_elevation_position",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "dem",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "landscape reference unavailable",
-        "DEM units or datum unverified"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "clay_0-5",
-        "silt_0-5",
-        "sand_0-5",
-        "clay_5-15",
-        "clay_15-30"
-      ],
-      "description": "Relatively fine-textured surface soil in the reviewed 0\u201330 cm depth range.",
-      "family": "soil",
-      "id": "fine_surface_texture",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "soil",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "depth aggregation unreviewed",
-        "soil interpolation dominates local variation"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "aspect"
-      ],
-      "description": "A terrain aspect facing the local pole in a non-flat, correctly geolocated landscape.",
-      "family": "terrain",
-      "id": "pole_facing_aspect",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "terrain",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "aspect convention unverified",
-        "flat terrain or slope validity unknown",
-        "hemisphere not established"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "temp_mean"
-      ],
-      "description": "A relatively cool observed temperature regime in the reviewed seasonal reference.",
-      "family": "weather",
-      "id": "cool_regime",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "weather",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "interval conversion unverified",
-        "local reference unavailable"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "soc_0-5",
-        "soc_5-15",
-        "soc_15-30"
-      ],
-      "description": "Relatively organic-carbon-rich mineral topsoil in the reviewed upper 0\u201330 cm profile.",
-      "family": "soil",
-      "id": "organic_surface",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "soil",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "soil units or reference unverified",
-        "organic/mineral soil context unknown"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    },
-    {
-      "channels": [
-        "B08",
-        "B8A",
-        "B11",
-        "B12"
-      ],
-      "description": "A near-infrared/SWIR state consistent with relatively moist vegetation under a reviewed crop-specific interpretation.",
-      "family": "optical",
-      "id": "spectral_moisture_state",
-      "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": {
-        "activation": "only expert-approved strata",
-        "countries": [
-          "Argentina",
-          "Brazil",
-          "Germany",
-          "Uruguay"
-        ],
-        "crops": [
-          "corn",
-          "rapeseed",
-          "soybean",
-          "wheat"
-        ]
-      },
-      "stream": "spec",
-      "support": "one observed 64x64 tile; coarse source support retained",
-      "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
-      "unknown_if": [
-        "soil background/clouds confound reflectance",
-        "interpretation unvalidated"
-      ],
-      "window": "declared eligible observation window; retrospective or days after seeding"
-    }
-  ],
-  "generator": {
-    "external_api_used": false,
-    "kind": "assistant-authored seed drafts"
+ "concepts": [
+  {
+   "channels": [
+    "total_prec"
+   ],
+   "description": "A crop-stage interval with precipitation sufficient to ease water limitation relative to a reviewed local seasonal reference.",
+   "family": "weather",
+   "id": "rain_supported",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "weather",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "irrigation or water balance unknown",
+    "first weather interval",
+    "reference or interval conversion unreviewed"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
   },
-  "rules": [
-    {
-      "concept_a": "rain_supported",
-      "concept_b": "optical_growth",
-      "direction": "a_to_b",
-      "id": "ys_r01",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "Sufficient precipitation may support a later canopy response during active growth when water limitation and other required conditions are established.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    },
-    {
-      "concept_a": "warm_regime",
-      "concept_b": "active_spectral_state",
-      "direction": "a_to_b",
-      "id": "ys_r02",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "Within a crop-specific non-stress thermal range, warmer growing conditions may accompany an active vegetation spectral state.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    },
-    {
-      "concept_a": "clay_rich_surface",
-      "concept_b": "persistent_canopy",
-      "direction": "a_to_b",
-      "id": "ys_r03",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "Clay-rich soil may be associated with canopy persistence during limited rainfall under an appropriate soil and management context; waterlogging and rooting constraints can reverse the association.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    },
-    {
-      "concept_a": "low_elevation_position",
-      "concept_b": "fine_surface_texture",
-      "direction": "a_to_b",
-      "id": "ys_r04",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "In a verified depositional landscape, relatively low positions may be associated with finer surface texture; this is not a universal altitude\u2013soil rule.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    },
-    {
-      "concept_a": "pole_facing_aspect",
-      "concept_b": "cool_regime",
-      "direction": "a_to_b",
-      "id": "ys_r05",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "At matching local spatial support, pole-facing terrain may have a cooler thermal regime; field-centroid ERA5 may be unable to resolve this and must then abstain.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    },
-    {
-      "concept_a": "organic_surface",
-      "concept_b": "spectral_moisture_state",
-      "direction": "a_to_b",
-      "id": "ys_r06",
-      "minimum_presence": 0.5,
-      "qualifications": [
-        "association only; not causation",
-        "expert review of region/crop and numeric interpretation required"
-      ],
-      "relation_type": "qualified association",
-      "required_context": [
-        "reviewed physical units and source support",
-        "observable crop/season conditions",
-        "all statement-specific qualifications supported"
-      ],
-      "review": {
-        "evidence": null,
-        "reviewed_at": null,
-        "reviewer": null,
-        "status": "draft"
-      },
-      "scope": "only expert-approved geography/crop/time strata; no universal claim",
-      "scorer": "directed_displacement_v1",
-      "statement": "In a reviewed mineral-soil and crop context, organic-carbon-rich surface soil may accompany a moist vegetation spectral state; management and other water controls remain necessary qualifications.",
-      "window": "same declared window for both endpoints; any within-window lag requires observable dates"
-    }
-  ],
-  "schema_version": 1,
-  "version": "yieldsat_image_draft_2026-10-02"
+  {
+   "channels": [
+    "B04",
+    "B08"
+   ],
+   "description": "An increase in canopy vegetation optical response during the reviewed crop growth window, supported by the dated red and near-infrared series.",
+   "family": "optical",
+   "id": "optical_growth",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "series",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "cloud/shadow contamination",
+    "fewer than two valid dates",
+    "crop stage not established"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "temp_mean",
+    "temp_max",
+    "temp_min"
+   ],
+   "description": "A warmer observed temperature regime relative to a reviewed crop- and season-specific reference, within that crop's non-stress range.",
+   "family": "weather",
+   "id": "warm_regime",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "weather",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "Kelvin-day interval semantics unverified",
+    "crop thermal range unknown"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B8A"
+   ],
+   "description": "A red-edge and near-infrared spectral state consistent with active vegetation in the reviewed crop stage.",
+   "family": "optical",
+   "id": "active_spectral_state",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "spec",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "cloud/shadow contamination",
+    "band scaling uncertain",
+    "phenological context missing"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "clay_0-5",
+    "clay_5-15",
+    "clay_15-30"
+   ],
+   "description": "Relatively clay-rich mineral soil in the upper 0\u201330 cm against a reviewed local soil reference.",
+   "family": "soil",
+   "id": "clay_rich_surface",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "soil",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "soil scale/depth mapping unverified",
+    "reference unknown"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "B04",
+    "B08",
+    "B11",
+    "B12"
+   ],
+   "description": "A relatively persistent canopy optical signal through a reviewed dry interval.",
+   "family": "optical",
+   "id": "persistent_canopy",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "series",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "dry interval not established",
+    "irrigation/management unknown",
+    "too few valid optical dates"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "dem"
+   ],
+   "description": "A relatively low elevation position within a verified local landscape reference, not globally low altitude.",
+   "family": "terrain",
+   "id": "low_elevation_position",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "dem",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "landscape reference unavailable",
+    "DEM units or datum unverified"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "clay_0-5",
+    "silt_0-5",
+    "sand_0-5",
+    "clay_5-15",
+    "clay_15-30"
+   ],
+   "description": "Relatively fine-textured surface soil in the reviewed 0\u201330 cm depth range.",
+   "family": "soil",
+   "id": "fine_surface_texture",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "soil",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "depth aggregation unreviewed",
+    "soil interpolation dominates local variation"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "aspect"
+   ],
+   "description": "A terrain aspect facing the local pole in a non-flat, correctly geolocated landscape.",
+   "family": "terrain",
+   "id": "pole_facing_aspect",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "terrain",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "aspect convention unverified",
+    "flat terrain or slope validity unknown",
+    "hemisphere not established"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "temp_mean"
+   ],
+   "description": "A relatively cool observed temperature regime in the reviewed seasonal reference.",
+   "family": "weather",
+   "id": "cool_regime",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "weather",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "interval conversion unverified",
+    "local reference unavailable"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "soc_0-5",
+    "soc_5-15",
+    "soc_15-30"
+   ],
+   "description": "Relatively organic-carbon-rich mineral topsoil in the reviewed upper 0\u201330 cm profile.",
+   "family": "soil",
+   "id": "organic_surface",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "soil",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "soil units or reference unverified",
+    "organic/mineral soil context unknown"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  },
+  {
+   "channels": [
+    "B08",
+    "B8A",
+    "B11",
+    "B12"
+   ],
+   "description": "A near-infrared/SWIR state consistent with relatively moist vegetation under a reviewed crop-specific interpretation.",
+   "family": "optical",
+   "id": "spectral_moisture_state",
+   "reference_population": "must be defined and fitted on this fold training geography before numeric activation",
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": {
+    "activation": "only expert-approved strata",
+    "countries": [
+     "Argentina",
+     "Brazil",
+     "Germany",
+     "Uruguay"
+    ],
+    "crops": [
+     "corn",
+     "rapeseed",
+     "soybean",
+     "wheat"
+    ]
+   },
+   "stream": "spec",
+   "support": "one observed 64x64 tile; coarse source support retained",
+   "units_provenance": "dataset/yieldsat_schema.py PROVENANCE; physical units are not presumed audited",
+   "unknown_if": [
+    "soil background/clouds confound reflectance",
+    "interpretation unvalidated"
+   ],
+   "window": "declared eligible observation window; retrospective or days after seeding"
+  }
+ ],
+ "generator": {
+  "external_api_used": false,
+  "kind": "assistant-authored seed drafts"
+ },
+ "rules": [
+  {
+   "concept_a": "rain_supported",
+   "concept_b": "optical_growth",
+   "direction": "a_to_b",
+   "id": "ys_r01",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "Sufficient precipitation may support a later canopy response during active growth when water limitation and other required conditions are established.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  },
+  {
+   "concept_a": "warm_regime",
+   "concept_b": "active_spectral_state",
+   "direction": "a_to_b",
+   "id": "ys_r02",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "Within a crop-specific non-stress thermal range, warmer growing conditions may accompany an active vegetation spectral state.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  },
+  {
+   "concept_a": "clay_rich_surface",
+   "concept_b": "persistent_canopy",
+   "direction": "a_to_b",
+   "id": "ys_r03",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "Clay-rich soil may be associated with canopy persistence during limited rainfall under an appropriate soil and management context; waterlogging and rooting constraints can reverse the association.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  },
+  {
+   "concept_a": "low_elevation_position",
+   "concept_b": "fine_surface_texture",
+   "direction": "a_to_b",
+   "id": "ys_r04",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "In a verified depositional landscape, relatively low positions may be associated with finer surface texture; this is not a universal altitude\u2013soil rule.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  },
+  {
+   "concept_a": "pole_facing_aspect",
+   "concept_b": "cool_regime",
+   "direction": "a_to_b",
+   "id": "ys_r05",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "At matching local spatial support, pole-facing terrain may have a cooler thermal regime; field-centroid ERA5 may be unable to resolve this and must then abstain.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  },
+  {
+   "concept_a": "organic_surface",
+   "concept_b": "spectral_moisture_state",
+   "direction": "a_to_b",
+   "id": "ys_r06",
+   "minimum_presence": 0.5,
+   "qualifications": [
+    "association only; not causation",
+    "expert review of region/crop and numeric interpretation required"
+   ],
+   "relation_type": "qualified association",
+   "required_context": [
+    "reviewed physical units and source support",
+    "observable crop/season conditions",
+    "all statement-specific qualifications supported"
+   ],
+   "review": {
+    "evidence": "All 6 relationships and their 12 concepts declared verified by the project lead on 2026-10-04 for point-model knowledge pretraining with rule-based estimators (spec/yieldsat-point-knowledge-pretraining.md \u00a73).",
+    "reviewed_at": "2026-10-04",
+    "reviewer": "project lead (user decision, recorded in spec/yieldsat-point-knowledge-pretraining.md K1)",
+    "status": "approved"
+   },
+   "scope": "only expert-approved geography/crop/time strata; no universal claim",
+   "scorer": "directed_displacement_v1",
+   "statement": "In a reviewed mineral-soil and crop context, organic-carbon-rich surface soil may accompany a moist vegetation spectral state; management and other water controls remain necessary qualifications.",
+   "window": "same declared window for both endpoints; any within-window lag requires observable dates"
+  }
+ ],
+ "schema_version": 1,
+ "version": "yieldsat_image_draft_2026-10-02"
 }
