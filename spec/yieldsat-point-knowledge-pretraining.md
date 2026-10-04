@@ -411,3 +411,6 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   help clear the utilization flag; its runs used the corrupt v2 statistics).
   - The 21 completed jobs were cleared as well.
   - The `pk_dev1r` admission retry keeps running every 10 min.
+- 2026-10-04 — **Utilization flag cleared; `pk_dev1r` pool a submitted**
+  (16 × A10, 5 CPU / 32 Gi). All 16 pods are running. Pool b is added once
+  pretraining checkpoints exist.
