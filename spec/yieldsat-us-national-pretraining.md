@@ -42,7 +42,7 @@ locally retained points are not automatically included in the 100M budget.
 | D05 | Balanced climate-region and crop-type sampling, with weights | Confirmed |
 | D06 | Points, not stored images; same 12 S2 bands as YieldSAT | Confirmed |
 | D07 | 24 growing-season slots with aligned weather; versioned crop- and region-specific calendars; harvest-year sample identity | Confirmed |
-| D08 | Exclude evaluation regions across all years | Confirmed; region list/boundaries pending |
+| D08 | Exclude evaluation regions across all years | Exclusion policy confirmed; region list/boundaries intentionally undecided by user |
 | D09 | Storage, acquisition budget, compute environment and deadline | Intentionally blank, at user request |
 
 Additional proposed defaults, open to revision: annual CDL crop eligibility
@@ -295,8 +295,10 @@ do not make a point record an image dataset.
 ## Evaluation integrity and knowledge pretraining
 
 The user requires geographically excluded evaluation regions **across all years**.
-The exact region/dataset list and boundary files remain unresolved. Do not start
-national sampling without that exclusion manifest. Exclude all benchmark regions
+The user has explicitly left the exact region/dataset list and boundary files
+undecided. Do not infer exclusions from the local corpus or substitute arbitrary
+regions. This remains an unresolved prerequisite: do not start national sampling
+without the exclusion manifest. Exclude all benchmark regions
 and required source/context buffers, including earlier-year data used in winter
 crop windows. Assign each remaining location permanently to a development or
 pretraining split. Define a separate development-region allowance outside the
