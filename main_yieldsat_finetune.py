@@ -9,7 +9,8 @@
 # --mode pretrain runs yield-free point-mode pretraining (masked observation
 # + last-valid forecast) on the *training* partition only and saves a sensor
 # checkpoint; --init_sensor_ckpt loads one (encoders + fusion) before
-# fine-tuning. Prerequisites (index, cache, geometry, split) come from
+# fine-tuning. --knowledge adds concept grounding + relational distillation
+# (spec/yieldsat-point-knowledge-pretraining.md). Prerequisites (index, cache, geometry, split) come from
 # yieldsat_prepare.py.
 # --------------------------------------------------------
 
@@ -48,6 +49,8 @@ def get_args_parser():
     p.add_argument('--split', required=True, help='split manifest name under artifact_root/splits')
     p.add_argument('--mode', default='finetune', choices=['finetune', 'pretrain'])
     p.add_argument('--backend', default='cache', choices=['cache', 'h5'])
+    p.add_argument('--skip_source_check', action='store_true',
+                   help='cache backend only: do not fingerprint the source NetCDF (local smoke without it)')
     p.add_argument('--streams', nargs='+', default=list(STREAMS), choices=list(STREAMS))
     p.add_argument('--cutoff_mode', default='before_harvest', choices=CUTOFF_MODES)
     p.add_argument('--cutoff_days', type=int, default=30)
@@ -84,6 +87,16 @@ def get_args_parser():
     p.add_argument('--early_depth', type=int, default=3)
     p.add_argument('--neighbourhood', action='store_true',
                    help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
+    # knowledge pretraining (spec/yieldsat-point-knowledge-pretraining.md)
+    p.add_argument('--knowledge', action='store_true',
+                   help='pretrain mode: add concept grounding + relational distillation')
+    p.add_argument('--knowledge_text_dir', default='',
+                   help='frozen CLIP text vectors (default <artifact_root>/knowledge/text_clip_b32)')
+    p.add_argument('--knowledge_control', default='none', choices=['none', 'shuffled', 'notext', 'ssl_long', 'random_targets'])
+    p.add_argument('--ground_weight', type=float, default=1.0)
+    p.add_argument('--relation_weight', type=float, default=1.0)
+    p.add_argument('--pretrain_val_batches', type=int, default=20,
+                   help='pretrain mode: validation batches per epoch (success criterion P1)')
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
@@ -148,6 +161,74 @@ def _to(batch, device):
             out[k] = {kk: vv.to(device, non_blocking=True) for kk, vv in v.items()}
         else:
             out[k] = v.to(device, non_blocking=True)
+    return out
+
+
+def build_knowledge_pretrainer(args, model, parts, train_ds, val_ds, out_dir):
+    """Fit the fold-train concept reference, attach targets to the datasets
+    and wrap the model in a KnowledgePointPretrainer."""
+    from yieldsat_build_knowledge import load_raw
+    from yieldsat_knowledge_point import (KnowledgePointPretrainer, KnowledgeReference, attach_knowledge,
+                                          load_library, load_text_vectors)
+    lib = load_library()
+    text_dir = args.knowledge_text_dir or str(Path(args.artifact_root) / 'knowledge' / 'text_clip_b32')
+    text, text_manifest = load_text_vectors(text_dir, lib)
+    raw = {c: load_raw(args.artifact_root, c) for c in train_ds.countries}
+    train_rows = {c: train_ds.row[train_ds.country_of == i] for i, c in enumerate(train_ds.countries)}
+    ref = KnowledgeReference.fit({c: (raw[c], r) for c, r in train_rows.items() if len(r)}, lib)
+    (out_dir / 'knowledge_reference.json').write_text(json.dumps(ref.to_json()))
+    attach_knowledge(train_ds, ref, args.artifact_root, raw)
+    if val_ds is not None:
+        attach_knowledge(val_ds, ref, args.artifact_root, raw)
+    control = None if args.knowledge_control == 'none' else args.knowledge_control
+    if control == 'random_targets':
+        from yieldsat_knowledge_point import randomize_targets
+        randomize_targets(train_ds, args.seed)
+        if val_ds is not None:
+            randomize_targets(val_ds, args.seed)
+    pt = KnowledgePointPretrainer(model, text, lib, control=control, ground_weight=args.ground_weight,
+                                  relation_weight=args.relation_weight, shuffle_seed=args.seed)
+    kt, kg = train_ds.knowledge['concept_target'], train_ds.knowledge['rule_gate']
+    seasons = train_ds.season_of
+    coverage = {}
+    for i, cid in enumerate(ref.concepts):
+        known = np.isfinite(kt[:, i])
+        coverage[cid] = float(len(np.unique(seasons[known])) / max(1, len(train_ds.seasons)))
+    rules = {}
+    for j, r in enumerate(ref.rules):
+        ia, ib = ref.concepts.index(r['concept_a']), ref.concepts.index(r['concept_b'])
+        ok = (kg[:, j] > 0) & (kt[:, ia] >= r['minimum_presence']) & (kt[:, ib] >= r['minimum_presence'])
+        rules[r['id']] = {'gate_open_seasons': int(len(np.unique(seasons[kg[:, j] > 0]))),
+                          'applicable_seasons': int(len(np.unique(seasons[ok])))}
+    info = {'control': args.knowledge_control, 'text': {k: text_manifest[k] for k in
+                                                         ('model', 'revision', 'vectors_hash', 'library_hash')},
+            'concept_season_coverage': coverage, 'rules': rules,
+            'reference_seasons': ref.meta['reference_seasons']}
+    print('knowledge:', json.dumps({'coverage': coverage, 'rules': rules}), flush=True)
+    return pt, info
+
+
+@torch.no_grad()
+def pretrain_validation(trainable, ds, args, device, amp):
+    """Mean pretraining losses over fixed validation batches (masking is random
+    but seeded, so epochs are comparable)."""
+    trainable.eval()
+    sampler = FieldBalancedBatchSampler(ds.season_ranges, args.batch_size, args.pretrain_val_batches,
+                                        alpha=args.field_alpha, block_size=1, seed=args.seed + 7919)
+    state = torch.random.get_rng_state()
+    torch.manual_seed(args.seed + 7919)
+    tot, comps = [], {}
+    for batch in _loader(ds, sampler, args.num_workers):
+        b = _to(batch, device)
+        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp):
+            loss, parts = trainable(b)
+        tot.append(float(loss))
+        for k, v in parts.items():
+            comps.setdefault(k, []).append(float(v))
+    torch.random.set_rng_state(state)
+    trainable.train()
+    out = {'val_loss': float(np.mean(tot))}
+    out.update({'val_' + k: float(np.mean(v)) for k, v in comps.items()})
     return out
 
 
@@ -262,7 +343,7 @@ def main(args):
     if args.data_contract != CONTRACT_KEY:
         raise SystemExit('{} ingestion is not implemented; this entry point serves {}'.format(
             args.data_contract, CONTRACT_KEY))
-    if not args.source_root or not args.artifact_root:
+    if (not args.source_root and not args.skip_source_check) or not args.artifact_root:
         raise SystemExit('--source_root and --artifact_root are required')
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
@@ -271,7 +352,10 @@ def main(args):
     out_dir.mkdir(parents=True, exist_ok=True)
     t_start = time.time()
 
-    table = load_field_table(args.artifact_root, args.source_root, args.countries)
+    check = not args.skip_source_check
+    if not check and args.backend != 'cache':
+        raise SystemExit('--skip_source_check needs the cache backend')
+    table = load_field_table(args.artifact_root, args.source_root, args.countries, check_source=check)
     split = load_split(args.artifact_root, args.split, fingerprints=table['fingerprints'])
     if not set(args.countries) <= set(split['countries']):
         raise SystemExit('split {} covers {}, not the requested {}'.format(
@@ -293,7 +377,7 @@ def main(args):
         parts['train'] = [parts['train'][i] for i in sorted(sel)]
 
     # train-only normalization
-    targets = {c: load_country_index(args.artifact_root, args.source_root, c)['rows']['target']
+    targets = {c: load_country_index(args.artifact_root, args.source_root, c, check)['rows']['target']
                for c in args.countries}
     train_fields = [(f['country'], f['field_code'], targets[f['country']][f['row_start']:f['row_end']])
                     for f in parts['train']]
@@ -307,6 +391,7 @@ def main(args):
     common = dict(streams=args.streams, backend=args.backend, cutoff_mode=args.cutoff_mode,
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
                   aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
+                  check_source=check,
                   neighbourhood_root=str(Path(args.artifact_root) / 'neighbourhood') if args.neighbourhood else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
@@ -340,7 +425,14 @@ def main(args):
             torch.load(args.init_sensor_ckpt, map_location='cpu', weights_only=True),
             encoders_only=args.encoders_only_transfer)
         print('loaded sensor checkpoint:', transfer['loaded'], 'tensors')
-    trainable = YieldSATPointPretrainer(model).to(device) if args.mode == 'pretrain' else model
+    knowledge_ref = None
+    if args.mode == 'pretrain' and args.knowledge:
+        trainable, knowledge_ref = build_knowledge_pretrainer(args, model, parts, train_ds, val_ds, out_dir)
+        trainable = trainable.to(device)
+    elif args.mode == 'pretrain':
+        trainable = YieldSATPointPretrainer(model).to(device)
+    else:
+        trainable = model
     if args.optimizer == 'adam':
         opt = torch.optim.Adam(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     else:
@@ -364,7 +456,7 @@ def main(args):
         trainable.train()
         t0 = time.time()
         tl = time.time()
-        losses = []
+        losses, comps = [], {}
         for batch in _loader(train_ds, sampler, args.num_workers):
             data_time += time.time() - tl
             for g in opt.param_groups:
@@ -381,11 +473,17 @@ def main(args):
                 torch.nn.utils.clip_grad_norm_(trainable.parameters(), args.grad_clip)
             opt.step()
             losses.append(loss.item())
+            if args.mode == 'pretrain':
+                for k, v in parts_loss.items():
+                    comps.setdefault(k, []).append(float(v))
             samples_seen += batch['target'].shape[0]
             step += 1
             tl = time.time()
         rec = {'epoch': epoch, 'train_loss': float(np.mean(losses)), 'lr': lr_at(step - 1),
                'seconds': round(time.time() - t0, 1)}
+        rec.update({'train_' + k: float(np.mean(v)) for k, v in comps.items()})
+        if args.mode == 'pretrain' and val_ds is not None and args.pretrain_val_batches > 0:
+            rec.update(pretrain_validation(trainable, val_ds, args, device, amp))
         if args.mode == 'finetune' and val_ds is not None:
             p, y, s, _, _ = predict(model, val_ds, args, device)
             m = evaluate_predictions(p, y, s, val_ds.seasons)
@@ -425,8 +523,19 @@ def main(args):
         'io': {'train_samples': samples_seen, 'data_wait_seconds': round(data_time, 1),
                'samples_per_second': round(samples_seen / max(1e-6, sum(h['seconds'] for h in history)), 1)},
     }
+    if knowledge_ref is not None:
+        report['knowledge'] = knowledge_ref
     if args.mode == 'pretrain':
         torch.save(model.sensor_state_dict(), out_dir / 'sensor_checkpoint.pth')
+        # disposable pretraining heads (SSL decoders; knowledge projectors and
+        # prototypes), kept for the success-criteria diagnostics (I1, I2, I4)
+        heads = {k: v.detach().cpu() for k, v in trainable.state_dict().items()
+                 if not k.startswith(('model.', 'ssl.model.'))}
+        torch.save({'state_dict': heads, 'knowledge': bool(args.knowledge),
+                    'control': args.knowledge_control if args.knowledge else None,
+                    'permutation': (None if getattr(trainable, 'permutation', None) is None
+                                    else trainable.permutation.tolist())},
+                   out_dir / 'pretrainer_heads.pth')
     else:
         torch.save(model.sensor_state_dict(), out_dir / 'sensor_checkpoint_last.pth')
         if best is not None:

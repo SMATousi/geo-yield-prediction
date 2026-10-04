@@ -422,7 +422,7 @@ class YieldSATPointDataset(Dataset):
         target_valid = np.isfinite(target_raw)
         target = np.where(target_valid, (target_raw - y_mean) / y_std, 0.0).astype(np.float32)
         season = self.season_of[idx]
-        return {
+        out = {
             'inputs': inputs,
             'masks': masks,
             'available': available,
@@ -440,6 +440,13 @@ class YieldSATPointDataset(Dataset):
             'grid_row': torch.from_numpy(meta['grid_row']),
             'grid_col': torch.from_numpy(meta['grid_col']),
         }
+        # knowledge pretraining (yieldsat_knowledge_point.attach_knowledge): per-item
+        # concept soft targets (NaN = unknown) and rule gates
+        knowledge = getattr(self, 'knowledge', None)
+        if knowledge is not None:
+            out['concept_target'] = torch.from_numpy(knowledge['concept_target'][idx].astype(np.float32))
+            out['rule_gate'] = torch.from_numpy(knowledge['rule_gate'][idx].astype(np.float32))
+        return out
 
 
 def collate_point_batch(items):

@@ -55,15 +55,29 @@ within a declared stratum (`KnowledgeReference`, stored with each
 checkpoint). This implements "relative to a reviewed local reference" without
 fixed global thresholds.
 
-Units:
+Units (verified on the cache 2026-10-04, §9):
 - S2: L2A digital numbers / 10,000 = reflectance.
 - Weather: interval sums. Temperatures are Kelvin-day sums and precipitation
-  is metre sums. A slot's interval runs from the previous dated slot
-  (exclusive) to this slot (inclusive), so a daily mean = sum / interval
-  days. Each row's first dated slot has no interval and is excluded (point
-  contract).
+  is metre sums. A slot's interval is the **inclusive** span from the
+  previous dated slot to this one (dt + 1 days; the data contract's
+  provenance), so a daily mean = sum / (dt + 1). A 31-day slot measured
+  8,937 K-days = 288 K/day. Each row's first dated slot has no interval and
+  is excluded (point contract). Window statistics weight each interval by
+  its day overlap with the window. They are unknown when the dated intervals
+  cover < 50% of the window.
+- Soil: SoilGrids mapped units. Clay/silt/sand are g/kg (they sum to
+  ≈ 1,000). SOC is **dg/kg** (Germany 0–5 cm median 525 → 52.5 g/kg), so the
+  builder divides by 10.
+- Terrain: aspect in degrees. Slope's scale is unresolved (values
+  1e3–1e4), so it is used only through a country percentile. TWI is
+  missing for all of Germany and 67% of Argentina and is not used.
 - Season: seeding → harvest day of the row. Mid-season = 30–80% and late
   season = 60–100% of that window.
+- **Input cutoff:** estimators read only slots dated ≤ harvest − 30 days,
+  the same inputs the model sees under the fine-tuning default
+  (`--cutoff_mode before_harvest --cutoff_days 30`). No concept is grounded
+  in data the model never receives. Late season is therefore 60% →
+  cutoff.
 
 | Concept | Stream | Raw index | Reference stratum | Soft target |
 |---|---|---|---|---|
@@ -106,9 +120,14 @@ Units:
 
 | Control | Change | Tests |
 |---|---|---|
-| `shuffled` | Concept→text assignments permuted (a fixed derangement) and relation directions recomputed from the shuffled prototypes; same losses and compute | knowledge content vs regularization |
+| `shuffled` | Concept→text assignments permuted (a fixed derangement) and relation directions recomputed from the shuffled prototypes; same losses and compute | role of the language prior (the text semantics) |
 | `notext` | Learned, randomly initialized concept prototypes (trainable) instead of frozen CLIP vectors | role of the language prior |
-| `ssl_long` | SSL only, with as many extra steps as the knowledge losses add | compute-matched |
+| `ssl_long` | SSL only, with 1.55× the steps (knowledge steps measured 7.6 s vs 4.9 s per 150 steps on a 3090) | compute-matched |
+| `random_targets` | Every field season receives the concept targets and rule gates of another season of the same country × crop (fixed derangement; rows matched by position); real text | **knowledge content**: same supervision, marginals and rule structure, no link to the season's inputs |
+
+The smoke evidence for `random_targets` is in §9 and in the criteria's
+revision log. With learnable projectors, a text shuffle is just as learnable
+as the real assignment, so `shuffled` cannot test the knowledge content.
 
 ## 5. Pretraining corpus and units (K4)
 
@@ -123,8 +142,9 @@ Units:
 | LORO | region *R* of a DEV pair's country | every season in *R*, all crops of that country |
 
 - Each DEV fine-tuning run starts from the checkpoint of its unit. That is
-  fewer pretraining runs than fine-tuning runs (10 + ~8 + 29 units vs 94
-  runs per arm on DEV).
+  fewer pretraining runs than fine-tuning runs: **46 units** (10 CV10 +
+  9 LOYO years + 27 LORO regions) for the 94 DEV runs per arm.
+  `splits/pretrain_units_dev_s0.json` maps each DEV fold to its unit.
 - **Split manifests** for the units (`yieldsat_pretrain_units.py`):
   - the same contract and format as the fold manifests;
   - all four countries;
@@ -148,6 +168,7 @@ The same DEV subset, matrix and pooled metric as the improvement plan
 | A4 | SSL + knowledge, `shuffled` | from the A4 checkpoint |
 | A5 | SSL + knowledge, `notext` | from the A5 checkpoint |
 | A6 | `ssl_long` | from the A6 checkpoint |
+| A7 | SSL + knowledge, `random_targets` | from the A7 checkpoint |
 
 - **Label efficiency** (criterion E3): A0, A2 and A3 fine-tuned with 10% and
   25% of training seasons on the DEV CV10 folds.
@@ -172,13 +193,100 @@ The same DEV subset, matrix and pooled metric as the improvement plan
 
 ## 8. Open points
 
+- **ARG-W LORO folds split one province under two spellings.** The source
+  metadata spells some provinces two ways ("Buenos Aires" / "Buenos_Aires",
+  "Santa Fe" / "Santa_Fe"). The existing paper LORO folds treat them as
+  different regions: fold 0 holds out "Buenos Aires" while training on
+  "Buenos_Aires" fields of the same province, and likewise folds 4/5.
+  - Pretraining units merge the spellings (one unit per physical province),
+    so pretraining never sees the held-out province.
+  - The fine-tuning folds themselves are unchanged for now, to stay
+    comparable with all existing results. Merging them changes ARG-W LORO
+    from 6 to 4 folds. **Decision for the project lead.**
+- **CLIP text vectors are anisotropic:** pairwise concept cosine 0.62–0.95
+  (mean 0.77). Concept discrimination lives in the residual directions;
+  centering the prototypes is an option if grounding saturates.
+- **Relational loss with linear projectors** can be partly satisfied by a
+  constant offset between stream projections (A7 alignment 0.79–1.00).
+  Criterion I2 is therefore relative to A7. If A3 ≯ A7, a contrastive
+  relational variant (applicable vs non-applicable pairs) is the next
+  option.
 - The non-stress temperature limits and the organic-soil limit are informed
   defaults from crop physiology and soil classification; the project lead
   may revise them.
-- SoilGrids units in the YieldSAT cache are verified during PK-02 before
-  limits apply (g/kg vs dg/kg).
 - `ys_r05` stays abstaining until a within-field thermal source exists.
 
 ## 9. Progress log
 
 - 2026-10-04 — Specified.
+- 2026-10-04 — **PK-02 done.** `yieldsat_build_knowledge.py`:
+  - per-row raw indices, from pure functions with unit tests (weather
+    interval overlap and the first-slot exclusion, low-coverage unknowns, S2
+    windows, soil depth weighting and units, within-field DEM rank,
+    hemisphere-aware aspect, input cutoff);
+  - built for all 4 countries locally in ~1 min:
+    `<artifact_root>/knowledge/<Country>/concept_raw.npz` (format
+    `yieldsat_concept_raw_v2`, cutoff 30 d) plus `concept_raw_summary.json`.
+  - Argentina sanity values (medians): mid-season precipitation 200 mm,
+    mean temperature 22.7 °C, max temperature 28.8 °C, NDVI rise 0.67, SOC
+    0–30 cm 15.7 g/kg, field relief 4.0 m. Missing values < 2.5% for every
+    index.
+- 2026-10-04 — **PK-03 done.** `yieldsat_knowledge_point.py`:
+  - `KnowledgeReference`: fold-train weighted percentile tables (each field
+    season counts once), mid-rank ties, strata with < 20 seasons → unknown;
+    serialized with each run;
+  - the gates of §3;
+  - `attach_knowledge`;
+  - `KnowledgePointPretrainer`: SSL + grounding + relation on the per-stream
+    summary embeddings, per-field-season averaging, controls
+    shuffled/notext/ssl_long/random_targets.
+  - Tests: gradients reach every stream encoder; unknown targets, closed
+    gates, sub-threshold presence and absent streams contribute nothing;
+    derangement; season averaging; serialization.
+- 2026-10-04 — **PK-04 done.** CLIP text vectors:
+  - `openai/clip-vit-base-patch32` at commit
+    `3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268` (official repo; only
+    `.bin` weights). Built with `yieldsat_knowledge/text_cache.py` in a
+    throwaway CPU env with torch 2.14, because transformers refuses `.bin`
+    loading under torch < 2.6 (CVE-2025-32434). The project images have
+    torch 2.5.1.
+  - Output: `<artifact_root>/knowledge/text_clip_b32/` (512-d,
+    `vectors_hash` 2df53f2e…, `library_hash` 99681a5c…). The trainer
+    verifies both hashes and refuses mock vectors (`load_text_vectors`).
+- 2026-10-04 — **PK-05 done.** `yieldsat_pretrain_units.py`:
+  - 46 unit manifests (`pretrain_unit_<unit>_s0`) and the fold → unit index;
+  - every unit passes `check_unit` (no mapped fold test season and no
+    held-out year/region in train/val; every season assigned exactly once);
+  - a leak test covers both failure modes.
+  - Units train on 1,584–2,018 seasons, excluding 1–410.
+  - Found the ARG-W province-spelling issue (§8).
+- 2026-10-04 — **PK-06 done.** `main_yieldsat_finetune.py --mode pretrain --knowledge --knowledge_control …`:
+  - fits the reference on the unit's training rows, attaches targets, logs
+    coverage and rule applicability, and runs a per-epoch pretraining
+    validation loss (criterion P1);
+  - saves `sensor_checkpoint.pth`, `knowledge_reference.json` and
+    `pretrainer_heads.pth`;
+  - `--skip_source_check` (cache backend) allows local runs without the
+    source NetCDF.
+  - Local smoke on unit `cv_k00` (all 4 countries, 300 steps):
+    - coverage ≥ 89% of training seasons for every concept;
+    - applicable seasons per active rule: r01 612, r02 806, r03 479,
+      r04 1,206, r06 1,271; r05 0 by design;
+    - transfer → fine-tune GER-R fold 0 loaded 153 tensors and completed.
+    - All five pretraining variants (A2, A3, shuffled, notext, ssl_long) ran.
+- 2026-10-04 — **PK-07 done.** `yieldsat_pretrain_diagnostics.py` computes
+  P2, I1, I2 (with per-season values for pairing, and at initialization),
+  I3 and I4 on the unit's excluded seasons. Smoke results (300 steps; not
+  evidence about the method):
+
+  | Arm | I1 AUROC (12 concepts) | I2 alignment (5 active rules) |
+  |---|---|---|
+  | A3 | 0.58–0.98 (11 of 12 ≥ 0.80; low-elevation 0.58) | 0.85–0.98 |
+  | shuffled | 0.58–0.99 | 0.83–0.98 |
+  | random_targets | 0.45–0.66, except fine texture 0.88 (shared 250 m soil across seasons of a ground) | 0.79–1.00 |
+
+  - Consequences:
+    - the A7 `random_targets` control was added;
+    - the criteria were revised (I1/I2/E2 vs A7; new E2b for the language
+      prior; P2 relative to initialization; see the criteria's revision log).
+  - P2 passes for every stream under A2 and A3.
