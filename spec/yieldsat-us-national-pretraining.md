@@ -41,7 +41,7 @@ locally retained points are not automatically included in the 100M budget.
 | D04 | Hybrid fraction | Proposed: nominal 10M shared + annual replenishment to 20M |
 | D05 | Balanced climate-region and crop-type sampling, with weights | Confirmed |
 | D06 | Points, not stored images; same 12 S2 bands as YieldSAT | Confirmed |
-| D07 | 24 growing-season sensor slots with aligned weather | Confirmed; season-window definition pending |
+| D07 | 24 growing-season slots with aligned weather; versioned crop- and region-specific calendars; harvest-year sample identity | Confirmed |
 | D08 | Exclude evaluation regions across all years | Confirmed; region list/boundaries pending |
 | D09 | Storage, acquisition budget, compute environment and deadline | Intentionally blank, at user request |
 
@@ -244,13 +244,12 @@ point histories and stored image patches are not required deliverables. Temporar
 source staging and reusable native-cell daily weather caches may support production;
 these are not extra point samples or a promise of a permanent full-time archive.
 
-The growing-season definition is still awaiting the user's choice. Recommended:
-versioned crop-group/region calendars, with the sample year interpreted as harvest
-year. This avoids imposing a summer-only window on winter wheat or a single cycle
+The confirmed growing-season definition uses **versioned crop- and region-specific
+calendars**, with the sample year interpreted as **harvest year**. This avoids imposing a summer-only window on winter wheat or a single cycle
 on double-cropped areas. A 2021 winter-crop sample may legitimately need autumn
 2020 observations; those observations do not create a sixth sample year.
 
-Whichever definition is chosen, record `season_year`, `season_start`, `season_end`,
+For every sample, record `season_year`, `season_start`, `season_end`,
 calendar source/version, crop/calendar group, confidence and fallback reason.
 Dates are calendar estimates, not invented observed planting/harvest dates.
 Define windows for perennials, hay, fallow and double crops explicitly. Crop
@@ -386,7 +385,7 @@ launch unbounded pointwise calls.
 
 | Task | Work and deliverable | Acceptance |
 |---|---|---|
-| NP-00 | Resolve remaining sampling/calendar/exclusion choices and freeze the release charter | Confirmed year/count scope, selection policy, modalities, evaluation and resource limits |
+| NP-00 | Resolve the hybrid fraction and evaluation boundaries; pin calendar products/mappings and freeze the release charter | Confirmed year/count scope, selection policy, modalities, evaluation and resource limits |
 | NP-01 | Audit source products and license/access paths by year/region | Versioned coverage matrix; required-source gaps, auth needs and unit/calendar tests documented |
 | NP-02 | Build national annual cropland frames and spatial exclusions | Native metadata pinned; zone-edge deduplication and class masks validated; no yield-dependent selection |
 | NP-03 | Implement hybrid, stratified deterministic sampling and reserve queues | Quota sums 20M/year; feasible caps; reproducibility, cohort eligibility and replacement accounting |
