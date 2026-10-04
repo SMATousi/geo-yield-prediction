@@ -401,3 +401,9 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     the 12 CPU / 40 Gi requests were mostly unused. No new pod can be
     created, so pk_dev1 keeps running (deleting it first would leave nothing
     running) until a pk_dev1r submission is admitted.
+- 2026-10-04 — **v3 statistics on the PVC.** Argentina curvature over all
+  fields: mean 0.003, std 0.418; the corrupt season has 0 valid cells. The
+  `pk_dev1r` plan is written (560 runs, ≈ 12.7 h on 16 GPUs).
+  - Submission is still refused by the utilization flag.
+  - An automatic retry runs every 10 min. Once pool a is admitted and ≥ 4 of
+    its pods run, the old `pk_dev1` job is deleted.
