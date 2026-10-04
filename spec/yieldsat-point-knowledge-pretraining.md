@@ -407,3 +407,7 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - Submission is still refused by the utilization flag.
   - An automatic retry runs every 10 min. Once pool a is admitted and ≥ 4 of
     its pods run, the old `pk_dev1` job is deleted.
+- 2026-10-04 — **Old `pk_dev1` job deleted** (project lead's decision, to
+  help clear the utilization flag; its runs used the corrupt v2 statistics).
+  - The 21 completed jobs were cleared as well.
+  - The `pk_dev1r` admission retry keeps running every 10 min.
