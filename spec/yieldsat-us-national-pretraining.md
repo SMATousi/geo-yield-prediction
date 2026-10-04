@@ -620,3 +620,31 @@ availability; rejected candidates and reasons; storage and acquisition costs;
 source versions, growing-season calendars, units and uncertainty conventions; corruption/missing
 shard checks; and reproducible selection/build manifests. No national downloads
 or model-training changes are authorized by this design document alone.
+
+### F. Pilot build log
+
+- 2026-10-04 — **Builder implemented** (`yieldsat_us/`, `yieldsat_us_pilot.py`
+  with stages `frame` and `extract`).
+  - **frame:** national CDL per harvest year (downloaded, used, deleted),
+    10,230 m cluster cells in EPSG:5070, NOAA regions from Census state
+    boundaries, clusters drawn in proportion to stratum area, about 2,000
+    points per cluster (one 10 m cell per 100 m block, stratified by CDL
+    class). 2021: 26 clusters across all 9 regions, 51,991 points.
+  - **extract:**
+    - S2 from AWS Earth Search COGs, pixel-only. One cluster (2,000 points):
+      174 acquisitions scanned via SCL, 132 band reads, 23 s. Earth Search
+      values are already harmonized (`earthsearch:boa_offset_applied`; July
+      2023 blue p0.5 = 266 DN).
+    - Weather from Open-Meteo: ERA5-Land temperatures. Precipitation comes
+      from ERA5 at 0.25° because Open-Meteo serves no ERA5-Land
+      precipitation; ERA5-Land precipitation is the interpolated ERA5
+      forcing.
+    - SoilGrids mean layers (uncertainty optional) and NASADEM terrain in the
+      recovered YieldSAT conventions.
+    - About 2 min per cluster.
+  - **First cluster check** (2021 Minnesota corn) against YieldSAT ranges:
+    B04/B08 p50 900/2,778 DN; slope p50 2,795 (YieldSAT 2,545–2,665);
+    curvature p5–p95 ±0.39 (YieldSAT ≈ ±0.5); ≈ 287 K/day; 6 monthly dated
+    slots at positions 15–21.
+  - **Calendar:** no NASS QuickStats key is available, so all dates are
+    currently the fallback crop windows (`calendar_fallback`).
