@@ -386,3 +386,18 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     indices only for knowledge runs, and the I3 probes need them for every
     arm. Fixed in `stage_local` (764b43e) for new pods; A2/A6 diagnostics
     from pool a are backfilled after pretraining.
+- 2026-10-04 — **Restart decided (project lead): fix the data, then restart
+  phase 1.**
+  - Validity rule v3 (`static_valid_mask`, `FIELD_STATS_VERSION = 3`):
+    |curvature| > 1,000 is invalid. It applies in the point dataset and in
+    the field statistics.
+  - v2 statistics backed up to `cache/<Country>/field_stats_v2_backup/`; the
+    v3 recompute runs from a separate clone inside a running pool pod.
+  - The restart suite is `pk_dev1r` (new plan and results directories), with
+    pools sized to measured usage: 5 CPU / 32 Gi, measured 1.4–5.8 CPU and
+    6–30 Gi per pod.
+  - **Blocked by Nautilus admission:** the utilization flag ("pods resources
+    utilization too low") was raised while pk_dev1 ran. GPU was ≈ 87%, but
+    the 12 CPU / 40 Gi requests were mostly unused. No new pod can be
+    created, so pk_dev1 keeps running (deleting it first would leave nothing
+    running) until a pk_dev1r submission is admitted.
