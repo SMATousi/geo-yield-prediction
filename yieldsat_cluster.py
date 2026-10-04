@@ -270,6 +270,8 @@ def _make_pretrain_runs(suite, artifact_root):
             args += ['--fusion', pt.get('fusion', 'perceiver_summary')]
             args = _override(args, _budget_args(budget))
             args = _override(args, [str(a) for a in spec.get('args', [])])
+            if pt.get('diagnostics', True):
+                args.append('--pretrain_diagnostics')
             runs.append({'run_id': hashlib.sha1(readable.encode()).hexdigest()[:12], 'name': readable,
                          'rel_path': _pretrain_rel(arm, unit['manifest']), 'pair': 'pretrain',
                          'job_group': 'pretrain|{}'.format(arm),
@@ -280,7 +282,8 @@ def _make_pretrain_runs(suite, artifact_root):
                          'seed': pt.get('seed', 0), 'fold': 0, 'split': unit['manifest'],
                          'n_train': 0, 'n_test': 0, 'budget': budget, 'args': args, 'knowledge': knowledge,
                          'keep_files': ['sensor_checkpoint.pth', 'knowledge_reference.json',
-                                        'pretrainer_heads.pth'],
+                                        'pretrainer_heads.pth', 'diagnostics.json',
+                                        'diagnostics_error.txt'],
                          'wandb_group': '{}|pretrain|{}'.format(suite['suite'], arm),
                          'wandb_tags': [suite['suite'], 'pretrain', arm, unit['manifest']]})
     return runs

@@ -19,8 +19,8 @@ import numpy as np
 from util.yieldsat_eval import regression_metrics
 
 
-def pooled(exp_dir):
-    ys, ps, seasons, folds = [], [], [], []
+def pooled(exp_dir, fold_stats=False):
+    ys, ps, seasons, folds, fold_of = [], [], [], [], []
     names = {}
     for d in sorted(exp_dir.glob('fold*')):
         f = d / 'test_predictions.npz'
@@ -34,6 +34,7 @@ def pooled(exp_dir):
         ps.append(z['pred'][ok].astype(np.float64))
         seasons.append(code[z['season'][ok]])
         folds.append(d.name)
+        fold_of.append(np.full(int(ok.sum()), len(folds) - 1, np.int16))
     if not folds:
         return None
     y, p, s = np.concatenate(ys), np.concatenate(ps), np.concatenate(seasons)
@@ -44,21 +45,37 @@ def pooled(exp_dir):
     ym = np.add.reduceat(y[order], starts) / np.diff(np.r_[starts, len(s)])
     pm = np.add.reduceat(p[order], starts) / np.diff(np.r_[starts, len(s)])
     fl = regression_metrics(ym, pm)
-    return {'folds': folds, 'n_cells': int(len(y)), 'n_seasons': int(len(starts)),
-            'pixel_r2': px.get('r2'), 'pixel_rmse': px.get('rmse'), 'pixel_mae': px.get('mae'),
-            'pixel_bias': px.get('bias'), 'field_r2': fl.get('r2'), 'field_rmse': fl.get('rmse')}
+    out = {'folds': folds, 'n_cells': int(len(y)), 'n_seasons': int(len(starts)),
+           'pixel_r2': px.get('r2'), 'pixel_rmse': px.get('rmse'), 'pixel_mae': px.get('mae'),
+           'pixel_bias': px.get('bias'), 'field_r2': fl.get('r2'), 'field_rmse': fl.get('rmse')}
+    if fold_stats:
+        # per-fold sufficient statistics: pooled R2 of any multiset of folds can be
+        # recomputed (paired fold bootstrap in yieldsat_pretrain_report.py)
+        f = np.concatenate(fold_of)
+        f_season = f[order][starts]
+        stats = {}
+        for i, name in enumerate(folds):
+            m = f == i
+            fm = f_season == i
+            stats[name] = {'n': int(m.sum()), 'sy': float(y[m].sum()), 'syy': float((y[m] ** 2).sum()),
+                           'sse': float(((y[m] - p[m]) ** 2).sum()),
+                           'field': np.stack([ym[fm], pm[fm]], 1).round(5).tolist()}
+        out['fold_stats'] = stats
+    return out
 
 
 def main():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument('--root', required=True)
     a.add_argument('--out', required=True)
+    a.add_argument('--fold_stats', action='store_true', help='add per-fold sufficient statistics')
+    a.add_argument('--match', default='*', help='glob on the experiment tag directory (e.g. "pk-*")')
     args = a.parse_args()
     root = Path(args.root)
     out = {}
-    for exp in sorted(root.glob('paper/*/*/*/*')):
+    for exp in sorted(root.glob('paper/*/*/{}/*'.format(args.match))):
         if exp.is_dir():
-            r = pooled(exp)
+            r = pooled(exp, args.fold_stats)
             if r:
                 out[exp.relative_to(root).as_posix()] = r
                 if len(out) % 50 == 0:

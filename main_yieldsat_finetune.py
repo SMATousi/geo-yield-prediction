@@ -95,6 +95,9 @@ def get_args_parser():
     p.add_argument('--knowledge_control', default='none', choices=['none', 'shuffled', 'notext', 'ssl_long', 'random_targets'])
     p.add_argument('--ground_weight', type=float, default=1.0)
     p.add_argument('--relation_weight', type=float, default=1.0)
+    p.add_argument('--pretrain_diagnostics', action='store_true',
+                   help='pretrain mode: compute the success-criteria diagnostics on the unit\'s held-out '
+                        'seasons at the end (yieldsat_pretrain_diagnostics.py -> diagnostics.json)')
     p.add_argument('--pretrain_val_batches', type=int, default=20,
                    help='pretrain mode: validation batches per epoch (success criterion P1)')
     p.add_argument('--init_sensor_ckpt', default='')
@@ -579,6 +582,16 @@ def main(args):
         'peak_gpu_gb': round(torch.cuda.max_memory_allocated() / 1e9, 2) if device.type == 'cuda' else None,
     }
     (out_dir / 'report.json').write_text(json.dumps(report, indent=1, default=str))
+    if args.mode == 'pretrain' and args.pretrain_diagnostics:
+        # never fails the run: the checkpoint is the deliverable, diagnostics can be redone
+        try:
+            from yieldsat_pretrain_diagnostics import run as run_diagnostics
+            run_diagnostics(out_dir, device=str(device), artifact_root=args.artifact_root,
+                            source_root=args.source_root, skip_source_check=args.skip_source_check)
+            print('diagnostics written', flush=True)
+        except Exception as exc:  # noqa: BLE001
+            (out_dir / 'diagnostics_error.txt').write_text(repr(exc))
+            print('diagnostics failed:', repr(exc), flush=True)
     wb.finish(report)
     if 'test' in report:
         t = report['test']['overall']
