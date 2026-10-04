@@ -339,3 +339,14 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     excluded. Pool a (16 pods) starts first and takes the 16 pretraining
     jobs, then fine-tuning. Pool b (14 pods) is applied once checkpoints
     exist, so no pod idles waiting for them (utilization flag).
+- 2026-10-04 — **PK-08 phase 1 launched.**
+  - Prepared on the PVC with the results pod:
+    - concept indices c0/c30 for all 4 countries;
+    - the 46 unit manifests, audit passed with the real source fingerprint
+      check;
+    - the CLIP text vectors (copied, hash verified).
+  - Plan `/data/YieldSAT/yieldsat_artifacts/cluster/pk_dev1`: 560 runs (184
+    pretraining, 376 fine-tuning gated on unit checkpoints).
+  - Pool a (16 × A10) submitted, results in
+    `/data/YieldSAT/yieldsat_results/pk_dev1`. Pool b follows once
+    checkpoints exist.
