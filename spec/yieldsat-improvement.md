@@ -366,3 +366,29 @@ below.
     to held-out seasons (even CV10 drops from 0.45 to 0.30).
   - Neighbourhood features help on top of early fusion (+0.02 pixel,
     +0.04 field).
+- 2026-10-04 — **Round 2, final** (`results/dev_r2.md`; all 564 runs, 0
+  failures, pooled from the PVC):
+
+  | Config | DEV pixel R² | DEV field R² | CV10 / LOYO / LORO pixel |
+  |---|---|---|---|
+  | p1-early (S4) | 0.274 | 0.407 | 0.45 / 0.19 / 0.18 |
+  | p2-level (S5) | 0.157 | 0.220 | 0.36 / 0.04 / 0.06 |
+  | **p3-nbr (S6)** | **0.332** | **0.497** | 0.50 / 0.24 / 0.26 |
+  | p4-early-level | 0.122 | 0.161 | 0.32 / 0.03 / 0.01 |
+  | p5-early-nbr | 0.298 | 0.447 | 0.47 / 0.24 / 0.19 |
+  | p6-all | 0.138 | 0.192 | 0.32 / 0.02 / 0.07 |
+  | Point model (seed 0 / 3 seeds) | 0.305 / 0.309 | 0.470 / 0.472 | |
+  | Paper best | 0.460 | 0.686 | 0.56 / 0.41 / 0.42 |
+
+  - **The neighbourhood stream alone (p3, S6) is the first variant to beat
+    the point model**: +0.023 pixel and +0.025 field over the 3-seed mean,
+    with gains on every protocol.
+    - The interim 6/12 rows had hidden this.
+    - It does not pass: it is 0.16 pixel / 0.22 field below the bar (paper
+      best + 0.03).
+  - Early fusion still costs ≈ 0.03, and S5 still hurts everywhere.
+  - Knowledge pretraining phase 1 keeps the plain point backbone, so A0 is
+    the established baseline and pod staging stays small.
+  - p3-nbr is the **candidate backbone** to combine with the selected
+    pretraining arm afterwards
+    (spec/yieldsat-point-knowledge-pretraining.md).

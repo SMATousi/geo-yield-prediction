@@ -509,10 +509,11 @@ def stage_local(plan, job, runs, local_root):
     countries = job.get('countries', [job['country']])
     t0 = time.time()
     rels = []
+    nbr = any('--neighbourhood' in runs[r]['args'] for r in job['run_ids'])
     for c in countries:
         rels += ['index/{}'.format(c), 'cache/{}'.format(c)]
-        if (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
-            rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2)
+        if nbr and (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
+            rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2), only when used
     if any(runs[r].get('knowledge') for r in job['run_ids']):
         # knowledge pretraining: raw concept indices + frozen text vectors
         for c in countries:

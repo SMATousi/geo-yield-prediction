@@ -324,3 +324,18 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     "pretraining helps").
   - Phase 2 (A4 shuffled, A5 notext for E2b; label efficiency for E3) follows
     if phase 1 is healthy (P1–P4).
+  - Local end-to-end test of the pool path:
+    - a mini plan with one A3 pretraining run (Germany, 20 steps) and its
+      gated fine-tuning run (GER-R fold 0) through `run_pool` with staging;
+    - the pretraining checkpoint, reference and heads landed in the results
+      root, then the fine-tuning job ran;
+    - transfer loaded 153 tensors with no sensor key missing (only the
+      crop-context fusion entries are skipped: fine-tuning a single crop
+      turns the crop token off).
+  - Staging copies the neighbourhood arrays only for runs that use
+    `--neighbourhood`.
+  - Pools (`cluster/nautilus/pk_dev1_pool_{a,b}.yaml`): 12 CPU / 40 Gi / A10.
+    The node without the CephFS driver (`hcc-nrp-shor-c5825.unl.edu`) is
+    excluded. Pool a (16 pods) starts first and takes the 16 pretraining
+    jobs, then fine-tuning. Pool b (14 pods) is applied once checkpoints
+    exist, so no pod idles waiting for them (utilization flag).
