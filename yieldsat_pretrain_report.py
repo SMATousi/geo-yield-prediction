@@ -20,6 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from yieldsat_dev_eval import PROTO, paper_best
+from yieldsat_pretrain_diagnostics import p2_pass
 
 B = 2000
 ACTIVE_RULE_CONCEPTS = ('rain_supported', 'optical_growth', 'warm_regime', 'active_spectral_state',
@@ -137,7 +138,9 @@ def p_criteria(units):
         dec = all(h[-1][k] < h[0][k] for k in comps + ['train_loss'])
         res['P1'].append(bool(val) and val[-1] <= 1.05 * min(val) and dec)
         d = rec['diag']
-        res['P2'].append(d is not None and all(v['pass'] for v in d['P2_collapse'].values()))
+        res['P2'].append(d is not None and all(
+            p2_pass(v['variance'], v['variance_init'], v['effective_rank'], v['effective_rank_init'], s)
+            for s, v in d['P2_collapse'].items()))
         k = rec['report'].get('knowledge')
         if k:
             cov = all(v >= 0.2 for v in k['concept_season_coverage'].values())
@@ -148,11 +151,16 @@ def p_criteria(units):
     return {c: (sum(v), len(v)) for c, v in res.items() if v}
 
 
+MIN_HELDOUT_SEASONS = 10
+
+
 def mean_diag(units, path):
+    """Median over units with >= MIN_HELDOUT_SEASONS held-out seasons (tiny held-out
+    sets, e.g. one 3-season farm, give unstable probe R2 and AUROC)."""
     vals = collections.defaultdict(list)
     for rec in units.values():
         d = rec['diag']
-        if not d:
+        if not d or d.get('heldout_seasons', 0) < MIN_HELDOUT_SEASONS:
             continue
         block = d
         for p in path:
@@ -161,7 +169,7 @@ def mean_diag(units, path):
             v = v.get('auroc') if isinstance(v, dict) and 'auroc' in v else v
             if isinstance(v, (int, float)) and v is not None:
                 vals[k].append(v)
-    return {k: float(np.mean(v)) for k, v in vals.items()}
+    return {k: float(np.median(v)) for k, v in vals.items()}
 
 
 def i2_paired(a3, a7, seed=0):

@@ -419,3 +419,15 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   inside `cache/<Country>/`.
   - Backups moved to `<artifact_root>/field_stats_v2_backup/`.
   - `stage_local` now skips subfolders. Replacement pods clone the fix.
+- 2026-10-04 — **pk_dev1r first results** (8 A2 units, ≈ 45 min per run).
+  - Diagnostics now work for SSL arms.
+  - `cv_k09` validation is fixed (0.50 → 0.29, was 1.3e14 before v3).
+  - 6 of 8 units pass P1.
+    - `cv_k00`/`cv_k03` validation swings with a few extreme-input cells
+      (S2 up to 70σ), while their held-out I4 is normal.
+  - P2 "failed" only on terrain, by the init-relative rank rule (5.0 vs
+    15.6); its variance grew 50×. The rule is now capped at the stream's
+    input width.
+  - I-criteria are aggregated as the median over units with ≥ 10 held-out
+    seasons (the 3-season Brazil farm1 unit gave probe R² of −400).
+  - Criteria revision log updated.

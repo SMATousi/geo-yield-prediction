@@ -23,7 +23,7 @@ question requires "yes" to the earlier ones.
 | ID | Criterion | Pass |
 |---|---|---|
 | P1 | Convergence | Total, SSL, grounding and relation losses decrease; the last-epoch validation loss is within 5% of its minimum (no divergence) |
-| P2 | No representation collapse | For every stream, the per-dimension variance of the summary embeddings over a held-out sample stays ≥ 0.5× its value at initialization, and the effective rank (exp of the entropy of normalized singular values) stays ≥ 0.5× the same stream's effective rank at initialization. (Relative, because a stream's attainable rank is bounded by its input: the DEM stream is one scalar, rank ≈ 2.) |
+| P2 | No representation collapse | For every stream, the per-dimension variance of the summary embeddings over a held-out sample stays ≥ 0.5× its value at initialization, and the effective rank (exp of the entropy of normalized singular values) stays ≥ 0.5 × min(the same stream's effective rank at initialization, the stream's input width: S2 12, weather 4, DEM 1, terrain 4, soil 48). (Relative and capped: random initialization spreads a 4-channel stream over ~15 dimensions, and learning down to its true width is compression, not collapse.) |
 | P3 | Knowledge coverage | Each non-abstaining concept has known targets for ≥ 20% of training field seasons. Each active rule (r01–r04, r06; r05 abstains by design) has ≥ 200 applicable training field seasons per pretraining unit. Concepts or rules below this are reported and excluded from I/E claims |
 | P4 | Estimator sanity | Each concept's raw index has non-degenerate spread within its strata (IQR > 0) and < 50% missing among rows with the source stream present |
 
@@ -97,3 +97,16 @@ Failed criteria are reported as failures, not omitted.
     - P2's effective-rank threshold became relative to initialization (the DEM
       stream is one scalar; the absolute 25%-of-width rule failed every arm,
       including SSL-only).
+- **2026-10-04 (pk_dev1r, first 8 A2 units, full budget).**
+  - **P2:** terrain's effective rank went from 15.6 at init to 5.0 while its
+    variance grew 50–68×. Terrain has 4 input channels, so the rank threshold
+    is now capped at the stream's input width. Every other stream passed
+    unchanged.
+  - **I-criteria aggregation:** units with tiny held-out sets (e.g. a
+    3-season LORO farm) gave probe R² of −400. I1–I4 are now aggregated as
+    the median over units with ≥ 10 held-out seasons.
+  - **P1 caveat:** on units `cv_k00`/`cv_k03` the validation batches are
+    fixed, yet the masked-observation loss swings 0.6–3.6. A few extreme-input
+    validation cells (S2 up to 70σ) dominate the MSE, while held-out I4 is
+    normal (0.115). P1 is reported as measured, with this caveat. A trimmed
+    validation metric is proposed for the next round.

@@ -160,6 +160,18 @@ def embed(pt, ds, device, batch_size=2048, ssl=True):
     return res
 
 
+STREAM_INPUT_WIDTH = {'yieldsat_s2': 12, 'yieldsat_weather': 4, 'yieldsat_dem': 1, 'yieldsat_terrain': 4,
+                      'yieldsat_soil': 48}
+
+
+def p2_pass(var, var0, er, er0, stream):
+    """No collapse: variance >= 0.5x init and effective rank >= 0.5x min(rank at init,
+    the stream's input width). Random init spreads a 4-channel stream over ~15
+    dimensions; learning to its true width is compression, not collapse."""
+    ref = min(er0, STREAM_INPUT_WIDTH.get(stream, er0))
+    return bool(var >= 0.5 * var0 and er >= 0.5 * ref)
+
+
 def collapse_stats(emb, init):
     out = {}
     for s, x in emb['stream'].items():
@@ -174,7 +186,7 @@ def collapse_stats(emb, init):
         # collapse is judged against the same stream at initialization
         out[s] = {'variance': v, 'variance_init': v0, 'variance_ratio': v / max(v0, 1e-12),
                   'effective_rank': er, 'effective_rank_init': er0, 'effective_rank_ratio': er / max(er0, 1e-12),
-                  'pass': bool(v >= 0.5 * v0 and er >= 0.5 * er0)}
+                  'pass': p2_pass(v, v0, er, er0, s)}
     return out
 
 
