@@ -28,7 +28,7 @@ from dataset.yieldsat_dataset import (
 )
 from dataset.yieldsat_splits import load_field_table, load_split
 from models_yieldsat import YieldSATPointModel, pack_inputs
-from yieldsat_build_knowledge import load_raw
+from yieldsat_build_knowledge import estimator_cutoff, load_raw
 from yieldsat_knowledge_point import (KnowledgePointPretrainer, KnowledgeReference, attach_knowledge,
                                       load_library, load_text_vectors)
 from yieldsat_objectives import YieldSATPointPretrainer
@@ -217,8 +217,8 @@ def relational(pt, emb, targets, gates, season_names):
     return out
 
 
-def raw_properties(ds, artifact_root):
-    raw = {c: load_raw(artifact_root, c) for c in ds.countries}
+def raw_properties(ds, artifact_root, cutoff_days=0):
+    raw = {c: load_raw(artifact_root, c, cutoff_days) for c in ds.countries}
     out = {k: np.full(len(ds), np.nan) for k in PROBE_PROPERTIES}
     for ci, c in enumerate(ds.countries):
         sel = np.flatnonzero(ds.country_of == ci)
@@ -245,8 +245,9 @@ def run(run_dir, device='cuda', heldout_rows=64, probe_rows=16, probe_seasons=40
     pt, pt0 = r.build(ds_h.layout, True), r.build(ds_h.layout, False)
     e_h, e0_h = embed(pt, ds_h, r.device), embed(pt0, ds_h, r.device, ssl=False)
     e_t = embed(pt, ds_t, r.device, ssl=False)
-    props_h, raw = raw_properties(ds_h, a['artifact_root'])
-    props_t, _ = raw_properties(ds_t, a['artifact_root'])
+    cutoff = estimator_cutoff(a['cutoff_mode'], a['cutoff_days'])
+    props_h, raw = raw_properties(ds_h, a['artifact_root'], cutoff)
+    props_t, _ = raw_properties(ds_t, a['artifact_root'], cutoff)
     names = [s['season_id'] for s in ds_h.seasons]
     res = {'run_dir': str(run_dir), 'split': a['split'], 'knowledge': r.knowledge, 'control': r.heads['control'],
            'heldout_seasons': len(held), 'heldout_rows': int(len(ds_h)),
@@ -255,7 +256,7 @@ def run(run_dir, device='cuda', heldout_rows=64, probe_rows=16, probe_seasons=40
            'I4_ssl_heldout': e_h['ssl']}
     if r.knowledge:
         ref = r.reference
-        attach_knowledge(ds_h, ref, a['artifact_root'], raw)
+        attach_knowledge(ds_h, ref, a['artifact_root'], raw, cutoff)
         tg = ds_h.knowledge['concept_target'].astype(np.float32)
         gt = ds_h.knowledge['rule_gate'].astype(np.float32)
         countries = np.array(ds_h.countries)[ds_h.country_of]

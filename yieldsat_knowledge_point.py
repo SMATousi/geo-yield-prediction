@@ -211,7 +211,7 @@ class KnowledgeReference:
                    d['rules'], d.get('meta'))
 
 
-def attach_knowledge(dataset, reference, artifact_root, raw_cache=None):
+def attach_knowledge(dataset, reference, artifact_root, raw_cache=None, cutoff_days=0):
     """Per-item concept targets and rule gates for a YieldSATPointDataset."""
     n = len(dataset)
     targets = np.full((n, len(reference.concepts)), np.nan, dtype=np.float16)
@@ -222,7 +222,7 @@ def attach_knowledge(dataset, reference, artifact_root, raw_cache=None):
         if not len(sel):
             continue
         if country not in raw_cache:
-            raw_cache[country] = load_raw(artifact_root, country)
+            raw_cache[country] = load_raw(artifact_root, country, cutoff_days)
         t, g = reference.transform(raw_cache[country], country, dataset.row[sel])
         targets[sel], gates[sel] = t, g
     dataset.knowledge = {'concept_target': targets, 'rule_gate': gates}

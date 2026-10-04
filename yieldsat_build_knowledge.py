@@ -28,8 +28,10 @@ LATE = (0.6, 1.0)
 EARLY = (0.0, 0.3)
 MIN_WEATHER_COVERAGE = 0.5
 # Estimators read only what the point model sees: slots dated <= harvest -
-# CUTOFF_DAYS (the fine-tuning default, --cutoff_mode before_harvest).
-CUTOFF_DAYS = 30
+# cutoff_days. 0 matches --cutoff_mode all_slots / harvest (the paper
+# protocols; estimator windows end at harvest anyway), 30 matches the
+# pre-harvest default (--cutoff_mode before_harvest --cutoff_days 30).
+CUTOFF_DAYS = 0
 POLE_AZIMUTH = {'Argentina': 180.0, 'Brazil': 180.0, 'Uruguay': 180.0, 'Germany': 0.0}
 RAW_FIELDS = ('precip_mid_mm', 'tmean_mid_c', 'tmax_mid_c', 'ndvi_rise', 'ndre_mid',
               'persist_ratio', 'ndmi_mid', 'clay030', 'fine030', 'soc030_gkg',
@@ -181,7 +183,7 @@ def compute_block(temporal, static, times, seeding, harvest, field_slices, count
 
 def build_country(artifact_root, country, block_rows=262144, overwrite=False, cutoff_days=CUTOFF_DAYS):
     root = Path(artifact_root)
-    out = root / 'knowledge' / country / 'concept_raw.npz'
+    out = raw_path(root, country, cutoff_days)
     if out.exists() and not overwrite:
         raise FileExistsError(out)
     cache = root / 'cache' / country
@@ -222,15 +224,28 @@ def build_country(artifact_root, country, block_rows=262144, overwrite=False, cu
                    'p50': float(np.nanmedian(v)) if np.isfinite(v).any() else None,
                    'p95': float(np.nanpercentile(v, 95)) if np.isfinite(v).any() else None}
                for k, v in res.items()}
-    (out.parent / 'concept_raw_summary.json').write_text(json.dumps(
+    (out.parent / 'concept_raw_c{}_summary.json'.format(cutoff_days)).write_text(json.dumps(
         {'format': FORMAT, 'country': country, 'cutoff_days': cutoff_days, 'rows': int(n), 'fields': summary}, indent=1))
     return out
 
 
-def load_raw(artifact_root, country):
-    with np.load(Path(artifact_root) / 'knowledge' / country / 'concept_raw.npz') as z:
-        if str(z['format']) != FORMAT:
-            raise ValueError('unexpected concept_raw format')
+def raw_path(artifact_root, country, cutoff_days):
+    return Path(artifact_root) / 'knowledge' / country / 'concept_raw_c{}.npz'.format(cutoff_days)
+
+
+def estimator_cutoff(cutoff_mode, cutoff_days):
+    """The estimator cutoff that matches a run's input cutoff."""
+    if cutoff_mode in ('all_slots', 'harvest'):
+        return 0
+    if cutoff_mode == 'before_harvest':
+        return int(cutoff_days)
+    raise ValueError('no knowledge estimators for cutoff_mode {}'.format(cutoff_mode))
+
+
+def load_raw(artifact_root, country, cutoff_days=CUTOFF_DAYS):
+    with np.load(raw_path(artifact_root, country, cutoff_days)) as z:
+        if str(z['format']) != FORMAT or int(z['cutoff_days']) != int(cutoff_days):
+            raise ValueError('unexpected concept_raw format or cutoff')
         return {k: z[k] for k in z.files}
 
 

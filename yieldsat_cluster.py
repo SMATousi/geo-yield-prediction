@@ -54,7 +54,10 @@ REF_THROUGHPUT = {'ours': 30600.0, 'paper_lstm': 141800.0,
                   # image model: 64x64 tiles/s per run, loader-bound; measured in
                   # training on the development host (RTX 3090, 3 loader workers,
                   # uncompressed staged tiles), 2026-10-01
-                  'image': 118.0}
+                  'image': 118.0,
+                  # point pretraining over all 4 countries (random cell access),
+                  # RTX 3090, 6 loader workers, 2026-10-04 smoke (PK-06)
+                  'pretrain_ssl': 15700.0, 'pretrain_knowledge': 10100.0}
 SCRIPTS = {'image': 'main_yieldsat_image.py'}           # default: main_yieldsat_finetune.py
 IMAGE_DEFAULTS = {'epochs': 60, 'batch_size': 16, 'min_steps_per_epoch': 20, 'lr': 5e-4}
 WARM_START_LR_SCALE = 0.3
@@ -124,6 +127,8 @@ def expand_runs(suite, table, artifact_root):
         if not suite['data'].get('image_root') or '$' in suite['data']['image_root']:
             sys.exit('image suites need data.image_root (tile counts are planned from it)')
         tiles = _image_tiles(suite)
+    if suite.get('pretrain'):
+        runs += _make_pretrain_runs(suite, artifact_root)
     for exp in suite['experiments']:
         model = exp['model']
         if exp.get('donors'):
@@ -204,6 +209,11 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
         init_ckpt = str(Path(root) / _donor_rel(donor, inputs, seed) / 'checkpoint_best.pth')
         lr = float(exp.get('budget', {}).get('lr', IMAGE_DEFAULTS['lr'])) * WARM_START_LR_SCALE
         args = _override(args, ['--init_ckpt', init_ckpt, '--lr', '{:g}'.format(lr)])
+    if exp.get('init_from'):
+        # knowledge pretraining DEV arms: start from the sensor checkpoint of the
+        # fold's pretraining unit (spec/yieldsat-point-knowledge-pretraining.md §6)
+        init_ckpt = pretrain_ckpt(suite, exp['init_from'], split_name, artifact_root=suite['data']['artifact_root'])
+        args = _override(args, ['--init_sensor_ckpt', init_ckpt])
     args = _override(args, [str(a) for a in exp.get('extra_args', [])])
     n_train = split['summary']['train']['rows']
     n_test = split['summary']['test']['rows']
@@ -212,9 +222,68 @@ def _make_run(suite, exp, model, protocol, policy_name, group, policy, k, inputs
             'protocol': proto, 'policy': policy_name, 'inputs': inputs, 'seed': seed,
             'fold': fold, 'split': split_name, 'n_train': n_train, 'n_test': n_test,
             'budget': exp.get('budget', {}), 'args': args, 'donor': donor, 'init_ckpt': init_ckpt,
+            'job_group': '{}|{}'.format(pair, exp['init_from']) if exp.get('init_from') else pair,
             'wandb_group': '{}|{}|{}|{}|{}|{}'.format(suite['suite'], tag, proto, policy_name,
                                                       inputs, pair),
             'wandb_tags': [suite['suite'], tag, proto, policy_name, inputs, pair, 'seed{}'.format(seed)]}
+
+
+def _pretrain_rel(arm, unit_manifest):
+    return 'pretrain/{}/{}'.format(arm, unit_manifest)
+
+
+def pretrain_ckpt(suite, arm, split_name, artifact_root):
+    """Sensor checkpoint of the pretraining unit that serves DEV fold ``split_name``."""
+    pt = suite['pretrain']
+    if arm not in pt['arms']:
+        sys.exit('init_from {} is not a pretraining arm ({})'.format(arm, sorted(pt['arms'])))
+    index = json.loads((Path(artifact_root) / 'splits' / '{}.json'.format(pt['unit_index'])).read_text())
+    unit = index['fold_to_unit'].get(split_name)
+    if unit is None:
+        sys.exit('fold {} has no pretraining unit in {}'.format(split_name, pt['unit_index']))
+    return str(Path(pt['results_root']) / _pretrain_rel(arm, unit) / 'sensor_checkpoint.pth')
+
+
+def _make_pretrain_runs(suite, artifact_root):
+    """One yield-free pretraining run per (arm, unit) over all countries; the
+    sensor checkpoint, knowledge reference and heads are kept in the results
+    root for the fine-tuning arms and the diagnostics."""
+    pt = suite['pretrain']
+    if not pt.get('results_root') or '$' in str(pt['results_root']):
+        sys.exit('pretrain.results_root must be the pools\' results root')
+    index = json.loads((Path(artifact_root) / 'splits' / '{}.json'.format(pt['unit_index'])).read_text())
+    countries = list(pt.get('countries', ['Argentina', 'Brazil', 'Germany', 'Uruguay']))
+    runs = []
+    for arm, spec in pt['arms'].items():
+        spec = spec if isinstance(spec, dict) else {'args': spec}
+        budget = dict(pt.get('budget', {}))
+        factor = float(spec.get('steps_factor', 1.0))
+        if factor != 1.0:
+            budget['epochs'] = int(round(budget.get('epochs', 20) * factor))
+        knowledge = '--knowledge' in spec.get('args', [])
+        for unit in sorted(index['units'].values(), key=lambda u: u['manifest']):
+            readable = '{}|pretrain|{}|{}'.format(suite['suite'], arm, unit['manifest'])
+            args = ['--data_contract', 'yieldsat_preprocessed_v1', '--mode', 'pretrain',
+                    '--countries', *countries, '--split', unit['manifest'], '--norm_pooling', 'per_country',
+                    '--seed', str(pt.get('seed', 0))]
+            args += INPUTS[pt.get('inputs', 's2_adm')] + MODELS['ours']
+            args += ['--fusion', pt.get('fusion', 'perceiver_summary')]
+            args = _override(args, _budget_args(budget))
+            args = _override(args, [str(a) for a in spec.get('args', [])])
+            runs.append({'run_id': hashlib.sha1(readable.encode()).hexdigest()[:12], 'name': readable,
+                         'rel_path': _pretrain_rel(arm, unit['manifest']), 'pair': 'pretrain',
+                         'job_group': 'pretrain|{}'.format(arm),
+                         'country': countries[0], 'countries': countries, 'crop': 'all',
+                         'experiment': 'pretrain-' + arm, 'model': 'ours',
+                         'throughput_key': 'pretrain_knowledge' if knowledge else 'pretrain_ssl',
+                         'protocol': 'pretrain', 'policy': 'na', 'inputs': pt.get('inputs', 's2_adm'),
+                         'seed': pt.get('seed', 0), 'fold': 0, 'split': unit['manifest'],
+                         'n_train': 0, 'n_test': 0, 'budget': budget, 'args': args, 'knowledge': knowledge,
+                         'keep_files': ['sensor_checkpoint.pth', 'knowledge_reference.json',
+                                        'pretrainer_heads.pth'],
+                         'wandb_group': '{}|pretrain|{}'.format(suite['suite'], arm),
+                         'wandb_tags': [suite['suite'], 'pretrain', arm, unit['manifest']]})
+    return runs
 
 
 def _donor_rel(name, inputs, seed):
@@ -275,7 +344,8 @@ def estimate_seconds(run, speed_factor):
         steps = max(b.get('min_steps_per_epoch', 1), math.ceil(run['n_train'] / batch))
         if b.get('max_steps_per_epoch', 0) > 0:
             steps = min(steps, b['max_steps_per_epoch'])
-    train = epochs * steps * batch / (REF_THROUGHPUT[model] * _factor(speed_factor, model))
+    key = run.get('throughput_key', model)
+    train = epochs * steps * batch / (REF_THROUGHPUT[key] * _factor(speed_factor, key))
     val = epochs * 2.0                       # ~500 cells per validation field
     test = run['n_test'] / (REF_TEST_ROWS_PER_S * _factor(speed_factor, 'test')) * (
         2 if '--eval_drop_stream' in run['args'] else 1)
@@ -297,9 +367,10 @@ def make_jobs(suite, runs):
     for r in runs:
         r['est_seconds'] = round(estimate_seconds(r, speed), 1)
     jobs = []
-    pairs = list(suite['pairs']) + sorted({r['pair'] for r in runs} - set(suite['pairs']))
+    group = lambda r: r.get('job_group', r['pair'])  # noqa: E731
+    pairs = list(suite['pairs']) + sorted({group(r) for r in runs} - set(suite['pairs']))
     for pair in pairs:
-        pr = sorted([r for r in runs if r['pair'] == pair], key=lambda r: -r['est_seconds'])
+        pr = sorted([r for r in runs if group(r) == pair], key=lambda r: -r['est_seconds'])
         if not pr:
             continue
         total = sum(r['est_seconds'] for r in pr) / eff
@@ -314,7 +385,7 @@ def make_jobs(suite, runs):
         if pr[0]['model'] == 'image':
             stage_gb = sum(IMAGE_STAGE_GB.get(c, 1.0) for c in pr[0].get('countries', [pr[0]['country']]))
         else:
-            stage_gb = STAGE_GB.get(pr[0]['country'], 5.0)
+            stage_gb = sum(STAGE_GB.get(c, 5.0) for c in pr[0].get('countries', [pr[0]['country']]))
         stage_h = stage_gb * 1024 / stage_rate / 3600
         for i, shard in enumerate(shards):
             jobs.append({'job_index': len(jobs), 'pair': pair, 'shard': i, 'n_shards': n,
@@ -435,11 +506,22 @@ def stage_local(plan, job, runs, local_root):
     fingerprint is read)."""
     src = Path(plan['suite']['data']['artifact_root'])
     dst = Path(local_root) / 'artifacts'
-    c = job['country']
+    countries = job.get('countries', [job['country']])
     t0 = time.time()
-    rels = ['index/{}'.format(c), 'cache/{}'.format(c)]
-    if (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
-        rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2)
+    rels = []
+    for c in countries:
+        rels += ['index/{}'.format(c), 'cache/{}'.format(c)]
+        if (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
+            rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2)
+    if any(runs[r].get('knowledge') for r in job['run_ids']):
+        # knowledge pretraining: raw concept indices + frozen text vectors
+        for c in countries:
+            (dst / 'knowledge' / c).mkdir(parents=True, exist_ok=True)
+            for f in (src / 'knowledge' / c).glob('concept_raw_c*.npz'):
+                _copy_once(f, dst / 'knowledge' / c / f.name)
+        (dst / 'knowledge' / 'text_clip_b32').mkdir(parents=True, exist_ok=True)
+        for f in (src / 'knowledge' / 'text_clip_b32').iterdir():
+            shutil.copy2(f, dst / 'knowledge' / 'text_clip_b32' / f.name)
     manifests = {'cache': 'cache_manifest.json', 'index': 'index_manifest.json',
                  'neighbourhood': 'neighbourhood_manifest.json'}
     for rel in rels:
@@ -462,7 +544,7 @@ def stage_local(plan, job, runs, local_root):
     for rid in job['run_ids']:
         name = runs[rid]['split']
         shutil.copy2(src / 'splits' / '{}.json'.format(name), dst / 'splits' / '{}.json'.format(name))
-    print('staged {} to {} in {:.0f} s'.format(c, dst, time.time() - t0), flush=True)
+    print('staged {} to {} in {:.0f} s'.format(','.join(countries), dst, time.time() - t0), flush=True)
     return dst
 
 
@@ -593,7 +675,8 @@ def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None):
     if use_wandb:
         cmd += ['--wandb', '--wandb_no_model_artifacts', '--wandb_project', str(wb.get('project', 'yieldsat')),
                 '--wandb_group', run['wandb_group'], '--wandb_name', run['name'],
-                '--wandb_job_type', 'finetune', '--wandb_tags', *run['wandb_tags'],
+                '--wandb_job_type', 'pretrain' if run['protocol'] == 'pretrain' else 'finetune',
+                '--wandb_tags', *run['wandb_tags'],
                 '--wandb_meta', json.dumps({k: run[k] for k in (
                     'run_id', 'name', 'rel_path', 'pair', 'experiment', 'protocol', 'policy',
                     'inputs', 'seed', 'fold', 'split')})]

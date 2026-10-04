@@ -73,11 +73,18 @@ Units (verified on the cache 2026-10-04, §9):
   missing for all of Germany and 67% of Argentina and is not used.
 - Season: seeding → harvest day of the row. Mid-season = 30–80% and late
   season = 60–100% of that window.
-- **Input cutoff:** estimators read only slots dated ≤ harvest − 30 days,
-  the same inputs the model sees under the fine-tuning default
-  (`--cutoff_mode before_harvest --cutoff_days 30`). No concept is grounded
-  in data the model never receives. Late season is therefore 60% →
-  cutoff.
+- **Input cutoff:** estimators read only the slots the model receives, so no
+  concept is grounded in data the model never sees.
+  - The builder writes one file per cutoff, `concept_raw_c<days>.npz`. The
+    entry point picks the file that matches the run (`estimator_cutoff`) and
+    refuses a mismatch.
+  - **c0** (slots ≤ harvest) matches `--cutoff_mode all_slots` / `harvest`,
+    which the paper protocols and DEV use. All estimator windows end at
+    harvest anyway.
+  - **c30** matches the pre-harvest mode (`before_harvest`, 30 d). Late
+    season is then 60% → cutoff.
+  - Pretraining uses the same input settings as the fine-tuning it serves
+    (DEV: `s2_adm` streams, `all_slots`), so sensor transfer is exact.
 
 | Concept | Stream | Raw index | Reference stratum | Soft target |
 |---|---|---|---|---|
@@ -274,6 +281,13 @@ The same DEV subset, matrix and pooled metric as the improvement plan
       r04 1,206, r06 1,271; r05 0 by design;
     - transfer → fine-tune GER-R fold 0 loaded 153 tensors and completed.
     - All five pretraining variants (A2, A3, shuffled, notext, ssl_long) ran.
+- 2026-10-04 — **Cutoff fix.** The paper protocols (DEV included) feed the
+  model all slots (`MODELS['ours']`: `--cutoff_mode all_slots`), so the first
+  build's fixed 30-day estimator cutoff under-read the late season.
+  - Estimators are now built per cutoff (c0 and c30, §3) and matched to each
+    run's input cutoff.
+  - The PK-07 smoke below ran with c30 inputs (`before_harvest`), consistent
+    with itself.
 - 2026-10-04 — **PK-07 done.** `yieldsat_pretrain_diagnostics.py` computes
   P2, I1, I2 (with per-season values for pairing, and at initialization),
   I3 and I4 on the unit's excluded seasons. Smoke results (300 steps; not
@@ -290,3 +304,23 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     - the criteria were revised (I1/I2/E2 vs A7; new E2b for the language
       prior; P2 relative to initialization; see the criteria's revision log).
   - P2 passes for every stream under A2 and A3.
+- 2026-10-04 — **PK-08 started: DEV phase 1** (`cluster/suites/pk_dev1.yaml`).
+  - The cluster driver gained a two-stage plan:
+    - `pretrain:` expands one run per (arm, unit) over all 4 countries. Each
+      keeps `sensor_checkpoint.pth`, `knowledge_reference.json` and
+      `pretrainer_heads.pth` in the results root.
+    - Fine-tuning experiments with `init_from: <arm>` start from their fold's
+      unit checkpoint (`splits/pretrain_units_dev_s0.json`) and wait for it
+      (`_job_ready`).
+    - Jobs are grouped per (pair, arm), so each fine-tuning job depends only
+      on its own arm's units.
+    - Staging copies every country of a job, plus the knowledge assets for
+      knowledge runs.
+  - Phase 1 arms: A2, A3, A6 (1.55× steps) and A7. Pretraining budget: 30 ×
+    500 steps of 512 cells. Fine-tuning: the dev_r2/before_full budget with
+    `--norm_pooling per_country`.
+  - Plan: 560 runs in 71 jobs, ≈ 186 A10 GPU-hours (≈ 13 h on 16 GPUs).
+  - Phase 1 decides E1, E2, E4 and E5 ("knowledge does its job" vs A7,
+    "pretraining helps").
+  - Phase 2 (A4 shuffled, A5 notext for E2b; label efficiency for E3) follows
+    if phase 1 is healthy (P1–P4).

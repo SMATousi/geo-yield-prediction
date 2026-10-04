@@ -167,13 +167,14 @@ def _to(batch, device):
 def build_knowledge_pretrainer(args, model, parts, train_ds, val_ds, out_dir):
     """Fit the fold-train concept reference, attach targets to the datasets
     and wrap the model in a KnowledgePointPretrainer."""
-    from yieldsat_build_knowledge import load_raw
+    from yieldsat_build_knowledge import estimator_cutoff, load_raw
     from yieldsat_knowledge_point import (KnowledgePointPretrainer, KnowledgeReference, attach_knowledge,
                                           load_library, load_text_vectors)
     lib = load_library()
     text_dir = args.knowledge_text_dir or str(Path(args.artifact_root) / 'knowledge' / 'text_clip_b32')
     text, text_manifest = load_text_vectors(text_dir, lib)
-    raw = {c: load_raw(args.artifact_root, c) for c in train_ds.countries}
+    cutoff = estimator_cutoff(args.cutoff_mode, args.cutoff_days)       # estimators see what the model sees
+    raw = {c: load_raw(args.artifact_root, c, cutoff) for c in train_ds.countries}
     train_rows = {c: train_ds.row[train_ds.country_of == i] for i, c in enumerate(train_ds.countries)}
     ref = KnowledgeReference.fit({c: (raw[c], r) for c, r in train_rows.items() if len(r)}, lib)
     (out_dir / 'knowledge_reference.json').write_text(json.dumps(ref.to_json()))
@@ -200,7 +201,7 @@ def build_knowledge_pretrainer(args, model, parts, train_ds, val_ds, out_dir):
         ok = (kg[:, j] > 0) & (kt[:, ia] >= r['minimum_presence']) & (kt[:, ib] >= r['minimum_presence'])
         rules[r['id']] = {'gate_open_seasons': int(len(np.unique(seasons[kg[:, j] > 0]))),
                           'applicable_seasons': int(len(np.unique(seasons[ok])))}
-    info = {'control': args.knowledge_control, 'text': {k: text_manifest[k] for k in
+    info = {'control': args.knowledge_control, 'estimator_cutoff_days': cutoff, 'text': {k: text_manifest[k] for k in
                                                          ('model', 'revision', 'vectors_hash', 'library_hash')},
             'concept_season_coverage': coverage, 'rules': rules,
             'reference_seasons': ref.meta['reference_seasons']}
