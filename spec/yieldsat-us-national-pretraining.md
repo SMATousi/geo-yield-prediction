@@ -68,7 +68,7 @@ for the pretraining view. The physical view stays optional.
 
 | Item | YieldSAT (measured) | US pretraining view |
 |---|---|---|
-| Slot grid | **Slot k = calendar month k of a 24-month window starting in January of (harvest year − 1).** 92–97% of dated slots match exactly in all four countries; the rest are one month later. Dated slots are contiguous and cover ≈ seeding → harvest. Median gap 30 days (p10–p90 13–45). Slots outside the season are undated. | Same rule: harvest year from the crop calendar (D07). One acquisition per calendar month from the calendar seeding month through the harvest month. Other slots are undated (NaN date) |
+| Slot grid | The dates span **only ≈ seeding → harvest**: no date is > 60 d before seeding. The raw release holds every acquisition (16–131 per field, every 2–5 days); the **preprocessed NetCDF keeps one per calendar month** (p50 7–11 per season, all raw dates). The slot *position* is the month index: slot k = calendar month k counted from January of (harvest year − 1). That is a positional frame, not a 2-year data window. 92–97% of dated slots match exactly, the rest are one month later. Median gap 30 days; months outside the season are undated. | Same rule: harvest year from the crop calendar (D07). One acquisition per calendar month from the calendar seeding month through the harvest month. Other slots are undated (NaN date) |
 | Acquisition per slot | The least-cloudy acquisition in the month (median day of month 20–23) | Among the month's acquisitions, prefer those clear at the point (SCL 4/5/6), ranked by scene `eo:cloud_cover`, then the latest date, then item ID. If none is clear, take the least-cloudy acquisition and set the optical values to NaN (a dated slot with masked optics, as in YieldSAT: 6–42% of its dated slots) |
 | S2 bands and units | L2A, 12 bands `B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B11 B12`, DN = reflectance × 10,000, no negatives | Same order and units |
 | Processing-baseline offset | **Harmonized**: no +1,000 shift after the January 2022 baseline 04.00 change. Low percentiles (B02 p0.5 ≈ 60–200 DN) are continuous across 2017–2024 in all four countries, so the BOA offset was removed. The pattern matches `COPERNICUS/S2_SR_HARMONIZED`. | For items with processing baseline ≥ 04.00 whose source did not already remove the offset, subtract 1,000 and clamp at 0. The source's offset flag and the baseline are stored per item |
@@ -80,6 +80,13 @@ for the pretraining view. The physical view stays optional.
 
 The concept estimators (spec/yieldsat-point-knowledge-pretraining.md §3)
 then apply unchanged, with US strata (state or climate region × crop).
+
+**Dense series (optional).** The point model consumes the monthly view,
+so the pretraining view is monthly for parity. The raw YieldSAT release also
+offers the dense ~5-day series, which a later model variant could use. If
+it does, the US reader stores every clear in-season acquisition per point,
+≈ 5× the block reads of §B. The monthly view is then derived by selecting
+one acquisition per month.
 
 ### B. Pixel-only Sentinel-2 acquisition (answers "can we download only the pixels?")
 
@@ -163,7 +170,7 @@ one Missouri AOI, 2025, 13.2M cropland points.
 
 | ID | Deliverable | Acceptance |
 |---|---|---|
-| NP-04a | Parity tests on YieldSAT itself | Re-extract S2 for ≥ 20 YieldSAT field seasons (all 4 countries) with the §A rules from the COG archive. Agreement with the cache: dates in the same slots for ≥ 90% of dated slots; median absolute band difference ≤ 2% of the value. This verifies harmonization, the monthly least-cloudy rule and nearest sampling before any US point is built |
+| NP-04a | Parity tests on YieldSAT itself | (1) From `Raw.zip`, confirm the monthly selection rule: which raw acquisition each month keeps (least cloudy over the field?). (2) Re-extract S2 for ≥ 20 YieldSAT field seasons (all 4 countries) from the COG archive with the §A rules. Agreement with the cache: same slot dates for ≥ 90% of dated slots; median absolute band difference ≤ 2% of the value. This verifies harmonization, the monthly selection rule and nearest sampling before any US point is built |
 | NP-04b | Cluster frame and sampler | CONUS cropland (CDL) block clusters, stratified by climate region × dominant crop; deterministic, seeded; 250k points in ≈ 125 clusters across 2021–2025 |
 | NP-04c | Pixel-only S2 reader | STAC query per cluster and season; block-aligned range reads; monthly clear-sky selection; harmonization; streaming writes; bounded memory; measured bytes per point |
 | NP-04d | ERA5-Land, SRTM/RichDEM, SoilGrids joins | Native-cell joins with YieldSAT operators and units; validity rules; first dated slot invalid |
