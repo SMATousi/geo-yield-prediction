@@ -648,3 +648,15 @@ or model-training changes are authorized by this design document alone.
     slots at positions 15–21.
   - **Calendar:** no NASS QuickStats key is available, so all dates are
     currently the fallback crop windows (`calendar_fallback`).
+- 2026-10-04 — **Frame complete for 2021–2025: 125 clusters, 249,952
+  points.**
+  - Per year: 26 / 25 / 24 / 25 / 25 clusters.
+  - Per region, exactly the D17 allocation: Upper Midwest 15, Ohio Valley
+    20, Northern Rockies & Plains 25, South 25, Southeast 10, Northwest 12,
+    Northeast 8, Southwest 5, West 5.
+  - Per stratum: corn 46, soybean 37, wheat 17, canola 10, winter wheat 10,
+    spring wheat 5.
+  - Transient CDL removed.
+  - Extraction waits for a NASS QuickStats key (project lead's choice), so
+    season dates come from Crop Progress. The test cluster with fallback
+    dates was discarded.
