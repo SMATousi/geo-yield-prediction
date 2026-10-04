@@ -667,7 +667,7 @@ def _state_paths(plan_dir, run_id):
     return state / '{}.done.json'.format(run_id), state / '{}.failed.json'.format(run_id)
 
 
-def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None):
+def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None, results_root=None):
     out = Path(work_dir) / run['rel_path']
     out.mkdir(parents=True, exist_ok=True)
     wb = plan['suite']['wandb']
@@ -679,6 +679,9 @@ def _launch(run, plan, artifact_root, work_dir, use_wandb, image_root=None):
         if plan['suite']['data'].get('dino_revision'):
             cmd += ['--dino_revision', plan['suite']['data']['dino_revision']]
     cmd += run['args']
+    if run.get('protocol') == 'pretrain' and results_root:
+        # per-epoch resumable state on the shared volume: survives pod loss
+        cmd += ['--resume_dir', str(Path(results_root) / run['rel_path'])]
     if use_wandb:
         cmd += ['--wandb', '--wandb_no_model_artifacts', '--wandb_project', str(wb.get('project', 'yieldsat')),
                 '--wandb_group', run['wandb_group'], '--wandb_name', run['name'],
@@ -721,6 +724,8 @@ def _finish(run, proc, log, out, plan_dir, results_root, keep_local):
             shutil.copytree(offline, keep, dirs_exist_ok=True)
             marker['wandb_offline_dir'] = str(keep)
             done.write_text(json.dumps(marker))
+        if results_root and (Path(results_root) / run['rel_path'] / 'resume.pth').exists():
+            (Path(results_root) / run['rel_path'] / 'resume.pth').unlink()
         if not keep_local:
             shutil.rmtree(out, ignore_errors=True)
         return True
@@ -815,7 +820,7 @@ def run_job(plan_dir, job_index, local_root=None, work_dir=None, results_root=No
         while pending or running:
             while pending and len(running) < k:
                 r = pending.pop(0)
-                proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb, image_root)
+                proc, log, out = _launch(r, plan, artifact_root, work_dir, use_wandb, image_root, results_root)
                 running.append((r, proc, log, out, time.time()))
             time.sleep(5)
             if heartbeat is not None:

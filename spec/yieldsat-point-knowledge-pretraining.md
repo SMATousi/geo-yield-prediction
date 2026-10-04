@@ -431,3 +431,15 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - I-criteria are aggregated as the median over units with ≥ 10 held-out
     seasons (the 3-season Brazil farm1 unit gave probe R² of −400).
   - Criteria revision log updated.
+- 2026-10-04 — **pk_dev1r memory starvation; resized (project lead's decision).**
+  - The 5 CPU / 32 Gi pods held 25–31 Gi in use for about 25 GB of staged
+    caches plus 4–6 runs at ≈ 2.7 GB RSS each. The page cache could not
+    hold the data, so random reads went to disk.
+    - GPU 0%, no CPU throttling.
+    - SSL epochs ≈ 335 s and knowledge epochs 1,040–1,390 s, vs ≈ 80 / 125 s
+      on the 40 Gi pods of the first attempt.
+  - Replaced by pools `c`/`d` at 6 CPU / 56 Gi. The 28 finished runs (12 A2,
+    16 A6) are kept; in-progress runs restart.
+  - **Pretraining runs now save resumable state every epoch** to the shared
+    results folder (`--resume_dir`; the driver passes it, and it is removed
+    when the run finishes), so a pod loss no longer discards progress.

@@ -100,6 +100,9 @@ def get_args_parser():
                         'seasons at the end (yieldsat_pretrain_diagnostics.py -> diagnostics.json)')
     p.add_argument('--pretrain_val_batches', type=int, default=20,
                    help='pretrain mode: validation batches per epoch (success criterion P1)')
+    p.add_argument('--resume_dir', default='',
+                   help='pretrain mode: save resumable state here every epoch (e.g. on the shared volume) '
+                        'and continue from it if present')
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
@@ -455,7 +458,16 @@ def main(args):
                                         alpha=args.field_alpha, block_size=block, seed=args.seed)
     history, best, step = [], None, 0
     samples_seen, data_time = 0, 0.0
-    for epoch in range(args.epochs):
+    start_epoch = 0
+    resume_path = Path(args.resume_dir) / 'resume.pth' if args.resume_dir and args.mode == 'pretrain' else None
+    if resume_path is not None and resume_path.exists():
+        st = torch.load(resume_path, map_location=device, weights_only=False)
+        trainable.load_state_dict(st['trainable'])
+        opt.load_state_dict(st['optimizer'])
+        start_epoch, step, history = st['epoch'] + 1, st['step'], st['history']
+        samples_seen = st.get('samples_seen', 0)
+        print('resumed from {} at epoch {}'.format(resume_path, start_epoch), flush=True)
+    for epoch in range(start_epoch, args.epochs):
         sampler.set_epoch(epoch)
         trainable.train()
         t0 = time.time()
@@ -501,6 +513,12 @@ def main(args):
         history.append(rec)
         print(json.dumps(rec), flush=True)
         wb.log_epoch(rec)
+        if resume_path is not None:
+            resume_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = resume_path.with_suffix('.tmp')
+            torch.save({'trainable': trainable.state_dict(), 'optimizer': opt.state_dict(), 'epoch': epoch,
+                        'step': step, 'history': history, 'samples_seen': samples_seen}, tmp)
+            os.replace(tmp, resume_path)
 
     report = {
         'contract': CONTRACT_KEY, 'mode': args.mode, 'data_mode': 'point_timeseries',
