@@ -55,6 +55,120 @@ below. The 100M target (D01) stays the ceiling, not a commitment.
    (with US strata: state/climate region × crop) and the same 6 approved
    rules as the YieldSAT stage.
 
+## YieldSAT-aligned acquisition design (2026-10-04)
+
+This section freezes how US points are built so that they match the
+YieldSAT point contract (`yieldsat_preprocessed_v1`) the point model is
+trained on. Measured YieldSAT conventions below come from the local caches
+(spec/yieldsat_data_contract.md §2 plus the 2026-10-04 probes recorded
+here). Where an earlier section of this spec disagrees, this section wins
+for the pretraining view. The physical view stays optional.
+
+### A. Measured YieldSAT conventions the US view must reproduce
+
+| Item | YieldSAT (measured) | US pretraining view |
+|---|---|---|
+| Slot grid | **Slot k = calendar month k of a 24-month window starting in January of (harvest year − 1).** 92–97% of dated slots match exactly in all four countries; the rest are one month later. Dated slots are contiguous and cover ≈ seeding → harvest. Median gap 30 days (p10–p90 13–45). Slots outside the season are undated. | Same rule: harvest year from the crop calendar (D07). One acquisition per calendar month from the calendar seeding month through the harvest month. Other slots are undated (NaN date) |
+| Acquisition per slot | The least-cloudy acquisition in the month (median day of month 20–23) | Among the month's acquisitions, prefer those clear at the point (SCL 4/5/6), ranked by scene `eo:cloud_cover`, then the latest date, then item ID. If none is clear, take the least-cloudy acquisition and set the optical values to NaN (a dated slot with masked optics, as in YieldSAT: 6–42% of its dated slots) |
+| S2 bands and units | L2A, 12 bands `B01 B02 B03 B04 B05 B06 B07 B08 B8A B09 B11 B12`, DN = reflectance × 10,000, no negatives | Same order and units |
+| Processing-baseline offset | **Harmonized**: no +1,000 shift after the January 2022 baseline 04.00 change. Low percentiles (B02 p0.5 ≈ 60–200 DN) are continuous across 2017–2024 in all four countries, so the BOA offset was removed. The pattern matches `COPERNICUS/S2_SR_HARMONIZED`. | For items with processing baseline ≥ 04.00 whose source did not already remove the offset, subtract 1,000 and clamp at 0. The source's offset flag and the baseline are stored per item |
+| Spatial sampling of S2 | 20/60 m bands nearest-upsampled to the 10 m cell | The value of the native pixel containing the 10 m cell centre (exact transform, no warping), per band at its native resolution |
+| Weather | ERA5-Land daily, field-centroid. Each dated slot holds the **sum of daily values over the inclusive interval [t_(k−1), t_k]**: temperatures in K·days, precipitation in m. The first dated slot is invalid | ERA5-Land daily at the native cell containing the point, same operator over the same acquisition dates (D07 interval rule replaced by this one for the pretraining view) |
+| DEM / terrain | SRTM 30 m, cubic-upsampled; RichDEM slope (unresolved scale), aspect (degrees), curvature, TWI (mostly NaN) | SRTM 30 m (same product, not the 1 m lidar or 8 m local derivatives) with the same RichDEM derivatives. Validity rule v3 applies (|curvature| > 1,000 invalid) |
+| Soil | SoilGrids 2.0, 250 m, mapped units (clay/silt/sand g/kg, SOC dg/kg, pH × 10), 8 properties × 6 depths | Same product and units, value at the containing 250 m cell |
+| Season dates | Per field: farmer seeding and harvest dates | State × crop × year planting and harvest dates from USDA NASS Crop Progress (median-progress week), recorded as `seeding_date_type = calendar_estimate` |
+
+The concept estimators (spec/yieldsat-point-knowledge-pretraining.md §3)
+then apply unchanged, with US strata (state or climate region × crop).
+
+### B. Pixel-only Sentinel-2 acquisition (answers "can we download only the pixels?")
+
+**Yes.** Whole scenes never need to be downloaded or kept on disk. There are
+two pixel-only routes:
+
+1. **COG range reads (recommended primary).** Sentinel-2 L2A is published
+   as Cloud-Optimized GeoTIFFs with a STAC index:
+   - AWS Earth Search `sentinel-2-l2a`: public, no authentication;
+   - Microsoft Planetary Computer: free, signed URLs.
+
+   Each band is internally tiled (≈ 1,024 × 1,024 pixel blocks). With
+   GDAL/rasterio over HTTP, a point read fetches **only the compressed
+   block(s) containing it** through HTTP range requests, about 1–2 MB per
+   band block, instead of ≈ 1 GB per 12-band scene.
+   - Values are sampled in memory and the block is discarded.
+   - Temporary disk use is essentially zero (a bounded in-memory block
+     cache).
+   - Item IDs, baselines and offsets give exact provenance.
+2. **Google Earth Engine** `COPERNICUS/S2_SR_HARMONIZED`: server-side
+   monthly selection and point sampling (`sampleRegions`). Only the values
+   come back (≈ 1.2 KB per point-season). The offset is already harmonized,
+   which likely matches how YieldSAT was produced. Costs:
+   - Earth Engine quotas and registration;
+   - weaker item-level provenance;
+   - batch-export throughput limits at tens of millions of points.
+
+**Cost driver: bytes per block, not per pixel.** A block covers about
+10 × 10 km at 10 m. An isolated point costs a whole block read per band per
+acquisition, while a block with 1,000 sampled points costs the same.
+Estimate per season and block:
+- ≈ 12 months × (13 bands × ~1.5 MB);
+- plus ≈ 6 acquisitions per month × the 20 m SCL block for clear-sky
+  selection;
+- ≈ 0.3 GB per block-season.
+
+Two consequences:
+- **Clustered sampling is required for the COG route.** Sample points within
+  a limited set of block-sized clusters, e.g. ~2,000 points per cluster.
+  - The 250k pilot is then ≈ 125 blocks ≈ 35 GB of streamed reads.
+  - 20M points per year is ≈ 10k blocks ≈ 3 TB streamed per year, with
+    nothing stored except the point values.
+  - Uniformly scattered points would cost one block per point, ≈ 1,000×
+    more traffic.
+- Diversity quotas (D05) are then met at the cluster level. Clusters are the
+  primary sampling units, stratified by climate region × dominant crop;
+  points within a cluster are stratified by CDL class. Cluster sampling
+  inflates the variance of between-cluster statistics; the diversity reports
+  count clusters as well as points.
+
+Stored per point and slot: 12 band values, SCL class, item ID, acquisition
+date, baseline, offset applied, clear flag. Per point: grid ID, WGS84
+coordinates, cluster ID, CDL class and calendar fields. The layout is the
+YieldSAT cache layout (`temporal (N,24,16)`, `static`, `times`, an index and
+a `fields`-like season table; no target).
+
+### C. Relation to the existing local AOI build
+
+`spec/yieldsat-us-pretraining-point-dataset.md` documents a separate build:
+one Missouri AOI, 2025, 13.2M cropland points.
+- It is **not** YieldSAT-aligned:
+  - 10 S2 bands (no B01/B09);
+  - 24 equal bins over a calendar year instead of the monthly harvest-year
+    grid;
+  - raw DN with no harmonization;
+  - no ERA5-Land and no SoilGrids;
+  - local 8 m terrain instead of SRTM.
+- It may be used for loader tests and for the image-model branch later.
+- It is not used for point-model pretraining unless it is rebuilt to §A.
+
+### D. Decisions
+
+| ID | Decision | Status |
+|---|---|---|
+| D13 | The pretraining view reproduces the measured YieldSAT conventions of §A (monthly 24-slot harvest-year grid, harmonized L2A DN, nearest native pixel, ERA5-Land inclusive interval sums, SRTM/RichDEM, SoilGrids mapped units) | Proposed 2026-10-04 (follows D11) |
+| D14 | S2 is acquired pixel-only: COG range reads from the STAC archive (primary), GEE `S2_SR_HARMONIZED` as parity check/fallback; no scene downloads or scene staging | Proposed 2026-10-04 |
+| D15 | Clustered sampling (block-sized clusters as primary sampling units, D05 quotas at cluster level) to make pixel-only reads efficient | Proposed 2026-10-04; needs confirmation because it changes the sampling frame of D03–D05 |
+| D16 | Season dates for US points come from NASS Crop Progress state × crop × year medians, marked as calendar estimates | Proposed 2026-10-04 |
+
+### E. Pilot build tasks (NP-04, YieldSAT-aligned)
+
+| ID | Deliverable | Acceptance |
+|---|---|---|
+| NP-04a | Parity tests on YieldSAT itself | Re-extract S2 for ≥ 20 YieldSAT field seasons (all 4 countries) with the §A rules from the COG archive. Agreement with the cache: dates in the same slots for ≥ 90% of dated slots; median absolute band difference ≤ 2% of the value. This verifies harmonization, the monthly least-cloudy rule and nearest sampling before any US point is built |
+| NP-04b | Cluster frame and sampler | CONUS cropland (CDL) block clusters, stratified by climate region × dominant crop; deterministic, seeded; 250k points in ≈ 125 clusters across 2021–2025 |
+| NP-04c | Pixel-only S2 reader | STAC query per cluster and season; block-aligned range reads; monthly clear-sky selection; harmonization; streaming writes; bounded memory; measured bytes per point |
+| NP-04d | ERA5-Land, SRTM/RichDEM, SoilGrids joins | Native-cell joins with YieldSAT operators and units; validity rules; first dated slot invalid |
+| NP-04e | YieldSAT-format cache and audit | Cache, index and season table loadable by `YieldSATPointDataset` (no target); concept indices built; unit and range audit against YieldSAT distributions per channel |
+
 ## Objective and confirmed scope
 
 Build an unlabeled, multimodal corpus spanning **2021–2025**, with exactly
@@ -97,6 +211,10 @@ locally retained points are not automatically included in the 100M budget.
 | D10 | Staged scaling (pilot → 1M → 5M → 20M location-years), each stage gated by measured DEV gains; 100M is a ceiling | Confirmed 2026-10-04 |
 | D11 | Point model first; pretraining view in exact YieldSAT point semantics (or a tested adapter) | Confirmed 2026-10-04 |
 | D12 | Stage 0 = knowledge pretraining on YieldSAT inputs before any US data is used | Confirmed 2026-10-04 |
+| D13 | Pretraining view reproduces measured YieldSAT conventions (monthly harvest-year slots, harmonized DN, nearest native pixel, ERA5-Land inclusive sums, SRTM/RichDEM, SoilGrids) | Proposed 2026-10-04; see "YieldSAT-aligned acquisition design" |
+| D14 | Pixel-only S2 (COG range reads; GEE harmonized as parity/fallback); no scene downloads | Proposed 2026-10-04 |
+| D15 | Clustered sampling with block-sized clusters as primary sampling units | Proposed 2026-10-04; changes D03–D05 frame, needs confirmation |
+| D16 | Season dates from NASS Crop Progress state × crop × year medians | Proposed 2026-10-04 |
 
 Additional proposed defaults, open to revision: annual CDL crop eligibility
 including hay/alfalfa, tree crops and fallow; a 10 m metric grid; a common mandatory
