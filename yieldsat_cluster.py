@@ -517,8 +517,9 @@ def stage_local(plan, job, runs, local_root):
         rels += ['index/{}'.format(c), 'cache/{}'.format(c)]
         if nbr and (src / 'neighbourhood' / c / 'neighbourhood_manifest.json').exists():
             rels.append('neighbourhood/{}'.format(c))          # S6 stream (round 2), only when used
-    if any(runs[r].get('knowledge') for r in job['run_ids']):
-        # knowledge pretraining: raw concept indices + frozen text vectors
+    if any(runs[r]['protocol'] == 'pretrain' for r in job['run_ids']):
+        # pretraining: raw concept indices (knowledge targets and, for every arm, the
+        # diagnostics' I3 probe properties) + frozen text vectors
         for c in countries:
             (dst / 'knowledge' / c).mkdir(parents=True, exist_ok=True)
             for f in (src / 'knowledge' / c).glob('concept_raw_c*.npz'):
