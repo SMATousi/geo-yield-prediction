@@ -1,0 +1,123 @@
+# TabM for YieldSAT point prediction
+
+**Status:** proposed 2026-10-05 (user request). Runs in parallel with the
+knowledge-pretraining DEV round. Model: TabM, from Gorishniy et al.,
+*"TabM: Advancing Tabular Deep Learning with Parameter-Efficient Ensembling"*,
+ICLR 2025, reference code `yandex-research/tabm`.
+
+## 1. Motivation
+
+The point task is a tabular regression: one 10 m cell → one yield value.
+Each cell is a fixed set of columns:
+- 24 slots × 12 S2 bands;
+- 24 slots × 4 weather sums;
+- DEM, terrain (4) and soil (48);
+- crop and dates.
+
+Three facts favour a tabular model over our Perceiver/transformer:
+
+1. **Slots are calendar-aligned.** Slot k is calendar month k from January of
+   harvest year − 1 (spec/yieldsat_data_contract.md). "B08 in July" is the
+   same column for every cell, so a flat model sees aligned features
+   directly. Attention over slots must learn an alignment the data already
+   has.
+2. **Strong inductive bias, little data diversity.** The DEV pairs have
+   about 100–700 field seasons, and the cells of a field are highly
+   correlated. Tabular deep models and GBDTs are robust in this regime.
+   TabM's parameter-efficient ensemble of k ≈ 32 MLP members sharing weights
+   (BatchEnsemble-style) reduces variance at little cost.
+3. **Simplicity and speed.** An MLP trains and evaluates many times faster
+   than the Perceiver, which makes larger sweeps (seeds, label budgets,
+   feature sets) affordable.
+
+The YieldSAT paper reports **no tabular baselines**: its benchmark models are
+AFF, 3D-ConvLSTM, 3D-LSTM, LSTM, MMGF and Transformer. On the 12 DEV rows
+the paper's best is AFF (14 of 24 row×level entries), 3D-ConvLSTM (5),
+3D-LSTM (3) and LSTM (2).
+
+**Expected limits.** The paper-best models see image tiles (spatial
+context). TabM on single cells does not, unless the S6 neighbourhood
+features are added; they gave +0.023 pixel R² to the point model in DEV
+round 2. TabM is therefore expected to compete with or beat our point model,
+not necessarily the paper's image models.
+
+## 2. Inputs (feature sets)
+
+The same point batches as `YieldSATPointDataset`: train-only normalization,
+the same masks, cutoff `all_slots` (paper protocols). Feature sets for the
+ablation:
+
+| ID | Features | Width (approx.) |
+|---|---|---|
+| F0 | **Raw flat:** 24 × 16 temporal values + 24 × 16 masks, static 53 + masks, 24 × 3 time features (days since seeding/365, day-of-year sin/cos), crop one-hot | ≈ 900 |
+| F1 | F0 + **S6 neighbourhood** S2 (24 × 12 + masks) | ≈ 1,480 |
+| F2 | F0 + **pretrained stream embeddings**: frozen sensor encoders of a pretraining checkpoint (A2/A3/A6/A7), the per-stream summary embedding (5 × 128) | ≈ 1,540 |
+| F3 | F0 + **concept scores**: the 12 cosine similarities between projected stream embeddings and the concept text prototypes (A3's knowledge heads), plus the 6 rule alignment scores | ≈ 920 |
+| F4 | F0 + F2 + F3 | ≈ 1,560 |
+| F5 | Embeddings + concept scores only (no raw) | ≈ 660 |
+
+- **Missing values:** invalid values are set to 0 after standardization (the
+  point contract), with an explicit mask column per value. TabM sees both.
+- **Numeric embeddings:** periodic or piecewise-linear embeddings (the
+  `rtdl_num_embeddings` package, recommended with TabM) for raw numeric
+  columns; plain linear for embeddings and mask columns.
+- **F2–F5 and leakage:** pretrained features come from the checkpoint of
+  the fold's pretraining unit (`splits/pretrain_units_dev_s0.json`), never a
+  checkpoint whose unit saw the fold's test seasons. Encoders are frozen in
+  the first round. Fine-tuning the encoders jointly with TabM ("TabM head
+  on the point encoders") is a follow-up arm.
+
+## 3. Models and baselines
+
+| ID | Model |
+|---|---|
+| T1 | **TabM** (k = 32, 3 blocks × 512, dropout 0.1, AdamW, MSE on the standardized target), per DEV row (pair-wise like all DEV runs) |
+| T2 | TabM-mini (shared MLP, per-member input adapters only) |
+| G1 | **LightGBM** on F0. A cheap, strong reference; if it beats TabM, the gain comes from the tabular view, not from TabM itself |
+| M1 | Plain MLP on F0 (k = 1): isolates the ensembling effect |
+| A0 | Existing point model (before_full seed 0) |
+
+- **Training:** the same field-balanced sampler (α = 0.5), epochs of 500–1,500
+  steps × 4,096 cells, early stopping on the fold's validation seasons
+  (pixel RMSE, as for the point model). Prediction = mean of the k members.
+- **Hyperparameters:** one small sweep on the CV10 folds of a single DEV pair
+  (GER-R), then fixed for all rows (no per-row tuning on test folds).
+
+## 4. Experiment (DEV)
+
+Same DEV subset, folds, pooled metric and success bar as the improvement
+plan (spec/yieldsat-improvement.md): 12 rows, 94 fine-tuning runs per
+configuration.
+
+- **Round TM-1:** T1 on F0, F1; G1 on F0; M1 on F0. Compared with A0, p3-nbr
+  and the paper best.
+- **Round TM-2:** T1 on F2–F5 with the A2/A3/A7 unit checkpoints, once the
+  knowledge-pretraining DEV round has finished. Questions:
+  - Do pretrained embeddings help TabM (F2 vs F0)?
+  - Do concept scores help (F3 vs F0, and A3 vs A7 concept scores)? Concept
+    scores from A7 (random targets) are the control.
+- **Success:**
+  - **TabM is adopted as the point backbone** if its DEV mean beats A0 by
+    ≥ +0.01 pixel R² (paired fold-bootstrap CI excluding 0) with field R²
+    not worse.
+  - **The paper bar** is paper best + 0.03 at both levels
+    (spec/yieldsat-improvement.md).
+  - Knowledge-derived features count as **helping** only if F3/F4 beat
+    F0/F2 *and* beat the same features from A7 (criterion E2 logic,
+    spec/pretraining/success-criteria.md).
+
+## 5. Tasks
+
+| ID | Deliverable | Acceptance |
+|---|---|---|
+| TM-01 | `models_yieldsat_tabm.py`: TabM/TabM-mini (`tabm` package or a self-contained BatchEnsemble MLP), numeric embeddings, mean-of-members prediction | Unit tests: member independence, masks, shapes, gradients |
+| TM-02 | `dataset/yieldsat_tabular.py`: flat F0/F1 feature builder on `YieldSATPointDataset` batches; column schema recorded | Columns match channel names; no target or date-leaking columns |
+| TM-03 | Feature extractors for F2/F3 from unit checkpoints (frozen encoders + knowledge heads), fold → unit mapping | Leakage test: the unit's excluded set covers the fold's test seasons |
+| TM-04 | Entry point `main_yieldsat_tabm.py` (or `--model tabm` in `main_yieldsat_finetune.py`) with the same report/predictions format | Pooled-metric tools read its outputs unchanged |
+| TM-05 | LightGBM baseline (`--model lgbm`) on F0 | Same split/metric plumbing |
+| TM-06 | GER-R CV10 sweep → fixed hyperparameters | Logged here |
+| TM-07 | Cluster suites `tm_dev1` (TM-1) and `tm_dev2` (TM-2), `results/tabm_dev.md` | DEV pooled tables, paired CIs vs A0 / p3-nbr / paper |
+
+## 6. Progress log
+
+- 2026-10-05 — Specified.
