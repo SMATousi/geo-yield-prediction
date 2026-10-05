@@ -481,3 +481,21 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   shards. Their `est_hours` were raised in the live plan (backup in
   `state/plan_before_priority.json`), so the next free pod takes them. They
   gate A2's fine-tuning. 172 runs done, 0 failed.
+- 2026-10-05 — **Interim yield results (pk_dev1r, 447/560 runs, 0 failed).**
+  - Pretraining is complete for all arms (46/46 each). Fine-tuning: A2
+    73/94, A3 68/94, A6 63/94, A7 59/94.
+  - On the DEV rows complete for both arms (paired fold bootstrap,
+    `yieldsat_pretrain_report.py`):
+
+    | Comparison | Rows | Δ pixel [95% CI] | Δ field | CV10 / LOYO / LORO pixel |
+    |---|---|---|---|---|
+    | A2 − A0 | 7 | −0.003 [−0.037, +0.038] | −0.009 | +0.001 / −0.006 / −0.003 |
+    | A3 − A0 | 6 | −0.021 [−0.052, +0.010] | −0.065 | +0.008 / −0.047 / −0.001 |
+    | A3 − A2 | 6 | −0.020 [−0.084, +0.032] | −0.057 | +0.007 / −0.041 / −0.013 |
+    | A3 − A6 | 3 | −0.019 | −0.038 | |
+    | A3 − A7 | 3 | −0.025 | −0.063 | |
+
+  - So far, SSL pretraining is neutral, and knowledge pretraining is
+    slightly negative, mainly on LOYO (≈ −0.04 pixel) and at field level.
+  - All CIs include 0 and the row sets are partial.
+  - The final verdict waits for all 94 runs per arm.
