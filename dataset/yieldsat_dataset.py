@@ -29,7 +29,7 @@ from dataset.yieldsat_cache import (
     static_valid_mask, temporal_valid_mask,
 )
 from dataset.yieldsat_schema import (
-    CROPS, NUM_TIME_SLOTS, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS, SOIL_UNCERTAINTY,
+    CROPS, NUM_TIME_SLOTS, OPTIONAL_STREAMS, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS, SOIL_UNCERTAINTY,
 )
 from dataset.yieldsat_source import load_country_index, open_source, source_path
 
@@ -45,7 +45,7 @@ def stream_layout(streams, soil_uncertainty='none', aspect_encoding='raw'):
     for each selected stream."""
     layout = {}
     for name in streams:
-        spec = STREAMS[name]
+        spec = STREAMS[name] if name in STREAMS else OPTIONAL_STREAMS[name]
         channels = list(spec['channels'])
         if spec['temporal']:
             pos = [_T_POS[c] for c in channels]
@@ -270,7 +270,9 @@ class YieldSATPointDataset(Dataset):
     def __init__(self, source_root, artifact_root, seasons, normalizer, streams=None,
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
-                 seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None):
+                 seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask'):
+        # 'keep': use the first dated slot's weather sum as the paper does (repro D1)
+        self.weather_first_slot = weather_first_slot
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         if backend not in ('cache', 'h5'):
@@ -384,7 +386,7 @@ class YieldSATPointDataset(Dataset):
         time_valid = np.isfinite(times) & (times <= cutoff[:, None])
         # temporal values: valid value (see temporal_valid_mask) AND eligible
         # slot; a date alone is not validity
-        t_valid = temporal_valid_mask(temporal, times) & time_valid[:, :, None]
+        t_valid = temporal_valid_mask(temporal, times, self.weather_first_slot == 'mask') & time_valid[:, :, None]
         t_norm = np.where(t_valid, (temporal - t_mean[:, None, :]) / t_std[:, None, :],
                           self.fill_value)
         s_valid = static_valid_mask(static)

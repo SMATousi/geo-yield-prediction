@@ -118,3 +118,18 @@ pipeline:
   - Notable: the paper's plain pixel LSTM with S2+ADM (no spatial context)
     reports GER-R CV10 0.47 pixel, while our point model gets 0.38 pooled
     there. R1 tests this first.
+- 2026-10-05 — **RP-01–RP-03 implemented; R1 started locally.**
+  - `yieldsat_repro_report.py`: fold mean ± std plus pooled, next to the
+    paper row.
+  - Switches: `--weather_first_slot keep` (D1); `--streams … yieldsat_coords`
+    (D3, an `OPTIONAL_STREAMS` entry so default stream sets are unchanged);
+    `--normalization supplied` (D2), now reading
+    `<artifact_root>/supplied_stats/<Country>.json` exported from the source
+    NetCDF when the source is absent.
+  - `PaperLSTMBaseline` takes `--lstm_hidden/--lstm_layers/--lstm_head mlp`
+    (the thesis IF-LSTM), and fine-tuning gained `--early_stop_patience`.
+    63 tests pass.
+  - First run: GER-R CV10, thesis IF-LSTM, paper-like settings (supplied
+    stats, raw target, NaN → −1, first slot kept, coordinates). Full-pass
+    epochs take ≈ 2 s; fold 0 early-stopped at epoch 17. Target: paper 0.47
+    ± 0.10 pixel / 0.81 ± 0.09 field.

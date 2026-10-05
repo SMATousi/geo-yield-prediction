@@ -368,17 +368,22 @@ class PaperLSTMBaseline(nn.Module):
     ``target_normalization='none'``).
     """
 
-    def __init__(self, layout, hidden_dim=64, num_layers=1):
+    def __init__(self, layout, hidden_dim=64, num_layers=1, head='fc'):
+        """head 'fc': Linear -> yield (tutorial). 'mlp': the thesis IF-LSTM head
+        (Miranda 2025, A.1.2): Linear(h, 128) -> BatchNorm -> ReLU -> Linear(128, 1)."""
         super().__init__()
         self.layout = layout
         self.streams = tuple(layout)
         in_dim = sum(len(l['out_channels']) for l in layout.values())
         self.lstm = nn.LSTM(input_size=in_dim, hidden_size=hidden_dim, num_layers=num_layers,
                             batch_first=True)
-        self.fc = nn.Linear(hidden_dim, 1)
+        if head == 'mlp':
+            self.fc = nn.Sequential(nn.Linear(hidden_dim, 128), nn.BatchNorm1d(128), nn.ReLU(), nn.Linear(128, 1))
+        else:
+            self.fc = nn.Linear(hidden_dim, 1)
         self.use_crop_context = False
         self.config = {'model': 'paper_lstm', 'hidden_dim': hidden_dim, 'num_layers': num_layers,
-                       'in_dim': in_dim}
+                       'in_dim': in_dim, 'head': head}
 
     def _inputs(self, batch):
         parts, T = [], None

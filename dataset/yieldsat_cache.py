@@ -109,7 +109,7 @@ def static_valid_mask(static):
     return valid
 
 
-def temporal_valid_mask(temporal, times):
+def temporal_valid_mask(temporal, times, mask_first_weather=True):
     """Validity of canonical temporal values before any cutoff.
 
     A value is valid when it is finite on a dated slot, except weather at a
@@ -121,7 +121,8 @@ def temporal_valid_mask(temporal, times):
     valid = np.isfinite(temporal) & tvalid[:, :, None]
     has = np.flatnonzero(tvalid.any(axis=1))
     first = np.argmax(tvalid, axis=1)
-    valid[has, first[has], WEA_SLICE] = False
+    if mask_first_weather:
+        valid[has, first[has], WEA_SLICE] = False
     return valid
 
 

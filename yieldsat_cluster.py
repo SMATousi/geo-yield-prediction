@@ -894,10 +894,10 @@ def gpu_health_check():
         "import numpy\n"          # before torch: avoids the MKL/libgomp load-order error
         "import torch\n"
         "from dataset.yieldsat_dataset import stream_layout\n"
-        "from dataset.yieldsat_schema import STREAMS\n"
+        "from dataset.yieldsat_schema import DEFAULT_STREAMS\n"
         "from models_yieldsat import YieldSATPointModel\n"
         "d = torch.device('cuda'); torch.manual_seed(0)\n"
-        "L = stream_layout(list(STREAMS)); m = YieldSATPointModel(L).to(d)\n"
+        "L = stream_layout(list(DEFAULT_STREAMS)); m = YieldSATPointModel(L).to(d)\n"
         "B, T = 512, 24\n"
         "b = {'inputs': {}, 'masks': {}, 'available': {}}\n"
         "for n, l in L.items():\n"

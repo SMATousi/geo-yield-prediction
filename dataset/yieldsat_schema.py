@@ -62,6 +62,10 @@ STREAMS = {
     'yieldsat_soil': {'channels': SOIL, 'temporal': False, 'family': 'soil'},
 }
 DEFAULT_STREAMS = tuple(STREAMS)
+# Optional input streams, never part of STREAMS/DEFAULT_STREAMS: coordinates
+# (unit-sphere x/y/z) as in the paper's neighbourhood models
+# (spec/yieldsat-paper-reproduction.md D3).
+OPTIONAL_STREAMS = {'yieldsat_coords': {'channels': COORDS, 'temporal': False, 'family': 'coords'}}
 
 # Global crop vocabulary for country-qualified crop context and reporting.
 CROPS = ('corn', 'rapeseed', 'soybean', 'wheat')

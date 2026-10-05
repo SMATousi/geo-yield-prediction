@@ -30,7 +30,7 @@ from dataset.yieldsat_dataset import (
     CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
     YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats,
 )
-from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, CROPS, PROVENANCE, STREAMS
+from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, OPTIONAL_STREAMS, PROVENANCE, STREAMS
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
 from models_yieldsat import FUSIONS, PaperLSTMBaseline, YieldSATPointModel
@@ -51,7 +51,14 @@ def get_args_parser():
     p.add_argument('--backend', default='cache', choices=['cache', 'h5'])
     p.add_argument('--skip_source_check', action='store_true',
                    help='cache backend only: do not fingerprint the source NetCDF (local smoke without it)')
-    p.add_argument('--streams', nargs='+', default=list(STREAMS), choices=list(STREAMS))
+    p.add_argument('--streams', nargs='+', default=list(DEFAULT_STREAMS), choices=list(STREAMS) + list(OPTIONAL_STREAMS))
+    p.add_argument('--weather_first_slot', default='mask', choices=['mask', 'keep'],
+                   help="'keep' uses the first dated slot's weather sum, as the paper (repro D1)")
+    p.add_argument('--lstm_hidden', type=int, default=64)
+    p.add_argument('--lstm_layers', type=int, default=1)
+    p.add_argument('--lstm_head', default='fc', choices=['fc', 'mlp'])
+    p.add_argument('--early_stop_patience', type=int, default=0,
+                   help='finetune: stop after this many epochs without validation improvement (0 = off)')
     p.add_argument('--cutoff_mode', default='before_harvest', choices=CUTOFF_MODES)
     p.add_argument('--cutoff_days', type=int, default=30)
     p.add_argument('--soil_uncertainty', default='none', choices=['none', 'ancillary'])
@@ -389,8 +396,13 @@ def main(args):
     train_fields = [(f['country'], f['field_code'], targets[f['country']][f['row_start']:f['row_end']])
                     for f in parts['train']]
     normalizer = YieldSATNormalizer.fit(args.artifact_root, train_fields, pooling=args.norm_pooling)
-    supplied = ({c: load_supplied_stats(args.source_root, c) for c in args.countries}
-                if args.normalization == 'supplied' else None)
+    def _supplied(c):
+        # exported copy (<artifact_root>/supplied_stats/<c>.json) when the source NetCDF is absent
+        cached = Path(args.artifact_root) / 'supplied_stats' / '{}.json'.format(c)
+        if args.skip_source_check and cached.exists():
+            return {k: np.asarray(v) for k, v in json.loads(cached.read_text()).items()}
+        return load_supplied_stats(args.source_root, c)
+    supplied = ({c: _supplied(c) for c in args.countries} if args.normalization == 'supplied' else None)
     normalizer = NormalizerView(normalizer, features=args.normalization,
                                 target=args.target_normalization, supplied=supplied)
     (out_dir / 'normalizer.json').write_text(json.dumps(normalizer.to_json()))
@@ -398,7 +410,7 @@ def main(args):
     common = dict(streams=args.streams, backend=args.backend, cutoff_mode=args.cutoff_mode,
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
                   aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
-                  check_source=check,
+                  check_source=check, weather_first_slot=args.weather_first_slot,
                   neighbourhood_root=str(Path(args.artifact_root) / 'neighbourhood') if args.neighbourhood else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
@@ -408,7 +420,8 @@ def main(args):
     if args.model == 'paper_lstm':
         if args.mode == 'pretrain':
             raise SystemExit('the paper LSTM baseline has no pretraining mode')
-        model = PaperLSTMBaseline(train_ds.layout).to(device)
+        model = PaperLSTMBaseline(train_ds.layout, hidden_dim=args.lstm_hidden, num_layers=args.lstm_layers,
+                                  head=args.lstm_head).to(device)
     else:
         model = YieldSATPointModel(train_ds.layout, embed_dim=args.embed_dim,
                                    num_latents=args.num_latents, depth=args.depth,
@@ -457,6 +470,7 @@ def main(args):
     sampler = FieldBalancedBatchSampler(train_ds.season_ranges, args.batch_size, args.steps_per_epoch,
                                         alpha=args.field_alpha, block_size=block, seed=args.seed)
     history, best, step = [], None, 0
+    bad_epochs = 0
     samples_seen, data_time = 0, 0.0
     start_epoch = 0
     resume_path = Path(args.resume_dir) / 'resume.pth' if args.resume_dir and args.mode == 'pretrain' else None
@@ -508,11 +522,17 @@ def main(args):
             rec['val_field_rmse'] = m['overall']['field_level']['rmse']
             if best is None or rec['val_pixel_rmse'] < best['val_pixel_rmse']:
                 best = dict(rec)
+                bad_epochs = 0
+            else:
+                bad_epochs += 1
                 torch.save({'model': model.state_dict(), 'descriptor': model.descriptor(), 'args': vars(args)},
                            out_dir / 'checkpoint_best.pth')
         history.append(rec)
         print(json.dumps(rec), flush=True)
         wb.log_epoch(rec)
+        if args.early_stop_patience and args.mode == 'finetune' and bad_epochs >= args.early_stop_patience:
+            print('early stopping at epoch', epoch, flush=True)
+            break
         if resume_path is not None:
             resume_path.parent.mkdir(parents=True, exist_ok=True)
             tmp = resume_path.with_suffix('.tmp')
