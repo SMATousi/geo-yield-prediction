@@ -475,3 +475,9 @@ The same DEV subset, matrix and pooled metric as the improvement plan
   - An earlier all-unit comparison suggested large I3/I4 losses for A3; that
     was a unit-subset artifact. The report now compares I3/I4 on common
     units.
+- 2026-10-05 — Pretraining: A3, A6 and A7 are complete (46/46 each); A2 is
+  at 24/46. A2's last two shards (plan jobs 57/58), claimed by the deleted
+  pool-a pods, kept losing the longest-first queue to 3.3 h fine-tuning
+  shards. Their `est_hours` were raised in the live plan (backup in
+  `state/plan_before_priority.json`), so the next free pod takes them. They
+  gate A2's fine-tuning. 172 runs done, 0 failed.
