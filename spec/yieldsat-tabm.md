@@ -183,3 +183,26 @@ configuration.
   - Neighbourhood arrays were built locally for Argentina, Brazil and
     Uruguay.
   - TabM F0 is running, MLP F0 is queued, and TabM F1 is queued after it.
+- 2026-10-05 — **TM-1 (F0) complete** (12 DEV rows, pooled pixel / field
+  R²):
+
+  | Config | Pixel | Field | CV10 / LOYO / LORO pixel |
+  |---|---|---|---|
+  | **TabM F0** | **0.342** | 0.462 | 0.51 / 0.25 / 0.27 |
+  | LightGBM F0 | 0.313 | 0.420 | 0.49 / 0.21 / 0.23 |
+  | MLP F0 (k = 1) | 0.288 | 0.392 | 0.47 / 0.14 / 0.26 |
+  | Point model A0 | 0.309 | 0.472 | |
+  | p3-nbr (point + S6) | 0.332 | 0.497 | 0.50 / 0.24 / 0.26 |
+  | Paper best | 0.460 | 0.686 | 0.56 / 0.41 / 0.41 |
+
+  - TabM is the best pixel-level DEV mean of all point variants so far:
+    +0.033 vs A0 and +0.010 vs p3-nbr. Field R² is about level with A0
+    (−0.010).
+  - It beats or ties A0 on 9 of 12 rows. Largest gains: GER-R LORO 0.21 vs
+    −0.25, GER-R LOYO 0.27 vs 0.09, ARG-W LOYO 0.56 vs 0.46.
+  - Weak spot: BRA-C LORO / LOYO (−0.01 / −0.13 pixel; field −0.28 /
+    −0.45), where A0 scores 0.22 / 0.12.
+  - The ensemble is essential: the same network without it (MLP) loses
+    0.054 pixel.
+  - TabM F1 (+ neighbourhood) is running. The paired CI vs A0 is computed in
+    the final report (`results/tabm_dev.md`).
