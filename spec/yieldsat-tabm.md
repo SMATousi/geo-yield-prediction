@@ -144,3 +144,11 @@ configuration.
     capped at 2,000 steps with early stopping on validation pixel RMSE:
     TabM at lr 1e-3 and 3e-4, TabM-mini, TabM with d_block 256 and
     dropout 0.2, MLP, LightGBM.
+- 2026-10-05 — **Sweep, first results (GER-R CV10, pooled):**
+  - LightGBM (F0): pixel R² 0.407, field 0.690 (10/10 folds, ≈ 12 s per
+    fold). That beats the point model (A0 0.38 / 0.67) on this row; the
+    paper's best is 0.49 / 0.81.
+  - TabM lr 1e-3: 0.388 / 0.664 on 5/10 folds so far (≈ 3 min per fold,
+    ≈ 1,400 steps before early stopping).
+  - LightGBM F0 was launched on all 12 DEV rows (`runs/tabm_dev1`, tag
+    `tm-lgbm-f0`) while the GPU sweep continues.
