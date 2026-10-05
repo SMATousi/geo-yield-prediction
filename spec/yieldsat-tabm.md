@@ -206,3 +206,8 @@ configuration.
     0.054 pixel.
   - TabM F1 (+ neighbourhood) is running. The paired CI vs A0 is computed in
     the final report (`results/tabm_dev.md`).
+- 2026-10-05 — **Correction:** TabM F1 had crashed with a CUDA OOM shortly
+  after starting (prediction batch 16,384 × 32 members at F1's ≈ 800 value
+  columns needed a 6.4 GB block); it had been reported as running. The
+  prediction batch is now 4,096 with `expandable_segments`; restarted
+  (16.4 GB, 100% GPU).

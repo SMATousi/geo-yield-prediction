@@ -92,7 +92,7 @@ def cap_rows(season, rows, per_field, seed):
 
 
 @torch.no_grad()
-def predict(model, V, M, rows, device, bs=16384):
+def predict(model, V, M, rows, device, bs=4096):
     model.eval()
     out = []
     for a in range(0, len(rows), bs):
