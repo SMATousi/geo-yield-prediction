@@ -1,4 +1,5 @@
-"""Cluster driver for the TabM DEV rounds (spec/yieldsat-tabm.md, TM-07).
+"""Cluster driver for the TabM DEV rounds (spec/yieldsat-tabm.md, TM-07) and other
+claimable work units (a unit with ``script`` runs that script with its own arguments).
 
   units  expand a suite (cluster/suites/tabm_*.yaml) into work units, one per
          (config, DEV row, chunk of <= --chunk folds), skipping units whose
@@ -106,8 +107,13 @@ def cmd_pool(a):
         d = claims.d(unit['id'])
         attempts = int((d / 'attempts').read_text()) + 1 if (d / 'attempts').exists() else 1
         (d / 'attempts').write_text(str(attempts))
-        cmd = [sys.executable, 'main_yieldsat_tabm.py', '--artifact_root', a.artifact_root, '--out_root', out_root,
-               *unit['args']]
+        if 'script' in unit:
+            # generic unit: full argument list with {artifact_root} / {out_root} / {source_root} placeholders
+            fmt = dict(artifact_root=a.artifact_root, out_root=out_root, source_root=a.source_root)
+            cmd = [sys.executable, unit['script'], *[str(x).format(**fmt) for x in unit['args']]]
+        else:
+            cmd = [sys.executable, 'main_yieldsat_tabm.py', '--artifact_root', a.artifact_root, '--out_root', out_root,
+                   *unit['args']]
         print('unit', unit['id'], 'attempt', attempts, flush=True)
         stop = threading.Event()
 
@@ -153,6 +159,7 @@ def main():
     q.add_argument('--units', required=True)
     q.add_argument('--artifact_root', default='/data/YieldSAT/yieldsat_artifacts')
     q.add_argument('--out_root', default=None)
+    q.add_argument('--source_root', default='/data/YieldSAT/preprocessed')
     q.add_argument('--stale_minutes', type=int, default=45)
     q.add_argument('--max_attempts', type=int, default=2)
     q.set_defaults(func=cmd_pool)

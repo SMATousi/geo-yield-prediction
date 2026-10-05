@@ -1,0 +1,69 @@
+# Reproduction R1 seeds (spec/yieldsat-paper-reproduction.md): thesis IF-LSTM on GER-R CV10,
+# 4 input configs x 3 seeds x 10 folds = 120 claimable units (yieldsat_tabm_cluster.py pool,
+# cluster/tabm/repro_seeds_units.json). Each pod stages Germany's cache/index/fold manifests to local
+# scratch (random-access full-pass epochs); supplied stats come from the source NetCDF on the PVC.
+# No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-repro-seeds
+spec:
+  completions: 16
+  parallelism: 16
+  backoffLimit: 30
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+      containers:
+      - name: repro
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          A=/data/YieldSAT/yieldsat_artifacts && L=/scratch/a &&
+          mkdir -p $L/cache $L/index $L/splits $L/geometry &&
+          cp -r $A/cache/Germany $L/cache/ && cp -r $A/index/Germany $L/index/ &&
+          cp $A/splits/paper_cv10_GER-R_season_paper_s0* $L/splits/ &&
+          (cp $A/geometry/fields_geometry_*.json $L/geometry/ 2>/dev/null || true) &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/repro_seeds_units.json
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 12Gi, ephemeral-storage: 10Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 12Gi, ephemeral-storage: 10Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 2Gi}

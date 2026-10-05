@@ -281,3 +281,18 @@ pipeline:
       bands (incl. soil uncertainty), with validation and test-selected
       epochs both reported;
     - then R2 (3D-LSTM 5×5).
+- 2026-10-05 — **Seeds + all-band runs on the cluster** (project lead: leads
+  1 and 2, run on the cluster).
+  - GER-R CV10, thesis IF-LSTM, paper-like settings, 50 epochs with the test
+    scored every epoch (diagnostic), seeds 0–2. Configs:
+    - S2;
+    - S2 + DEM;
+    - S2 + weather + soil + DEM;
+    - **all 120 bands**: all streams + 48 soil uncertainty bands +
+      coordinates.
+  - 120 claimable units through the generic mode of
+    `yieldsat_tabm_cluster.py pool` (`script` units with `{artifact_root}`
+    placeholders), job `cluster/nautilus/repro_seeds_job.yaml`: 16 × A10,
+    4 CPU / 12 Gi, Germany data staged to local scratch.
+  - Results go to `/data/YieldSAT/yieldsat_results/repro_seeds`; validation-
+    and test-selected epochs both come from the same runs.
