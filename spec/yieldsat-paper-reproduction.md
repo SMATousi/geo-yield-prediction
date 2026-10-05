@@ -133,3 +133,24 @@ pipeline:
     stats, raw target, NaN → −1, first slot kept, coordinates). Full-pass
     epochs take ≈ 2 s; fold 0 early-stopped at epoch 17. Target: paper 0.47
     ± 0.10 pixel / 0.81 ± 0.09 field.
+- 2026-10-05 — **R1, GER-R CV10, paper-like IF-LSTM: not reproduced.**
+
+  | Run | Pixel R² fold mean ± std (pooled) | Field R² fold mean ± std (pooled) |
+  |---|---|---|
+  | Ours (thesis IF-LSTM, supplied stats, first slot kept, coords) | 0.28 ± 0.12 (0.30) | 0.53 ± 0.21 (0.57) |
+  | Paper (S2+ADM, input fusion, LSTM) | 0.47 ± 0.10 | 0.81 ± 0.09 |
+
+  - Early stopping triggered at epochs 10–23; per-fold pixel R² ranges
+    0.07–0.45.
+  - This is below our own point model on this row (0.38 pooled), and below
+    our S2-only tutorial LSTM of PC-05 (0.33 vs the paper's 0.36). Adding ADM
+    hurt our LSTM, while it helps in the paper (0.36 → 0.47).
+  - Ablations running on GER-R:
+    - a1: S2-only thesis LSTM;
+    - a2: no coordinates;
+    - a3: first-slot weather masked;
+    - a4: tutorial LSTM (1 × 64, 15 epochs) with ADM;
+    - a5: no early stopping.
+  - The release ML tutorial confirms only the data structure and the
+    `stats-*` fields (its example is LightGBM on S2), so it reveals no
+    preprocessing we miss.
