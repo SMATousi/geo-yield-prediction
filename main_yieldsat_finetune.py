@@ -57,6 +57,10 @@ def get_args_parser():
     p.add_argument('--lstm_hidden', type=int, default=64)
     p.add_argument('--lstm_layers', type=int, default=1)
     p.add_argument('--lstm_head', default='fc', choices=['fc', 'mlp'])
+    p.add_argument('--diag_test_each_epoch', action='store_true',
+                   help='DIAGNOSTIC ONLY: also score the test fold after every epoch (report.history), to '
+                        'measure the effect of selecting the epoch on the test fold (repro hypothesis H1); '
+                        'never used for model selection')
     p.add_argument('--early_stop_patience', type=int, default=0,
                    help='finetune: stop after this many epochs without validation improvement (0 = off)')
     p.add_argument('--cutoff_mode', default='before_harvest', choices=CUTOFF_MODES)
@@ -471,6 +475,7 @@ def main(args):
                                         alpha=args.field_alpha, block_size=block, seed=args.seed)
     history, best, step = [], None, 0
     bad_epochs = 0
+    diag_test_ds = None
     samples_seen, data_time = 0, 0.0
     start_epoch = 0
     resume_path = Path(args.resume_dir) / 'resume.pth' if args.resume_dir and args.mode == 'pretrain' else None
@@ -514,6 +519,14 @@ def main(args):
         rec.update({'train_' + k: float(np.mean(v)) for k, v in comps.items()})
         if args.mode == 'pretrain' and val_ds is not None and args.pretrain_val_batches > 0:
             rec.update(pretrain_validation(trainable, val_ds, args, device, amp))
+        if args.mode == 'finetune' and args.diag_test_each_epoch:
+            if diag_test_ds is None:
+                diag_test_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['test'], normalizer,
+                                                    max_rows_per_field=args.test_rows_per_field, **common)
+            pt_, yt_, st_, _, _ = predict(model, diag_test_ds, args, device)
+            mt_ = evaluate_predictions(pt_, yt_, st_, diag_test_ds.seasons)
+            rec['diag_test_pixel_r2'] = mt_['overall']['pixel']['r2']
+            rec['diag_test_field_r2'] = mt_['overall']['field_level']['r2']
         if args.mode == 'finetune' and val_ds is not None:
             p, y, s, _, _ = predict(model, val_ds, args, device)
             m = evaluate_predictions(p, y, s, val_ds.seasons)

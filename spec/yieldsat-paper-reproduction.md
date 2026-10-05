@@ -170,3 +170,24 @@ pipeline:
     degree-unit rise/run, aspect, curvature and mostly-missing TWI.
   - Per-modality ablations are queued after a4/a5: S2 + weather / soil / DEM
     / terrain, and S2 + weather + soil + DEM.
+- 2026-10-05 — **Terrain is not the cause.** GER-R CV10, fold mean ± std,
+  pixel / field:
+  - b5, S2 + weather + soil + DEM (the thesis ADM set, no terrain):
+    0.29 ± 0.17 / 0.55 ± 0.33;
+  - R1, all ADM: 0.28 / 0.53;
+  - a4, tutorial LSTM 1 × 64 with ADM, 15 epochs: 0.23 / 0.45;
+  - a1, S2 only: 0.32 / 0.60;
+  - paper: 0.47 / 0.81.
+  - Weather, soil and DEM themselves fail to help.
+  - The S2+ADM runs peak very early: the validation-best epoch is often
+    1–3 (median ≈ 8), with per-fold pixel R² from −0.19 to 0.43. That fits
+    fast memorization of field-constant soil/DEM values.
+- **Hypothesis H1: test-fold epoch selection.** The release tutorial reports
+  the best epoch *on the evaluated split* (PC-Q7).
+  - If the paper did the same, high-variance, early-peaking S2+ADM models
+    gain far more from that optimistic selection than S2-only models.
+  - Diagnostic `--diag_test_each_epoch` (never used for selection): 50
+    epochs without early stopping, test scored every epoch, for S2-only and
+    S2 + weather + soil + DEM.
+  - Compared: validation-selected vs test-selected vs last epoch.
+  - The single-modality runs (b1–b4) and a5 continue in the queue.
