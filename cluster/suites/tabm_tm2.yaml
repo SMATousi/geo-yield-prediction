@@ -1,0 +1,12 @@
+# TabM DEV round TM-2 (spec/yieldsat-tabm.md): the adopted TabM F1 backbone plus pretrained
+# features from each fold's own pretraining unit (pk_dev1r, leakage-checked):
+# frozen stream embeddings (A2 SSL vs A3 knowledge), concept scores + rule alignments
+# (A3 vs the A7 random-targets control), and A3 embeddings + concept scores.
+name: tabm_tm2
+out_root: /data/YieldSAT/yieldsat_results/tabm_dev2
+configs:
+- {tag: tm2-emb-a2, model: tabm, features: F1, args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3, --pretrained_arm, a2, --pretrained_kind, emb]}
+- {tag: tm2-emb-a3, model: tabm, features: F1, args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3, --pretrained_arm, a3, --pretrained_kind, emb]}
+- {tag: tm2-cpt-a3, model: tabm, features: F1, args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3, --pretrained_arm, a3, --pretrained_kind, cpt]}
+- {tag: tm2-cpt-a7, model: tabm, features: F1, args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3, --pretrained_arm, a7, --pretrained_kind, cpt]}
+- {tag: tm2-all-a3, model: tabm, features: F1, args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3, --pretrained_arm, a3, --pretrained_kind, all]}

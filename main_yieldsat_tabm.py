@@ -96,18 +96,18 @@ def cap_rows(season, rows, per_field, seed):
 
 
 @torch.no_grad()
-def predict(model, V, M, rows, device, bs=4096):
+def predict(model, V, M, rows, device, bs=4096, X=None):
     model.eval()
     out = []
     for a in range(0, len(rows), bs):
         r = torch.as_tensor(rows[a:a + bs], device=device)
         with torch.autocast(device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
-            out.append(model(V[r].float(), M[r]).float().cpu().numpy())
+            out.append(model(V[r].float(), M[r], None if X is None else X[r].float()).float().cpu().numpy())
     model.train()
     return np.concatenate(out) if out else np.zeros(0)
 
 
-def train_nn(args, pair, rows, Vn, device):
+def train_nn(args, pair, rows, Vn, device, Xn=None):
     from models_yieldsat_tabm import TabMRegressor
     torch.manual_seed(args.seed)
     y = pair['target']
@@ -116,8 +116,10 @@ def train_nn(args, pair, rows, Vn, device):
     M = torch.as_tensor(pair['masks'], device=device)
     Y = torch.as_tensor(np.where(np.isfinite(y), (y - ym) / ys, 0.0), device=device, dtype=torch.float32)
     arch = {'tabm': 'tabm', 'tabm-mini': 'tabm-mini', 'mlp': 'mlp'}[args.model]
+    X = None if Xn is None else torch.as_tensor(Xn, device=device, dtype=torch.float16)
     model = TabMRegressor(V.shape[1], M.shape[1], k=args.k, n_blocks=args.n_blocks, d_block=args.d_block,
-                          dropout=args.dropout, d_embedding=args.d_embedding, arch_type=arch).to(device)
+                          dropout=args.dropout, d_embedding=args.d_embedding, arch_type=arch,
+                          n_plain=0 if X is None else X.shape[1]).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     train = rows['train'][np.isfinite(y[rows['train']])]
     draw = balanced_sampler(pair['season'], train, args.field_alpha, device, args.seed)
@@ -127,14 +129,14 @@ def train_nn(args, pair, rows, Vn, device):
     for step in range(1, args.max_steps + 1):
         idx = draw(args.batch_size)
         with torch.autocast(device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
-            loss = model.loss(V[idx].float(), M[idx], Y[idx])
+            loss = model.loss(V[idx].float(), M[idx], Y[idx], None if X is None else X[idx].float())
         opt.zero_grad(set_to_none=True)
         loss.float().backward()
         opt.step()
         if step % args.eval_every == 0 or step == args.max_steps:
             rec = {'step': step, 'train_loss': float(loss), 'seconds': round(time.time() - t0, 1)}
             if val is not None:
-                pv = predict(model, V, M, val, device) * ys + ym
+                pv = predict(model, V, M, val, device, X=X) * ys + ym
                 rec['val_pixel_rmse'] = float(np.sqrt(np.nanmean((pv - y[val]) ** 2)))
                 if rec['val_pixel_rmse'] < best:
                     best, bad = rec['val_pixel_rmse'], 0
@@ -146,8 +148,8 @@ def train_nn(args, pair, rows, Vn, device):
                 break
     if best_state is not None:
         model.load_state_dict(best_state)
-    pt = predict(model, V, M, rows['test'], device) * ys + ym
-    del V, M, Y
+    pt = predict(model, V, M, rows['test'], device, X=X) * ys + ym
+    del V, M, Y, X
     torch.cuda.empty_cache()
     return pt, {'history': hist, 'best_val_pixel_rmse': None if best == np.inf else best, 'steps': step,
                 'model': model.config, 'samples': step * args.batch_size}
@@ -187,7 +189,17 @@ def run_fold(args, row, fold_i, split_name, pair, device):
         pt, info = train_lgbm(args, pair, rows)
     else:
         mean, std = standardize_stats(pair['values'], rows['train'])
-        pt, info = train_nn(args, pair, rows, standardize(pair['values'], mean, std), device)
+        Xn, unit = None, None
+        if args.pretrained_arm:
+            from yieldsat_tabm_pretrained import pretrained_features
+            X, unit = pretrained_features(args.artifact_root, args.pretrain_root, args.pretrained_arm, split_name,
+                                          pair, row['country'], row['crop'], args.pretrained_kind, device)
+            xm, xs = standardize_stats(X, rows['train'])
+            Xn = standardize(X, xm, xs)
+        pt, info = train_nn(args, pair, rows, standardize(pair['values'], mean, std), device, Xn)
+        if unit:
+            info['pretrained'] = {'arm': args.pretrained_arm, 'kind': args.pretrained_kind, 'unit': unit,
+                                  'columns': int(Xn.shape[1])}
     te = rows['test']
     s_all = pair['season'][te]
     uniq = np.unique(s_all)
@@ -220,6 +232,9 @@ def main():
     p.add_argument('--protocols', nargs='+', default=['cv', 'loyo', 'loro'])
     p.add_argument('--max_folds', type=int, default=0)
     p.add_argument('--folds', type=int, nargs='*', default=None, help='fold indices to run (cluster work units)')
+    p.add_argument('--pretrained_arm', default='', help='TM-2: A2/A3/A7 unit checkpoints as extra features')
+    p.add_argument('--pretrained_kind', default='emb', choices=['emb', 'cpt', 'all'])
+    p.add_argument('--pretrain_root', default='/data/YieldSAT/yieldsat_results/pk_dev1r')
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--k', type=int, default=32)
     p.add_argument('--n_blocks', type=int, default=3)

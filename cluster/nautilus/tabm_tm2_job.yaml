@@ -1,0 +1,62 @@
+# TabM DEV round TM-2 on Nautilus (spec/yieldsat-tabm.md): 16 A10 pods
+# claim work units from cluster/tabm/tabm_tm2_units.json (yieldsat_tabm_cluster.py pool) and
+# write to /data/YieldSAT/yieldsat_results/tabm_dev2. Sized from measured use: training is
+# GPU-bound (~100%), the largest flat-matrix build (URG-S F1) peaks at ~22-25 GB RAM.
+# No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-tabm-tm2
+spec:
+  completions: 16
+  parallelism: 16
+  backoffLimit: 30
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+      containers:
+      - name: tabm
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          pip install --quiet --no-cache-dir tabm==0.0.3 rtdl_num_embeddings lightgbm &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/tabm_tm2_units.json
+          --artifact_root /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 40Gi, ephemeral-storage: 20Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 40Gi, ephemeral-storage: 20Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 2Gi}

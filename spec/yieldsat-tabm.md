@@ -280,3 +280,26 @@ configuration.
   - **Next: TM-2.** TabM F1 plus pretrained-embedding and concept-score
     features (`pk_dev1r` unit checkpoints, A7 control); TM-03 extractors
     first.
+- 2026-10-05 — **TM-03 done; TM-2 launched on the cluster** (project lead's
+  decision).
+  - `yieldsat_tabm_pretrained.py` encodes every cell of a pair with the
+    frozen encoders of the fold's own `pk_dev1r` unit checkpoint (eval mode,
+    the unit's normalizer and inputs):
+    - `emb`: 5 stream summary embeddings × 128 = 640 columns;
+    - `cpt`: 12 concept scores + 6 rule alignments = 18 columns;
+    - `all`: both.
+  - **Leakage guard:** `unit_for` refuses a unit whose train/val contains
+    the fold's test seasons. All 94 DEV folds checked clean.
+  - Extra features enter TabM as standardized plain columns (no periodic
+    embedding, `TabMRegressor(n_plain=…)`). Only concept scores are cached:
+    caching embeddings for every arm × unit × pair would need ≈ 240 GB.
+  - Local smoke on a stand-in A3 unit: all three kinds ran end to end
+    (658 extra columns for `all`).
+  - **Suite `tabm_tm2`** on the TabM F1 backbone: emb-A2, emb-A3, cpt-A3,
+    cpt-A7 (control), all-A3. 185 units, 470 folds, 16 × A10, 4 CPU /
+    40 Gi. Results in `/data/YieldSAT/yieldsat_results/tabm_dev2`.
+  - Questions:
+    - emb-A3 vs F1: do pretrained embeddings help?
+    - emb-A3 vs emb-A2: does knowledge pretraining improve them?
+    - cpt-A3 vs cpt-A7: do the learned concepts carry yield information
+      beyond the random-targets control?
