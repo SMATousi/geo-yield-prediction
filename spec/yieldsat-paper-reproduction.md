@@ -191,3 +191,37 @@ pipeline:
     S2 + weather + soil + DEM.
   - Compared: validation-selected vs test-selected vs last epoch.
   - The single-modality runs (b1–b4) and a5 continue in the queue.
+- 2026-10-05 — **R1 complete** (`results/repro_r1.md`). GER-R CV10, fold
+  mean pixel / field R².
+  - **Single ADM modality** (validation-selected):
+
+    | Inputs | Pixel / field | vs S2 only |
+    |---|---|---|
+    | S2 + DEM | 0.37 / 0.67 | helps |
+    | S2 + terrain | 0.32 / 0.62 | neutral |
+    | S2 + soil | 0.27 / 0.53 | hurts |
+    | S2 + weather | 0.26 / 0.49 | hurts |
+    | S2 only | 0.32 / 0.60 | |
+
+  - **H1 rejected.** With test-selected epochs: S2 0.44 / 0.78, S2 +
+    weather + soil + DEM 0.42 / 0.75. With validation selection: 0.33 / 0.63
+    and 0.35 / 0.64.
+    - Test selection lifts both by ≈ +0.1 and does not create the paper's ADM
+      advantage.
+    - The paper's S2 row matches our honest selection, so its S2 numbers are
+      not test-selected.
+  - **Run-to-run noise:** the same S2 + weather + soil + DEM setup gave 0.29
+    with early stopping and 0.35 in the H1 run. Single-seed differences
+    < 0.06 are not reliable.
+  - **Conclusions:**
+    1. Our S2 pipeline reproduces the paper (S2 comparisons are valid).
+    2. The paper's S2+ADM input-fusion rows do not reproduce from the
+       released preprocessed ADM features under any epoch-selection rule.
+    3. In their released form, weather (interval sums dominated by the gap
+       between acquisitions) and soil hurt, while DEM helps.
+  - **Next:**
+    - weather as daily means (sum / (dt + 1)) and soil variants, rerun
+      S2 + weather / soil;
+    - 3 seeds for S2, S2 + DEM and S2 + all;
+    - R2, the 3D-LSTM with 5×5 windows: spatial context, on the validated
+      S2 pipeline.
