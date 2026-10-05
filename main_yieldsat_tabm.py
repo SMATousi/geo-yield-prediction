@@ -58,7 +58,7 @@ def load_pair(artifact_root, country, crop, features):
     d = build_pair(artifact_root, country, crop, neighbourhood=features == 'F1')
     cache.parent.mkdir(parents=True, exist_ok=True)
     # atomic: several cluster pods may build the same pair concurrently
-    tmp = cache.with_name('{}.{}.partial.npz'.format(cache.stem, os.getpid()))
+    tmp = cache.with_name('{}.{}-{}.partial.npz'.format(cache.stem, os.uname().nodename, os.getpid()))  # pids repeat across pods
     np.savez(tmp, **{k: v for k, v in d.items() if k != 'seasons'}, seasons=np.array(json.dumps(d['seasons'])))
     os.replace(tmp, cache)
     return d
