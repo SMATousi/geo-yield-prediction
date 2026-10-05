@@ -154,3 +154,19 @@ pipeline:
   - The release ML tutorial confirms only the data structure and the
     `stats-*` fields (its example is LightGBM on S2), so it reveals no
     preprocessing we miss.
+- 2026-10-05 — **R1 ablations, GER-R CV10** (fold mean ± std, pixel / field):
+  - a1, S2-only thesis LSTM: 0.32 ± 0.18 / 0.60 ± 0.21. **Reproduces the
+    paper's S2 row** (0.36 ± 0.14 / 0.62 ± 0.25): architecture, folds,
+    metric and S2 data are consistent with the paper.
+  - S2+ADM variants: 0.24–0.28 / 0.49–0.56, vs the paper's 0.47 / 0.81.
+    - R1 paper-like: 0.28 / 0.53.
+    - a2, no coordinates: 0.27 / 0.56.
+    - a3, first slot masked: 0.24 / 0.49.
+  - **The discrepancy is in the auxiliary inputs.** ADM hurts our LSTM
+    (−0.04 pixel) while it helps the paper's (+0.11). Coordinates (D3) and
+    first-slot weather (D1) are not the cause.
+  - Suspect: our "S2+ADM" also includes the terrain stream, which the thesis
+    does not list among its ADMs (weather, soil, DEM). Terrain has slope in
+    degree-unit rise/run, aspect, curvature and mostly-missing TWI.
+  - Per-modality ablations are queued after a4/a5: S2 + weather / soil / DEM
+    / terrain, and S2 + weather + soil + DEM.
