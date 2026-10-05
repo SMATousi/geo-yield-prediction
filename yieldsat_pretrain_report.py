@@ -294,8 +294,13 @@ def build(args):
         act = [v for v in i2.values() if v]
         if act:
             verdict['I2'] = all(v['ci'][0] > 0 for v in act)
-    i3 = {a: mean_diag(pre[a], ['I3_probe_r2']) for a in pre}
-    i4 = {a: mean_diag(pre[a], ['I4_ssl_heldout']) for a in pre}
+    # I3/I4 compare arms on the units every arm has finished (different unit subsets
+    # differ by held-out population, which dominates probe R2 and SSL loss)
+    common = set.intersection(*[set(u) for u in pre.values()]) if pre else set()
+    sub = {a: {u: pre[a][u] for u in common} for a in pre}
+    i3 = {a: mean_diag(sub[a], ['I3_probe_r2']) for a in sub}
+    i4 = {a: mean_diag(sub[a], ['I4_ssl_heldout']) for a in sub}
+    L += ['', 'I3/I4 use the {} units finished by every arm.'.format(len(common))]
     if i3.get('A3') and i3.get('A2'):
         L += ['', '| Probe (R², held-out) | ' + ' | '.join(sorted(a for a in i3 if i3[a])) + ' |', '|---|' + '---|' * sum(1 for a in i3 if i3[a])]
         for k in sorted(i3['A2']):

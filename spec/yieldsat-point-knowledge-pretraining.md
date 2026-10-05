@@ -447,3 +447,31 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     and refused pool `c`. Per the project lead, pool `a` was deleted first.
     Its claims expire after 30 min; pool `c` is retried every 10 min until
     admitted.
+- 2026-10-05 — **Interim intrinsic results (pk_dev1r).**
+  - Pretraining runs finished: A3 46/46, A6 46/46, A7 40/46, A2 24/46. The
+    remaining A2 shards were claimed by the deleted pool-a pods and are
+    taken over as pods free up. 0 failures.
+  - **P:** P2–P4 pass on every unit. P1 fails on 11/46 (A3), 16/46 (A6),
+    7/40 (A7) and 3/24 (A2) units: the outlier-dominated validation noted
+    earlier.
+  - **I1 passes on 11/12 concepts.** A3 AUROC 0.81–0.99 vs A7 0.46–0.55
+    (+0.35 to +0.50).
+    - `low_elevation_position` fails (0.575 vs A7 0.562). The point model
+      sees only its own cell's elevation, not the field's, so a within-field
+      relative position is not observable from its inputs.
+  - **I2 passes on 4/5 active rules.** A3 − A7 alignment, paired by season:
+    r01 +0.167, r02 +0.075, r03 +0.206, r06 +0.077, all with CI > 0.
+    r04 (low elevation → fine texture) is −0.022, consistent with the I1
+    failure.
+  - **I4 passes** on the 22 units every arm finished: masked observation A3
+    0.1754 vs A2 0.1750, forecast 1.03×.
+  - **I3 is mixed** on the same 22 units:
+    - A3 ≥ A2 on clay (0.83 vs 0.80), SOC (0.77 vs 0.67) and NDVI rise
+      (0.21 vs 0.07);
+    - A3 is below A2 − 0.02 on precipitation (0.42 vs 0.52), NDMI (0.58 vs
+      0.62) and relative elevation (−0.21 vs −0.18);
+    - temperature probes are negative for every arm (unstable across
+      held-out populations).
+  - An earlier all-unit comparison suggested large I3/I4 losses for A3; that
+    was a unit-subset artifact. The report now compares I3/I4 on common
+    units.
