@@ -303,3 +303,12 @@ configuration.
     - emb-A3 vs emb-A2: does knowledge pretraining improve them?
     - cpt-A3 vs cpt-A7: do the learned concepts carry yield information
       beyond the random-targets control?
+- 2026-10-05 — **TM-2 incident:** two pods died with exit 137 at the same
+  moment on node `gpu-05.nrp.mghpcc.org`.
+  - Both were on light BRA-C concept-score units and had finished earlier
+    units; not OOM (no OOMKilled; pods use 15–20 Gi of 40). The likely cause
+    is a node-level kill.
+  - The job recreated the pods. The two interrupted units' claims were
+    released by hand instead of waiting 45 min for staleness.
+  - Progress: 78/185 units done, none abandoned. If gpu-05 fails again it
+    joins the exclusion list.
