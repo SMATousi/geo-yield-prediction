@@ -20,12 +20,14 @@ paper's best + 0.03 = 0.490 / 0.716. **Nothing passes yet.**
 | Round 1 hybrids (best h1) | 0.212 | 0.310 | results/dev_r1.md |
 | Round 2 p3-nbr (S6 neighbourhood) | 0.332 | 0.497 | results/dev_r2.md |
 | Knowledge pretraining A3 (11 rows) | Δ −0.003 vs A0 | Δ −0.019 | results/pretrain_dev.md |
-| **TabM F0** (spec/yieldsat-tabm.md) | **0.342** | 0.462 | TM-1 (F1 running) |
+| **TabM F1** (spec/yieldsat-tabm.md) | **0.351** | 0.478 | results/tabm_dev.md |
+| TabM F0 | 0.342 | 0.462 | results/tabm_dev.md |
 | LightGBM F0 | 0.313 | 0.420 | TM-1 |
 | Paper best | 0.460 | 0.686 | |
 
-The best pixel-level result so far is TabM (+0.033 vs the point model); the
-best field-level result is p3-nbr. The remaining gap to the paper is ≈ 0.12
+The best result so far is **TabM F1**: +0.046 pixel vs the point model, CI
+[+0.008, +0.083], adopted as the point backbone. The best field-level result
+is still p3-nbr. The remaining gap to the paper is ≈ 0.12
 pixel and ≈ 0.19 field. The paper's best models see image tiles.
 
 ## 1. Development subset (DEV)

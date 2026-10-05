@@ -2,8 +2,11 @@
 
 **Status (2026-10-05):**
 - TM-01, TM-02, TM-04–TM-06 done; TM-07 cluster scripts done.
-- **TM-1:** F0 complete. TabM F0 is the best DEV pixel mean so far (0.342).
-  F1 is running on the cluster (`tabm_tm1`).
+- **TM-1 complete** (`results/tabm_dev.md`).
+  - **TabM F1 (+ S6 neighbourhood) is adopted as the point backbone** (§4
+    criterion met): DEV 0.351 / 0.478, Δ vs A0 +0.046 pixel [+0.008,
+    +0.083], field +0.009.
+  - It does not pass the paper bar (0.490 / 0.716).
 - **TM-2:** pretrained-embedding and concept-score features from the
   `pk_dev1r` checkpoints; next. TM-03 (feature extractors) is not yet
   implemented.
@@ -245,3 +248,35 @@ configuration.
     The cache file was intact and the unit retries from it.
   - Fixed: temp names now include the hostname. All four F1 caches were
     prebuilt on the PVC, so no further build races are possible.
+- 2026-10-05 — **TM-1 complete.** The cluster ran 30/30 units (76 folds,
+  53 min on up to 15 A10s, none abandoned), merged with the 18 local F1
+  folds. Report: `results/tabm_dev.md` (`yieldsat_tabm_report.py`, paired fold
+  bootstrap).
+
+  | Model | Pixel | Field | CV10 / LOYO / LORO pixel |
+  |---|---|---|---|
+  | **TabM F1** | **0.351** | 0.478 | 0.50 / 0.29 / 0.27 |
+  | TabM F0 | 0.342 | 0.462 | 0.51 / 0.25 / 0.27 |
+  | LightGBM F0 | 0.313 | 0.420 | 0.49 / 0.21 / 0.23 |
+  | MLP F0 | 0.288 | 0.392 | 0.47 / 0.14 / 0.26 |
+  | p3-nbr (point + S6) | 0.332 | 0.497 | 0.50 / 0.24 / 0.26 |
+  | A0 (point, seed 0) | 0.305 | 0.470 | 0.48 / 0.25 / 0.19 |
+  | Paper best | 0.460 | 0.686 | 0.56 / 0.41 / 0.41 |
+
+  - Paired Δ pixel [95% CI]:
+    - F1 − A0: +0.046 [+0.008, +0.083], field +0.009 [−0.118, +0.081];
+    - F0 − A0: +0.037 [−0.003, +0.076];
+    - F1 − p3-nbr: +0.019 [−0.027, +0.052], field −0.019;
+    - F1 − F0: +0.009 [−0.014, +0.034], mostly LOYO +0.038;
+    - F0 − LightGBM: +0.029 [−0.009, +0.070];
+    - F0 − MLP: +0.054 [+0.028, +0.098] (the ensemble matters).
+  - **Decision (§4): TabM F1 is adopted as the point backbone.** It is the
+    first change that clears the +0.01-with-CI bar against the point model.
+    It does not pass the paper bar.
+  - **Remaining weakness: BRA-C LORO/LOYO.** TabM F1 scores −0.01 / −0.01
+    pixel and −0.24 / −0.26 field there, while A0 scores 0.18 / 0.18 pixel.
+    The tabular model extrapolates poorly to unseen Brazilian farms and
+    years; the next diagnostic.
+  - **Next: TM-2.** TabM F1 plus pretrained-embedding and concept-score
+    features (`pk_dev1r` unit checkpoints, A7 control); TM-03 extractors
+    first.

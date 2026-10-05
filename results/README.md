@@ -15,6 +15,7 @@ cluster's prediction files. Earlier single-machine pilot results are in
 | [negative_r2_investigation.md](negative_r2_investigation.md) | Why per-fold R² is negative in LOYO/LORO: metric mismatch with the paper (pooled vs per-fold), training and image-model causes, candidate solutions |
 | [dev_r1.md](dev_r1.md), [dev_r2.md](dev_r2.md) | Improvement plan DEV rounds 1 (hybrid image models) and 2 (point-model variants: early fusion, season level, neighbourhood) |
 | [pretrain_dev.md](pretrain_dev.md) | Knowledge pretraining DEV phase 1 (`pk_dev1r`, stopped at 84% of fine-tuning): P/I/E success criteria, paired fold-bootstrap comparisons of A0/A2/A3/A6/A7 |
+| [tabm_dev.md](tabm_dev.md) | TabM DEV round TM-1: TabM F0/F1, LightGBM, MLP vs the point model, p3-nbr and the paper's best; paired fold-bootstrap Δ |
 
 
 **How to read them**
