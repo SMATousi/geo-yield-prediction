@@ -79,6 +79,17 @@ Every evaluation writes `results/pretrain_<round>.md` with:
 
 Failed criteria are reported as failures, not omitted.
 
+## Applied: point knowledge pretraining, DEV phase 1 (2026-10-05)
+
+Source: `results/pretrain_dev.md` (round stopped at 84% of fine-tuning).
+
+| Question | Verdict | Evidence |
+|---|---|---|
+| Is pretraining healthy? | **Yes, apart from P1** | P2–P4 pass on all 46 units of every arm. P1 fails on 11–16 units per arm because validation loss is dominated by a few extreme-input cells (S2 up to 70σ), not divergence. A trimmed validation metric is recommended |
+| Is the knowledge doing its job? | **Learned, but not useful** | I1 11/12 concepts (A3 0.81–0.99 vs A7 ≈ 0.5); I2 4/5 rules (CIs > 0); I4 pass. E2 vs A7 fails: +0.007 [−0.021, +0.059] pixel |
+| Is pretraining helping? | **No** | E1 fails: A2 − A0 −0.003 [−0.038, +0.033]. E2 fails vs A2, A6, A7. E4 and E5 fail. E3 not run |
+| US scale-up gate | **Not met** | Stage 0 (YieldSAT inputs) shows no gain, so US data is not added beyond the pilot on this evidence |
+
 ## Revision log
 
 - **2026-10-04 (PK-07 smoke, 300 pretraining steps on unit `cv_k00`).**

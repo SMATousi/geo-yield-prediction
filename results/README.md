@@ -13,6 +13,8 @@ cluster's prediction files. Earlier single-machine pilot results are in
 | [image_v2_vs_point.md](image_v2_vs_point.md) | Image v2 vs point model on the same (all) cells |
 | [image_v2_vs_v1.md](image_v2_vs_v1.md) | Image v2 vs image v1 on v1's tiled cells |
 | [negative_r2_investigation.md](negative_r2_investigation.md) | Why per-fold R² is negative in LOYO/LORO: metric mismatch with the paper (pooled vs per-fold), training and image-model causes, candidate solutions |
+| [dev_r1.md](dev_r1.md), [dev_r2.md](dev_r2.md) | Improvement plan DEV rounds 1 (hybrid image models) and 2 (point-model variants: early fusion, season level, neighbourhood) |
+| [pretrain_dev.md](pretrain_dev.md) | Knowledge pretraining DEV phase 1 (`pk_dev1r`, stopped at 84% of fine-tuning): P/I/E success criteria, paired fold-bootstrap comparisons of A0/A2/A3/A6/A7 |
 
 
 **How to read them**

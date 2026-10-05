@@ -1,6 +1,18 @@
 # Nationwide US cropland pretraining corpus
 
-**Status:** Design draft, 2026-10-04. This document specifies a future collection;
+**Status (2026-10-05):**
+- Pilot design confirmed (D13–D19).
+- Builder implemented (`yieldsat_us/`, `yieldsat_us_pilot.py`).
+- **Frame built:** 125 clusters, 249,952 points over 2021–2025, in
+  `/home1/pupil/SMATousi/YieldSAT-US-Pilot`.
+- **Extraction pending a NASS QuickStats key** (D16).
+- Stage-0 knowledge pretraining showed no DEV gain
+  (spec/pretraining/success-criteria.md, "Applied"), so the scale-up gate
+  (D10) is not met. The pilot completes as planned, because it is cheap and
+  useful for a parity check, but **no scaling beyond 250k** without new
+  evidence.
+
+Earlier status: design draft, 2026-10-04. This document specifies a future collection;
 it does not launch downloads, reserve infrastructure, or modify training code.
 Confirmed decisions and proposed defaults are distinguished below. Outstanding
 user choices must be incorporated before the acquisition plan is finalized.

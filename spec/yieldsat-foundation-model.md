@@ -1,6 +1,10 @@
 # YieldSAT pooled foundation model with knowledge pretraining
 
-**Status:** specified 2026-10-03 (user request). Not implemented. Builds on
+**Status:** specified 2026-10-03 (user request). Not implemented. **On hold
+(2026-10-05):** its key ingredient, knowledge pretraining, was learned but did
+not improve yield on the point model (spec/yieldsat-point-knowledge-pretraining.md
+§0), and the point backbone question is open (TabM, spec/yieldsat-tabm.md).
+Revisit after TM-2. Builds on
 [yieldsat-improvement.md](./yieldsat-improvement.md) (DEV subset, pooled metric,
 round-2 point-model features) and the knowledge-pretraining design in
 [knowledge_pretraining.md](./knowledge_pretraining.md),

@@ -1,6 +1,14 @@
 # TabM for YieldSAT point prediction
 
-**Status:** proposed 2026-10-05 (user request). Runs in parallel with the
+**Status (2026-10-05):**
+- TM-01, TM-02, TM-04–TM-06 done; TM-07 cluster scripts done.
+- **TM-1:** F0 complete. TabM F0 is the best DEV pixel mean so far (0.342).
+  F1 is running on the cluster (`tabm_tm1`).
+- **TM-2:** pretrained-embedding and concept-score features from the
+  `pk_dev1r` checkpoints; next. TM-03 (feature extractors) is not yet
+  implemented.
+
+Proposed 2026-10-05 (user request). Ran in parallel with the
 knowledge-pretraining DEV round. Model: TabM, from Gorishniy et al.,
 *"TabM: Advancing Tabular Deep Learning with Parameter-Efficient Ensembling"*,
 ICLR 2025, reference code `yandex-research/tabm`.
@@ -228,3 +236,12 @@ configuration.
   - Job `cluster/nautilus/tabm_tm1_job.yaml`: 15 × A10, 4 CPU / 32 Gi,
     results in `/data/YieldSAT/yieldsat_results/tabm_dev1`. The final
     report merges the local F0/F1 results with the cluster's.
+- 2026-10-05 — **Cluster run TM-1 F1 started.**
+  - All other cluster jobs were stopped first (project lead's decision).
+  - 30 units on 15 × A10 pods, 4 CPU / 32 Gi. Measured memory 7–21 Gi per
+    pod while building and training.
+  - One unit failed on its first attempt from a temp-name race when pods
+    built the same pair's matrix at once: container PIDs repeat across pods.
+    The cache file was intact and the unit retries from it.
+  - Fixed: temp names now include the hostname. All four F1 caches were
+    prebuilt on the PVC, so no further build races are possible.

@@ -1,10 +1,66 @@
 # YieldSAT knowledge pretraining on the point model
 
-**Status:** specified 2026-10-04 (user decisions below). Implementation log in §9.
+**Status:** specified 2026-10-04; PK-01–PK-07 implemented; PK-08 phase 1
+run and **closed 2026-10-05** (outcome in §0). Implementation log in §9.
 This is the point-model realization of [knowledge_pretraining.md](./knowledge_pretraining.md)
 v2 and the YieldSAT library in `spec/yieldsat_knowledge_assets/`. The image-model
 package `yieldsat_knowledge/` stays as is; we return to it later. Success is judged
 by the separate criteria in [pretraining/success-criteria.md](./pretraining/success-criteria.md).
+
+## 0. Outcome (2026-10-05) — DEV phase 1 closed
+
+The phase-1 round (`pk_dev1r`) was **stopped by the project lead at 84% of
+fine-tuning**. Pretraining was complete: 4 arms × 46 units. Fine-tuning:
+A2 91/94, A3 91/94, A6 83/94, A7 84/94 runs. The final report is
+`results/pretrain_dev.md` (yield comparisons on rows complete for both arms:
+11 rows for A0–A3, 9 for A6/A7).
+
+**Verdict: the knowledge is learned, but neither SSL nor knowledge
+pretraining changes DEV yield accuracy.**
+
+| Comparison | Rows | Δ pixel R² [95% CI] | Δ field R² |
+|---|---|---|---|
+| A2 SSL − A0 scratch | 11 | −0.003 [−0.038, +0.033] | +0.000 |
+| A3 knowledge − A0 | 11 | −0.003 [−0.034, +0.026] | −0.019 |
+| A3 − A2 | 11 | +0.000 [−0.041, +0.040] | −0.019 |
+| A3 − A6 (compute-matched SSL) | 9 | +0.007 [−0.031, +0.056] | −0.023 |
+| A3 − A7 (random targets) | 9 | +0.007 [−0.021, +0.059] | −0.007 |
+
+- **E (yield):** E1, E2, E4, E5 and E6 fail. Every Δ is within ±0.01 pixel
+  with a CI spanning 0.
+  - The earlier interim LOYO deficit (−0.04 to −0.05) shrank to −0.02 as
+    rows completed.
+  - E3 (label efficiency) and E2b (A4/A5, the language prior) were never
+    run; phase 2 is not pursued.
+- **I (knowledge learned on held-out seasons):**
+  - **I1** passes for 11/12 concepts: A3 AUROC 0.81–0.99 vs A7 0.46–0.55.
+    The exception is `low_elevation_position` (0.575 vs 0.562): it is not
+    observable from a single cell's inputs.
+  - **I2** passes for 4/5 active rules: A3 − A7 alignment r01 +0.150,
+    r02 +0.092, r03 +0.207, r06 +0.080 (all CIs > 0). r04 is −0.022.
+  - **I4** passes: masked observation 0.261 (A3) vs 0.267 (A2).
+  - **I3** fails, on precipitation (0.146 vs 0.242). A3 is better than A2 on
+    clay, NDMI, NDVI rise and SOC.
+  - The strict verdicts in the report read "fail" because I1 and I2 require
+    every concept and rule.
+- **P (health):** P2–P4 pass on every unit. P1 fails on 11–16 units per arm,
+  from outlier-dominated validation loss (§9); it is a metric problem, not
+  divergence.
+- **Conclusions:**
+  1. Grounding the point model's stream embeddings in CLIP concept
+     directions works (I1/I2). It does not transfer to yield, because the
+     fine-tuned yield head does not depend on those directions.
+  2. Under the scale-up gate (success criteria), stage 0 shows no gain, so
+     the US corpus (yieldsat-us-national-pretraining.md) is not scaled
+     beyond its pilot on this evidence.
+  3. Next uses of the trained knowledge go through the TabM route
+     (spec/yieldsat-tabm.md, round TM-2): pretrained embeddings and concept
+     scores as tabular features, with A7 as the control.
+- **Data finding of the round:** one corrupt Argentina field season
+  (curvature ~1e9) was fixed by static validity v3 (§8, §9).
+- **Assets kept on the PVC** (`/data/YieldSAT/yieldsat_results/pk_dev1r`): all
+  184 sensor checkpoints, knowledge references, heads and diagnostics.
+  TM-2 reuses them.
 
 ## 1. User decisions (2026-10-04)
 
@@ -499,3 +555,5 @@ The same DEV subset, matrix and pooled metric as the improvement plan
     slightly negative, mainly on LOYO (≈ −0.04 pixel) and at field level.
   - All CIs include 0 and the row sets are partial.
   - The final verdict waits for all 94 runs per arm.
+- 2026-10-05 — **Phase 1 closed** (project lead): all cluster jobs stopped
+  in favour of TabM. Final report `results/pretrain_dev.md`; outcome in §0.
