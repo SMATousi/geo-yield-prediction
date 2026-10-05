@@ -225,3 +225,59 @@ pipeline:
     - 3 seeds for S2, S2 + DEM and S2 + all;
     - R2, the 3D-LSTM with 5×5 windows: spatial context, on the validated
       S2 pipeline.
+- 2026-10-05 — **Correction to H1** (project lead's reading, accepted).
+  "H1 rejected" overstated it. With test-selected epochs, S2 + weather +
+  soil + DEM reaches 0.42 / 0.75 vs the paper's 0.47 / 0.81: within the
+  ≈ 0.06 single-seed noise at pixel level, at its edge at field level.
+  - The paper's S2 row (0.36 / 0.62) matches only honest selection (ours
+    0.33 / 0.63); test selection gives 0.44 / 0.78, beyond the noise.
+  - **H1 is therefore unresolved:** the S2+ADM rows are consistent with
+    test-fold epoch selection, the S2 rows are not.
+  - Possible explanations: selection differed between rows, or another
+    difference applies on top. Several seeds per configuration are needed
+    to separate these.
+- 2026-10-05 — **Weather processing, from the sources** (paper §4.3.2 and
+  Table 3; thesis §2.2, §4.4.1, Tables 4.2–4.4; release notebooks;
+  `Raw.zip`).
+  - **Paper:** weather is ERA5 "between seeding and harvesting, at a daily
+    resolution", with 4 variables (max / mean / min temperature, total
+    precipitation) at 30 km.
+  - **Thesis, IF pipeline:**
+    - "daily weather data is aggregated between each time interval based on
+      the timestamp of each S2 image. We also tested the average but found
+      that aggregation yields the best result."
+    - Soil and DEM are "vectorized and repeated over each time step"; all
+      8 soil properties × 6 depths are used.
+    - The thesis's own modality study shows **small** ADM gains for the
+      LSTM, e.g. ARG-S pixel R² S2 0.61, + weather 0.63, + DEM 0.65,
+      + soil 0.61, all 0.63. Its best GER-R LSTM (S2 + soil) is 0.45
+      pixel / 0.78 field.
+  - **Release notebooks:** they list the 4 weather bands, the soil bands and
+    their `*_uncertainty` bands (120 bands in total) and the `stats-*` fields.
+    They give no units or aggregation, and say nothing about which bands
+    the benchmarks used.
+  - **Raw data check (`Raw.zip`, GER-R field 13, 2015/16):**
+    - The per-field daily weather CSV has **10 variables**: Temp_mean/max/
+      min, Wndsp, RH_mean/min/max, Total_prec, S_rad, Temp_dew. It covers
+      2015-06-24 – 2016-09-30, beyond seeding (23 Aug 2015) and harvest
+      (31 Jul 2016).
+    - **The preprocessed weather equals the inclusive sum of the raw daily
+      values over [t_prev, t] between consecutive S2 dates.** All 12
+      intervals match to 0.1 K·day and 1e-5 m.
+    - The first dated slot is a single day's value (291.8 K), not an
+      unknown span. Masking it (our default D1) discards a valid value
+      here.
+    - Raw soil comes as one 0–200 cm raster per property.
+  - **Conclusion:** the released weather is exactly the aggregation the
+    thesis describes; the representation does not differ from the paper's
+    IF pipeline. Two open points remain:
+    1. The paper states 4 weather variables, but the raw CSV has 10. Using
+       more than 4 would be undocumented, and is unlikely given Table 3.
+    2. "Encompassing all available data modalities" (paper §4.5) may
+       include the 48 soil `*_uncertainty` bands and coordinates, which
+       our S2+ADM omits (coordinates were tested in R1 with no effect).
+  - **Next, to settle R1:**
+    - 3 seeds each for S2, S2 + DEM, S2 + weather + soil + DEM and all 120
+      bands (incl. soil uncertainty), with validation and test-selected
+      epochs both reported;
+    - then R2 (3D-LSTM 5×5).
