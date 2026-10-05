@@ -121,3 +121,26 @@ configuration.
 ## 6. Progress log
 
 - 2026-10-05 — Specified.
+- 2026-10-05 — **TM-01, TM-02, TM-04, TM-05 implemented; local run**
+  (decision: TabM trains on the local RTX 3090 with each pair's flat matrix
+  resident on the GPU).
+  - **Code:** `dataset/yieldsat_tabular.py` (flat builder, point-contract
+    validity, train-only per-column standardization), `models_yieldsat_tabm.py`
+    (`TabMRegressor`), `main_yieldsat_tabm.py` (DEV-matrix driver: TabM,
+    TabM-mini, MLP, LightGBM; outputs in the point model's
+    report/predictions format plus `runs.jsonl`). Tests:
+    `tests/test_yieldsat_tabm.py` (4 pass).
+  - **Width:** F0 is 510 value columns (24 × 16 temporal, 24 × 3 time, 54
+    static incl. aspect sin/cos) plus 125 mask columns.
+    - Per-slot-per-stream masks (S2, weather) replace the per-value masks:
+      cloud masking invalidates a slot's bands together, and individually
+      invalid values are 0 after standardization.
+    - Periodic embeddings (d = 8, lite) on value columns; masks pass through
+      raw.
+  - **Throughput** (RTX 3090, batch 4,096, bf16): TabM k = 32 ≈ 36k
+    cells/s, TabM-mini ≈ 44k, plain MLP ≈ 180k. The first version (per-value
+    masks, d = 16) ran at 23k cells/s.
+  - **TM-06 sweep started** on GER-R CV10 (pooled R², 10 folds), each
+    capped at 2,000 steps with early stopping on validation pixel RMSE:
+    TabM at lr 1e-3 and 3e-4, TabM-mini, TabM with d_block 256 and
+    dropout 0.2, MLP, LightGBM.
