@@ -175,3 +175,11 @@ configuration.
     then MLP F0. TabM F1 follows once the S6 neighbourhood arrays are built
     locally for Argentina, Brazil and Uruguay (only Germany's existed
     locally).
+- 2026-10-05 — **TM-1 interim: LightGBM F0 on all 12 DEV rows** (pooled):
+  pixel 0.313, field 0.420 (CV10 / LOYO / LORO pixel 0.49 / 0.21 / 0.23).
+  - That is level with the point model on pixel R² (0.309) and **below it at
+    field level** (0.472); GER-R CV10's gain does not generalize. The paper's
+    best is 0.460 / 0.686.
+  - Neighbourhood arrays were built locally for Argentina, Brazil and
+    Uruguay.
+  - TabM F0 is running, MLP F0 is queued, and TabM F1 is queued after it.
