@@ -152,3 +152,26 @@ configuration.
     ≈ 1,400 steps before early stopping).
   - LightGBM F0 was launched on all 12 DEV rows (`runs/tabm_dev1`, tag
     `tm-lgbm-f0`) while the GPU sweep continues.
+- 2026-10-05 — **TM-06 sweep done** (GER-R CV10, pooled pixel / field R²,
+  s per fold):
+
+  | Config | Pixel | Field | s/fold |
+  |---|---|---|---|
+  | TabM lr 3e-4 | 0.414 | 0.709 | 173 |
+  | **TabM d_block 256, dropout 0.2** | 0.412 | **0.720** | 113 |
+  | LightGBM | 0.407 | 0.690 | 12 |
+  | TabM-mini | 0.403 | 0.700 | 157 |
+  | TabM lr 1e-3 | 0.403 | 0.694 | 183 |
+  | Plain MLP (k = 1) | 0.369 | 0.673 | 28 |
+  | Point model A0 | 0.38 | 0.67 | |
+
+  - Every TabM variant beats the point model on this row (+0.02 to +0.03
+    pixel). The ensemble matters: the same MLP without it scores 0.369.
+  - **Fixed for all rows:** TabM (k = 32, 3 blocks × 256, dropout 0.2,
+    lr 1e-3, d_emb 8). It has the best field R², is within 0.002 of the best
+    pixel R² and is the fastest TabM; the gaps are below fold noise, so there
+    is no further tuning.
+  - **TM-1 launched** (`runs/tabm_dev1`): LightGBM F0 (finishing), TabM F0,
+    then MLP F0. TabM F1 follows once the S6 neighbourhood arrays are built
+    locally for Argentina, Brazil and Uruguay (only Germany's existed
+    locally).
