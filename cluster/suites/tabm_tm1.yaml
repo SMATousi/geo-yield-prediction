@@ -1,0 +1,10 @@
+# TabM DEV round TM-1 remainder (spec/yieldsat-tabm.md): TabM on F1 (F0 + S6 neighbourhood),
+# fixed configuration from the TM-06 sweep. F0 configurations (TabM, MLP, LightGBM) finished
+# locally; folds finished locally are skipped when the units are generated.
+name: tabm_tm1
+out_root: /data/YieldSAT/yieldsat_results/tabm_dev1
+configs:
+- tag: tm-tabm-f1
+  model: tabm
+  features: F1
+  args: [--d_block, 256, --dropout, 0.2, --lr, 1e-3]

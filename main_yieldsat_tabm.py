@@ -12,6 +12,7 @@ model's formats, so yieldsat_pooled_metrics.py / yieldsat_dev_eval.py apply.
 """
 import argparse
 import json
+import os
 import time
 from pathlib import Path
 
@@ -56,7 +57,10 @@ def load_pair(artifact_root, country, crop, features):
         return d
     d = build_pair(artifact_root, country, crop, neighbourhood=features == 'F1')
     cache.parent.mkdir(parents=True, exist_ok=True)
-    np.savez(cache, **{k: v for k, v in d.items() if k != 'seasons'}, seasons=np.array(json.dumps(d['seasons'])))
+    # atomic: several cluster pods may build the same pair concurrently
+    tmp = cache.with_name('{}.{}.partial.npz'.format(cache.stem, os.getpid()))
+    np.savez(tmp, **{k: v for k, v in d.items() if k != 'seasons'}, seasons=np.array(json.dumps(d['seasons'])))
+    os.replace(tmp, cache)
     return d
 
 
@@ -215,6 +219,7 @@ def main():
     p.add_argument('--pairs', nargs='*', default=None)
     p.add_argument('--protocols', nargs='+', default=['cv', 'loyo', 'loro'])
     p.add_argument('--max_folds', type=int, default=0)
+    p.add_argument('--folds', type=int, nargs='*', default=None, help='fold indices to run (cluster work units)')
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--k', type=int, default=32)
     p.add_argument('--n_blocks', type=int, default=3)
@@ -242,6 +247,8 @@ def main():
         pair = None
         folds = row['folds'][:a.max_folds or None]
         for i, name in enumerate(folds):
+            if a.folds is not None and i not in a.folds:
+                continue
             rel = 'paper/{}/s2_adm/{}_seed{}/{}/fold{:02d}'.format(row['group'], a.tag, a.seed, row['pair'], i)
             with open(runs, 'a') as f:
                 f.write(json.dumps({'rel_path': rel, 'experiment': a.tag, 'protocol': row['protocol'],

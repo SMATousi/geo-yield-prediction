@@ -211,3 +211,20 @@ configuration.
   columns needed a 6.4 GB block); it had been reported as running. The
   prediction batch is now 4,096 with `expandable_segments`; restarted
   (16.4 GB, 100% GPU).
+- 2026-10-05 — **TM-07 cluster scripts** (project lead: stop all cluster
+  jobs and run TabM there).
+  - `yieldsat_tabm_cluster.py`:
+    - `units` expands a suite into work units (config × DEV row × ≤ 3
+      folds), skipping folds already finished locally;
+    - `pool` claims units atomically on the PVC, with heartbeats, stale
+      takeover and ≤ 2 attempts.
+  - `main_yieldsat_tabm.py` gained `--folds`, and the shared tabular cache
+    is written atomically.
+  - The pool was tested locally with two concurrent workers: each unit ran
+    once.
+  - Suite `cluster/suites/tabm_tm1.yaml`: the remaining TM-1 config, TabM
+    F1. 30 units, 76 folds; 18 F1 folds finished locally before the local
+    run was stopped.
+  - Job `cluster/nautilus/tabm_tm1_job.yaml`: 15 × A10, 4 CPU / 32 Gi,
+    results in `/data/YieldSAT/yieldsat_results/tabm_dev1`. The final
+    report merges the local F0/F1 results with the cluster's.
