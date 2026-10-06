@@ -120,18 +120,23 @@ def load_pair(artifact_root, country, crop, features):
         print('unreadable cache, rebuilding:', cache, flush=True)
         cache.unlink(missing_ok=True)
     if cache.exists():
-        z = np.load(cache, allow_pickle=True)
-        d = {k: z[k] for k in z.files}
-        d['seasons'] = json.loads(str(d['seasons']))
-        d['value_names'], d['mask_names'] = list(d['value_names']), list(d['mask_names'])
-        return d
+        try:
+            z = np.load(cache, allow_pickle=True)
+            d = {k: z[k] for k in z.files}
+            d['seasons'] = json.loads(str(d['seasons']))
+            d['value_names'], d['mask_names'] = list(d['value_names']), list(d['mask_names'])
+            return d
+        except (zipfile.BadZipFile, ValueError, OSError, EOFError) as exc:
+            # silently corrupted data on the shared volume (2026-10-06: Bad CRC-32 in Argentina_soybean_F1)
+            print('corrupt cache, rebuilding:', cache, repr(exc), flush=True)
+            cache.unlink(missing_ok=True)
     d = build_pair(artifact_root, country, crop, neighbourhood=features == 'F1')
     cache.parent.mkdir(parents=True, exist_ok=True)
     # atomic: several cluster pods may build the same pair concurrently
     tmp = cache.with_name('{}.{}-{}.partial.npz'.format(cache.stem, os.uname().nodename, os.getpid()))  # pids repeat across pods
     np.savez(tmp, **{k: v for k, v in d.items() if k != 'seasons'}, seasons=np.array(json.dumps(d['seasons'])))
     with zipfile.ZipFile(tmp) as z:                  # publish only a verified archive
-        bad = z.testzip() if os.environ.get('YIELDSAT_TABM_VERIFY_CRC') else None
+        bad = z.testzip()                            # full CRC check of what actually reached the volume
         if bad is not None or len(z.namelist()) < 5:
             raise RuntimeError('cache write failed verification: {}'.format(tmp))
     os.replace(tmp, cache)
