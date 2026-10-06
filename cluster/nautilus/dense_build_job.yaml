@@ -1,6 +1,7 @@
 # Dense raw S2 series build on the PVC (spec/yieldsat-dense-series.md, DS-04): yieldsat_build_dense.py for all
 # four countries from /data/YieldSAT/Raw.zip into yieldsat_artifacts/cache_dense, then the dense 5x5
-# neighbourhood stream. CPU only. Sized from local measurement (16 workers: Germany 6.9 GiB PSS dense build,
+# neighbourhood stream. CPU only. Raw.zip is copied to local scratch first (random reads over CephFS left
+# the workers I/O-bound at ~3% CPU). Sized from local measurement (16 workers: Germany 6.9 GiB PSS dense build,
 # 3.3 GiB neighbourhood; Argentina larger). No credentials inside.
 apiVersion: batch/v1
 kind: Job
@@ -24,8 +25,9 @@ spec:
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
           (python -c "import rasterio" 2>/dev/null || pip install --quiet --no-cache-dir rasterio) &&
-          python yieldsat_build_dense.py --raw_zip /data/YieldSAT/Raw.zip
-          --artifact_root /data/YieldSAT/yieldsat_artifacts --workers 16 &&
+          cp /data/YieldSAT/Raw.zip /scratch/Raw.zip &&
+          python yieldsat_build_dense.py --raw_zip /scratch/Raw.zip
+          --artifact_root /data/YieldSAT/yieldsat_artifacts --workers 12 &&
           YIELDSAT_NUM_SLOTS=72 YIELDSAT_CACHE_NAME=cache_dense YIELDSAT_NBR_NAME=neighbourhood_dense
           python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
           echo DENSE_BUILD_COMPLETE
@@ -33,10 +35,13 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '16', memory: 12Gi, ephemeral-storage: 10Gi}
-          requests: {cpu: '16', memory: 12Gi, ephemeral-storage: 10Gi}
+          limits: {cpu: '12', memory: 12Gi, ephemeral-storage: 30Gi}
+          requests: {cpu: '12', memory: 12Gi, ephemeral-storage: 30Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
       volumes:
       - name: data
         persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
