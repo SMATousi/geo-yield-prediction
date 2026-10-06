@@ -135,6 +135,13 @@ def cmd_pool(a):
     claims = Claims(Path(out_root) / '_claims', owner, a.stale_minutes)
     ran = 0
     while True:
+        # a GPU can also fail mid-run (2026-10-06, nrp-01.laccd.edu: 'unspecified launch failure', then
+        # every later unit failed at CUDA init); stop claiming instead of burning the queue
+        if ran and not a.skip_gpu_check and subprocess.run(
+                [sys.executable, '-c', 'import sys, yieldsat_tabm_cluster as c; sys.exit(0 if c.gpu_ok() else 1)'],
+                timeout=300).returncode != 0:
+            print('GPU no longer healthy; pool worker exits without claiming', flush=True)
+            sys.exit(3)
         unit = None
         for u in plan['units']:
             if claims.try_claim(u['id']):
