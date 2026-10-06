@@ -79,37 +79,74 @@ def protocol_rows(artifact_root, pairs=None, protocols=('cv', 'loyo', 'loro'), f
 def load_pooled(args, split):
     """All pairs for one pooled fold: training cells capped per season (the
     flat matrix of all 12.4M cells does not fit an A10), every test cell kept;
-    country and crop indicators as plain columns."""
+    country and crop indicators as plain columns. Memory-lean (a 48 Gi pod ran
+    out on folds holding out a whole year): the small arrays are read first to
+    size one preallocated matrix, then each pair's values are copied into it."""
+    import zipfile
     countries = sorted({parse_pair(c)[0] for c in PAPER_PAIRS})
     crops = sorted({parse_pair(c)[1] for c in PAPER_PAIRS})
-    parts = {k: [] for k in ('values', 'masks', 'target', 'season', 'grid_row', 'grid_col', 'plain')}
-    seasons, train, test, n = [], [], [], 0
+    plan, total = [], 0
     for code in PAPER_PAIRS:
         country, crop = parse_pair(code)
-        d = load_pair(args.artifact_root, country, crop, args.features)
-        r = fold_rows(d, split)
-        tr = r['train'][np.isfinite(d['target'][r['train']])]
-        tr = cap_rows(d['season'], tr, args.pooled_train_rows_per_field, args.seed)
-        keep = np.concatenate([tr, r['test']])
-        for k in ('values', 'masks', 'target', 'grid_row', 'grid_col'):
-            parts[k].append(d[k][keep])
-        parts['season'].append(d['season'][keep] + len(seasons))
-        oh = np.zeros((len(keep), len(countries) + len(crops)), np.float32)
-        oh[:, countries.index(country)] = 1
-        oh[:, len(countries) + crops.index(crop)] = 1
-        parts['plain'].append(oh)
-        seasons += [dict(s, country=country, crop=crop, pair=code) for s in d['seasons']]
+        cache = Path(args.artifact_root) / 'tabular' / '{}_{}_{}.npz'.format(country, crop, args.features)
+        if not cache.exists() or not zipfile.is_zipfile(cache):
+            load_pair(args.artifact_root, country, crop, args.features)     # (re)build the cache
+        z = np.load(cache, allow_pickle=True)                               # lazy: members load on access
+        light = {'season': z['season'], 'seasons': json.loads(str(z['seasons'])), 'target': z['target']}
+        r = fold_rows(light, split)
+        tr = r['train'][np.isfinite(light['target'][r['train']])]
+        tr = cap_rows(light['season'], tr, args.pooled_train_rows_per_field, args.seed)
+        plan.append((code, country, crop, cache, tr, r['test'], light))
+        total += len(tr) + len(r['test'])
+        names = list(z['value_names']), list(z['mask_names'])
+        z.close()
+    pair = {'values': np.empty((total, len(names[0])), np.float32), 'masks': np.empty((total, len(names[1])), np.uint8),
+            'target': np.empty(total, np.float32), 'season': np.empty(total, np.int64),
+            'grid_row': np.empty(total, np.int64), 'grid_col': np.empty(total, np.int64),
+            'plain': np.zeros((total, len(countries) + len(crops)), np.float32)}
+    seasons, train, test, n = [], [], [], 0
+    for code, country, crop, cache, tr, te, light in plan:
+        keep = np.concatenate([tr, te])
+        sl = slice(n, n + len(keep))
+        z = np.load(cache, allow_pickle=True)
+        for k in ('values', 'masks', 'grid_row', 'grid_col'):
+            a = z[k]
+            pair[k][sl] = a[keep]
+            del a
+        z.close()
+        pair['target'][sl] = light['target'][keep]
+        pair['season'][sl] = light['season'][keep] + len(seasons)
+        pair['plain'][sl, countries.index(country)] = 1
+        pair['plain'][sl, len(countries) + crops.index(crop)] = 1
+        seasons += [dict(s, country=country, crop=crop, pair=code) for s in light['seasons']]
         train.append(n + np.arange(len(tr)))
-        test.append(n + len(tr) + np.arange(len(r['test'])))
+        test.append(n + len(tr) + np.arange(len(te)))
         n += len(keep)
-        names = d['value_names'], d['mask_names']
-        del d
-    pair = {k: np.concatenate(v) for k, v in parts.items()}
     pair['seasons'] = seasons
     pair['value_names'], pair['mask_names'] = names
+    pair['pooled'] = True
     rows = {'train': np.concatenate(train), 'test': np.concatenate(test)}
     rows['val'] = rows['test']
     return pair, rows
+
+
+def standardize_inplace(values, train_rows, chunk=200000):
+    """standardize_stats + standardize without copies of the matrix (pooled folds)."""
+    s = np.zeros(values.shape[1]); s2 = np.zeros(values.shape[1]); c = np.zeros(values.shape[1])
+    for a in range(0, len(train_rows), chunk):
+        v = values[train_rows[a:a + chunk]].astype(np.float64)
+        f = np.isfinite(v)
+        v[~f] = 0
+        s += v.sum(0); s2 += (v * v).sum(0); c += f.sum(0)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        mean = s / c
+        std = np.sqrt(np.maximum(s2 / c - mean ** 2, 0))
+    mean = np.where(np.isfinite(mean), mean, 0.0).astype(np.float32)
+    std = np.where(np.isfinite(std) & (std > 0), std, 1.0).astype(np.float32)
+    for a in range(0, len(values), chunk):
+        z = (values[a:a + chunk] - mean) / std
+        values[a:a + chunk] = np.where(np.isfinite(z), z, 0.0)
+    return values
 
 
 def load_pair(artifact_root, country, crop, features):
@@ -193,7 +230,9 @@ def train_nn(args, pair, rows, Vn, device, Xn=None):
     torch.manual_seed(args.seed)
     y = pair['target']
     ym, ys = float(np.nanmean(y[rows['train']])), float(np.nanstd(y[rows['train']]))
-    V = torch.as_tensor(Vn, device=device, dtype=torch.float16)
+    V = torch.empty(Vn.shape, device=device, dtype=torch.float16)      # chunked: no fp32 copy on the GPU
+    for a in range(0, len(Vn), 500000):
+        V[a:a + 500000] = torch.from_numpy(np.ascontiguousarray(Vn[a:a + 500000])).to(device).half()
     M = torch.as_tensor(pair['masks'], device=device)
     Y = torch.as_tensor(np.where(np.isfinite(y), (y - ym) / ys, 0.0), device=device, dtype=torch.float32)
     arch = {'tabm': 'tabm', 'tabm-mini': 'tabm-mini', 'mlp': 'mlp'}[args.model]
@@ -272,7 +311,7 @@ def run_fold(args, row, fold_i, split_name, pair, device):
     if args.model == 'lgbm':
         pt, info = train_lgbm(args, pair, rows)
     else:
-        mean, std = standardize_stats(pair['values'], rows['train'])
+        mean, std = (None, None) if pair.get('pooled') else standardize_stats(pair['values'], rows['train'])
         Xn, unit = (pair['plain'], None) if 'plain' in pair else (None, None)
         if args.pretrained_arm:
             from yieldsat_tabm_pretrained import pretrained_features
@@ -280,7 +319,9 @@ def run_fold(args, row, fold_i, split_name, pair, device):
                                           pair, row['country'], row['crop'], args.pretrained_kind, device)
             xm, xs = standardize_stats(X, rows['train'])
             Xn = standardize(X, xm, xs)
-        pt, info = train_nn(args, pair, rows, standardize(pair['values'], mean, std), device, Xn)
+        Vn = (standardize_inplace(pair['values'], rows['train']) if pair.get('pooled')
+              else standardize(pair['values'], mean, std))
+        pt, info = train_nn(args, pair, rows, Vn, device, Xn)
         if unit:
             info['pretrained'] = {'arm': args.pretrained_arm, 'kind': args.pretrained_kind, 'unit': unit,
                                   'columns': int(Xn.shape[1])}
