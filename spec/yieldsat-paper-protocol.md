@@ -198,3 +198,10 @@ Pending.
       burned unit; this was observed once.
     - `protocol-nn` was resubmitted with the node excluded and resumes from
       the PVC claims.
+  - ~11:50 UTC: a pooled TabM F1 unit (LOYO fold 5, 337 test seasons) was
+    OOM-killed at 48 Gi.
+    - Five large pooled F1 units (LOYO 3/5/6, LORO 0/21) are held
+      (`gave_up` = "held") until pods with the memory-lean loader (pushed)
+      can run them.
+    - The utilization flag is back on: the results pod cannot be recreated,
+      so the watcher reads the PVC through a running protocol pod.
