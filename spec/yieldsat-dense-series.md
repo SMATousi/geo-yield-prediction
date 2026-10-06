@@ -145,3 +145,33 @@ note).
     `YieldSATPointModel(num_slots)`. Pool units can set them via `env`.
     Existing tests pass (40).
 
+- 2026-10-06, DS-02/03/05 (local, full Germany and Argentina dense builds):
+  - **Build speed:** Argentina dense cache in 3.4 min (16 workers); Germany
+    in ~30 s. Dense field stats are computed in the builder: temporal from
+    the dense values, static copied from the monthly cache.
+  - **p3-nbr dense trains end to end at 72 slots.**
+
+    | | Peak PSS (process + loader workers) | GPU memory |
+    |---|---|---|
+    | GER-R | 3.0 GiB | 3.1 GB |
+    | ARG-S | 10.8 GiB | 3.1 GB |
+
+  - **Early signal, same tiny budget (2 × 200 steps), ARG-S LOYO fold 4:**
+    dense test pixel R² 0.484 vs monthly 0.158. GER-R CV fold 1:
+    0.419 / 0.70 field. These are smoke numbers, not results.
+  - **TabM dense (F0 ~1,400 columns, F1 ~2,300):** CUDA out of memory even
+    on GER-R (F0 > 21 GB, F1 tried to allocate 9 GB more). The embedded
+    column width is too large for the current TabM set-up. **Deferred:** it
+    needs a design change (fewer columns, e.g. monthly summaries of the
+    dense series, or a smaller batch / embedding). The first training wave
+    is p3-nbr dense only.
+  - **Builders:** dense build 6.9 GiB PSS (16 workers, Germany);
+    neighbourhood 3.3 GiB. Cluster build job: 16 CPU / 12 Gi, no GPU.
+  - **64-GPU sizing (§5):** 3 runs per GPU on 24 GB cards only (A10, RTX
+    3090, RTX 4090).
+    - GPU memory ≈ 9.3 GB of 24 GB (39%).
+    - RAM request 36 Gi: 3 ARG-S runs ≈ 32 GiB (90%), 3 GER-R runs
+      ≈ 9 GiB (25%).
+    - 10 CPU, 4 Gi shm.
+    - 64 pods × 3 = 192 slots for 217 units. The last units run one per GPU
+      briefly at the tail.
