@@ -200,3 +200,18 @@ note).
   - **Saturated S2 DN above float16's range** (18,103 values in Argentina,
     mostly B01, ~1e-4) are now dropped as NaN instead of becoming inf.
   - **Build job:** 12 CPU / 12 Gi.
+- 2026-10-06, DS-04 continued:
+  - **Fourth attempt:** failed on one raster read from the pod's local copy
+    of `Raw.zip`; the pod's logs were lost with the job.
+    - A diagnostic pod read ~14,000 Argentina rasters (every 7th) straight
+      from the PVC with no failure. The cluster and local stack are
+      identical (rasterio 1.4.4, GDAL 3.10.3).
+    - The builder now reads the PVC directly, loops on short `pread`s, and
+      retries an unreadable acquisition once, then skips and counts it
+      (`unreadable_acquisitions_skipped` in the manifest).
+  - **The PVC read is throughput-bound:** ~0.2–0.5 CPU and 0.3–1 GiB at
+    12 or 32 workers, ~3.4 min per 100 Argentina fields.
+    - Resized to 1 CPU / 4 Gi (measured 54% CPU, 26% memory).
+    - The neighbourhood step is a separate job (`dense_nbr_job.yaml`,
+      2 CPU / 10 Gi for its 7.7 GiB peak), started automatically after the
+      build.
