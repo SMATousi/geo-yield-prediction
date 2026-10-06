@@ -321,3 +321,15 @@ pipeline:
     reaches here.
   - The remaining two S2 seed-1 folds were not run (their claims belonged to
     a pod that exited); they barely affect the seed mean.
+- 2026-10-06 — **Extending the check to all DEV rows** (project lead's
+  decision, on the cluster).
+  - Seed 0, since the measured seed std is ≤ 0.016 pixel. Configs: S2,
+    S2 + DEM, S2 + weather + soil + DEM (all-120 dropped: it matched the
+    thesis set on GER-R).
+  - The 11 remaining rows = 84 folds per config, 252 units.
+  - Same 50-epoch, test-scored-every-epoch protocol.
+  - The pool gained per-unit staging (`stage` paths, `--stage_from`, copied
+    once per pod under a lock with markers).
+  - Job `cluster/nautilus/repro_dev_job.yaml`: 16 pods, any GPU, 4 CPU /
+    24 Gi / 40 Gi scratch. Results in
+    `/data/YieldSAT/yieldsat_results/repro_seeds` next to GER-R CV10.

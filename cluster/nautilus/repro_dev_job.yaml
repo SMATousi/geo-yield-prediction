@@ -1,0 +1,62 @@
+# Reproduction check on all DEV rows (spec/yieldsat-paper-reproduction.md): thesis IF-LSTM, seed 0,
+# S2 / S2+DEM / S2+weather+soil+DEM x 84 folds (GER-R CV10 already done) = 252 claimable units
+# (cluster/tabm/repro_dev_units.json). Each unit stages its country's cache/index/fold manifests to
+# local scratch once per pod (pool --stage_from); supplied stats come from the source NetCDF on the PVC.
+# Any GPU type (project lead, 2026-10-06: A10s were full; this LSTM needs ~1 GB and its results do
+# not depend on the GPU). No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-repro-dev
+spec:
+  completions: 16
+  parallelism: 16
+  backoffLimit: 30
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+      containers:
+      - name: repro
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/repro_dev_units.json
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 24Gi, ephemeral-storage: 40Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 24Gi, ephemeral-storage: 40Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 2Gi}

@@ -90,6 +90,30 @@ class Claims:
         (self.d(uid) / 'heartbeat').write_text(str(time.time()))
 
 
+def stage(rels, src_root, dst_root):
+    """Copy artifact paths (files, directories or globs relative to src_root) to the local
+    artifact root once per pod; a '.staged' marker records a complete copy."""
+    import fcntl
+    src, dst = Path(src_root), Path(dst_root)
+    dst.mkdir(parents=True, exist_ok=True)
+    with open(dst / '.stage.lock', 'w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        for rel in rels:
+            mark = dst / '.staged' / rel.replace('/', '__').replace('*', '+')
+            if mark.exists():
+                continue
+            for s_ in sorted(src.glob(rel)):
+                d_ = dst / s_.relative_to(src)
+                d_.parent.mkdir(parents=True, exist_ok=True)
+                if s_.is_dir():
+                    shutil.copytree(s_, d_, dirs_exist_ok=True,
+                                    ignore=shutil.ignore_patterns('uuids.npy', 'field_stats_v2_backup'))
+                else:
+                    shutil.copy2(s_, d_)
+            mark.parent.mkdir(parents=True, exist_ok=True)
+            mark.write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
+
+
 def cmd_pool(a):
     plan = json.loads(Path(a.units).read_text())
     out_root = a.out_root or plan['out_root']
@@ -107,6 +131,8 @@ def cmd_pool(a):
         d = claims.d(unit['id'])
         attempts = int((d / 'attempts').read_text()) + 1 if (d / 'attempts').exists() else 1
         (d / 'attempts').write_text(str(attempts))
+        if unit.get('stage') and a.stage_from:
+            stage(unit['stage'], a.stage_from, a.artifact_root)
         if 'script' in unit:
             # generic unit: full argument list with {artifact_root} / {out_root} / {source_root} placeholders
             fmt = dict(artifact_root=a.artifact_root, out_root=out_root, source_root=a.source_root)
@@ -160,6 +186,8 @@ def main():
     q.add_argument('--artifact_root', default='/data/YieldSAT/yieldsat_artifacts')
     q.add_argument('--out_root', default=None)
     q.add_argument('--source_root', default='/data/YieldSAT/preprocessed')
+    q.add_argument('--stage_from', default=None,
+                   help='copy each unit\'s "stage" paths from this artifact root to --artifact_root first')
     q.add_argument('--stale_minutes', type=int, default=45)
     q.add_argument('--max_attempts', type=int, default=2)
     q.set_defaults(func=cmd_pool)
