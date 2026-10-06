@@ -1,7 +1,8 @@
 # Dense raw S2 series build on the PVC (spec/yieldsat-dense-series.md, DS-04): yieldsat_build_dense.py for all
 # four countries from /data/YieldSAT/Raw.zip into yieldsat_artifacts/cache_dense, then the dense 5x5
 # neighbourhood stream. CPU only. Raw.zip is copied to local scratch first (random reads over CephFS left
-# the workers I/O-bound at ~3% CPU). Sized from local measurement (12 workers: Argentina 26 GiB PSS, mostly shared output pages).
+# the workers I/O-bound at ~3% CPU). Sized from local measurement (12 workers: Argentina 26 GiB PSS, mostly
+# shared output pages). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:

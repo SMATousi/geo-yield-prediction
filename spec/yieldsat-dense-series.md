@@ -175,3 +175,11 @@ note).
     - 10 CPU, 4 Gi shm.
     - 64 pods × 3 = 192 slots for 217 units. The last units run one per GPU
       briefly at the tail.
+- 2026-10-06, DS-04 (cluster build):
+  - **First attempt:** reading `Raw.zip` randomly over CephFS left the
+    workers I/O-bound (0.47 of 16 CPUs).
+  - **Second attempt:** with `Raw.zip` copied to local scratch first
+    (9 min), it was OOM-killed at 12 Gi. The memory had only been measured
+    on Germany; Argentina peaks at 26 GiB PSS with 12 workers, mostly shared
+    output pages.
+  - **Resubmitted** at 32 Gi / 12 CPU.
