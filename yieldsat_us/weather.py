@@ -30,12 +30,18 @@ def era5_cell(lon, lat):
 
 
 def _get(params, retries=8):
+    r = None
     for k in range(retries):
-        r = requests.get(URL, params=params, timeout=120)
+        try:
+            r = requests.get(URL, params=params, timeout=120)
+        except requests.RequestException as exc:       # timeouts / connection resets: retry
+            r = None
+            time.sleep(10 * (k + 1))
+            continue
         if r.status_code == 200:
             return r.json()
         time.sleep(10 * (k + 1))                       # rate limit / transient
-    raise RuntimeError('Open-Meteo failed: {} {}'.format(r.status_code, r.text[:200]))
+    raise RuntimeError('Open-Meteo failed: {}'.format('no response' if r is None else '{} {}'.format(r.status_code, r.text[:200])))
 
 
 def fetch_cell(lon, lat, start, end, cache_dir):
