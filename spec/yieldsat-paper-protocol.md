@@ -124,6 +124,7 @@ ARG-W is partial: 9, 9 and 4 of 10 folds.
 | Neural trainers | `main_yieldsat_finetune.py`: `--val_rows_per_field 0` = full selection fold; `selection` recorded in `report.json` |
 | Flat models | `main_yieldsat_tabm.py`: `--fold_set {dev,noval,pooled}`, `load_pooled` (indicator columns, training-cell cap), `--build_only` |
 | Work units | `yieldsat_protocol_runs.py units` → `cluster/tabm/protocol_nn_units.json` (798: 3 models × (217 + 49) folds) and `protocol_tab_units.json` (432, including 14 cache builds) |
+| Report | `yieldsat_protocol_runs.py report` → `results/protocol_point.md` (per pair: paper LSTM S2, LSTM S2+ADM, paper best, then every model in both arms) |
 | Jobs | `cluster/nautilus/protocol_nn_job.yaml` (24 pods, staged to scratch); `protocol_tab_job.yaml` (16 pods, PVC). Any GPU with ≥ 24 GB and bf16 |
 | Output | `/data/YieldSAT/yieldsat_results/protocol/paper/<group>/<inputs>/<tag>_seed0/<pair or ALL>/fold<ii>` |
 
