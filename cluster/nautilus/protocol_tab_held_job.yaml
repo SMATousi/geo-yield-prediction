@@ -1,0 +1,63 @@
+# Three large pooled TabM F1 folds held after an OOM at 48 Gi (spec/yieldsat-paper-protocol.md
+# §7), rerun with the memory-lean pooled loader; same output paths, separate claim ids (__lean).
+# No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-protocol-tab-held
+spec:
+  completions: 3
+  parallelism: 3
+  backoffLimit: 40
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090, NVIDIA-L40, NVIDIA-L40S,
+                         NVIDIA-RTX-A6000, NVIDIA-A100-SXM4-80GB, NVIDIA-A100-PCIE-40GB, NVIDIA-A100-80GB-PCIe, NVIDIA-L4]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          pip install --quiet --no-cache-dir tabm==0.0.3 rtdl_num_embeddings lightgbm &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_tab_held_units.json
+          --artifact_root /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 56Gi, ephemeral-storage: 20Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 56Gi, ephemeral-storage: 20Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 2Gi}
