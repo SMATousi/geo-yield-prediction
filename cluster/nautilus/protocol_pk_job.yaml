@@ -51,8 +51,8 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 32Gi, ephemeral-storage: 64Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 32Gi, ephemeral-storage: 64Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 20Gi, ephemeral-storage: 40Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 20Gi, ephemeral-storage: 40Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
