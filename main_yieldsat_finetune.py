@@ -117,6 +117,8 @@ def get_args_parser():
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
+    p.add_argument('--init_nonstrict_streams', action='store_true',
+                   help='streams the checkpoint lacks (e.g. the 5x5 neighbourhood) start from scratch')
     # optimisation
     p.add_argument('--epochs', type=int, default=10)
     p.add_argument('--steps_per_epoch', type=int, default=500,
@@ -448,7 +450,7 @@ def main(args):
     if args.init_sensor_ckpt:
         transfer = model.load_sensor_state_dict(
             torch.load(args.init_sensor_ckpt, map_location='cpu', weights_only=True),
-            encoders_only=args.encoders_only_transfer)
+            encoders_only=args.encoders_only_transfer, strict_streams=not args.init_nonstrict_streams)
         print('loaded sensor checkpoint:', transfer['loaded'], 'tensors')
     knowledge_ref = None
     if args.mode == 'pretrain' and args.knowledge:

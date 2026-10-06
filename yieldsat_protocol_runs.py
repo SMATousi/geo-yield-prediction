@@ -131,6 +131,63 @@ def image_units(artifact_root, pooled_protocols=('cv',)):
     return units
 
 
+PK_ROOT = '/data/YieldSAT/yieldsat_results/pk_dev1r'
+# knowledge-pretrained sensor encoders (spec/yieldsat-point-knowledge-pretraining.md) under p3-nbr:
+# a3 = knowledge pretraining, a7 = random-target control; the neighbourhood encoder starts fresh
+PK_ARMS = ('a3', 'a7')
+
+
+def pretrain_unit_for(artifact_root, fold_name):
+    """Leakage-safe pretraining unit for a fold: one whose corpus (train + val) holds none of the
+    fold's test seasons; the DEV index's unit when it qualifies, else the unit of the same protocol
+    with the largest corpus. None when no unit qualifies."""
+    S = Path(artifact_root) / 'splits'
+    if not hasattr(pretrain_unit_for, 'units'):
+        pretrain_unit_for.units = {}
+        for f in sorted(S.glob('pretrain_unit_*_s0.json')):
+            d = json.loads(f.read_text())
+            pretrain_unit_for.units[f.stem] = (d['protocol'], set(d['partitions']['train']) | set(d['partitions']['val']))
+        pretrain_unit_for.index = json.loads((S / 'pretrain_units_dev_s0.json').read_text())['fold_to_unit']
+    split = json.loads((S / '{}.json'.format(fold_name)).read_text())
+    test = set(split['partitions']['test'])
+    ok = {u: proto for u, (proto, seen) in pretrain_unit_for.units.items() if not (test & seen)}
+    pref = pretrain_unit_for.index.get(split.get('source_split', fold_name))
+    if pref in ok:
+        return pref
+    if not ok:
+        return None
+    return sorted(ok, key=lambda u: (ok[u] != split['scheme'], -len(pretrain_unit_for.units[u][1]), u))[0]
+
+
+def pk_units(artifact_root):
+    units = []
+    inputs, margs, _ = NN['ours-p3nbr']
+    for pair, proto, group, folds in _rows(artifact_root):
+        if pair == 'ALL':
+            continue
+        country, crop = parse_pair(pair)
+        prefix = folds[0].rsplit('_fold', 1)[0]
+        for i, name in enumerate(folds):
+            unit = pretrain_unit_for(artifact_root, name)
+            if unit is None:
+                continue
+            for arm in PK_ARMS:
+                tag = 'ours-p3nbr-{}'.format(arm)
+                out = '{{out_root}}/paper/{}/{}/{}_seed0/{}/fold{:02d}'.format(group, inputs, tag, pair, i)
+                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                              'script': 'main_yieldsat_finetune.py', 'pretrain_unit': unit,
+                              'stage': ['cache/' + country, 'index/' + country, 'neighbourhood/' + country,
+                                        'splits/{}*'.format(prefix), 'geometry/fields_geometry_*.json'],
+                              'args': COMMON + margs + ['--norm_pooling', 'per_country',
+                                       '--init_sensor_ckpt', '{}/pretrain/{}/{}/sensor_checkpoint.pth'.format(
+                                           PK_ROOT, arm, unit),
+                                       '--encoders_only_transfer', '--init_nonstrict_streams',
+                                       '--countries', country, '--crops', crop, '--split', name,
+                                       '--output_dir', out, '--streams', *STREAMS[inputs]]})
+    units.sort(key=lambda u: -SIZE[u['pair']])
+    return units
+
+
 def _rows(artifact_root):
     """(pair, protocol, group, prefix) of every per-pair row and pooled row."""
     out = []
@@ -186,6 +243,14 @@ def cmd_units(a):
               for pair in sorted(PAPER_PAIRS, key=lambda x: -SIZE[x]) for f in ('F1', 'F0')
               if (pair, f) not in cached]
     tab = builds + tab
+    if a.batch == 'pk':
+        units = pk_units(a.artifact_root)
+        smoke = [u for u in units if u['pair'] == 'GER-R' and u['id'].endswith('__loyo__f0')]
+        for name, us in (('protocol_pk', units), ('protocol_pk_smoke', smoke)):
+            Path('cluster/tabm/{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': name, 'out_root': a.out_root, 'units': us}, indent=1))
+            print('{}: {} units'.format(name, len(us)))
+        return
     if a.batch == 'image':
         units = image_units(a.artifact_root)
         smoke = [u for u in units if u['pair'] == 'GER-R' and u['id'].endswith('__cv__f0')]
@@ -298,7 +363,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
