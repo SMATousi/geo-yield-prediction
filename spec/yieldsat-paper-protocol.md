@@ -174,3 +174,12 @@ Pending.
     re-queued units. The node then went NotReady ("no healthy devices") and
     the pod was evicted. The units were re-queued again, and no protocol pod
     remains on that node.
+  - 07:38 UTC: the scheduler kept placing pods on nrp-01.laccd.edu, whose
+    GPU was unhealthy. 65 pods failed admission (UnexpectedAdmissionError),
+    each counted against the jobs' backoffLimit.
+    - `protocol-nn` reached it and failed; `protocol-tab` stopped at 28/40
+      with 5 healthy pods running.
+    - The NRP utilization flag then blocked every job change and
+      resubmission. The plan is to resubmit with the node excluded (the job
+      files already exclude it) once the flag clears; claims on the PVC make
+      the resubmission resume where the runs stopped.
