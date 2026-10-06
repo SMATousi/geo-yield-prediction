@@ -183,3 +183,12 @@ Pending.
       resubmission. The plan is to resubmit with the node excluded (the job
       files already exclude it) once the flag clears; claims on the PVC make
       the resubmission resume where the runs stopped.
+  - 08:09 UTC: `Argentina_soybean_F1.npz` had corrupt data (Bad CRC-32 in
+    `masks.npy`; its zip directory read fine). Seven TabM F1 ARG-S units
+    failed on it.
+    - A full CRC test of all 18 caches found only this file bad. It was
+      deleted and re-queued for rebuild, along with its units.
+    - Both corrupt ARG-S caches were among the first built, probably on the
+      failing node.
+    - The cache code now CRC-checks every archive before publishing it, and
+      rebuilds a cache whose data fails to load.
