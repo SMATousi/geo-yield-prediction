@@ -151,7 +151,9 @@ def standardize_inplace(values, train_rows, chunk=200000):
 
 def load_pair(artifact_root, country, crop, features):
     import zipfile
-    cache = Path(artifact_root) / 'tabular' / '{}_{}_{}.npz'.format(country, crop, features)
+    from dataset.yieldsat_schema import CACHE_NAME
+    suffix = '' if CACHE_NAME == 'cache' else '_' + CACHE_NAME        # dense series: separate flat caches
+    cache = Path(artifact_root) / 'tabular' / '{}_{}_{}{}.npz'.format(country, crop, features, suffix)
     if cache.exists() and not zipfile.is_zipfile(cache):
         # a corrupt cache on the shared volume (2026-10-06: Argentina_soybean_F0) is rebuilt, not trusted
         print('unreadable cache, rebuilding:', cache, flush=True)

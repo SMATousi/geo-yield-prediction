@@ -28,6 +28,7 @@ import numpy as np
 from dataset.yieldsat_schema import (
     ALL_CHANNELS,
     CONTRACT_KEY,
+    CACHE_NAME,
     NUM_TIME_SLOTS,
     OPTICAL,
     STATIC_CHANNELS,
@@ -162,7 +163,7 @@ def build_country_cache(source_root, country, artifact_root, block_rows=4096,
     index = load_country_index(artifact_root, source_root, country)
     fields = index['fields']
     code_to_slot = {f['field_code']: i for i, f in enumerate(fields)}
-    out = Path(artifact_root) / 'cache' / country
+    out = Path(artifact_root) / CACHE_NAME / country
     out.mkdir(parents=True, exist_ok=True)
     manifest_path = out / 'cache_manifest.json'
     if manifest_path.exists():
@@ -292,7 +293,7 @@ def recompute_field_stats(artifact_root, source_root, country, block_rows=65536)
     from dataset.yieldsat_source import load_country_index
 
     manifest = load_cache_manifest(artifact_root, source_root, country)
-    d = Path(artifact_root) / 'cache' / country
+    d = Path(artifact_root) / CACHE_NAME / country
     fields = load_country_index(artifact_root, source_root, country)['fields']
     temporal = np.load(d / 'temporal.npy', mmap_mode='r')
     static = np.load(d / 'static.npy', mmap_mode='r')
@@ -324,7 +325,7 @@ def load_cache_manifest(artifact_root, source_root, country, check_source=True):
     """Return the manifest of a completed cache, rejecting stale caches."""
     from dataset.yieldsat_source import SnapshotError
 
-    path = Path(artifact_root) / 'cache' / country / 'cache_manifest.json'
+    path = Path(artifact_root) / CACHE_NAME / country / 'cache_manifest.json'
     if not path.exists():
         raise SnapshotError('{}: no completed cache at {}'.format(country, path.parent))
     manifest = json.loads(path.read_text())

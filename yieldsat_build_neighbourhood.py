@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 
-from dataset.yieldsat_schema import COUNTRIES, STREAMS, TEMPORAL_CHANNELS
+from dataset.yieldsat_schema import CACHE_NAME, COUNTRIES, NBR_NAME, STREAMS, TEMPORAL_CHANNELS
 
 S2_POS = [TEMPORAL_CHANNELS.index(c) for c in STREAMS['yieldsat_s2']['channels']]
 RADIUS = 2                                                   # 5x5 window
@@ -52,10 +52,10 @@ def field_neighbourhood(values, rows, cols):
 
 def build_country(artifact_root, country):
     root = Path(artifact_root)
-    temporal = np.load(root / 'cache' / country / 'temporal.npy', mmap_mode='r')
+    temporal = np.load(root / CACHE_NAME / country / 'temporal.npy', mmap_mode='r')
     rows = np.load(root / 'index' / country / 'rows.npz')
     fields = json.loads((root / 'index' / country / 'fields.json').read_text())
-    out_dir = root / 'neighbourhood' / country
+    out_dir = root / NBR_NAME / country
     out_dir.mkdir(parents=True, exist_ok=True)
     final = out_dir / 's2_nbr5.npy'
     tmp = out_dir / 's2_nbr5.npy.partial'

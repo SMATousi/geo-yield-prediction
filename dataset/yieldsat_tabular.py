@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 
 from dataset.yieldsat_cache import static_valid_mask, temporal_valid_mask
-from dataset.yieldsat_schema import SOIL, STATIC_CHANNELS, TEMPORAL_CHANNELS
+from dataset.yieldsat_schema import CACHE_NAME, NBR_NAME, NUM_TIME_SLOTS, SOIL, STATIC_CHANNELS, TEMPORAL_CHANNELS
 
 _S = {c: i for i, c in enumerate(STATIC_CHANNELS)}
 
@@ -35,11 +35,11 @@ def build_pair(artifact_root, country, crop, neighbourhood=False):
     fields = sorted((f for f in json.loads((root / 'index' / country / 'fields.json').read_text())
                      if f['crop'] == crop), key=lambda f: f['row_start'])
     rows = np.load(root / 'index' / country / 'rows.npz')
-    cache = root / 'cache' / country
+    cache = root / CACHE_NAME / country
     T = np.load(cache / 'temporal.npy', mmap_mode='r')
     S = np.load(cache / 'static.npy', mmap_mode='r')
     TM = np.load(cache / 'times.npy', mmap_mode='r')
-    nbr = np.load(root / 'neighbourhood' / country / 's2_nbr5.npy', mmap_mode='r') if neighbourhood else None
+    nbr = np.load(root / NBR_NAME / country / 's2_nbr5.npy', mmap_mode='r') if neighbourhood else None
     idx = np.concatenate([np.arange(f['row_start'], f['row_end']) for f in fields])
     season = np.concatenate([np.full(f['row_end'] - f['row_start'], i, np.int32) for i, f in enumerate(fields)])
     n = len(idx)
@@ -76,18 +76,18 @@ def build_pair(artifact_root, country, crop, neighbourhood=False):
         parts_m += [stv[:, [0, 1, 3, 4, 5] + list(range(6, stv.shape[1]))], dated]
         vals.append(np.concatenate(parts_v, 1).astype(np.float32))
         masks.append(np.concatenate(parts_m, 1).astype(np.uint8))
-    tnames = ['{}@{}'.format(c, k) for k in range(24) for c in TEMPORAL_CHANNELS]
+    tnames = ['{}@{}'.format(c, k) for k in range(NUM_TIME_SLOTS) for c in TEMPORAL_CHANNELS]
     vnames = list(tnames)
     if neighbourhood:
-        vnames += ['nbr5_{}@{}'.format(c, k) for k in range(24) for c in TEMPORAL_CHANNELS[:12]]
-    vnames += ['{}@{}'.format(c, k) for k in range(24) for c in ('days_since_seeding', 'doy_sin', 'doy_cos')]
+        vnames += ['nbr5_{}@{}'.format(c, k) for k in range(NUM_TIME_SLOTS) for c in TEMPORAL_CHANNELS[:12]]
+    vnames += ['{}@{}'.format(c, k) for k in range(NUM_TIME_SLOTS) for c in ('days_since_seeding', 'doy_sin', 'doy_cos')]
     snames = ['dem', 'aspect_sin', 'aspect_cos', 'curvature', 'slope', 'twi'] + list(SOIL)
     vnames += snames
-    mnames = ['valid:s2@{}'.format(k) for k in range(24)] + ['valid:weather@{}'.format(k) for k in range(24)]
+    mnames = ['valid:s2@{}'.format(k) for k in range(NUM_TIME_SLOTS)] + ['valid:weather@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     if neighbourhood:
-        mnames += ['valid:nbr5@{}'.format(k) for k in range(24)]
+        mnames += ['valid:nbr5@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     mnames += ['valid:' + c for c in ['dem', 'aspect', 'curvature', 'slope', 'twi'] + list(SOIL)]
-    mnames += ['dated@{}'.format(k) for k in range(24)]
+    mnames += ['dated@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     out = {'values': np.concatenate(vals), 'masks': np.concatenate(masks), 'value_names': vnames,
            'mask_names': mnames, 'target': rows['target'][idx].astype(np.float32), 'season': season,
            'grid_row': rows['grid_row'][idx], 'grid_col': rows['grid_col'][idx], 'seasons': fields,

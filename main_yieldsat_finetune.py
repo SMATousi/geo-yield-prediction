@@ -30,7 +30,8 @@ from dataset.yieldsat_dataset import (
     CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
     YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats,
 )
-from dataset.yieldsat_schema import CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, OPTIONAL_STREAMS, PROVENANCE, STREAMS
+from dataset.yieldsat_schema import (CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, NBR_NAME, NUM_TIME_SLOTS,
+                                     OPTIONAL_STREAMS, PROVENANCE, STREAMS)
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
 from models_yieldsat import FUSIONS, PaperLSTMBaseline, YieldSATPointModel
@@ -418,7 +419,7 @@ def main(args):
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
                   aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
                   check_source=check, weather_first_slot=args.weather_first_slot,
-                  neighbourhood_root=str(Path(args.artifact_root) / 'neighbourhood') if args.neighbourhood else None)
+                  neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
                                   max_rows_per_field=args.val_rows_per_field or None, **common) if parts['val'] else None
@@ -437,7 +438,7 @@ def main(args):
                                    use_crop_context=use_crop, fusion=args.fusion,
                                    cross_attn_layers=args.cross_attn_layers, level_head=args.level_head,
                                    level_weight=args.level_weight, early_hidden=args.early_hidden,
-                                   early_depth=args.early_depth).to(device)
+                                   early_depth=args.early_depth, num_slots=NUM_TIME_SLOTS).to(device)
     # cuDNN LSTMs do not run under bf16 autocast
     amp = device.type == 'cuda' and not args.no_amp and args.model != 'paper_lstm'
     if args.steps_per_epoch <= 0:

@@ -19,7 +19,16 @@ import numpy as np
 CONTRACT_KEY = 'yieldsat_preprocessed_v1'
 SOURCE_FILENAME = 'merge_s2-soil-dem-weather-coords.nc'
 COUNTRIES = ('Argentina', 'Brazil', 'Germany', 'Uruguay')
-NUM_TIME_SLOTS = 24
+import os as _os
+
+# Slot count and cache directories. Defaults are the monthly release contract
+# (24 slots, <artifact_root>/cache, <artifact_root>/neighbourhood); the dense raw
+# series (spec/yieldsat-dense-series.md) is selected by environment variables so
+# every reader (cache, dataset, flat view, neighbourhood) follows one setting:
+#   YIELDSAT_NUM_SLOTS=72 YIELDSAT_CACHE_NAME=cache_dense YIELDSAT_NBR_NAME=neighbourhood_dense
+NUM_TIME_SLOTS = int(_os.environ.get('YIELDSAT_NUM_SLOTS', 24))
+CACHE_NAME = _os.environ.get('YIELDSAT_CACHE_NAME', 'cache')
+NBR_NAME = _os.environ.get('YIELDSAT_NBR_NAME', 'neighbourhood')
 
 # Snapshot recorded in the spec (file bytes and the CRC32 from the original
 # Preprocessed.zip central directory). A source file that differs is a

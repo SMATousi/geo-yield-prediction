@@ -29,7 +29,7 @@ from dataset.yieldsat_cache import (
     static_valid_mask, temporal_valid_mask,
 )
 from dataset.yieldsat_schema import (
-    CROPS, NUM_TIME_SLOTS, OPTIONAL_STREAMS, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS, SOIL_UNCERTAINTY,
+    CACHE_NAME, CROPS, NUM_TIME_SLOTS, OPTIONAL_STREAMS, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS, SOIL_UNCERTAINTY,
 )
 from dataset.yieldsat_source import load_country_index, open_source, source_path
 
@@ -91,7 +91,7 @@ class YieldSATNormalizer:
             by_country.setdefault(country, []).append((code, tvals))
         acc = {}
         for country, items in by_country.items():
-            cache_dir = Path(artifact_root) / 'cache' / country
+            cache_dir = Path(artifact_root) / CACHE_NAME / country
             version = json.loads((cache_dir / 'cache_manifest.json').read_text()).get('field_stats_version')
             if version != FIELD_STATS_VERSION:
                 raise ValueError('{}: field statistics use validity rule v{}, need v{}; run '
@@ -201,7 +201,7 @@ class NormalizerView:
 class _CacheReader:
     def __init__(self, artifact_root, source_root, country, check_source=True):
         load_cache_manifest(artifact_root, source_root, country, check_source=check_source)
-        self.dir = Path(artifact_root) / 'cache' / country
+        self.dir = Path(artifact_root) / CACHE_NAME / country
         self._arrays = None
 
     def _open(self):

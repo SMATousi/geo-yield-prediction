@@ -229,8 +229,9 @@ def cmd_pool(a):
         th = threading.Thread(target=heartbeat, daemon=True)
         th.start()
         log = open(d / 'log_attempt{}.txt'.format(attempts), 'w')
-        rc = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT,
-                            env=dict(os.environ, PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True')).returncode
+        # a unit may set environment variables (e.g. the dense-series cache selection)
+        env = dict(os.environ, PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True', **unit.get('env', {}))
+        rc = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, env=env).returncode
         log.close()
         stop.set()
         if rc == 0:
