@@ -52,27 +52,35 @@ def field_neighbourhood(values, rows, cols):
 
 def build_country(artifact_root, country):
     root = Path(artifact_root)
-    temporal = np.load(root / CACHE_NAME / country / 'temporal.npy', mmap_mode='r')
-    rows = np.load(root / 'index' / country / 'rows.npz')
+    # field-by-field pread/pwrite with page-cache release: no full-size memory maps (the dense cache
+    # made a mapped build reach ~20 GiB for Argentina, 2026-10-06)
+    from yieldsat_build_dense import _read_rows, _write_rows
+    src = root / CACHE_NAME / country / 'temporal.npy'
+    shape = np.load(src, mmap_mode='r').shape
+    with np.load(root / 'index' / country / 'rows.npz') as z:      # load once (NpzFile re-reads per access)
+        grid_row, grid_col = z['grid_row'], z['grid_col']
     fields = json.loads((root / 'index' / country / 'fields.json').read_text())
     out_dir = root / NBR_NAME / country
     out_dir.mkdir(parents=True, exist_ok=True)
     final = out_dir / 's2_nbr5.npy'
     tmp = out_dir / 's2_nbr5.npy.partial'
-    out = np.lib.format.open_memmap(tmp, mode='w+', dtype=np.float16,
-                                    shape=(temporal.shape[0], temporal.shape[1], len(S2_POS)))
-    out[:] = np.nan
+    del_ = np.lib.format.open_memmap(tmp, mode='w+', dtype=np.float16, shape=(shape[0], shape[1], len(S2_POS)))
+    del del_
     t0 = time.time()
+    done = 0
     for i, f in enumerate(fields):
         a, b = f['row_start'], f['row_end']
-        vals = np.asarray(temporal[a:b])[..., S2_POS].astype(np.float64)
-        out[a:b] = field_neighbourhood(vals, rows['grid_row'][a:b], rows['grid_col'][a:b]).astype(np.float16)
+        if a > done:                                                 # rows outside any field stay NaN
+            _write_rows(tmp, done, np.full((a - done, shape[1], len(S2_POS)), np.nan, np.float16))
+        vals = _read_rows(src, a, b)[..., S2_POS].astype(np.float64)
+        _write_rows(tmp, a, field_neighbourhood(vals, grid_row[a:b], grid_col[a:b]).astype(np.float16))
+        done = b
         if (i + 1) % 200 == 0:
             print(country, i + 1, 'of', len(fields), 'fields, %.0f s' % (time.time() - t0), flush=True)
-    out.flush()
-    del out
+    if done < shape[0]:
+        _write_rows(tmp, done, np.full((shape[0] - done, shape[1], len(S2_POS)), np.nan, np.float16))
     os.replace(tmp, final)
-    manifest = {'country': country, 'rows': int(temporal.shape[0]), 'window': 2 * RADIUS + 1,
+    manifest = {'country': country, 'rows': int(shape[0]), 'window': 2 * RADIUS + 1,
                 'centre_excluded': True, 'channels': list(STREAMS['yieldsat_s2']['channels']),
                 'dtype': 'float16', 'seconds': round(time.time() - t0, 1)}
     (out_dir / 'neighbourhood_manifest.json').write_text(json.dumps(manifest, indent=1))

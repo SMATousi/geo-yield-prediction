@@ -183,3 +183,20 @@ note).
     on Germany; Argentina peaks at 26 GiB PSS with 12 workers, mostly shared
     output pages.
   - **Resubmitted** at 32 Gi / 12 CPU.
+- 2026-10-06, build memory:
+  - **Third cluster attempt:** OOM-killed at 32 Gi. Profiling (per-process
+    PSS against the build phase) found four causes, all fixed without
+    changing the output (verified identical):
+
+    | Cause | Fix |
+    |---|---|
+    | The parent re-read the lazy `rows.npz` per field and kept 751 full copies alive (24.7 GB) | Load the row arrays once and copy each field's slice |
+    | Forked workers duplicated the parent heap | Spawned workers read zip members by offset (pread + inflate), without parsing the 266k-entry directory |
+    | Output memory maps (12 GB file pages) | Per-field `pwrite` with fdatasync + page drop |
+    | The stats pass mapped the whole output | Block `pread` |
+
+  - **Result for Argentina:** dense build 26 → **2.3 GiB** peak PSS;
+    neighbourhood builder (same treatment) 19.8 → **7.7 GiB**.
+  - **Saturated S2 DN above float16's range** (18,103 values in Argentina,
+    mostly B01, ~1e-4) are now dropped as NaN instead of becoming inf.
+  - **Build job:** 12 CPU / 12 Gi.
