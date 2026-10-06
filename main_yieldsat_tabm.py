@@ -113,7 +113,12 @@ def load_pooled(args, split):
 
 
 def load_pair(artifact_root, country, crop, features):
+    import zipfile
     cache = Path(artifact_root) / 'tabular' / '{}_{}_{}.npz'.format(country, crop, features)
+    if cache.exists() and not zipfile.is_zipfile(cache):
+        # a corrupt cache on the shared volume (2026-10-06: Argentina_soybean_F0) is rebuilt, not trusted
+        print('unreadable cache, rebuilding:', cache, flush=True)
+        cache.unlink(missing_ok=True)
     if cache.exists():
         z = np.load(cache, allow_pickle=True)
         d = {k: z[k] for k in z.files}
@@ -125,6 +130,10 @@ def load_pair(artifact_root, country, crop, features):
     # atomic: several cluster pods may build the same pair concurrently
     tmp = cache.with_name('{}.{}-{}.partial.npz'.format(cache.stem, os.uname().nodename, os.getpid()))  # pids repeat across pods
     np.savez(tmp, **{k: v for k, v in d.items() if k != 'seasons'}, seasons=np.array(json.dumps(d['seasons'])))
+    with zipfile.ZipFile(tmp) as z:                  # publish only a verified archive
+        bad = z.testzip() if os.environ.get('YIELDSAT_TABM_VERIFY_CRC') else None
+        if bad is not None or len(z.namelist()) < 5:
+            raise RuntimeError('cache write failed verification: {}'.format(tmp))
     os.replace(tmp, cache)
     return d
 
