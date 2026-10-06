@@ -160,3 +160,13 @@ Pending.
   - The paper LSTM was deferred (project lead): its 532 units were marked
     skipped on the PVC (`gave_up` = "skipped") so pods holding the old unit
     list never claim them; the running LSTM unit was stopped.
+- 2026-10-06, overnight monitoring (watcher every 10 min):
+  - `Argentina_soybean_F0.npz` was written corrupt on the PVC (right size,
+    unreadable zip). The six ARG-S MLP/LightGBM units gave up on it.
+    - Fixed: the file was deleted and rebuilt; the cache code now verifies an
+      archive before publishing it and rebuilds an unreadable one.
+  - The GPU on nrp-01.laccd.edu failed mid-run ("unspecified launch failure").
+    Its pod burned 14 units of our point model in minutes.
+    - Fixed: the pod was deleted and the 14 units re-queued.
+    - The pool now re-checks the GPU in a fresh process before every claim.
+    - The node is excluded from future protocol jobs.
