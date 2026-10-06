@@ -188,6 +188,32 @@ def pk_units(artifact_root):
     return units
 
 
+DENSE_ENV = {'YIELDSAT_NUM_SLOTS': '72', 'YIELDSAT_CACHE_NAME': 'cache_dense', 'YIELDSAT_NBR_NAME': 'neighbourhood_dense'}
+
+
+def dense_units(artifact_root):
+    """p3-nbr on the dense raw S2 series (spec/yieldsat-dense-series.md), per pair, all 217 folds."""
+    units = []
+    inputs, margs, _ = NN['ours-p3nbr']
+    for pair, proto, group, folds in _rows(artifact_root):
+        if pair == 'ALL':
+            continue
+        country, crop = parse_pair(pair)
+        prefix = folds[0].rsplit('_fold', 1)[0]
+        for i, name in enumerate(folds):
+            tag = 'ours-p3nbr-dense'
+            out = '{{out_root}}/paper/{}/{}/{}_seed0/{}/fold{:02d}'.format(group, inputs, tag, pair, i)
+            units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                          'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV,
+                          'stage': ['cache_dense/' + country, 'neighbourhood_dense/' + country, 'index/' + country,
+                                    'splits/{}*'.format(prefix), 'geometry/fields_geometry_*.json'],
+                          'args': COMMON + margs + ['--weather_first_slot', 'keep',
+                                   '--countries', country, '--crops', crop, '--split', name,
+                                   '--output_dir', out, '--streams', *STREAMS[inputs]]})
+    units.sort(key=lambda u: -SIZE[u['pair']])
+    return units
+
+
 def _rows(artifact_root):
     """(pair, protocol, group, prefix) of every per-pair row and pooled row."""
     out = []
@@ -243,6 +269,15 @@ def cmd_units(a):
               for pair in sorted(PAPER_PAIRS, key=lambda x: -SIZE[x]) for f in ('F1', 'F0')
               if (pair, f) not in cached]
     tab = builds + tab
+    if a.batch == 'dense':
+        units = dense_units(a.artifact_root)
+        smoke = [u for u in units if u['id'] in ('ours-p3nbr-dense__GER-R__cv__f0', 'ours-p3nbr-dense__ARG-S__loyo__f3',
+                                                  'ours-p3nbr-dense__URG-S__cv__f0')]
+        for name, us in (('protocol_dense', units), ('protocol_dense_smoke', smoke)):
+            Path('cluster/tabm/{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': name, 'out_root': a.out_root, 'units': us}, indent=1))
+            print('{}: {} units'.format(name, len(us)))
+        return
     if a.batch == 'pk':
         units = pk_units(a.artifact_root)
         smoke = [u for u in units if u['pair'] == 'GER-R' and u['id'].endswith('__loyo__f0')]
@@ -377,7 +412,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
