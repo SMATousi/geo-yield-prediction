@@ -318,3 +318,15 @@ Findings:
       can run them.
     - The utilization flag is back on: the results pod cannot be recreated,
       so the watcher reads the PVC through a running protocol pod.
+- 2026-10-06, ~16:30 UTC: the image batch was stopped on the project lead's
+  request (pretrained-encoder p3-nbr first).
+  - Done at the stop: image v1 25, v2 19, hybrid 9 units (mostly ARG-S;
+    interim ARG-S CV10 fold-mean pixel: v1 0.44, v2 0.53, hybrid 0.66 on
+    3 folds).
+  - The hybrid's loader workers had been killed by the 2 Gi `/dev/shm`. A
+    follow-up job (`protocol_hybrid_job.yaml`, 8 Gi shm) is ready.
+  - The image batch resumes from the PVC claims; in-flight units go stale
+    and are retaken.
+  - The utilization flag (image pods requested 8 CPU / 40 Gi, used
+    2–4 CPU / 4–6 Gi) blocks submissions. The job files have been
+    right-sized.
