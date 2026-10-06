@@ -333,3 +333,12 @@ pipeline:
   - Job `cluster/nautilus/repro_dev_job.yaml`: 16 pods, any GPU, 4 CPU /
     24 Gi / 40 Gi scratch. Results in
     `/data/YieldSAT/yieldsat_results/repro_seeds` next to GER-R CV10.
+- 2026-10-06 — **DEV repro job incident:** pod `repro-dev-dsrlp` on
+  `fiona-prg1.cesnet.cz` had a broken GPU ("CUDA unknown error" at init).
+  - It failed and abandoned 3 units (URG-S S2 + DEM CV folds 1, 6, 7)
+    within a minute, then the node went Unknown.
+  - Pod force-deleted, the 3 units reopened, and the node added to all
+    manifests' exclusion lists.
+  - The pool now runs a GPU health check before claiming any unit (exit 3
+    on failure), so a broken GPU can no longer burn units. Replacement pods
+    clone `main` and get it.
