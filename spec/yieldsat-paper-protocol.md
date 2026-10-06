@@ -192,3 +192,9 @@ Pending.
       failing node.
     - The cache code now CRC-checks every archive before publishing it, and
       rebuilds a cache whose data fails to load.
+  - ~08:55 UTC: the utilization flag had cleared.
+    - `protocol-tab` backoffLimit was raised to 200. Its template cannot
+      exclude nrp-01, but the per-claim GPU check limits a pod there to one
+      burned unit; this was observed once.
+    - `protocol-nn` was resubmitted with the node excluded and resumes from
+      the PVC claims.
