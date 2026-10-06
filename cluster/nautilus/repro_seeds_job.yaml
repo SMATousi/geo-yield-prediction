@@ -2,7 +2,8 @@
 # 4 input configs x 3 seeds x 10 folds = 120 claimable units (yieldsat_tabm_cluster.py pool,
 # cluster/tabm/repro_seeds_units.json). Each pod stages Germany's cache/index/fold manifests to local
 # scratch (random-access full-pass epochs); supplied stats come from the source NetCDF on the PVC.
-# No credentials inside.
+# Any GPU type (project lead, 2026-10-06: A10s were full; this LSTM needs ~1 GB and its results do
+# not depend on the GPU). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -20,9 +21,6 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values: [NVIDIA-A10]
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
