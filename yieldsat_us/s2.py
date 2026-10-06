@@ -38,6 +38,9 @@ def search_items(bbox_lonlat, start, end):
     out = []
     for it in items:
         p = it.properties
+        hrefs = [it.assets[v].href for v in list(ASSET.values()) + ['scl'] if v in it.assets]
+        if len(hrefs) < len(ASSET) + 1 or not all(h.startswith('https://') for h in hrefs):
+            continue        # some items point to requester-pays JP2s, not public COGs: skip the acquisition
         out.append({'id': it.id, 'date': it.datetime.date(), 'cloud': float(p.get('eo:cloud_cover', 100.0)),
                     'baseline': p.get('s2:processing_baseline'), 'offset_applied': p.get('earthsearch:boa_offset_applied'),
                     'epsg': int(p.get('proj:epsg') or it.properties.get('proj:code', 'EPSG:0').split(':')[-1]),
@@ -60,6 +63,15 @@ def sample_asset(href, epsg, lon, lat):
     from pyproj import Transformer
     from rasterio.windows import Window
     xs, ys = Transformer.from_crs('EPSG:4326', 'EPSG:{}'.format(epsg), always_xy=True).transform(lon, lat)
+    try:
+        return _sample_open(href, xs, ys)
+    except rasterio.errors.RasterioIOError:
+        return np.full(len(xs), -1, dtype=np.int32)     # unreadable asset: acquisition treated as missing
+
+
+def _sample_open(href, xs, ys):
+    import rasterio
+    from rasterio.windows import Window
     with rasterio.Env(**GDAL_ENV), rasterio.open(href) as d:
         inv = ~d.transform
         cols, rows = inv * (np.asarray(xs), np.asarray(ys))
