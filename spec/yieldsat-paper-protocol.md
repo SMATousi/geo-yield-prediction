@@ -158,33 +158,72 @@ the paper's best model.
 | LORO pixel | 0.18 | 0.23 | 0.39 | **0.23** [4 / 1] | 0.21 [4 / 0] | 0.21 [4 / 0] | 0.15 [4 / 0] | 0.17 [3 / 0] | 0.13 [3 / 0] | 0.17 [3 / 0] |
 | LORO field | 0.06 | 0.22 | 0.58 | −0.12 [2 / 0] | **−0.01** [2 / 0] | −0.03 [2 / 0] | −0.09 [1 / 0] | −0.10 [2 / 0] | −0.18 [1 / 0] | −0.09 [2 / 0] |
 
+**Metric correction.** The fold-mean table above uses the wrong convention
+for LOYO/LORO. The paper's LOYO/LORO rows behave like R² pooled over all
+folds' predictions: 31 paper rows have a mean ± std that is impossible as a
+per-fold mean (`results/negative_r2_investigation.md`). The same rows
+recomputed as pooled out-of-fold R² (per-pair arm;
+`results/protocol_point_oof.md`):
+
+| Protocol / level | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM |
+|---|---|---|---|---|---|---|---|
+| CV10 pixel | 0.46 | 0.53 | 0.51 [8 / 1] | 0.51 [9 / 1] | 0.51 [9 / 1] | 0.49 [7 / 1] | 0.48 [6 / 1] |
+| CV10 field | 0.72 | 0.82 | **0.80** [8 / 3] | 0.79 [8 / 0] | 0.79 [8 / 0] | 0.76 [7 / 0] | 0.75 [6 / 1] |
+| LOYO pixel | 0.31 | 0.38 | **0.35** [7 / 0] | 0.32 [4 / 1] | 0.31 [5 / 2] | 0.27 [3 / 1] | 0.28 [3 / 1] |
+| LOYO field | 0.43 | 0.54 | **0.45** [6 / 0] | 0.37 [5 / 0] | 0.36 [4 / 0] | 0.29 [2 / 0] | 0.37 [4 / 1] |
+| LORO pixel | 0.23 | 0.39 | **0.32** [9 / 0] | 0.29 [7 / 1] | 0.30 [7 / 1] | 0.28 [5 / 1] | 0.28 [6 / 0] |
+| LORO field | 0.22 | 0.58 | **0.46** [8 / 0] | 0.38 [7 / 1] | 0.38 [7 / 1] | 0.37 [6 / 1] | 0.40 [7 / 0] |
+
 Findings:
-1. **CV10.**
-   - Under the paper's protocol, our models beat the paper's LSTM S2+ADM
-     on 8 of 9 pairs (point model and TabM).
-   - They remain about 0.03 pixel / 0.04 field below the paper's best
-     model per row.
-   - The gap is concentrated in Argentina.
-2. **LOYO and LORO.** We are well below even the paper's LSTM.
-   - Fold-mean field R² is dominated by a few held-out years or regions
-     with few fields, where a constant offset gives a strongly negative R²
-     (e.g. GER-R LOYO MLP −11.6).
-   - Whether the paper's LOYO/LORO rows are fold means or pooled
-     out-of-fold R² is being checked (§6.1).
-3. **Our point model (p3-nbr)** is the most robust across protocols and the
-   best of ours in CV10 and LOYO. TabM is close in CV10 and leads LORO field
-   level.
+1. **Against the paper's LSTM (S2+ADM).** Under the paper's protocol and
+   metric, our point model (p3-nbr) beats it in every protocol:
+   - on 8/9 pairs in CV10 and 9/9 pairs in LORO (pixel level);
+   - by +0.04 pixel in LOYO and +0.09 pixel / +0.24 field in LORO (means).
+2. **Against the paper's best model per row.** We are still below it on
+   average:
+   - CV10: −0.02 pixel, −0.02 field;
+   - LOYO: −0.03 pixel, −0.09 field;
+   - LORO: −0.07 pixel, −0.12 field.
+
+   Our point model beats the best paper model on field-level CV10 for 3/9
+   pairs.
+3. **Our models.** The point model (p3-nbr) is the strongest of ours
+   overall, especially out of distribution (LOYO/LORO). TabM ties it on
+   CV10 pixel level.
 4. **Pooled training** (one model for all pairs) is worse than per-pair
-   training in every protocol (CV10 −0.03 pixel, −0.05 field), consistent
-   with the paper's per-pair training.
-5. Every number here is selected on the test fold (optimistic by
-   construction). It is comparable with the paper's tables only.
+   training in every protocol (CV10 fold-mean −0.03 pixel, −0.05 field).
+   This is consistent with the paper's per-pair training.
+5. Every number is selected on the test fold (optimistic by construction).
+   It is comparable with the paper's tables only.
 
-### 6.1 Pending
+### 6.1 Image batch (submitted 2026-10-06)
 
-- Pooled out-of-fold R² for LOYO/LORO, to establish which convention the
-  paper's rows use.
-- Image models (second batch).
+- **Models:** image v1, image v2 (+ series, level head) and the round-1
+  hybrid h1-early.
+  - Inputs S2+ADM, seed 0.
+  - All 9 pairs × CV10/LOYO/LORO per pair, plus pooled CV10: 681 units
+    (`cluster/tabm/protocol_image_units.json`,
+    `cluster/nautilus/protocol_image_job.yaml`, 24 pods).
+- **Tiles and test cells:** tiles come from the full-coverage build, and
+  test cells are every cell (the paper's coverage).
+  - v1 trains on the v1 tile set (≥ 2,048 valid cells).
+  - German v1/v2 runs warm-start from the existing donors, which were
+    trained on non-German tiles only.
+- **Selection:** `main_yieldsat_image.py` selects on the test fold
+  (`selection: test_fold`).
+- **Pooled arm:** CV10 only, because pooled image training costs ~3–5 h
+  per fold. Pooled LOYO/LORO run only if wanted.
+- **Smoke (GER-R CV fold 0):** all three passed.
+
+  | Model | Pixel R² | Field R² | Note |
+  |---|---|---|---|
+  | v1 | 0.02 | −0.16 | warm start, 336 tensors |
+  | v2 | −0.03 | −0.41 | best at epoch 0 |
+  | h1 | 0.32 | 0.72 | |
+
+### 6.2 Pending
+
+- Image batch results.
 - The paper LSTM (deferred; run only if needed).
 
 ## 7. Log
