@@ -143,7 +143,10 @@ def cmd_pool(a):
         if unit is None:
             break
         d = claims.d(unit['id'])
-        attempts = int((d / 'attempts').read_text()) + 1 if (d / 'attempts').exists() else 1
+        try:        # tolerate a concurrently written / empty file on the shared volume
+            attempts = int((d / 'attempts').read_text().strip() or 0) + 1
+        except (OSError, ValueError):
+            attempts = 1
         (d / 'attempts').write_text(str(attempts))
         if unit.get('stage') and a.stage_from:
             stage(unit['stage'], a.stage_from, a.artifact_root)
