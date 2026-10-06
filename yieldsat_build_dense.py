@@ -152,6 +152,27 @@ def build_field(task):
     return stats
 
 
+def dense_field_stats(out, mono, fields, block_rows=65536):
+    """field_stats.npz for the dense cache: temporal sums from the dense values (every
+    in-season slot is a full interval, so first-slot weather is valid); static sums copied from
+    the monthly cache (same static rows)."""
+    from dataset.yieldsat_cache import _Accumulator, temporal_valid_mask
+    temporal = np.load(out / 'temporal.npy', mmap_mode='r')
+    times = np.load(out / 'times.npy', mmap_mode='r')
+    acc = _Accumulator(len(fields), temporal.shape[2])
+    for slot, fl in enumerate(fields):
+        for s in range(fl['row_start'], fl['row_end'], block_rows):
+            e = min(fl['row_end'], s + block_rows)
+            t = np.asarray(temporal[s:e]).astype(np.float32)
+            valid = temporal_valid_mask(t, np.asarray(times[s:e]), mask_first_weather=False)
+            acc.add(slot, np.where(valid, t, np.nan).reshape(-1, t.shape[2]))
+    mono_stats = np.load(mono / 'field_stats.npz')
+    np.savez(out / 'field_stats.npz', field_codes=np.array([fl['field_code'] for fl in fields]),
+             temporal_count=acc.count, temporal_sum=acc.sum, temporal_sumsq=acc.sumsq,
+             temporal_min=acc.min, temporal_max=acc.max,
+             **{k: mono_stats[k] for k in mono_stats.files if k.startswith('static_')})
+
+
 def build_country(raw_zip, artifact_root, country, workers, limit=None, out_name='cache_dense'):
     from dataset.yieldsat_schema import TEMPORAL_CHANNELS
     root = Path(artifact_root)
@@ -201,6 +222,7 @@ def build_country(raw_zip, artifact_root, country, workers, limit=None, out_name
         if link.exists() or link.is_symlink():
             link.unlink()
         os.symlink(os.path.relpath(mono / name, out), link)
+    dense_field_stats(out, mono, fields)
     manifest = json.loads((mono / 'cache_manifest.json').read_text())
     manifest['dense'] = {
         'n_slots': N_SLOTS, 'slot_rule': '3 per month (1-10, 11-20, 21-end) from January of harvest year - 1',
