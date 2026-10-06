@@ -84,6 +84,53 @@ TAB = {
 }
 
 
+# image models (spec/yieldsat-image-training.md; spec/yieldsat-improvement.md round 1), S2+ADM, seed 0;
+# all are tested on every cell of the full-coverage tile build
+IMG_COMMON = ['--artifact_root', '{artifact_root}', '--image_root', '{image_root}', '--cutoff_mode', 'all_slots',
+              '--seed', '0', '--num_workers', '6', '--save_maps', '0']
+IMAGE = {
+    # v1: spatial image model (64x64 tiles, frozen DINOv3 + modality encoders), trained on the v1 tile set
+    'image-v1': (['--epochs', '60', '--batch_size', '16', '--min_steps_per_epoch', '20', '--lr', '5e-4',
+                  '--train_min_valid', '2048'], 'image_donors'),
+    # v2: + per-pixel S2 time series, level + residual head, present-cell slot coverage
+    'image-v2': (['--epochs', '60', '--batch_size', '16', '--min_steps_per_epoch', '20', '--lr', '5e-4',
+                  '--train_min_valid', '2048', '--series', '--level_head', '--slot_coverage', 'present'],
+                 'image_v2_donors'),
+    # round-1 hybrid h1-early (S4 early cell fusion), all tiles, no warm start (as in dev_r1)
+    'hybrid-h1': (['--arch', 'hybrid', '--slot_coverage', 'present', '--cell_fusion', 'early', '--epochs', '80',
+                   '--batch_size', '8', '--min_steps_per_epoch', '20', '--lr', '2e-3'], None),
+}
+WARM = {'GER-R': 'pooled', 'GER-W': 'bra-w'}       # donors trained on non-German tiles only (YI-06)
+
+
+def image_units(artifact_root, pooled_protocols=('cv',)):
+    units = []
+    for pair, proto, group, folds in _rows(artifact_root):
+        if pair == 'ALL' and proto not in pooled_protocols:
+            continue
+        countries = list(COUNTRIES) if pair == 'ALL' else [parse_pair(pair)[0]]
+        crop_args = [] if pair == 'ALL' else ['--crops', parse_pair(pair)[1]]
+        prefix = folds[0].rsplit('_fold', 1)[0]
+        for tag, (margs, donors) in IMAGE.items():
+            for i, name in enumerate(folds):
+                args = IMG_COMMON + margs + ['--countries', *countries] + crop_args + [
+                    '--split', name, '--streams', *STREAMS['s2_adm'],
+                    '--output_dir', '{{out_root}}/paper/{}/s2_adm/{}_seed0/{}/fold{:02d}'.format(group, tag, pair, i)]
+                if donors and pair in WARM:
+                    args += ['--init_ckpt', '/data/YieldSAT/yieldsat_results/{}/donors/{}/s2_adm/seed0/'
+                             'checkpoint_best.pth'.format(donors, WARM[pair]),
+                             '--lr', '{:g}'.format(float(margs[margs.index('--lr') + 1]) * 0.3)]
+                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                              'script': 'main_yieldsat_image.py',
+                              'stage': ['index/' + c for c in countries] + ['splits/{}*'.format(prefix)],
+                              'stage_image': {'key': pair, 'countries': countries,
+                                              'crops': None if pair == 'ALL' else [parse_pair(pair)[1]]},
+                              'args': args})
+    # per pair first, grouped by pair (one staged tile root per pod), largest first; pooled last
+    units.sort(key=lambda u: (u['pair'] == 'ALL', -SIZE[u['pair']], u['pair']))
+    return units
+
+
 def _rows(artifact_root):
     """(pair, protocol, group, prefix) of every per-pair row and pooled row."""
     out = []
@@ -139,6 +186,14 @@ def cmd_units(a):
               for pair in sorted(PAPER_PAIRS, key=lambda x: -SIZE[x]) for f in ('F1', 'F0')
               if (pair, f) not in cached]
     tab = builds + tab
+    if a.batch == 'image':
+        units = image_units(a.artifact_root)
+        smoke = [u for u in units if u['pair'] == 'GER-R' and u['id'].endswith('__cv__f0')]
+        for name, us in (('protocol_image', units), ('protocol_image_smoke', smoke)):
+            Path('cluster/tabm/{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': name, 'out_root': a.out_root, 'units': us}, indent=1))
+            print('{}: {} units'.format(name, len(us)))
+        return
     for name, units in (('protocol_nn', nn), ('protocol_tab', tab)):
         out = Path('cluster/tabm/{}_units.json'.format(name))
         out.write_text(json.dumps({'suite': name, 'out_root': a.out_root, 'units': units}, indent=1))
@@ -243,6 +298,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
+    u.add_argument('--batch', default='point', choices=['point', 'image'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

@@ -241,6 +241,10 @@ def main(args):
         if not set(args.countries) <= set(split['countries']):
             raise SystemExit('split {} covers {}, not {}'.format(args.split, split['countries'], args.countries))
     parts = tiles_for_split(tiles, split, crops=args.crops)
+    if split.get('selection') == 'test_fold':
+        # the paper's protocol (spec/yieldsat-paper-protocol.md): no validation set, selection on the
+        # test fold; tiles_for_split maps each season to one partition, so the test tiles are reused
+        parts['val'] = list(parts['test'])
     train_filter = None
     if args.train_min_valid > 0:
         full = [t for t in parts['train'] if t['valid_pixels'] >= args.train_min_valid]
@@ -374,6 +378,7 @@ def main(args):
                              'target-side metadata', 'supplied stats-*'],
         'pair_filter': {'countries': args.countries, 'crops': args.crops, 'crop_context': use_crop},
         'normalization': {'features': 'train tiles', 'target': 'train tiles'},
+        'selection': split.get('selection', 'validation'),
         'train_seasons': len({t['season_id'] for t in parts['train']}),
         'val_seasons': len({t['season_id'] for t in parts['val']}),
         'test_seasons': len({t['season_id'] for t in parts['test']}),

@@ -1,0 +1,193 @@
+{
+ "suite": "protocol_image_smoke",
+ "out_root": "/data/YieldSAT/yieldsat_results/protocol",
+ "units": [
+  {
+   "id": "image-v1__GER-R__cv__f0",
+   "pair": "GER-R",
+   "n_folds": 1,
+   "script": "main_yieldsat_image.py",
+   "stage": [
+    "index/Germany",
+    "splits/noval_paper_cv10_GER-R_season_paper_s0*"
+   ],
+   "stage_image": {
+    "key": "GER-R",
+    "countries": [
+     "Germany"
+    ],
+    "crops": [
+     "rapeseed"
+    ]
+   },
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--image_root",
+    "{image_root}",
+    "--cutoff_mode",
+    "all_slots",
+    "--seed",
+    "0",
+    "--num_workers",
+    "6",
+    "--save_maps",
+    "0",
+    "--epochs",
+    "60",
+    "--batch_size",
+    "16",
+    "--min_steps_per_epoch",
+    "20",
+    "--lr",
+    "5e-4",
+    "--train_min_valid",
+    "2048",
+    "--countries",
+    "Germany",
+    "--crops",
+    "rapeseed",
+    "--split",
+    "noval_paper_cv10_GER-R_season_paper_s0_fold00",
+    "--streams",
+    "yieldsat_s2",
+    "yieldsat_weather",
+    "yieldsat_dem",
+    "yieldsat_terrain",
+    "yieldsat_soil",
+    "--output_dir",
+    "{out_root}/paper/cv10_season_noval_s0/s2_adm/image-v1_seed0/GER-R/fold00",
+    "--init_ckpt",
+    "/data/YieldSAT/yieldsat_results/image_donors/donors/pooled/s2_adm/seed0/checkpoint_best.pth",
+    "--lr",
+    "0.00015"
+   ]
+  },
+  {
+   "id": "image-v2__GER-R__cv__f0",
+   "pair": "GER-R",
+   "n_folds": 1,
+   "script": "main_yieldsat_image.py",
+   "stage": [
+    "index/Germany",
+    "splits/noval_paper_cv10_GER-R_season_paper_s0*"
+   ],
+   "stage_image": {
+    "key": "GER-R",
+    "countries": [
+     "Germany"
+    ],
+    "crops": [
+     "rapeseed"
+    ]
+   },
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--image_root",
+    "{image_root}",
+    "--cutoff_mode",
+    "all_slots",
+    "--seed",
+    "0",
+    "--num_workers",
+    "6",
+    "--save_maps",
+    "0",
+    "--epochs",
+    "60",
+    "--batch_size",
+    "16",
+    "--min_steps_per_epoch",
+    "20",
+    "--lr",
+    "5e-4",
+    "--train_min_valid",
+    "2048",
+    "--series",
+    "--level_head",
+    "--slot_coverage",
+    "present",
+    "--countries",
+    "Germany",
+    "--crops",
+    "rapeseed",
+    "--split",
+    "noval_paper_cv10_GER-R_season_paper_s0_fold00",
+    "--streams",
+    "yieldsat_s2",
+    "yieldsat_weather",
+    "yieldsat_dem",
+    "yieldsat_terrain",
+    "yieldsat_soil",
+    "--output_dir",
+    "{out_root}/paper/cv10_season_noval_s0/s2_adm/image-v2_seed0/GER-R/fold00",
+    "--init_ckpt",
+    "/data/YieldSAT/yieldsat_results/image_v2_donors/donors/pooled/s2_adm/seed0/checkpoint_best.pth",
+    "--lr",
+    "0.00015"
+   ]
+  },
+  {
+   "id": "hybrid-h1__GER-R__cv__f0",
+   "pair": "GER-R",
+   "n_folds": 1,
+   "script": "main_yieldsat_image.py",
+   "stage": [
+    "index/Germany",
+    "splits/noval_paper_cv10_GER-R_season_paper_s0*"
+   ],
+   "stage_image": {
+    "key": "GER-R",
+    "countries": [
+     "Germany"
+    ],
+    "crops": [
+     "rapeseed"
+    ]
+   },
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--image_root",
+    "{image_root}",
+    "--cutoff_mode",
+    "all_slots",
+    "--seed",
+    "0",
+    "--num_workers",
+    "6",
+    "--save_maps",
+    "0",
+    "--arch",
+    "hybrid",
+    "--slot_coverage",
+    "present",
+    "--cell_fusion",
+    "early",
+    "--epochs",
+    "80",
+    "--batch_size",
+    "8",
+    "--min_steps_per_epoch",
+    "20",
+    "--lr",
+    "2e-3",
+    "--countries",
+    "Germany",
+    "--crops",
+    "rapeseed",
+    "--split",
+    "noval_paper_cv10_GER-R_season_paper_s0_fold00",
+    "--streams",
+    "yieldsat_s2",
+    "yieldsat_weather",
+    "yieldsat_dem",
+    "yieldsat_terrain",
+    "yieldsat_soil",
+    "--output_dir",
+    "{out_root}/paper/cv10_season_noval_s0/s2_adm/hybrid-h1_seed0/GER-R/fold00"
+   ]
+  }
+ ]
+}

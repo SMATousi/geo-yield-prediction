@@ -114,6 +114,40 @@ def stage(rels, src_root, dst_root):
             mark.write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
 
 
+def stage_image(spec, src_img, local_root):
+    """Image units: stage the tiles of spec['countries'] (only spec['crops'] tiles, uncompressed and
+    sparse, when crops are given; the compressed files otherwise), their patch tables and DINO
+    features under <local_root>/<spec['key']>; other keys' roots are removed first (one at a time
+    per pod). Returns the local image root."""
+    import fcntl
+    from models_yieldsat_image import DINO_REVISION, preprocessing_hash
+    from yieldsat_cluster import _copy_once, _stage_tiles_sparse
+    from yieldsat_image_dino_cache import cache_tag
+    base, src = Path(local_root), Path(src_img)
+    dst = base / spec['key']
+    base.mkdir(parents=True, exist_ok=True)
+    with open(base / '.stage.lock', 'w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not (dst / '.staged').exists():
+            for d in base.iterdir():
+                if d.is_dir() and d != dst:
+                    shutil.rmtree(d, ignore_errors=True)
+            dino = Path('dino_cache') / cache_tag(DINO_REVISION, preprocessing_hash())
+            _copy_once(src / 'manifest.json', dst / 'manifest.json')
+            _copy_once(src / dino / 'manifest.json', dst / dino / 'manifest.json')
+            for c in spec['countries']:
+                for rel in (Path(c) / 'patches.jsonl', dino / '{}.h5'.format(c)):
+                    _copy_once(src / rel, dst / rel)
+                if spec.get('crops'):
+                    keep = [json.loads(line)['patch_index'] for line in open(src / c / 'patches.jsonl')
+                            if json.loads(line)['crop'] in spec['crops']]
+                    _stage_tiles_sparse(src / c / 'images.h5', dst / c / 'images.h5', keep)
+                else:
+                    _copy_once(src / c / 'images.h5', dst / c / 'images.h5')
+            (dst / '.staged').write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
+    return str(dst)
+
+
 def gpu_ok():
     """Fail fast on a broken GPU: a pod whose CUDA cannot initialize would otherwise fail
     and burn every unit it claims (2026-10-06, fiona-prg1.cesnet.cz)."""
@@ -157,9 +191,14 @@ def cmd_pool(a):
         (d / 'attempts').write_text(str(attempts))
         if unit.get('stage') and a.stage_from:
             stage(unit['stage'], a.stage_from, a.artifact_root)
+        image_root = None
+        if unit.get('stage_image'):
+            image_root = stage_image(unit['stage_image'], a.stage_image_from, a.image_local)
         if 'script' in unit:
-            # generic unit: full argument list with {artifact_root} / {out_root} / {source_root} placeholders
-            fmt = dict(artifact_root=a.artifact_root, out_root=out_root, source_root=a.source_root)
+            # generic unit: full argument list with {artifact_root} / {out_root} / {source_root} /
+            # {image_root} placeholders
+            fmt = dict(artifact_root=a.artifact_root, out_root=out_root, source_root=a.source_root,
+                       image_root=image_root)
             cmd = [sys.executable, unit['script'], *[str(x).format(**fmt) for x in unit['args']]]
         else:
             cmd = [sys.executable, 'main_yieldsat_tabm.py', '--artifact_root', a.artifact_root, '--out_root', out_root,
@@ -213,6 +252,9 @@ def main():
     q.add_argument('--skip_gpu_check', action='store_true')
     q.add_argument('--stage_from', default=None,
                    help='copy each unit\'s "stage" paths from this artifact root to --artifact_root first')
+    q.add_argument('--stage_image_from', default='/data/YieldSAT/YieldSAT-Image-full',
+                   help='image units: PVC image root to stage tiles from')
+    q.add_argument('--image_local', default='/scratch/img', help='image units: local staging root')
     q.add_argument('--stale_minutes', type=int, default=45)
     q.add_argument('--max_attempts', type=int, default=2)
     q.set_defaults(func=cmd_pool)
