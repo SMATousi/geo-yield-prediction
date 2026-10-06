@@ -672,3 +672,21 @@ or model-training changes are authorized by this design document alone.
   - Extraction waits for a NASS QuickStats key (project lead's choice), so
     season dates come from Crop Progress. The test cluster with fallback
     dates was discarded.
+- 2026-10-06 — **NASS QuickStats key received** (the project lead's key, kept
+  only in a session environment variable, `NASS_API_KEY`; never written to
+  the repository).
+  - Calendar client fixes, verified against the live API:
+    - Corn planting is published as `CORN - PROGRESS …` but harvest as
+      `CORN, GRAIN - PROGRESS …`, so exact series names are matched per
+      crop.
+    - QuickStats files progress under the crop (harvest) year, including
+      winter wheat's autumn planting (2023 crop: Sep–Nov 2022 weeks under
+      year 2023). Kansas 2023: planted 2022-10-09, harvested 2023-07-09.
+    - One request per state × commodity × year.
+    - The first prefill ran ≈ 740 rapid calls and was throttled (HTTP 403).
+      Those failures had been cached as fallbacks; they were purged.
+      Requests are now paced (1.5 s) with backoff, and transient failures
+      are never cached.
+  - Prefill of the 371 state × crop group × year keys is running. Then
+    `extract` runs per harvest year in parallel, reading the prefilled
+    calendar only.
