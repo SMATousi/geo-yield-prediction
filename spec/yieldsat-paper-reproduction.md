@@ -342,3 +342,9 @@ pipeline:
   - The pool now runs a GPU health check before claiming any unit (exit 3
     on failure), so a broken GPU can no longer burn units. Replacement pods
     clone `main` and get it.
+- 2026-10-06 — DEV repro job at 48/252 units after 2 h (largest pair first,
+  so later units are faster).
+  - Two pods crashed in the pool reading an empty `attempts` file written
+    concurrently on the shared volume. Fixed with a tolerant parse;
+    replacement pods clone the fix, and the affected claims are taken over
+    when stale.
