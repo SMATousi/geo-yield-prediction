@@ -1,8 +1,8 @@
 # Dense raw S2 series build on the PVC (spec/yieldsat-dense-series.md, DS-04): yieldsat_build_dense.py for all
-# four countries from /data/YieldSAT/Raw.zip into yieldsat_artifacts/cache_dense, then the dense 5x5
-# neighbourhood stream. CPU only. Workers read zip members by offset straight from the PVC (a scratch copy
-# hit a read failure; the per-worker zip-directory parsing that made PVC reads slow is gone). Sized from local measurement after the memory fixes (Argentina: dense build 2.3 GiB PSS with 12
-# workers, neighbourhood 7.7 GiB). No credentials inside.
+# four countries from /data/YieldSAT/Raw.zip into yieldsat_artifacts/cache_dense (the dense 5x5 neighbourhood
+# stream is a separate job, dense_nbr_job.yaml, sized for its own peak). CPU only. Workers read zip members by offset straight from the PVC (a scratch copy
+# hit a read failure; the per-worker zip-directory parsing that made PVC reads slow is gone). I/O-bound on the PVC (12 workers used 0.2 CPU and
+# 0.8 GiB): 32 workers for more reads in flight, 4 CPU / 6 Gi to stay above 20% use. No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -26,16 +26,14 @@ spec:
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
           (python -c "import rasterio" 2>/dev/null || pip install --quiet --no-cache-dir rasterio) &&
           python yieldsat_build_dense.py --raw_zip /data/YieldSAT/Raw.zip
-          --artifact_root /data/YieldSAT/yieldsat_artifacts --workers 12 &&
-          YIELDSAT_NUM_SLOTS=72 YIELDSAT_CACHE_NAME=cache_dense YIELDSAT_NBR_NAME=neighbourhood_dense
-          python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          --artifact_root /data/YieldSAT/yieldsat_artifacts --workers 32 &&
           echo DENSE_BUILD_COMPLETE
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '12', memory: 12Gi, ephemeral-storage: 5Gi}
-          requests: {cpu: '12', memory: 12Gi, ephemeral-storage: 5Gi}
+          limits: {cpu: '4', memory: 6Gi, ephemeral-storage: 5Gi}
+          requests: {cpu: '4', memory: 6Gi, ephemeral-storage: 5Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
       volumes:

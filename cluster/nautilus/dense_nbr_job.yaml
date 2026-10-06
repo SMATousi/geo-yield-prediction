@@ -1,0 +1,38 @@
+# Dense 5x5 neighbourhood stream (spec/yieldsat-dense-series.md, D6) from cache_dense on the PVC, after
+# dense_build_job.yaml. Single process; local measurement after the memory fixes: Argentina 7.7 GiB PSS ->
+# 2 CPU / 10 Gi. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-dense-nbr
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: build
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          YIELDSAT_NUM_SLOTS=72 YIELDSAT_CACHE_NAME=cache_dense YIELDSAT_NBR_NAME=neighbourhood_dense
+          python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          echo DENSE_NBR_COMPLETE
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {cpu: '2', memory: 10Gi, ephemeral-storage: 5Gi}
+          requests: {cpu: '2', memory: 10Gi, ephemeral-storage: 5Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
