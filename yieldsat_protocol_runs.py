@@ -155,11 +155,16 @@ def collect(results_root):
     import numpy as np
     from dataset.yieldsat_splits import pair_code
     out = {}
-    for f in sorted(Path(results_root).glob('paper/*_noval_s0/*/*_seed0/*/fold*/report.json')):
+    if str(results_root).endswith('.json'):
+        # compact export: [{'path': 'paper/<group>/<inputs>/<tag>_seed0/<pair>/fold<ii>/report.json', ...}]
+        items = [(Path(r['path']), r) for r in json.loads(Path(results_root).read_text())]
+    else:
+        items = ((f, json.loads(f.read_text())) for f in
+                 sorted(Path(results_root).glob('paper/*_noval_s0/*/*_seed0/*/fold*/report.json')))
+    for f, r in items:
         fold_dir = f.parent
         pair, tagdir, inputs, group = fold_dir.parent.name, fold_dir.parents[1].name, \
             fold_dir.parents[2].name, fold_dir.parents[3].name
-        r = json.loads(f.read_text())
         if r.get('selection') != 'test_fold':
             continue
         tag = tagdir.rsplit('_seed', 1)[0]

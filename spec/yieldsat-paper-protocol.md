@@ -1,7 +1,6 @@
 # The paper's training protocol for all models (no validation set)
 
-**Status (2026-10-06): point-level batch implemented and submitted to the
-cluster.** The image models (v1/v2, hybrids) are the second batch. Results
+**Status (2026-10-06): point-level batch complete (§6).** The image models (v1/v2, hybrids) are the second batch. Results
 go in §6.
 
 Related:
@@ -140,9 +139,53 @@ Estimate without the LSTM: ≈ 100 GPU-hours for our point model and ≈ 100
 for the flat models (the original ≈ 600 included the pooled LSTM), i.e.
 well under a day once most of the 40 pods are admitted.
 
-## 6. Results
+## 6. Results (point-level batch complete, 2026-10-06)
 
-Pending.
+All 1,330 folds have finished (217 per-pair and 49 pooled folds × 5
+models). Full per-pair tables: `results/protocol_point.md`.
+
+The table shows R² averaged over folds (the paper's metric), then averaged
+over the 9 pairs. Paper rows are means of the paper's per-pair numbers. In
+brackets: the number of pairs (of 9) above the paper's LSTM S2+ADM / above
+the paper's best model.
+
+| Protocol / level | Paper LSTM S2 | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM | TabM F1 pooled | Ours pooled |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CV10 pixel | 0.37 | 0.46 | 0.53 | **0.50** [8 / 1] | 0.49 [8 / 0] | 0.49 [8 / 1] | 0.47 [7 / 0] | 0.47 [5 / 1] | 0.46 [5 / 0] | 0.45 [5 / 0] |
+| CV10 field | 0.69 | 0.72 | 0.82 | **0.78** [8 / 0] | 0.77 [6 / 0] | 0.77 [7 / 0] | 0.74 [6 / 0] | 0.74 [6 / 0] | 0.72 [5 / 0] | 0.69 [3 / 0] |
+| LOYO pixel | 0.15 | 0.31 | 0.38 | **0.17** [0 / 0] | 0.08 [1 / 0] | 0.06 [1 / 0] | −0.01 [1 / 0] | −0.03 [1 / 0] | 0.03 [0 / 0] | 0.08 [0 / 0] |
+| LOYO field | 0.08 | 0.43 | 0.54 | **−0.07** [0 / 0] | −1.24 | −0.81 | −1.82 | −0.49 | −1.31 | −0.73 |
+| LORO pixel | 0.18 | 0.23 | 0.39 | **0.23** [4 / 1] | 0.21 [4 / 0] | 0.21 [4 / 0] | 0.15 [4 / 0] | 0.17 [3 / 0] | 0.13 [3 / 0] | 0.17 [3 / 0] |
+| LORO field | 0.06 | 0.22 | 0.58 | −0.12 [2 / 0] | **−0.01** [2 / 0] | −0.03 [2 / 0] | −0.09 [1 / 0] | −0.10 [2 / 0] | −0.18 [1 / 0] | −0.09 [2 / 0] |
+
+Findings:
+1. **CV10.**
+   - Under the paper's protocol, our models beat the paper's LSTM S2+ADM
+     on 8 of 9 pairs (point model and TabM).
+   - They remain about 0.03 pixel / 0.04 field below the paper's best
+     model per row.
+   - The gap is concentrated in Argentina.
+2. **LOYO and LORO.** We are well below even the paper's LSTM.
+   - Fold-mean field R² is dominated by a few held-out years or regions
+     with few fields, where a constant offset gives a strongly negative R²
+     (e.g. GER-R LOYO MLP −11.6).
+   - Whether the paper's LOYO/LORO rows are fold means or pooled
+     out-of-fold R² is being checked (§6.1).
+3. **Our point model (p3-nbr)** is the most robust across protocols and the
+   best of ours in CV10 and LOYO. TabM is close in CV10 and leads LORO field
+   level.
+4. **Pooled training** (one model for all pairs) is worse than per-pair
+   training in every protocol (CV10 −0.03 pixel, −0.05 field), consistent
+   with the paper's per-pair training.
+5. Every number here is selected on the test fold (optimistic by
+   construction). It is comparable with the paper's tables only.
+
+### 6.1 Pending
+
+- Pooled out-of-fold R² for LOYO/LORO, to establish which convention the
+  paper's rows use.
+- Image models (second batch).
+- The paper LSTM (deferred; run only if needed).
 
 ## 7. Log
 
