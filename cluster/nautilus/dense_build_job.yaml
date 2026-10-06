@@ -1,8 +1,7 @@
 # Dense raw S2 series build on the PVC (spec/yieldsat-dense-series.md, DS-04): yieldsat_build_dense.py for all
 # four countries from /data/YieldSAT/Raw.zip into yieldsat_artifacts/cache_dense, then the dense 5x5
 # neighbourhood stream. CPU only. Raw.zip is copied to local scratch first (random reads over CephFS left
-# the workers I/O-bound at ~3% CPU). Sized from local measurement (16 workers: Germany 6.9 GiB PSS dense build,
-# 3.3 GiB neighbourhood; Argentina larger). No credentials inside.
+# the workers I/O-bound at ~3% CPU). Sized from local measurement (12 workers: Argentina 26 GiB PSS, mostly shared output pages).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -35,8 +34,8 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '12', memory: 12Gi, ephemeral-storage: 30Gi}
-          requests: {cpu: '12', memory: 12Gi, ephemeral-storage: 30Gi}
+          limits: {cpu: '12', memory: 32Gi, ephemeral-storage: 30Gi}
+          requests: {cpu: '12', memory: 32Gi, ephemeral-storage: 30Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
