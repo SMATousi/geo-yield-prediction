@@ -77,6 +77,19 @@ def _read_band_values(raw_zip, info, rows, cols, n_bands):
 _FD = {}
 
 
+def _read_raster_pair(raw_zip, s2_info, scl_info, rows, cols):
+    """S2 bands and SCL at the cells, one retry on a read error."""
+    for attempt in (0, 1):
+        try:
+            v, inside = _read_band_values(raw_zip, s2_info, rows, cols, 12)
+            c, _ = _read_band_values(raw_zip, scl_info, rows, cols, 1)
+            return (v, c), inside
+        except Exception:
+            _FD.clear()                         # reopen the file on retry
+            if attempt:
+                raise
+
+
 def _member(raw_zip, info):
     """Bytes of one zip member from (header_offset, compress_type, compress_size): a pread of the
     local header and data, inflated when deflated. Workers never parse the 266k-entry central
@@ -92,7 +105,15 @@ def _member(raw_zip, info):
     if head[:4] != b'PK\x03\x04':
         raise ValueError('bad local header at {}'.format(off))
     n_name, n_extra = struct.unpack('<HH', head[26:30])
-    data = os.pread(fd, csize, off + 30 + n_name + n_extra)
+    start = off + 30 + n_name + n_extra
+    chunks, got = [], 0
+    while got < csize:                      # pread may return fewer bytes than asked
+        c = os.pread(fd, csize - got, start + got)
+        if not c:
+            raise IOError('short read at {} ({} of {} bytes)'.format(start, got, csize))
+        chunks.append(c)
+        got += len(c)
+    data = b''.join(chunks)
     if ctype == 0:
         return data
     if ctype == 8:
@@ -167,7 +188,7 @@ def build_field(task):
             weather[d] = [float(p[idx[c]]) if c in idx and p[idx[c]] != '' else np.nan for c in WEATHER_COLS]
     w_pos = [temporal_channels.index(c) for c in WEATHER_COLS]
     s2_pos = list(range(12))
-    stats = {'acquisitions': len(dates), 'clear_cells': 0, 'season_slots': 0}
+    stats = {'acquisitions': len(dates), 'clear_cells': 0, 'season_slots': 0, 'unreadable': 0}
     for k, (a, b) in enumerate(bounds):
         lo, hi = max(a, seeding), min(b, harvest)
         if lo > hi:
@@ -182,8 +203,13 @@ def build_field(task):
         cache = {}                      # a date belongs to one slot only: nothing to keep across slots
         for d in cand:
             if d not in cache:
-                v, inside = _read_band_values(raw_zip, members[s2[d]], rows, cols, 12)
-                c, _ = _read_band_values(raw_zip, members[scl[d]], rows, cols, 1)
+                try:
+                    v, inside = _read_raster_pair(raw_zip, members[s2[d]], members[scl[d]], rows, cols)
+                except Exception:                       # unreadable acquisition: skipped and counted
+                    stats['unreadable'] += 1
+                    continue
+                c = v[1]
+                v = v[0]
                 ok = inside & np.isin(c[:, 0], CLEAR_SCL) & (v > 0).all(1)
                 cache[d] = (v, ok)
             v, ok = cache[d]
@@ -266,11 +292,12 @@ def build_country(raw_zip, artifact_root, country, workers, limit=None, out_name
               grid_row[f['row_start']:f['row_end']].copy(), grid_col[f['row_start']:f['row_end']].copy(),
               int(f['seeding_day']), int(f['harvest_day']), int(f['year']), list(TEMPORAL_CHANNELS))
              for f in todo if f['field_shared_name'] in folders]
-    agg = {'acquisitions': 0, 'clear_cells': 0, 'season_slots': 0, 'cells': 0, 'fields': 0, 'saturated': 0}
+    agg = {'acquisitions': 0, 'clear_cells': 0, 'season_slots': 0, 'cells': 0, 'fields': 0, 'saturated': 0,
+           'unreadable': 0}
     import multiprocessing
     with multiprocessing.get_context('spawn').Pool(workers) as pool:      # workers do not inherit the parent heap
         for i, st in enumerate(pool.imap_unordered(build_field, tasks, chunksize=1)):
-            for k in ('acquisitions', 'clear_cells', 'season_slots', 'cells', 'saturated'):
+            for k in ('acquisitions', 'clear_cells', 'season_slots', 'cells', 'saturated', 'unreadable'):
                 agg[k] += st[k]
             agg['fields'] += 1
             if (i + 1) % 100 == 0:
@@ -291,7 +318,7 @@ def build_country(raw_zip, artifact_root, country, workers, limit=None, out_name
         'fields_missing_raw': missing, 'limit': limit,
         'acquisitions_in_season': agg['acquisitions'], 'cells': agg['cells'],
         'clear_cell_slots': agg['clear_cells'], 'season_slots_total': agg['season_slots'],
-        'saturated_s2_values_dropped': agg['saturated'],
+        'saturated_s2_values_dropped': agg['saturated'], 'unreadable_acquisitions_skipped': agg['unreadable'],
         'seconds': round(time.time() - t0, 1)}
     manifest['complete'] = manifest.get('complete', True) and not limit and not missing
     tmp = out / 'cache_manifest.json.tmp'
