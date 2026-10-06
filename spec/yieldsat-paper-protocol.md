@@ -29,6 +29,9 @@ Decision (project lead, 2026-10-06):
 - **Pooled training** (one model for all 9 pairs, reported per pair) is an
   additional arm.
 - Point-level models run first, image models after.
+- **The paper LSTM is deferred** (project lead, 2026-10-06): our models are
+  trained and compared with the paper's published rows first; the LSTM runs
+  only if that comparison needs it (`units --with_lstm`).
 
 Selecting on the test fold is optimistic by construction (H1: +0.08 to
 +0.12 pixel R² on GER-R). Numbers from this protocol are comparable with the
@@ -69,8 +72,8 @@ validation-selected results stay the honest reference.
 
 | Tag | Model | Inputs | Training |
 |---|---|---|---|
-| `lstm-s2` | Paper input-fusion LSTM, thesis configuration (hidden 128, 2 layers, MLP head, supplied stats, raw t/ha target, Adam 1e-3, batch 1024, full passes) | S2 | ≤ 50 epochs, early stop 10 |
-| `lstm-s2adm` | same | S2 + ADM (weather, DEM, terrain, soil) | same |
+| `lstm-s2` (deferred) | Paper input-fusion LSTM, thesis configuration (hidden 128, 2 layers, MLP head, supplied stats, raw t/ha target, Adam 1e-3, batch 1024, full passes) | S2 | ≤ 50 epochs, early stop 10 |
+| `lstm-s2adm` (deferred) | same | S2 + ADM (weather, DEM, terrain, soil) | same |
 | `ours-p3nbr` | our point model, best configuration (perceiver summary + 5×5 neighbourhood S2) | S2 + ADM + neighbourhood | ≤ 60 epochs × 500–1,500 steps, early stop 10 |
 | `tabm-f1` | TabM k = 32, d_block 256, dropout 0.2, lr 1e-3 (adopted backbone) | F1 = F0 + 5×5 neighbourhood | ≤ 3,000 steps |
 | `tabm-f0` | same | F0 (flat month-aligned features) | same |
@@ -123,7 +126,7 @@ ARG-W is partial: 9, 9 and 4 of 10 folds.
 | Fold manifests | `yieldsat_protocol_runs.py folds`; `noval_split`, `pooled_noval_splits` in `dataset/yieldsat_splits.py` |
 | Neural trainers | `main_yieldsat_finetune.py`: `--val_rows_per_field 0` = full selection fold; `selection` recorded in `report.json` |
 | Flat models | `main_yieldsat_tabm.py`: `--fold_set {dev,noval,pooled}`, `load_pooled` (indicator columns, training-cell cap), `--build_only` |
-| Work units | `yieldsat_protocol_runs.py units` → `cluster/tabm/protocol_nn_units.json` (798: 3 models × (217 + 49) folds) and `protocol_tab_units.json` (432, including 14 cache builds) |
+| Work units | `yieldsat_protocol_runs.py units` → `cluster/tabm/protocol_nn_units.json` (266: our point model × (217 + 49) folds; 798 with `--with_lstm`) and `protocol_tab_units.json` (432, including 14 cache builds) |
 | Report | `yieldsat_protocol_runs.py report` → `results/protocol_point.md` (per pair: paper LSTM S2, LSTM S2+ADM, paper best, then every model in both arms) |
 | Jobs | `cluster/nautilus/protocol_nn_job.yaml` (24 pods, staged to scratch); `protocol_tab_job.yaml` (16 pods, PVC). Any GPU with ≥ 24 GB and bf16 |
 | Output | `/data/YieldSAT/yieldsat_results/protocol/paper/<group>/<inputs>/<tag>_seed0/<pair or ALL>/fold<ii>` |
@@ -133,8 +136,9 @@ Order:
 2. Per-pair units, largest pairs first.
 3. Pooled units.
 
-Estimate: ≈ 500 GPU-hours for the neural models (the pooled LSTM dominates)
-and ≈ 100 for the flat models, i.e. about one day with 40 pods.
+Estimate without the LSTM: ≈ 100 GPU-hours for our point model and ≈ 100
+for the flat models (the original ≈ 600 included the pooled LSTM), i.e.
+well under a day once most of the 40 pods are admitted.
 
 ## 6. Results
 
@@ -153,3 +157,6 @@ Pending.
   - Smoke tests passed: TabM and LightGBM per pair, TabM pooled (2 pairs),
     LSTM per pair and pooled (all 9 pairs). In every case the test score
     equals the score at the test-selected epoch.
+  - The paper LSTM was deferred (project lead): its 532 units were marked
+    skipped on the PVC (`gave_up` = "skipped") so pods holding the old unit
+    list never claim them; the running LSTM unit was stopped.

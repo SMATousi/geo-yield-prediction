@@ -99,11 +99,13 @@ def _rows(artifact_root):
 
 def cmd_units(a):
     nn, tab = [], []
+    nn_tags = [t for t in NN if a.with_lstm or not t.startswith('lstm-')]
     for pair, proto, group, folds in _rows(a.artifact_root):
         countries = list(COUNTRIES) if pair == 'ALL' else [parse_pair(pair)[0]]
         crop_args = [] if pair == 'ALL' else ['--crops', parse_pair(pair)[1]]
         prefix = folds[0].rsplit('_fold', 1)[0]
-        for tag, (inputs, margs, nbr) in NN.items():
+        for tag in nn_tags:
+            inputs, margs, nbr = NN[tag]
             for i, name in enumerate(folds):
                 stage = (['cache/' + c for c in countries] + ['index/' + c for c in countries]
                          + (['neighbourhood/' + c for c in countries] if nbr else [])
@@ -236,6 +238,8 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
+    u.add_argument('--with_lstm', action='store_true',
+                   help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
     r = sub.add_parser('report')
     r.add_argument('--results_root', default='/data/YieldSAT/yieldsat_results/protocol')
