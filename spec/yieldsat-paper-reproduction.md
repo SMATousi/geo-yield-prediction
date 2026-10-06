@@ -296,3 +296,28 @@ pipeline:
     4 CPU / 12 Gi, Germany data staged to local scratch.
   - Results go to `/data/YieldSAT/yieldsat_results/repro_seeds`; validation-
     and test-selected epochs both come from the same runs.
+- 2026-10-06 — **Seeds + all-band results** (`results/repro_seeds.md`;
+  118/120 runs; job 16 pods, any GPU).
+  - Fold mean, averaged over 3 seeds, pixel / field:
+    - validation-selected: S2 0.323 / 0.628, S2 + DEM 0.345 / 0.621,
+      S2 + W + S + D 0.272 / 0.543, all 120 bands 0.276 / 0.556;
+    - test-selected: 0.431 / 0.772, **0.466 / 0.795**, 0.398 / 0.713,
+      0.369 / 0.690.
+  - The seed std is ≤ 0.016 pixel / 0.034 field, so the earlier "±0.06
+    noise" was a configuration difference, not seed noise.
+  - **Findings:**
+    1. The paper's S2 row matches honest selection.
+    2. The paper's S2+ADM row (0.47 / 0.81) is matched **only** by S2 + DEM
+       with test-selected epochs (0.466 / 0.795).
+    3. With honest selection no input set exceeds ≈ 0.35 pixel / 0.63
+       field.
+    4. Weather and soil, as released, hurt under every selection rule.
+    5. All 120 bands (soil uncertainty, coordinates) does not help.
+  - **Interpretation (not proven):** the paper's S2+ADM numbers are
+    consistent with optimistic (test-fold) model selection on a DEM-like
+    auxiliary set. They are not reachable with honest selection from the
+    released features. Our honest numbers (point model 0.38 pooled, TabM
+    0.40 on this row) are at or above what an honestly selected paper LSTM
+    reaches here.
+  - The remaining two S2 seed-1 folds were not run (their claims belonged to
+    a pod that exited); they barely affect the seed mean.
