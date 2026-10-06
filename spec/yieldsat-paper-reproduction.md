@@ -8,6 +8,14 @@ pipeline:
 - if not, the difference is a data or protocol problem to find, which may
   improve every model.
 
+
+**Correction (2026-10-06):** the R1 ablation table (top of
+`results/repro_r1.md`) scored the last non-improving epoch instead of the
+validation-best one, because of a checkpoint bug introduced in 81e9fdd.
+The H1, seeds and DEV numbers are unaffected. See
+[yieldsat-paper-protocol.md](./yieldsat-paper-protocol.md) §4. The follow-up
+protocol (no validation set, as the paper did) is specified and run there.
+
 ## 1. Sources
 
 - **Paper:** YieldSAT, arXiv:2604.00940 v1, §5, Table 4, Appendix A.3

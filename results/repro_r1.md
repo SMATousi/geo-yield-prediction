@@ -2,6 +2,9 @@
 
 Generated 2026-10-05 20:42 UTC by `yieldsat_repro_report.py` (spec/yieldsat-paper-reproduction.md). Fold mean ± std over folds (the paper's stated metric) and pooled out-of-fold R², next to the paper's "S2+ADM / input / LSTM" rows.
 
+> **Correction (2026-10-06):** the experiment table below scored the *last non-improving* epoch, not the validation-best epoch: `checkpoint_best.pth` was saved on non-improving epochs from 81e9fdd until this fix. The values are biased low. The H1 table further down is computed from the per-epoch history and is correct. See spec/yieldsat-paper-protocol.md §4.
+
+
 | Experiment | Row | Folds | Pixel R² fold mean ± std | Pixel pooled | Paper pixel | Field R² fold mean ± std | Field pooled | Paper field |
 |---|---|---|---|---|---|---|---|---|
 | a1-s2-thesis_seed0 | GER-R CV10 | 10 | 0.32 ± 0.18 | 0.35 | 0.47 ± 0.10 | 0.60 ± 0.21 | 0.66 | 0.81 ± 0.09 |

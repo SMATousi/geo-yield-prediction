@@ -133,7 +133,8 @@ def get_args_parser():
                    help='season sampling weight n_rows**alpha (0 field-balanced, 1 pixel)')
     p.add_argument('--block_size', type=int, default=None,
                    help='contiguous rows per draw (default 1 for cache, 64 for h5)')
-    p.add_argument('--val_rows_per_field', type=int, default=500)
+    p.add_argument('--val_rows_per_field', type=int, default=500,
+                   help='cells per selection season (0 = all; the paper protocol selects on the full test fold)')
     p.add_argument('--test_rows_per_field', type=int, default=None,
                    help='None evaluates every held-out cell')
     p.add_argument('--eval_batch_size', type=int, default=4096)
@@ -418,7 +419,7 @@ def main(args):
                   neighbourhood_root=str(Path(args.artifact_root) / 'neighbourhood') if args.neighbourhood else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
-                                  max_rows_per_field=args.val_rows_per_field, **common) if parts['val'] else None
+                                  max_rows_per_field=args.val_rows_per_field or None, **common) if parts['val'] else None
     block = args.block_size or (1 if args.backend == 'cache' else 64)
 
     if args.model == 'paper_lstm':
@@ -536,10 +537,10 @@ def main(args):
             if best is None or rec['val_pixel_rmse'] < best['val_pixel_rmse']:
                 best = dict(rec)
                 bad_epochs = 0
-            else:
-                bad_epochs += 1
                 torch.save({'model': model.state_dict(), 'descriptor': model.descriptor(), 'args': vars(args)},
                            out_dir / 'checkpoint_best.pth')
+            else:
+                bad_epochs += 1
         history.append(rec)
         print(json.dumps(rec), flush=True)
         wb.log_epoch(rec)
@@ -574,6 +575,8 @@ def main(args):
                           'fill_value': args.fill_value},
         'train_seasons': len(parts['train']), 'val_seasons': len(parts['val']),
         'test_seasons': len(parts['test']),
+        # 'test_fold': no validation set, epochs selected on the test fold (the paper's protocol)
+        'selection': split.get('selection', 'validation'),
         'history': history, 'best_val': best, 'transfer': transfer,
         'io': {'train_samples': samples_seen, 'data_wait_seconds': round(data_time, 1),
                'samples_per_second': round(samples_seen / max(1e-6, sum(h['seconds'] for h in history)), 1)},

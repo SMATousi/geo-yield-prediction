@@ -483,3 +483,97 @@ def save_folds(splits, artifact_root, prefix):
     path = Path(artifact_root) / 'splits' / '{}.folds.json'.format(prefix)
     path.write_text(json.dumps(index, indent=1))
     return names
+
+
+# ---- the paper's protocol: no validation set (spec/yieldsat-paper-protocol.md) ----
+
+PROTOCOL_ROWS = {'cv': 'paper_cv10_{}_season_paper_s0',
+                 'loyo': 'paper_loyo_{}_na_paper_s0',
+                 # province regions for Argentina, farms elsewhere (point-suite convention)
+                 'loro': 'paper_loro_{}_na_paper_s0'}
+
+
+def paper_row_prefix(pair, protocol):
+    if protocol == 'loro' and pair.startswith('ARG'):
+        return 'paper_loro_{}_province_paper_s0'.format(pair)
+    return PROTOCOL_ROWS[protocol].format(pair)
+
+
+def _finish(split, label):
+    split['partition_hash'] = hashlib.sha256(
+        json.dumps(split['partitions'], sort_keys=True).encode()).hexdigest()[:16]
+    split['label'] = label
+    return split
+
+
+def noval_split(split, source_name):
+    """Train/test only, as in the paper: training absorbs the validation
+    carve-out and model selection (the ``val`` partition every trainer reads)
+    is the held-out test fold itself. ``selection: test_fold`` marks it."""
+    p = split['partitions']
+    s = dict(split)
+    s['partitions'] = {'train': sorted(p['train'] + p['val']), 'val': list(p['test']), 'test': list(p['test']),
+                       'excluded': list(p.get('excluded', []))}
+    s['selection'] = 'test_fold'
+    s['val_frac'] = 0.0
+    s['source_split'] = source_name
+    s['created'] = time.strftime('%Y-%m-%dT%H:%M:%S')
+    return _finish(s, split['label'] + '; no validation set, selection on the test fold')
+
+
+def _norm_region(r):
+    # the source metadata spells some Argentine provinces two ways ('Buenos Aires' / 'Buenos_Aires')
+    return str(r).replace('_', ' ')
+
+
+def pooled_noval_splits(artifact_root, protocol, pairs=PAPER_PAIRS):
+    """One model for all country-crop pairs, reported per pair. Fold k holds out
+    every pair's fold k (CV10), every season of one harvest year (LOYO) or of
+    one region (LORO, provinces merged across spellings); each season is still
+    tested exactly once and the per-pair test folds are the per-pair protocol's.
+    No validation set: selection on the test fold."""
+    root = Path(artifact_root) / 'splits'
+    per_pair = {}
+    for pair in pairs:
+        prefix = paper_row_prefix(pair, protocol)
+        names = json.loads((root / '{}.folds.json'.format(prefix)).read_text())['folds']
+        per_pair[pair] = [(n, json.loads((root / '{}.json'.format(n)).read_text())) for n in names]
+    if protocol == 'cv':
+        keys = sorted({sp['fold'] for v in per_pair.values() for _, sp in v})
+        key_of = lambda sp: sp['fold']
+    else:
+        keys = sorted({_norm_region(h) for v in per_pair.values() for _, sp in v for h in sp['holdout']}, key=str)
+        key_of = lambda sp: _norm_region(sp['holdout'][0])
+    fingerprints = {}
+    for v in per_pair.values():
+        fingerprints.update(v[0][1]['fingerprints'])
+    splits = []
+    for i, key in enumerate(keys):
+        train, test, excluded, sources = [], [], [], []
+        for pair, folds in per_pair.items():
+            p0 = folds[0][1]['partitions']
+            every = sorted(set(p0['train'] + p0['val'] + p0['test']))
+            held = set()
+            for name, sp in folds:
+                if key_of(sp) == key:
+                    held |= set(sp['partitions']['test'])
+                    excluded += sp['partitions'].get('excluded', [])
+                    sources.append(name)
+            test += sorted(held)
+            train += [s for s in every if s not in held]
+        s = {'contract': CONTRACT_KEY, 'scheme': protocol, 'pair': 'ALL', 'fold': i, 'n_folds': len(keys),
+             'group': 'season' if protocol == 'cv' else protocol, 'leakage_policy': 'paper', 'seed': 0,
+             'val_frac': 0.0, 'selection': 'test_fold', 'pooled_pairs': list(pairs),
+             'countries': sorted({parse_pair(p)[0] for p in pairs}),
+             'crops': sorted({parse_pair(p)[1] for p in pairs}), 'fingerprints': fingerprints,
+             'created': time.strftime('%Y-%m-%dT%H:%M:%S'), 'holdout': None if protocol == 'cv' else [key],
+             'source_splits': sources,
+             'partitions': {'train': sorted(train), 'val': sorted(test), 'test': sorted(test),
+                            'excluded': sorted(set(excluded))},
+             'physical_overlap_test_seasons': None}
+        splits.append(_finish(s, 'pooled {} fold {} of {} (all pairs; no validation set, selection on the '
+                                 'test fold)'.format(protocol.upper(), i + 1, len(keys))))
+    tested = sorted(s for sp in splits for s in sp['partitions']['test'])
+    if len(tested) != len(set(tested)):
+        raise ValueError('a season is tested twice')
+    return splits

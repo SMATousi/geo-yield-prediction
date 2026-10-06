@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from dataset.yieldsat_splits import load_split
+from dataset.yieldsat_splits import PAPER_PAIRS, load_split, paper_row_prefix, parse_pair
 from dataset.yieldsat_tabular import build_pair, fold_rows, standardize, standardize_stats
 from util.yieldsat_eval import evaluate_predictions
 
@@ -45,6 +45,71 @@ def dev_rows(artifact_root, pairs=None, protocols=('cv', 'loyo', 'loro')):
             out.append({'country': country, 'crop': crop, 'pair': code, 'protocol': proto, 'group': group,
                         'folds': folds})
     return out
+
+
+GROUP = {'cv': 'cv10_season', 'loyo': 'loyo_na', 'loro': 'loro_na'}
+
+
+def protocol_rows(artifact_root, pairs=None, protocols=('cv', 'loyo', 'loro'), fold_set='dev'):
+    """Rows of a fold set: ``dev`` (DEV pairs, validation carve-out), ``noval``
+    (all 9 pairs, the paper's protocol: no validation set, selection on the test
+    fold) or ``pooled`` (one row per protocol over all pairs, pair 'ALL');
+    spec/yieldsat-paper-protocol.md."""
+    if fold_set == 'dev':
+        return dev_rows(artifact_root, pairs, protocols)
+    out = []
+    for proto in protocols:
+        if fold_set == 'pooled':
+            prefix = 'pooled_noval_{}_s0'.format({'cv': 'cv10', 'loyo': 'loyo', 'loro': 'loro'}[proto])
+            todo = [(None, None, 'ALL', prefix, 'pooled_{}_noval_s0'.format(GROUP[proto].split('_')[0]))]
+        else:
+            todo = []
+            for code in (pairs or PAPER_PAIRS):
+                country, crop = parse_pair(code)
+                prefix = 'noval_' + paper_row_prefix(code, proto)
+                group = GROUP[proto] + ('_province' if proto == 'loro' and code.startswith('ARG') else '')
+                todo.append((country, crop, code, prefix, '{}_noval_s0'.format(group)))
+        for country, crop, code, prefix, group in todo:
+            folds = json.loads((Path(artifact_root) / 'splits' / '{}.folds.json'.format(prefix)).read_text())['folds']
+            out.append({'country': country, 'crop': crop, 'pair': code, 'protocol': proto, 'group': group,
+                        'folds': folds})
+    return out
+
+
+def load_pooled(args, split):
+    """All pairs for one pooled fold: training cells capped per season (the
+    flat matrix of all 12.4M cells does not fit an A10), every test cell kept;
+    country and crop indicators as plain columns."""
+    countries = sorted({parse_pair(c)[0] for c in PAPER_PAIRS})
+    crops = sorted({parse_pair(c)[1] for c in PAPER_PAIRS})
+    parts = {k: [] for k in ('values', 'masks', 'target', 'season', 'grid_row', 'grid_col', 'plain')}
+    seasons, train, test, n = [], [], [], 0
+    for code in PAPER_PAIRS:
+        country, crop = parse_pair(code)
+        d = load_pair(args.artifact_root, country, crop, args.features)
+        r = fold_rows(d, split)
+        tr = r['train'][np.isfinite(d['target'][r['train']])]
+        tr = cap_rows(d['season'], tr, args.pooled_train_rows_per_field, args.seed)
+        keep = np.concatenate([tr, r['test']])
+        for k in ('values', 'masks', 'target', 'grid_row', 'grid_col'):
+            parts[k].append(d[k][keep])
+        parts['season'].append(d['season'][keep] + len(seasons))
+        oh = np.zeros((len(keep), len(countries) + len(crops)), np.float32)
+        oh[:, countries.index(country)] = 1
+        oh[:, len(countries) + crops.index(crop)] = 1
+        parts['plain'].append(oh)
+        seasons += [dict(s, country=country, crop=crop, pair=code) for s in d['seasons']]
+        train.append(n + np.arange(len(tr)))
+        test.append(n + len(tr) + np.arange(len(r['test'])))
+        n += len(keep)
+        names = d['value_names'], d['mask_names']
+        del d
+    pair = {k: np.concatenate(v) for k, v in parts.items()}
+    pair['seasons'] = seasons
+    pair['value_names'], pair['mask_names'] = names
+    rows = {'train': np.concatenate(train), 'test': np.concatenate(test)}
+    rows['val'] = rows['test']
+    return pair, rows
 
 
 def load_pair(artifact_root, country, crop, features):
@@ -87,6 +152,8 @@ def balanced_sampler(season, train_rows, alpha, device, seed):
 
 
 def cap_rows(season, rows, per_field, seed):
+    if not per_field:
+        return rows
     rng = np.random.default_rng(seed)
     out = []
     for s in np.unique(season[rows]):
@@ -158,8 +225,8 @@ def train_nn(args, pair, rows, Vn, device, Xn=None):
 def train_lgbm(args, pair, rows):
     import lightgbm as lgb
     y = pair['target']
-    X = np.concatenate([pair['values'], pair['masks'].astype(np.float32)], 1)
-    rng = np.random.default_rng(args.seed)
+    X = np.concatenate([pair['values'], pair['masks'].astype(np.float32)] +
+                       ([pair['plain']] if 'plain' in pair else []), 1)
     tr = rows['train'][np.isfinite(y[rows['train']])]
     tr = cap_rows(pair['season'], tr, args.lgbm_rows_per_field, args.seed)
     va = cap_rows(pair['season'], rows['val'], args.val_rows_per_field, args.seed) if len(rows['val']) else None
@@ -184,12 +251,15 @@ def run_fold(args, row, fold_i, split_name, pair, device):
         return None
     t0 = time.time()
     split = load_split(args.artifact_root, split_name)
-    rows = fold_rows(pair, split)
+    if row['pair'] == 'ALL':
+        pair, rows = load_pooled(args, split)
+    else:
+        rows = fold_rows(pair, split)
     if args.model == 'lgbm':
         pt, info = train_lgbm(args, pair, rows)
     else:
         mean, std = standardize_stats(pair['values'], rows['train'])
-        Xn, unit = None, None
+        Xn, unit = (pair['plain'], None) if 'plain' in pair else (None, None)
         if args.pretrained_arm:
             from yieldsat_tabm_pretrained import pretrained_features
             X, unit = pretrained_features(args.artifact_root, args.pretrain_root, args.pretrained_arm, split_name,
@@ -204,8 +274,9 @@ def run_fold(args, row, fold_i, split_name, pair, device):
     s_all = pair['season'][te]
     uniq = np.unique(s_all)
     remap = {int(s): i for i, s in enumerate(uniq)}
-    seasons = [{'country': row['country'], 'crop': row['crop'], **{k: pair['seasons'][s][k] for k in
-               ('season_id', 'field_shared_name')}} for s in uniq]
+    seasons = [{'country': pair['seasons'][s].get('country', row['country']),
+                'crop': pair['seasons'][s].get('crop', row['crop']),
+                **{k: pair['seasons'][s][k] for k in ('season_id', 'field_shared_name')}} for s in uniq]
     s_local = np.array([remap[int(s)] for s in s_all])
     test = evaluate_predictions(pt, pair['target'][te], s_local, seasons)
     out.mkdir(parents=True, exist_ok=True)
@@ -213,6 +284,7 @@ def run_fold(args, row, fold_i, split_name, pair, device):
                         season=s_local, grid_row=pair['grid_row'][te], grid_col=pair['grid_col'][te],
                         season_names=np.array([s['field_shared_name'] for s in seasons]))
     rep = {'mode': 'tabular', 'model': args.model, 'features': args.features, 'split': split_name,
+           'selection': split.get('selection', 'validation'),
            'args': vars(args), 'train_seasons': int(len(np.unique(pair['season'][rows['train']]))),
            'test': test, 'info': info, 'resources': {'wall_seconds': round(time.time() - t0, 1)}}
     (out / 'report.json').write_text(json.dumps(rep, default=str))
@@ -248,7 +320,12 @@ def main():
     p.add_argument('--eval_every', type=int, default=100)
     p.add_argument('--patience', type=int, default=8)
     p.add_argument('--field_alpha', type=float, default=0.5)
-    p.add_argument('--val_rows_per_field', type=int, default=500)
+    p.add_argument('--val_rows_per_field', type=int, default=500,
+                   help='cells per selection season (0 = all; the paper protocol selects on the full test fold)')
+    p.add_argument('--fold_set', default='dev', choices=['dev', 'noval', 'pooled'],
+                   help='dev: DEV rows with validation; noval/pooled: the paper protocol per pair / pooled')
+    p.add_argument('--pooled_train_rows_per_field', type=int, default=1000)
+    p.add_argument('--build_only', action='store_true', help='build the --pairs flat-matrix caches and exit')
     p.add_argument('--lgbm_rows_per_field', type=int, default=3000)
     p.add_argument('--lgbm_rounds', type=int, default=3000)
     p.add_argument('--lgbm_threads', type=int, default=20)
@@ -256,9 +333,13 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     out_root = Path(a.out_root)
     out_root.mkdir(parents=True, exist_ok=True)
+    if a.build_only:
+        for code in a.pairs:
+            load_pair(a.artifact_root, *parse_pair(code), a.features)
+        return
     runs = out_root / 'runs.jsonl'
     log = out_root / '{}_log.jsonl'.format(a.tag)
-    for row in dev_rows(a.artifact_root, a.pairs, a.protocols):
+    for row in protocol_rows(a.artifact_root, a.pairs, a.protocols, a.fold_set):
         pair = None
         folds = row['folds'][:a.max_folds or None]
         for i, name in enumerate(folds):
@@ -270,7 +351,7 @@ def main():
                                     'pair': row['pair']}) + '\n')
             if (out_root / rel / 'report.json').exists():
                 continue
-            if pair is None:
+            if pair is None and row['pair'] != 'ALL':
                 pair = load_pair(a.artifact_root, row['country'], row['crop'], a.features)
             rec = run_fold(a, row, i, name, pair, device)
             if rec:
