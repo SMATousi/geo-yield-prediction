@@ -191,6 +191,13 @@ def cmd_pool(a):
         (d / 'attempts').write_text(str(attempts))
         if unit.get('stage') and a.stage_from:
             stage(unit['stage'], a.stage_from, a.artifact_root)
+        if unit.get('skip_if_exists'):
+            # a follow-up unit whose result another unit id already produced (same output path)
+            done_path = Path(unit['skip_if_exists'].format(out_root=out_root))
+            if done_path.exists():
+                (d / 'done').write_text(json.dumps({'owner': owner, 'skipped_existing': str(done_path)}))
+                print('exists, skipped', unit['id'], flush=True)
+                continue
         image_root = None
         if unit.get('stage_image'):
             image_root = stage_image(unit['stage_image'], a.stage_image_from, a.image_local)

@@ -251,6 +251,20 @@ def cmd_units(a):
                 json.dumps({'suite': name, 'out_root': a.out_root, 'units': us}, indent=1))
             print('{}: {} units'.format(name, len(us)))
         return
+    if a.batch == 'hybrid-shm':
+        # hybrid follow-up (the first image job's 2 Gi /dev/shm killed its loader workers): 3 workers,
+        # larger shm in the job, new claim ids; units whose report already exists are skipped
+        units = []
+        for u in image_units(a.artifact_root):
+            if not u['id'].startswith('hybrid-h1'):
+                continue
+            out = u['args'][u['args'].index('--output_dir') + 1]
+            units.append(dict(u, id=u['id'] + '__shm', args=u['args'] + ['--num_workers', '3'],
+                              skip_if_exists=out + '/report.json'))
+        Path('cluster/tabm/protocol_hybrid_shm_units.json').write_text(
+            json.dumps({'suite': 'protocol_hybrid_shm', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_hybrid_shm: {} units'.format(len(units)))
+        return
     if a.batch == 'image':
         units = image_units(a.artifact_root)
         smoke = [u for u in units if u['pair'] == 'GER-R' and u['id'].endswith('__cv__f0')]
@@ -363,7 +377,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
