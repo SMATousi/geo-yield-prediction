@@ -81,8 +81,10 @@ def _qs_progress(key, commodity, state, year, pause=1.5, retries=6):
         if r is not None and r.status_code == 200:
             _QS_CACHE[k] = r.json().get('data', [])
             return _QS_CACHE[k]
-        if r is not None and r.status_code == 400 and 'no data' in r.text.lower():
-            _QS_CACHE[k] = []           # QuickStats answers 400 "bad request - no data" for empty queries
+        if r is not None and r.status_code == 400 and 'bad request' in r.text.lower():
+            # QuickStats answers 400 "bad request - invalid query" when a state has no such series
+            # (e.g. corn progress in California): genuinely no data, not a transient failure
+            _QS_CACHE[k] = []
             return _QS_CACHE[k]
         time.sleep(30 * (i + 1))
     raise QuickStatsError('QuickStats failed for {} {} {}'.format(commodity, state, year))
