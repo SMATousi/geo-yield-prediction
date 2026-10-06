@@ -170,3 +170,7 @@ Pending.
     - Fixed: the pod was deleted and the 14 units re-queued.
     - The pool now re-checks the GPU in a fresh process before every claim.
     - The node is excluded from future protocol jobs.
+  - A second pod on the same node, started before the fix, burned 10 of the
+    re-queued units. The node then went NotReady ("no healthy devices") and
+    the pod was evicted. The units were re-queued again, and no protocol pod
+    remains on that node.
