@@ -161,11 +161,21 @@ def gpu_ok():
 
 
 def cmd_pool(a):
+    if a.concurrency > 1:
+        # several independent pool workers share the pod's GPU: small point-model runs use ~1 GB and
+        # 0-20% of a GPU each, which the cluster's utilization check flags (2026-10-06)
+        args = [x for x in sys.argv[1:]]
+        i = args.index('--concurrency')
+        del args[i:i + 2]
+        procs = [subprocess.Popen([sys.executable, sys.argv[0], *args],
+                                  env=dict(os.environ, POOL_SLOT=str(k))) for k in range(a.concurrency)]
+        sys.exit(max(p.wait() for p in procs))
     if not a.skip_gpu_check and not gpu_ok():
         sys.exit(3)
     plan = json.loads(Path(a.units).read_text())
     out_root = a.out_root or plan['out_root']
-    owner = os.environ.get('HOSTNAME', os.uname().nodename)
+    owner = os.environ.get('HOSTNAME', os.uname().nodename) + (
+        '-s' + os.environ['POOL_SLOT'] if os.environ.get('POOL_SLOT') else '')
     claims = Claims(Path(out_root) / '_claims', owner, a.stale_minutes)
     ran = 0
     while True:
@@ -262,6 +272,7 @@ def main():
     q.add_argument('--stage_image_from', default='/data/YieldSAT/YieldSAT-Image-full',
                    help='image units: PVC image root to stage tiles from')
     q.add_argument('--image_local', default='/scratch/img', help='image units: local staging root')
+    q.add_argument('--concurrency', type=int, default=1, help='pool workers per pod sharing the GPU')
     q.add_argument('--stale_minutes', type=int, default=45)
     q.add_argument('--max_attempts', type=int, default=2)
     q.set_defaults(func=cmd_pool)
