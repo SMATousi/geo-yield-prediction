@@ -114,7 +114,21 @@ def stage(rels, src_root, dst_root):
             mark.write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
 
 
+def gpu_ok():
+    """Fail fast on a broken GPU: a pod whose CUDA cannot initialize would otherwise fail
+    and burn every unit it claims (2026-10-06, fiona-prg1.cesnet.cz)."""
+    try:
+        import torch
+        x = torch.ones(1024, device='cuda')
+        return bool((x * 2).sum().item() == 2048)
+    except Exception as exc:  # noqa: BLE001
+        print('GPU health check failed:', repr(exc), flush=True)
+        return False
+
+
 def cmd_pool(a):
+    if not a.skip_gpu_check and not gpu_ok():
+        sys.exit(3)
     plan = json.loads(Path(a.units).read_text())
     out_root = a.out_root or plan['out_root']
     owner = os.environ.get('HOSTNAME', os.uname().nodename)
@@ -186,6 +200,7 @@ def main():
     q.add_argument('--artifact_root', default='/data/YieldSAT/yieldsat_artifacts')
     q.add_argument('--out_root', default=None)
     q.add_argument('--source_root', default='/data/YieldSAT/preprocessed')
+    q.add_argument('--skip_gpu_check', action='store_true')
     q.add_argument('--stage_from', default=None,
                    help='copy each unit\'s "stage" paths from this artifact root to --artifact_root first')
     q.add_argument('--stale_minutes', type=int, default=45)

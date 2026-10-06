@@ -34,6 +34,7 @@ spec:
                 - ry-gpu-03.sdsc.optiputer.net
                 - uicnrp-fiona.evl.uic.edu
                 - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
       containers:
       - name: tabm
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
