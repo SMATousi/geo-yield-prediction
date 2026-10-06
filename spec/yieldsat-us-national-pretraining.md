@@ -1,11 +1,15 @@
 # Nationwide US cropland pretraining corpus
 
-**Status (2026-10-05):**
+**Status (2026-10-06):**
 - Pilot design confirmed (D13–D19).
 - Builder implemented (`yieldsat_us/`, `yieldsat_us_pilot.py`).
 - **Frame built:** 125 clusters, 249,952 points over 2021–2025, in
   `/home1/pupil/SMATousi/YieldSAT-US-Pilot`.
-- **Extraction pending a NASS QuickStats key** (D16).
+- **Pilot extracted and audited (2026-10-06):** 249,952 points with
+  Crop Progress season dates (77%), pixel-only S2, ERA5-Land/ERA5 weather,
+  SoilGrids and NASADEM terrain in YieldSAT conventions. Details in
+  [yieldsat-us-pilot-dataset.md](./yieldsat-us-pilot-dataset.md). Next:
+  assembly, loader integration with a crop filter, and the parity test.
 - Stage-0 knowledge pretraining showed no DEV gain
   (spec/pretraining/success-criteria.md, "Applied"), so the scale-up gate
   (D10) is not met. The pilot completes as planned, because it is cheap and
@@ -690,3 +694,6 @@ or model-training changes are authorized by this design document alone.
   - Prefill of the 371 state × crop group × year keys is running. Then
     `extract` runs per harvest year in parallel, reading the prefilled
     calendar only.
+- 2026-10-06 — **Pilot extraction complete:** 125/125 clusters, 249,952
+  points; audit passed. The dataset is documented in
+  [yieldsat-us-pilot-dataset.md](./yieldsat-us-pilot-dataset.md).
