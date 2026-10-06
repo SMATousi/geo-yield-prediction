@@ -144,35 +144,65 @@ well under a day once most of the 40 pods are admitted.
 All 1,330 folds have finished (217 per-pair and 49 pooled folds × 5
 models). Full per-pair tables: `results/protocol_point.md`.
 
-The table shows R² averaged over folds (the paper's metric), then averaged
-over the 9 pairs. Paper rows are means of the paper's per-pair numbers. In
-brackets: the number of pairs (of 9) above the paper's LSTM S2+ADM / above
-the paper's best model.
+Scoring: as the paper's tables and the authors' release tutorial do, the
+test predictions of all folds of a row are pooled and R² is computed once
+(pooled out-of-fold R²). Field level is the R² of field-season means. The
+paper text says "average across the folds", but 31 of its LOYO/LORO rows
+cannot be fold means (§1 of `results/negative_r2_investigation.md`); in CV10
+both conventions agree.
 
-| Protocol / level | Paper LSTM S2 | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM | TabM F1 pooled | Ours pooled |
-|---|---|---|---|---|---|---|---|---|---|---|
-| CV10 pixel | 0.37 | 0.46 | 0.53 | **0.50** [8 / 1] | 0.49 [8 / 0] | 0.49 [8 / 1] | 0.47 [7 / 0] | 0.47 [5 / 1] | 0.46 [5 / 0] | 0.45 [5 / 0] |
-| CV10 field | 0.69 | 0.72 | 0.82 | **0.78** [8 / 0] | 0.77 [6 / 0] | 0.77 [7 / 0] | 0.74 [6 / 0] | 0.74 [6 / 0] | 0.72 [5 / 0] | 0.69 [3 / 0] |
-| LOYO pixel | 0.15 | 0.31 | 0.38 | **0.17** [0 / 0] | 0.08 [1 / 0] | 0.06 [1 / 0] | −0.01 [1 / 0] | −0.03 [1 / 0] | 0.03 [0 / 0] | 0.08 [0 / 0] |
-| LOYO field | 0.08 | 0.43 | 0.54 | **−0.07** [0 / 0] | −1.24 | −0.81 | −1.82 | −0.49 | −1.31 | −0.73 |
-| LORO pixel | 0.18 | 0.23 | 0.39 | **0.23** [4 / 1] | 0.21 [4 / 0] | 0.21 [4 / 0] | 0.15 [4 / 0] | 0.17 [3 / 0] | 0.13 [3 / 0] | 0.17 [3 / 0] |
-| LORO field | 0.06 | 0.22 | 0.58 | −0.12 [2 / 0] | **−0.01** [2 / 0] | −0.03 [2 / 0] | −0.09 [1 / 0] | −0.10 [2 / 0] | −0.18 [1 / 0] | −0.09 [2 / 0] |
+Each cell is pixel / field R². Columns:
+- per-pair models (one model per pair, as in the paper);
+- paper columns: the paper's published values ("Paper best" = the best
+  paper model of that pair and protocol).
 
-**Metric correction.** The fold-mean table above uses the wrong convention
-for LOYO/LORO. The paper's LOYO/LORO rows behave like R² pooled over all
-folds' predictions: 31 paper rows have a mean ± std that is impossible as a
-per-fold mean (`results/negative_r2_investigation.md`). The same rows
-recomputed as pooled out-of-fold R² (per-pair arm;
-`results/protocol_point_oof.md`):
+Bottom row: mean over the 9 pairs. Source: `results/protocol_point_oof.json`
+(also `results/protocol_point_oof.md`).
 
-| Protocol / level | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM |
+#### CV10
+
+| Pair | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM |
 |---|---|---|---|---|---|---|---|
-| CV10 pixel | 0.46 | 0.53 | 0.51 [8 / 1] | 0.51 [9 / 1] | 0.51 [9 / 1] | 0.49 [7 / 1] | 0.48 [6 / 1] |
-| CV10 field | 0.72 | 0.82 | **0.80** [8 / 3] | 0.79 [8 / 0] | 0.79 [8 / 0] | 0.76 [7 / 0] | 0.75 [6 / 1] |
-| LOYO pixel | 0.31 | 0.38 | **0.35** [7 / 0] | 0.32 [4 / 1] | 0.31 [5 / 2] | 0.27 [3 / 1] | 0.28 [3 / 1] |
-| LOYO field | 0.43 | 0.54 | **0.45** [6 / 0] | 0.37 [5 / 0] | 0.36 [4 / 0] | 0.29 [2 / 0] | 0.37 [4 / 1] |
-| LORO pixel | 0.23 | 0.39 | **0.32** [9 / 0] | 0.29 [7 / 1] | 0.30 [7 / 1] | 0.28 [5 / 1] | 0.28 [6 / 0] |
-| LORO field | 0.22 | 0.58 | **0.46** [8 / 0] | 0.38 [7 / 1] | 0.38 [7 / 1] | 0.37 [6 / 1] | 0.40 [7 / 0] |
+| ARG-C | 0.58 / 0.76 | 0.70 / 0.84 | 0.68 / 0.85 | 0.66 / 0.81 | 0.66 / 0.81 | 0.66 / 0.81 | 0.61 / 0.74 |
+| ARG-S | 0.59 / 0.72 | 0.73 / 0.84 | 0.69 / 0.80 | 0.69 / 0.79 | 0.69 / 0.79 | 0.67 / 0.78 | 0.67 / 0.79 |
+| ARG-W | 0.75 / 0.85 | 0.84 / 0.92 | 0.80 / 0.89 | 0.78 / 0.86 | 0.78 / 0.86 | 0.78 / 0.86 | 0.75 / 0.83 |
+| BRA-C | 0.43 / 0.81 | 0.46 / 0.84 | 0.49 / 0.85 | 0.48 / 0.83 | 0.48 / 0.82 | 0.46 / 0.81 | 0.49 / 0.85 |
+| BRA-S | 0.33 / 0.64 | 0.44 / 0.80 | 0.41 / 0.78 | 0.43 / 0.79 | 0.43 / 0.78 | 0.41 / 0.75 | 0.40 / 0.74 |
+| BRA-W | 0.21 / 0.58 | 0.24 / 0.73 | 0.22 / 0.74 | 0.24 / 0.71 | 0.23 / 0.73 | 0.21 / 0.67 | 0.21 / 0.61 |
+| GER-R | 0.47 / 0.81 | 0.49 / 0.82 | 0.46 / 0.78 | 0.47 / 0.79 | 0.48 / 0.80 | 0.46 / 0.78 | 0.43 / 0.70 |
+| GER-W | 0.35 / 0.63 | 0.44 / 0.77 | 0.44 / 0.76 | 0.43 / 0.72 | 0.43 / 0.73 | 0.39 / 0.64 | 0.39 / 0.72 |
+| URG-S | 0.39 / 0.72 | 0.43 / 0.81 | 0.41 / 0.76 | 0.42 / 0.77 | 0.41 / 0.78 | 0.40 / 0.77 | 0.41 / 0.75 |
+| **Mean** | **0.46 / 0.72** | **0.53 / 0.82** | **0.51 / 0.80** | **0.51 / 0.79** | **0.51 / 0.79** | **0.49 / 0.76** | **0.48 / 0.75** |
+
+#### LOYO
+
+| Pair | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM |
+|---|---|---|---|---|---|---|---|
+| ARG-C | 0.44 / 0.42 | 0.48 / 0.61 | 0.48 / 0.58 | 0.39 / 0.43 | 0.39 / 0.47 | 0.38 / 0.47 | 0.39 / 0.44 |
+| ARG-S | 0.49 / 0.62 | 0.66 / 0.77 | 0.58 / 0.69 | 0.57 / 0.65 | 0.56 / 0.63 | 0.51 / 0.58 | 0.54 / 0.62 |
+| ARG-W | 0.61 / 0.74 | 0.72 / 0.81 | 0.65 / 0.76 | 0.63 / 0.75 | 0.64 / 0.75 | 0.57 / 0.70 | 0.49 / 0.58 |
+| BRA-C | 0.19 / 0.29 | 0.29 / 0.45 | 0.28 / 0.43 | 0.11 / 0.09 | 0.04 / -0.09 | -0.06 / -0.28 | 0.08 / 0.13 |
+| BRA-S | 0.17 / 0.26 | 0.29 / 0.45 | 0.23 / 0.30 | 0.30 / 0.43 | 0.29 / 0.45 | 0.29 / 0.43 | 0.19 / 0.27 |
+| BRA-W | 0.09 / 0.12 | 0.11 / 0.14 | 0.04 / -0.10 | 0.07 / -0.10 | 0.06 / -0.16 | -0.01 / -0.44 | 0.13 / 0.25 |
+| GER-R | 0.31 / 0.58 | 0.31 / 0.58 | 0.29 / 0.50 | 0.31 / 0.48 | 0.31 / 0.52 | 0.30 / 0.51 | 0.22 / 0.31 |
+| GER-W | 0.18 / 0.33 | 0.22 / 0.46 | 0.22 / 0.27 | 0.15 / 0.10 | 0.15 / 0.12 | 0.13 / 0.14 | 0.17 / 0.21 |
+| URG-S | 0.30 / 0.54 | 0.35 / 0.63 | 0.35 / 0.60 | 0.33 / 0.55 | 0.32 / 0.53 | 0.31 / 0.52 | 0.28 / 0.48 |
+| **Mean** | **0.31 / 0.43** | **0.38 / 0.54** | **0.35 / 0.45** | **0.32 / 0.37** | **0.31 / 0.36** | **0.27 / 0.29** | **0.28 / 0.37** |
+
+#### LORO
+
+| Pair | Paper LSTM S2+ADM | Paper best | Ours p3-nbr | TabM F1 | TabM F0 | MLP | LightGBM |
+|---|---|---|---|---|---|---|---|
+| ARG-C | 0.48 / 0.43 | 0.54 / 0.68 | 0.50 / 0.60 | 0.38 / 0.48 | 0.43 / 0.56 | 0.40 / 0.56 | 0.37 / 0.45 |
+| ARG-S | 0.54 / 0.66 | 0.65 / 0.78 | 0.57 / 0.67 | 0.56 / 0.64 | 0.56 / 0.63 | 0.52 / 0.59 | 0.57 / 0.68 |
+| ARG-W | 0.53 / 0.61 | 0.78 / 0.87 | 0.67 / 0.79 | 0.61 / 0.70 | 0.63 / 0.72 | 0.57 / 0.67 | 0.58 / 0.67 |
+| BRA-C | 0.28 / 0.38 | 0.37 / 0.65 | 0.29 / 0.51 | 0.15 / 0.13 | 0.11 / 0.04 | 0.17 / 0.22 | 0.14 / 0.25 |
+| BRA-S | 0.12 / 0.29 | 0.35 / 0.63 | 0.26 / 0.46 | 0.29 / 0.49 | 0.30 / 0.52 | 0.30 / 0.54 | 0.25 / 0.47 |
+| BRA-W | 0.11 / 0.26 | 0.20 / 0.52 | 0.17 / 0.48 | 0.14 / 0.37 | 0.13 / 0.31 | 0.10 / 0.24 | 0.14 / 0.37 |
+| GER-R | 0.05 / 0.20 | 0.17 / 0.26 | 0.05 / 0.14 | 0.26 / 0.48 | 0.27 / 0.52 | 0.27 / 0.48 | 0.08 / 0.03 |
+| GER-W | -0.36 / -1.39 | 0.10 / 0.14 | 0.04 / -0.13 | -0.10 / -0.55 | -0.09 / -0.55 | -0.14 / -0.62 | 0.10 / 0.11 |
+| URG-S | 0.32 / 0.56 | 0.36 / 0.68 | 0.35 / 0.66 | 0.36 / 0.65 | 0.35 / 0.63 | 0.35 / 0.64 | 0.31 / 0.56 |
+| **Mean** | **0.23 / 0.22** | **0.39 / 0.58** | **0.32 / 0.46** | **0.29 / 0.38** | **0.30 / 0.38** | **0.28 / 0.37** | **0.28 / 0.40** |
 
 Findings:
 1. **Against the paper's LSTM (S2+ADM).** Under the paper's protocol and
@@ -190,9 +220,10 @@ Findings:
 3. **Our models.** The point model (p3-nbr) is the strongest of ours
    overall, especially out of distribution (LOYO/LORO). TabM ties it on
    CV10 pixel level.
-4. **Pooled training** (one model for all pairs) is worse than per-pair
-   training in every protocol (CV10 fold-mean −0.03 pixel, −0.05 field).
-   This is consistent with the paper's per-pair training.
+4. **Pooled training** (one model for all pairs) was worse than per-pair
+   training in every protocol when scored per fold (CV10 −0.03 pixel,
+   −0.05 field). Its pooled-scoring numbers are not computed yet. This is
+   consistent with the paper's per-pair training.
 5. Every number is selected on the test fold (optimistic by construction).
    It is comparable with the paper's tables only.
 
