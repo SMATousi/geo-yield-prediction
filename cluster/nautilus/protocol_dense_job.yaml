@@ -34,6 +34,7 @@ spec:
                 - hcc-nrp-shor-c5825.unl.edu
                 - fiona-prg1.cesnet.cz
                 - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
