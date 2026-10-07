@@ -376,3 +376,20 @@ Operational notes:
   - The paper's R² is standard pooled R², bias included: for all 270 pixel
     rows the reported R² equals 1 − RMSE²/Var(y) of the pair to within
     ±0.003.
+- **2026-10-07, full-run result** (`results/obsdrop_final.json`; tables in
+  `results/dense_p3nbr_final.md`). Dropout − dense, mean over pairs, paired
+  fold bootstrap 95% CI:
+
+  | Protocol | Pixel | Field |
+  |---|---|---|
+  | CV10 | −0.006 [−0.012, +0.001] | **−0.022 [−0.036, −0.006]** |
+  | LOYO | +0.002 [−0.042, +0.048] | +0.004 [−0.078, +0.090] |
+  | LORO | +0.006 [−0.028, +0.034] | −0.026 [−0.075, +0.046] |
+  | All | +0.001 [−0.017, +0.021] | −0.014 [−0.045, +0.023] |
+
+  - **Fixes:** the sparse-year failure (GER-W LOYO 0.08 → 0.28) and BRA-C
+    LORO (0.30 → 0.40).
+  - **Costs:** about as much elsewhere (ARG-W, ARG-C, URG-S LOYO), plus
+    CV10 field accuracy.
+  - **Not adopted as a general setting.**
+  - ARG-S LORO and BRA-S CV10 were finishing when this was computed.
