@@ -334,3 +334,13 @@ Operational notes:
   folds (pooled LOYO R² per pair, per-fold differences).
   - Units: `cluster/tabm/protocol_obsdrop_units.json` (26).
   - Job: `cluster/nautilus/protocol_obsdrop_job.yaml`.
+- **2026-10-07, full run (project lead):**
+  - **Evidence:** GER-W LOYO mid-training. With K = 0.1, 2016 goes from
+    −0.91 (dense) to −0.08, and every other year is level or better.
+  - **Scope:** K = 0.1 on all 9 pairs × CV10/LOYO/LORO (217 units) with one
+    fixed setting, so CV10/LORO costs are measured too and nothing is chosen
+    per pair.
+  - **Caveat:** choosing 0.1 over 0.3 used GER-W test-fold results (a single
+    choice between two settings); this is noted for the write-up.
+  - Units: `cluster/tabm/protocol_obsdrop_all_units.json`.
+  - Job: `cluster/nautilus/protocol_obsdrop_all_job.yaml` (64 GPUs × 4).
