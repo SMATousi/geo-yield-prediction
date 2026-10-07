@@ -249,3 +249,38 @@ Findings:
      dense weather sums for those years.
    - Dense TabM: needs a narrower flat view.
    - Pretrained encoders at 72 slots.
+
+## 9. Knowledge pretraining on the dense series (project lead, 2026-10-07)
+
+The 24-slot pretrained encoders (pk_dev1r) cannot load into the 72-slot
+model, so pretraining is re-run on the dense cache.
+
+| Item | Decision |
+|---|---|
+| Arms | **A3** (SSL + knowledge grounding + relational distillation) and **A7** (the same with random targets; control), as in spec/yieldsat-point-knowledge-pretraining.md |
+| Units | The same 46 leakage-audited pretraining units (`pretrain_units_dev_s0`): all 4 countries, inputs only, each excluding the seasons its folds test on |
+| Model / budget | As pk_dev1r: point model, perceiver summary, S2+ADM, no neighbourhood stream, 30 epochs × 500 steps × 512 cells, `--norm_pooling per_country`, `--pretrain_diagnostics`. Dense env (72 slots), `--weather_first_slot keep` |
+| Knowledge targets | Unchanged: the per-cell concept indices (`knowledge/<Country>/concept_raw_c30.npz`, from the monthly cache; label-free cell-season properties that do not depend on the slot layout) and the frozen CLIP text vectors |
+| Fine-tuning | Dense p3-nbr (§4 budget) from each fold's unit checkpoint. Encoders only; the neighbourhood encoder starts fresh (`--encoders_only_transfer --init_nonstrict_streams`). Run on the 163 per-pair folds whose test seasons no unit saw (all LOYO, all but 4 LORO, CV10 for the 4 DEV pairs only) |
+| Comparison | Paired with dense p3-nbr from scratch on the same folds: pooled out-of-fold R² per pair and protocol, paired fold bootstrap CI. A3 − scratch is the pretraining effect; A3 − A7 is the knowledge effect |
+| Execution | Two jobs: pretraining (92 runs) first, then fine-tuning (326 runs), so no fine-tuning unit starts before its checkpoint exists. Resources measured on a smoke pod first (§5 rule) |
+
+Not in this round: observation-dropout augmentation (the fix proposed by the
+LOYO diagnosis), kept separate so the pretraining comparison stays clean.
+
+### LOYO diagnosis (2026-10-07)
+
+- **BRA-C and GER-W LOYO are worse dense than monthly because of an
+  observation-density shift, not a pipeline error.**
+  - Clear S2 observations per cell in the dense cache drop to about a
+    third in the early years (GER-W 2016: 5.2 vs 13–18 later; BRA-C 2017:
+    6.1), when only Sentinel-2A was imaging.
+  - The dense model, trained mostly on observation-rich years,
+    underpredicts the high-yield sparse year GER-W 2016 by 3.2 t/ha
+    (fold R² −0.91 vs −0.22 monthly). This one year dominates the pooled
+    score.
+  - Year-level bias of 1–3 t/ha affects both models.
+- **Data checks are clean:** no weather NaN on dated slots; plausible
+  seasonal sums and peak NDVI in every year.
+- **Candidate fix (later round):** random S2 observation dropout during
+  training.
