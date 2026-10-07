@@ -148,13 +148,22 @@ def stage_image(spec, src_img, local_root):
     return str(dst)
 
 
-def gpu_ok():
+def gpu_ok(min_free_gib=float(os.environ.get('POOL_MIN_FREE_GIB', 3))):
     """Fail fast on a broken GPU: a pod whose CUDA cannot initialize would otherwise fail
     and burn every unit it claims (2026-10-06, fiona-prg1.cesnet.cz)."""
     try:
         import torch
         x = torch.ones(1024, device='cuda')
-        return bool((x * 2).sum().item() == 2048)
+        if not bool((x * 2).sum().item() == 2048):
+            return False
+        # a GPU whose memory is held outside this pod (2026-10-07, hcc-nrp-shor-c5925 and another node:
+        # ~22 GB used by something else) passes a tiny allocation, then every unit dies of CUDA OOM
+        free, total = torch.cuda.mem_get_info()
+        if free < min_free_gib * 2 ** 30:
+            print('GPU health check failed: only {:.1f} of {:.1f} GiB free'.format(free / 2 ** 30, total / 2 ** 30),
+                  flush=True)
+            return False
+        return True
     except Exception as exc:  # noqa: BLE001
         print('GPU health check failed:', repr(exc), flush=True)
         return False
