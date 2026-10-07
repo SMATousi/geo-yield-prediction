@@ -53,3 +53,54 @@ Dense ≥ paper best (pixel) on 5/9 pairs. Dense − monthly (mean over pairs, p
 
 Dense ≥ paper best (pixel) on 3/9 pairs. Dense − monthly (mean over pairs, paired fold bootstrap 95% CI): pixel +0.047 [+0.029, +0.071], field +0.075 [+0.031, +0.144].
 
+## Knowledge pretraining on the dense series (A3, A7)
+
+Dense p3-nbr fine-tuned from encoders pretrained at 72 slots (spec/yieldsat-dense-series.md §9): **A3** = knowledge pretraining (SSL + concept grounding + relational distillation), **A7** = the same with random targets (control), **scratch** = dense p3-nbr without pretraining. Only folds whose test seasons no pretraining unit saw are covered (163 of 217: all LOYO, all but 4 LORO folds, CV10 for the 4 DEV pairs only), so the scratch values here are pooled over those folds and can differ from the tables above. Pooled out-of-fold R² (pixel / field); bold = best of the three. Source: results/pk_dense_final.json.
+
+#### CV10
+
+| Pair | Folds | Scratch | A3 | A7 |
+|---|---|---|---|---|
+| ARG-W | 10 | 0.82 / 0.92 | 0.81 / 0.91 | **0.83** / **0.92** |
+| BRA-C | 10 | **0.50** / **0.90** | 0.49 / 0.88 | 0.49 / 0.88 |
+| GER-R | 10 | 0.52 / 0.84 | **0.53** / **0.85** | 0.52 / 0.83 |
+| URG-S | 10 | **0.42** / 0.77 | 0.42 / **0.77** | 0.42 / 0.76 |
+
+#### LOYO
+
+| Pair | Folds | Scratch | A3 | A7 |
+|---|---|---|---|---|
+| ARG-C | 8 | **0.54** / **0.62** | 0.50 / 0.61 | 0.52 / 0.60 |
+| ARG-S | 8 | 0.63 / 0.73 | 0.63 / 0.72 | **0.66** / **0.76** |
+| ARG-W | 7 | **0.74** / **0.86** | 0.73 / 0.84 | 0.74 / 0.83 |
+| BRA-C | 6 | 0.12 / -0.02 | **0.19** / **0.18** | 0.17 / 0.15 |
+| BRA-S | 8 | **0.31** / 0.55 | 0.31 / **0.58** | 0.31 / 0.55 |
+| BRA-W | 7 | **0.15** / **0.39** | 0.11 / 0.21 | 0.09 / 0.12 |
+| GER-R | 7 | **0.28** / **0.50** | 0.22 / 0.47 | 0.23 / 0.41 |
+| GER-W | 7 | 0.08 / -0.00 | **0.14** / **0.04** | 0.11 / 0.01 |
+| URG-S | 5 | 0.36 / 0.63 | **0.36** / **0.64** | 0.35 / 0.63 |
+
+#### LORO
+
+| Pair | Folds | Scratch | A3 | A7 |
+|---|---|---|---|---|
+| ARG-C | 5 | 0.58 / 0.69 | **0.62** / **0.77** | 0.57 / 0.70 |
+| ARG-S | 6 | **0.67** / 0.79 | 0.67 / **0.79** | 0.66 / 0.77 |
+| ARG-W | 6 | **0.78** / **0.88** | 0.77 / 0.87 | 0.78 / 0.88 |
+| BRA-C | 7 | **0.24** / **0.32** | 0.18 / 0.13 | 0.23 / 0.24 |
+| BRA-S | 8 | **0.31** / 0.57 | 0.30 / **0.59** | 0.29 / 0.52 |
+| BRA-W | 6 | **0.17** / **0.49** | 0.16 / 0.49 | 0.13 / 0.33 |
+| GER-R | 6 | **0.15** / **0.38** | 0.09 / 0.22 | 0.10 / 0.20 |
+| GER-W | 6 | 0.09 / **0.09** | **0.12** / -0.01 | 0.10 / 0.00 |
+| URG-S | 10 | **0.36** / **0.66** | 0.36 / 0.65 | 0.36 / 0.66 |
+
+#### Paired differences (mean over pairs, paired fold bootstrap 95% CI)
+
+| Protocol | A3 − scratch pixel | A7 − scratch pixel | A3 − A7 pixel | A3 − scratch field | A7 − scratch field | A3 − A7 field |
+|---|---|---|---|---|---|---|
+| CV10 | -0.003 [-0.011, +0.006] | -0.003 [-0.012, +0.004] | +0.001 [-0.005, +0.007] | -0.002 [-0.010, +0.007] | -0.006 [-0.013, +0.003] | +0.004 [-0.001, +0.010] |
+| LOYO | -0.001 [-0.034, +0.031] | -0.004 [-0.030, +0.020] | +0.003 [-0.016, +0.019] | +0.004 [-0.059, +0.075] | -0.021 [-0.087, +0.031] | +0.025 [-0.005, +0.070] |
+| LORO | -0.009 [-0.027, +0.011] | -0.016 [-0.039, +0.007] | +0.006 [-0.010, +0.026] | -0.041 [-0.071, +0.015] | -0.063 [-0.105, -0.001] | +0.022 [-0.012, +0.057] |
+| ALL | -0.005 [-0.017, +0.010] | -0.008 [-0.021, +0.005] | +0.004 [-0.007, +0.014] | -0.016 [-0.044, +0.019] | -0.036 [-0.061, -0.003] | +0.020 [+0.002, +0.040] |
+
+**Conclusion:** knowledge pretraining does not improve dense p3-nbr: A3 − scratch is within ±0.01 pixel and every CI includes 0. The only significant effects are the control's field-level loss (A7 − scratch −0.036 overall, −0.063 LORO) and, from that, A3 − A7 field +0.020 overall; the knowledge targets avoid the harm random targets do but do not beat training from scratch.
