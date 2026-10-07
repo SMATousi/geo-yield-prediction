@@ -1,6 +1,6 @@
 # p3-nbr on the dense raw S2 series (spec/yieldsat-dense-series.md, DS-06), the paper's protocol, 217 units on 64 GPUs.
-# 3 runs per GPU (each ~3.1 GB GPU memory, 3-11 GiB RAM measured): 24 GB cards only, so GPU memory use
-# stays ~39% and RAM 25-90% of the request (utilization rule: never below 20%). No credentials inside.
+# 4 runs per GPU (cluster smoke, 3 runs on an A10: 5.1 GB GPU memory, 100% util, 2.8 CPU, 14.6 GiB): 24 GB cards only, so GPU memory
+# ~29%, RAM ~25-80% and CPU ~60% of the request (utilization rule: never below 20%). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -43,14 +43,14 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
-          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_dense_units.json --concurrency 3
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_dense_units.json --concurrency 4
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '10', memory: 36Gi, ephemeral-storage: 80Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '10', memory: 36Gi, ephemeral-storage: 80Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 40Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 40Gi, ephemeral-storage: 80Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
