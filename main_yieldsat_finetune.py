@@ -118,6 +118,8 @@ def get_args_parser():
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
+    p.add_argument('--s2_obs_dropout', type=float, default=0.0,
+                   help='training only: each sample keeps a fraction U(x, 1) of its S2 observations (0 = off)')
     p.add_argument('--init_nonstrict_streams', action='store_true',
                    help='streams the checkpoint lacks (e.g. the 5x5 neighbourhood) start from scratch')
     # optimisation
@@ -420,7 +422,8 @@ def main(args):
                   aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
                   check_source=check, weather_first_slot=args.weather_first_slot,
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None)
-    train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer, **common)
+    train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer,
+                                    s2_obs_dropout=args.s2_obs_dropout, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
                                   max_rows_per_field=args.val_rows_per_field or None, **common) if parts['val'] else None
     block = args.block_size or (1 if args.backend == 'cache' else 64)

@@ -25,7 +25,7 @@ import torch
 from torch.utils.data import Dataset, Sampler
 
 from dataset.yieldsat_cache import (
-    FIELD_STATS_VERSION, N_S, N_T, SourceLayout, canonicalize_block, load_cache_manifest,
+    FIELD_STATS_VERSION, N_S, N_T, OPT_SLICE as S2_SLICE, SourceLayout, canonicalize_block, load_cache_manifest,
     static_valid_mask, temporal_valid_mask,
 )
 from dataset.yieldsat_schema import (
@@ -270,9 +270,15 @@ class YieldSATPointDataset(Dataset):
     def __init__(self, source_root, artifact_root, seasons, normalizer, streams=None,
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
-                 seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask'):
+                 seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask',
+                 s2_obs_dropout=0.0):
         # 'keep': use the first dated slot's weather sum as the paper does (repro D1)
         self.weather_first_slot = weather_first_slot
+        # training augmentation (spec/yieldsat-dense-series.md §10): each sample keeps a fraction
+        # r ~ U(s2_obs_dropout, 1) of its S2 observations (centre and 5x5 neighbourhood dropped at the
+        # same slots; dates and weather kept), mimicking sparse years. 0 = off.
+        self.s2_obs_dropout = float(s2_obs_dropout)
+        self._aug_rng = None
         if cutoff_mode not in CUTOFF_MODES:
             raise ValueError('cutoff_mode must be one of {}'.format(CUTOFF_MODES))
         if backend not in ('cache', 'h5'):
@@ -382,6 +388,15 @@ class YieldSATPointDataset(Dataset):
             s_mean[sel], s_std[sel] = st['static_mean'], st['static_std']
             y_mean[sel], y_std[sel] = st['target_mean'], st['target_std']
 
+        if self.s2_obs_dropout > 0:
+            if self._aug_rng is None:                       # per process (DataLoader workers)
+                import os
+                self._aug_rng = np.random.default_rng([os.getpid(), int(self.s2_obs_dropout * 1000)])
+            keep = self._aug_rng.uniform(self.s2_obs_dropout, 1.0, size=(B, 1))
+            drop = self._aug_rng.random((B, NUM_TIME_SLOTS)) > keep
+            temporal[:, :, S2_SLICE] = np.where(drop[:, :, None], np.nan, temporal[:, :, S2_SLICE])
+            if nbr is not None:
+                nbr[drop] = np.nan
         cutoff = self.cutoff_day(meta['seeding_day'], meta['harvest_day'])
         time_valid = np.isfinite(times) & (times <= cutoff[:, None])
         # temporal values: valid value (see temporal_valid_mask) AND eligible

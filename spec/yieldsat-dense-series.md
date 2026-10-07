@@ -284,3 +284,19 @@ LOYO diagnosis), kept separate so the pretraining comparison stays clean.
   seasonal sums and peak NDVI in every year.
 - **Candidate fix (later round):** random S2 observation dropout during
   training.
+
+## 10. S2 observation-dropout augmentation (project lead, 2026-10-07)
+
+- **Cause it targets:** the LOYO regressions in §9.
+- **Option:** `--s2_obs_dropout K` (training only;
+  `YieldSATPointDataset(s2_obs_dropout=K)`). Each sample keeps a fraction
+  r ~ U(K, 1) of its S2 slots.
+  - The centre S2 values and the 5×5 neighbourhood are dropped at the same
+    slots. Dates and weather are kept, as in a sparse year.
+  - Check on GER-W: K = 0.3 keeps 64% of S2/neighbourhood observations
+    (expected 65%). Weather is untouched, and nothing is ever added.
+- **First run:** BRA-C and GER-W LOYO only (13 folds), K = 0.3 and
+  K = 0.1. Compared with dense p3-nbr without augmentation on the same
+  folds (pooled LOYO R² per pair, per-fold differences).
+  - Units: `cluster/tabm/protocol_obsdrop_units.json` (26).
+  - Job: `cluster/nautilus/protocol_obsdrop_job.yaml`.
