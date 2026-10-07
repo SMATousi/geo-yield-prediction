@@ -303,9 +303,14 @@ fold bootstrap 95% CIs (`results/pk_dense_final.json`):
 dense series either.**
 - A3 − scratch is within ±0.01 pixel in every protocol, and every CI
   includes 0.
-- A3 − A7 (the knowledge effect) is not significant at either level.
-- The only CI excluding 0 is the random-target control's field-level loss
-  on LORO.
+- A3 − A7 (the knowledge effect) is not significant within any single
+  protocol.
+- Across all protocols, the field-level A3 − A7 difference is significant:
+  +0.020 [+0.002, +0.040]. This comes from the control *losing* field
+  accuracy (A7 − scratch −0.036 [−0.061, −0.003]; LORO −0.063), not from
+  A3 gaining (A3 − scratch −0.016, CI includes 0).
+- So knowledge targets avoid the harm random targets do, but neither beats
+  training from scratch.
 - This matches the monthly study (§0 of
   spec/yieldsat-point-knowledge-pretraining.md), now under test-fold
   selection and with the dense series.
