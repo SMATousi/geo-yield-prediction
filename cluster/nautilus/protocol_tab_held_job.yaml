@@ -8,7 +8,7 @@ metadata:
 spec:
   completions: 3
   parallelism: 3
-  backoffLimit: 40
+  backoffLimit: 1000
   ttlSecondsAfterFinished: 604800
   template:
     spec:
