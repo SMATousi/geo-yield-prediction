@@ -215,3 +215,37 @@ note).
     - The neighbourhood step is a separate job (`dense_nbr_job.yaml`,
       2 CPU / 10 Gi for its 7.7 GiB peak), started automatically after the
       build.
+
+## 8. Results (DS-06/07, 2026-10-07)
+
+All 217 units are done; none were lost. Hardware failures during the run:
+- **Two GPUs with memory held outside our pods:** the pool's GPU check now
+  requires ≥ 3 GiB free. Affected units were re-queued.
+- **One bad node:** excluded in the job files.
+
+Full per-pair tables: `results/dense_p3nbr_final.md`. Data:
+`results/dense_p3nbr_final.json`. Pooled out-of-fold R², mean over the
+9 pairs (pixel / field):
+
+| Protocol | Paper LSTM S2+ADM | Paper best | Monthly p3-nbr | **Dense p3-nbr** | Dense ≥ paper best (pixel) | Dense − monthly (paired fold bootstrap 95% CI) |
+|---|---|---|---|---|---|---|
+| CV10 | 0.46 / 0.72 | 0.53 / 0.82 | 0.51 / 0.80 | **0.54 / 0.84** | 5/9 pairs | pixel +0.029 [+0.022, +0.037]; field +0.036 [+0.024, +0.047] |
+| LOYO | 0.31 / 0.43 | 0.38 / 0.54 | 0.35 / 0.45 | 0.36 / 0.47 | 5/9 pairs | pixel +0.010 [−0.032, +0.054]; field +0.026 [−0.058, +0.103] |
+| LORO | 0.23 / 0.22 | 0.39 / 0.58 | 0.32 / 0.46 | 0.37 / 0.54 | 3/9 pairs | pixel +0.047 [+0.029, +0.071]; field +0.075 [+0.031, +0.144] |
+
+Findings:
+1. **The dense series helps where it is measurable.**
+   - CV10 and LORO gains are significant (CIs exclude 0).
+   - LOYO is positive on average but not significant. It improves strongly
+     on ARG-C, ARG-W, BRA-S, BRA-W and URG-S, and regresses on BRA-C
+     (0.12 vs 0.28 monthly) and GER-W (0.08 vs 0.22).
+2. **CV10: we beat the paper's best model on average:** 0.54 vs 0.53 pixel
+   and 0.84 vs 0.82 field. This is the first time any of our models
+   exceeds it (same protocol and metric).
+3. **LOYO / LORO: still below the paper's best on average** (−0.03 / −0.02
+   pixel), though above it on 5/9 and 3/9 pairs.
+4. **Next candidates:**
+   - The two LOYO regressions (BRA-C, GER-W): year-level offset; check the
+     dense weather sums for those years.
+   - Dense TabM: needs a narrower flat view.
+   - Pretrained encoders at 72 slots.
