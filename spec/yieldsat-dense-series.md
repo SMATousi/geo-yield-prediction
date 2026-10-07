@@ -344,3 +344,35 @@ Operational notes:
     choice between two settings); this is noted for the write-up.
   - Units: `cluster/tabm/protocol_obsdrop_all_units.json`.
   - Job: `cluster/nautilus/protocol_obsdrop_all_job.yaml` (64 GPUs × 4).
+
+## 11. Test-time input re-normalization (AdaBN at the input level), LOYO (2026-10-07)
+
+- **Question (project lead):** would normalization with test-batch
+  statistics remove the year-level bias?
+- **Method:** `yieldsat_testnorm_eval.py` re-predicts every dense p3-nbr
+  LOYO fold from its saved checkpoint, with the input features
+  standardized by the held-out year's own statistics. Target scaling stays
+  the training fold's, so no labels are used. The training-normalization
+  prediction reproduces the reported scores (local check
+  0.4847 vs 0.4844).
+- **Result (pooled LOYO R², mean over 9 pairs, pixel / field):**
+
+  | Normalization | Mean |
+  |---|---|
+  | Training statistics | 0.356 / 0.473 |
+  | **Test-year statistics** | **0.183 / 0.141** |
+
+  - 8 of 9 pairs get worse (ARG-C 0.54 → 0.05, BRA-S 0.31 → −0.06), and
+    biases grow (ARG-C 2021 +0.9 → +3.9 t/ha).
+  - Only GER-W improves slightly (0.08 → 0.11).
+- **Conclusion: no.** A year's yield level is largely explained by how its
+  inputs differ from other years; re-centring per year deletes that
+  signal. The remaining offset is not an input-calibration artefact, so
+  test-time normalization or AdaBN-style BatchNorm is not the fix.
+- **Related diagnostics (labels used, not reportable):**
+  - Removing each fold's mean error raises dense LOYO pooled R² from 0.356
+    to 0.422 (LORO 0.277 → 0.339).
+  - Within-year Pearson r² is ~0.33.
+  - The paper's R² is standard pooled R², bias included: for all 270 pixel
+    rows the reported R² equals 1 − RMSE²/Var(y) of the pair to within
+    ±0.003.
