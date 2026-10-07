@@ -285,6 +285,35 @@ LOYO diagnosis), kept separate so the pretraining comparison stays clean.
 - **Candidate fix (later round):** random S2 observation dropout during
   training.
 
+### 9.1 Results (2026-10-07)
+
+All 92 pretraining units and all 326 fine-tuning units are done; the
+comparison covers 163 folds with all three arms. The table gives the
+change in pooled R², averaged over the pairs of each protocol, with paired
+fold bootstrap 95% CIs (`results/pk_dense_final.json`):
+
+| Protocol | A3 − scratch pixel | A7 − scratch pixel | A3 − A7 pixel | A3 − scratch field | A7 − scratch field | A3 − A7 field |
+|---|---|---|---|---|---|---|
+| CV10 | -0.003 [-0.011, +0.006] | -0.003 [-0.012, +0.004] | +0.001 [-0.005, +0.007] | -0.002 [-0.010, +0.007] | -0.006 [-0.013, +0.003] | +0.004 [-0.001, +0.010] |
+| LOYO | -0.001 [-0.034, +0.031] | -0.004 [-0.030, +0.020] | +0.003 [-0.016, +0.019] | +0.004 [-0.059, +0.075] | -0.021 [-0.087, +0.031] | +0.025 [-0.005, +0.070] |
+| LORO | -0.009 [-0.027, +0.011] | -0.016 [-0.039, +0.007] | +0.006 [-0.010, +0.026] | -0.041 [-0.071, +0.015] | -0.063 [-0.105, -0.001] | +0.022 [-0.012, +0.057] |
+| ALL | -0.005 [-0.017, +0.010] | -0.008 [-0.021, +0.005] | +0.004 [-0.007, +0.014] | -0.016 [-0.044, +0.019] | -0.036 [-0.061, -0.003] | +0.020 [+0.002, +0.040] |
+
+**Conclusion: knowledge pretraining does not change yield accuracy on the
+dense series either.**
+- A3 − scratch is within ±0.01 pixel in every protocol, and every CI
+  includes 0.
+- A3 − A7 (the knowledge effect) is not significant at either level.
+- The only CI excluding 0 is the random-target control's field-level loss
+  on LORO.
+- This matches the monthly study (§0 of
+  spec/yieldsat-point-knowledge-pretraining.md), now under test-fold
+  selection and with the dense series.
+
+Operational notes:
+- Fine-tuning was resubmitted once at 28 Gi: at 40 Gi the fleet used 19% of
+  requested memory. After the resize the fleet used 70%.
+
 ## 10. S2 observation-dropout augmentation (project lead, 2026-10-07)
 
 - **Cause it targets:** the LOYO regressions in §9.
