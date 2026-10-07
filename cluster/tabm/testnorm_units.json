@@ -1,0 +1,249 @@
+{
+ "suite": "testnorm",
+ "out_root": "/data/YieldSAT/yieldsat_results/testnorm",
+ "units": [
+  {
+   "id": "testnorm__ours-p3nbr-dense__ARG-S__loyo",
+   "pair": "ARG-S",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Argentina",
+    "neighbourhood_dense/Argentina",
+    "index/Argentina",
+    "splits/noval_paper_loyo_ARG-S_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "ARG-S",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__BRA-S__loyo",
+   "pair": "BRA-S",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Brazil",
+    "neighbourhood_dense/Brazil",
+    "index/Brazil",
+    "splits/noval_paper_loyo_BRA-S_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "BRA-S",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__URG-S__loyo",
+   "pair": "URG-S",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Uruguay",
+    "neighbourhood_dense/Uruguay",
+    "index/Uruguay",
+    "splits/noval_paper_loyo_URG-S_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "URG-S",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__ARG-C__loyo",
+   "pair": "ARG-C",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Argentina",
+    "neighbourhood_dense/Argentina",
+    "index/Argentina",
+    "splits/noval_paper_loyo_ARG-C_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "ARG-C",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__BRA-W__loyo",
+   "pair": "BRA-W",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Brazil",
+    "neighbourhood_dense/Brazil",
+    "index/Brazil",
+    "splits/noval_paper_loyo_BRA-W_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "BRA-W",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__ARG-W__loyo",
+   "pair": "ARG-W",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Argentina",
+    "neighbourhood_dense/Argentina",
+    "index/Argentina",
+    "splits/noval_paper_loyo_ARG-W_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "ARG-W",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__BRA-C__loyo",
+   "pair": "BRA-C",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Brazil",
+    "neighbourhood_dense/Brazil",
+    "index/Brazil",
+    "splits/noval_paper_loyo_BRA-C_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "BRA-C",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__GER-R__loyo",
+   "pair": "GER-R",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Germany",
+    "neighbourhood_dense/Germany",
+    "index/Germany",
+    "splits/noval_paper_loyo_GER-R_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "GER-R",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  },
+  {
+   "id": "testnorm__ours-p3nbr-dense__GER-W__loyo",
+   "pair": "GER-W",
+   "n_folds": 1,
+   "script": "yieldsat_testnorm_eval.py",
+   "env": {
+    "YIELDSAT_NUM_SLOTS": "72",
+    "YIELDSAT_CACHE_NAME": "cache_dense",
+    "YIELDSAT_NBR_NAME": "neighbourhood_dense"
+   },
+   "stage": [
+    "cache_dense/Germany",
+    "neighbourhood_dense/Germany",
+    "index/Germany",
+    "splits/noval_paper_loyo_GER-W_na_paper_s0*"
+   ],
+   "args": [
+    "--artifact_root",
+    "{artifact_root}",
+    "--run_root",
+    "/data/YieldSAT/yieldsat_results/protocol/paper/loyo_na_noval_s0/s2_adm/ours-p3nbr-dense_seed0",
+    "--pairs",
+    "GER-W",
+    "--out_root",
+    "{out_root}/ours-p3nbr-dense/loyo"
+   ]
+  }
+ ]
+}
