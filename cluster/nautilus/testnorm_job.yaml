@@ -1,11 +1,12 @@
 # Test-time input re-normalization (yieldsat_testnorm_eval.py) on the saved dense p3-nbr LOYO checkpoints of all 9
-# pairs: 9 units (one per pair), 1 GPU x 3. Prediction only (minutes per fold). No credentials inside.
+# pairs: 9 units (one per pair), 1 GPU x 3, any GPU type (24 GB cards were all busy; short prediction-only job).
+# No credentials inside.
 # 4 runs per GPU (cluster smoke, 3 runs on an A10: 5.1 GB GPU memory, 100% util, 2.8 CPU, 14.6 GiB): 24 GB cards only, so GPU memory
 # ~29%, RAM ~25-80% and CPU ~60% of the request (utilization rule: never below 20%). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-testnorm
+  name: smatousi-yieldsat-testnorm-b
 spec:
   completions: 1
   parallelism: 1
@@ -19,9 +20,6 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090]
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
