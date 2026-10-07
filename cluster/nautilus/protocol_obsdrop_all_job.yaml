@@ -36,6 +36,7 @@ spec:
                 - fiona-prg1.cesnet.cz
                 - nrp-01.laccd.edu
                 - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
