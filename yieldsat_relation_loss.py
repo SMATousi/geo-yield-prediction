@@ -47,6 +47,7 @@ def within_field_metrics(pred, target, season, min_pixels=50):
     pred, target, season = np.asarray(pred, np.float64), np.asarray(target, np.float64), np.asarray(season)
     ok = np.isfinite(pred) & np.isfinite(target)
     pred, target, season = pred[ok], target[ok], season[ok]
+    season = np.unique(season, return_inverse=True)[1]          # integer keys (season ids may be strings)
     order = np.argsort(season, kind='stable')
     pred, target, season = pred[order], target[order], season[order]
     cuts = np.flatnonzero(np.diff(season)) + 1
