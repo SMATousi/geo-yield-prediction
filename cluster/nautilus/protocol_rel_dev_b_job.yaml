@@ -35,6 +35,7 @@ spec:
                 - nrp-01.laccd.edu
                 - hcc-nrp-shor-c5925.unl.edu
                 - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
