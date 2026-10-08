@@ -1,7 +1,9 @@
 # Relation-matching loss for within-field yield variability
 
-**Status (2026-10-08): adopted; RL-01..RL-03 implemented (§6), RL-04
-running on the cluster.**
+**Status (2026-10-09): RL-01..RL-04 done (§6, §7). RL-04 gain is small: CV10
+within-field R² +0.01 (significant), LOYO +0.01 (not significant), variability
+ratio unchanged. Below the "clearly up" bar; RL-05 not launched (decision:
+project lead).**
 
 Related:
 - [yieldsat-dense-series.md](./yieldsat-dense-series.md): the current best
@@ -184,4 +186,48 @@ Job `smatousi-yieldsat-protocol-rel-dev`
     for LOYO).
   - Per-field medians reported alongside.
 
-Results: pending.
+### 7.1 Results (2026-10-09)
+
+All 130 runs finished (none failed). Data: `results/rel_dev_rl04.json`,
+script `results/rel_cmp.py`. Fields are keyed by fold + season id, since the
+saved season ids are per fold. The baseline numbers reproduce §4.
+
+**Δ vs dense p3-nbr, [95% field-season bootstrap CI]:**
+
+| Protocol | Pair | Base pooled R² | Base within R² | λ 0.5: Δ pooled | λ 0.5: Δ within | λ 1: Δ pooled | λ 1: Δ within |
+|---|---|---|---|---|---|---|---|
+| CV10 | ARG-W | 0.824 | 0.367 | +0.010 [−0.000, +0.023] | +0.013 [−0.009, +0.039] | +0.006 [−0.010, +0.019] | +0.015 [−0.004, +0.038] |
+| CV10 | BRA-C | 0.502 | 0.275 | +0.004 [−0.011, +0.017] | +0.006 [−0.008, +0.018] | +0.008 [−0.005, +0.020] | **+0.014 [+0.002, +0.025]** |
+| CV10 | GER-R | 0.521 | 0.229 | −0.001 [−0.019, +0.021] | +0.015 [+0.000, +0.031] | +0.010 [−0.012, +0.034] | +0.006 [−0.009, +0.023] |
+| CV10 | URG-S | 0.419 | 0.098 | +0.001 [−0.006, +0.009] | +0.002 [−0.004, +0.009] | +0.001 [−0.009, +0.010] | +0.003 [−0.004, +0.008] |
+| **CV10** | **mean** | | | +0.004 [−0.003, +0.011] | **+0.009 [+0.001, +0.017]** | +0.006 [−0.002, +0.014] | **+0.010 [+0.003, +0.017]** |
+| LOYO | ARG-W | 0.742 | 0.151 | −0.010 [−0.038, +0.015] | +0.018 [−0.036, +0.088] | −0.013 [−0.036, +0.008] | +0.028 [−0.026, +0.098] |
+| LOYO | BRA-C | 0.116 | 0.147 | +0.033 [−0.018, +0.086] | **+0.033 [+0.016, +0.049]** | +0.032 [−0.016, +0.075] | +0.015 [−0.004, +0.033] |
+| LOYO | GER-R | 0.285 | 0.168 | +0.026 [−0.032, +0.088] | −0.004 [−0.034, +0.026] | +0.038 [−0.009, +0.083] | +0.002 [−0.020, +0.028] |
+| LOYO | URG-S | 0.355 | 0.086 | **−0.014 [−0.027, −0.001]** | −0.005 [−0.011, +0.001] | −0.008 [−0.020, +0.004] | **−0.006 [−0.012, −0.001]** |
+| **LOYO** | **mean** | | | +0.009 [−0.012, +0.030] | +0.010 [−0.006, +0.031] | +0.012 [−0.006, +0.029] | +0.010 [−0.006, +0.030] |
+
+**Variability ratio and within-field r:**
+- Unchanged within ±0.04 per pair.
+- Example, CV10 ARG-W: ratio 0.71 → 0.68 / 0.67; r 0.66 → 0.66.
+
+**Reading:**
+1. **The loss does no harm and helps a little.**
+   - Pooled R² is not lower on average (+0.004 to +0.012).
+   - Within-field R² rises by ≈ +0.01 on average for both λ.
+   - The gain is significant on CV10 (CI above 0), not on LOYO.
+   - Relative to the baseline it is small: CV10 within-field 0.24 → 0.25,
+     mean over these 4 pairs.
+2. **It does not fix the shrinkage.**
+   - The variability ratio stays ≈ 0.35–0.75: the predicted maps are as
+     flat as before.
+   - The pattern (r) improves only marginally.
+   - Matching neighbour differences under an MSE-dominated objective still
+     lets the model hedge toward small differences where it is unsure.
+3. **λ = 1 ≥ λ = 0.5**, by a margin within noise.
+4. **Against the RL-04 criterion** (within-field R² clearly up, pooled R² not
+   lower), this is a pass on "not lower" but only a weak pass on "up".
+   RL-05 is not launched automatically.
+   - **Option A:** run RL-05 at λ = 1 anyway (cheap gain, no downside).
+   - **Option B:** first test the variance term (λ_var > 0) or a larger
+     λ_rel (2–4), which target the amplitude directly.
