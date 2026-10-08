@@ -231,3 +231,50 @@ saved season ids are per fold. The baseline numbers reproduce §4.
    - **Option A:** run RL-05 at λ = 1 anyway (cheap gain, no downside).
    - **Option B:** first test the variance term (λ_var > 0) or a larger
      λ_rel (2–4), which target the amplitude directly.
+
+## 8. Image models, within-field (2026-10-09)
+
+The image models' test predictions, scored on the same cells as the point
+model. Matched by field season and grid cell ().
+Data: .
+
+Suites and setting:
+- Image v1 = ; image v2 = ; both 324 experiments.
+- Rows below: S2+ADM, paper label policy, mean over 9 pairs × 3 seeds.
+- These suites used validation selection. The point model is the one they
+  were compared with ().
+
+Each cell gives pooled R² / within-field R² / median within-field r / median
+variability ratio.
+
+| Protocol | Image v1 | Image v2 | Point |
+|---|---|---|---|
+| CV10 | 0.257 / 0.122 / 0.41 / 0.52 | 0.233 / 0.079 / 0.38 / 0.59 | 0.43–0.45 / 0.22 / 0.49 / 0.56 |
+| LOYO | 0.053 / 0.068 / 0.38 / 0.54 | 0.061 / 0.036 / 0.37 / 0.59 | 0.18–0.21 / 0.11 / 0.40–0.41 / 0.57–0.58 |
+| LORO (farm) | −0.079 / 0.075 / 0.34 / 0.47 | 0.002 / 0.052 / 0.33 / 0.50 | 0.04–0.05 / 0.09 / 0.37–0.38 / 0.48–0.49 |
+| LORO (province) | 0.188 / 0.092 / 0.45 / 0.64 | 0.206 / −0.004 / 0.43 / 0.85 | 0.46–0.48 / 0.20 / 0.52 / 0.66–0.67 |
+
+Image beats point within-field in:
+- image v1: 0/27 CV10, 14/27 LOYO, 7/18 LORO, 1/9 province rows;
+- image v2: 0, 4, 3 and 0 rows.
+
+Partial paper-protocol runs (ARG-S, against dense p3-nbr within-field R²):
+
+| Run | Image | Dense p3-nbr |
+|---|---|---|
+| Image v1, CV10 | 0.22 | 0.52 |
+| Image v2, CV10 | 0.32 | 0.52 |
+| Image v2, LOYO | 0.26 | 0.47 |
+| Hybrid-h1, CV10 | 0.40 | 0.51 |
+
+**Reading:**
+1. The image models are worse inside fields too, not only in level. Their
+   within-field correlation r is lower in every protocol.
+2. Within-field R² ≈ 2·r·k − k² (k = variability ratio), which is maximal at
+   k = r.
+   - Image v2 has more amplitude than v1 (k 0.59 vs 0.52) but lower r, so
+     its within-field R² is lower.
+   - Extreme case, province LORO: k = 0.85, r = 0.43 → R² ≈ 0. This is the
+     observed −0.004.
+   - More contrast without a better pattern costs R². This is the argument
+     against the per-field spread term (§2, ).
