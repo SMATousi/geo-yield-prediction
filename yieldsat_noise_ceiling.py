@@ -1,7 +1,7 @@
 """Within-field noise ceiling from the yield maps alone (spec/yieldsat-field-context.md §3).
 
 Per field season the targets are centred on their mean and placed on the 10 m grid. The empirical
-semivariogram along grid rows and columns, gamma(h) = 0.5 * mean((y(x) - y(x + h))^2) for h = 1..4 cells,
+semivariogram along grid rows and columns, gamma(h) = 0.5 * mean((y(x) - y(x + h))^2) for h = 1..30 cells,
 is extrapolated linearly from h = 1..3 to h = 0: the nugget, the part of the within-field variance that
 is uncorrelated even between adjacent cells (harvester noise, sub-cell variation). No input can predict
 it, so 1 - nugget / within-field variance bounds the within-field R2 of any model.
@@ -19,7 +19,7 @@ from dataset.yieldsat_source import load_country_index
 CROP = {'C': 'corn', 'S': 'soybean', 'W': 'wheat', 'R': 'rapeseed'}
 COUNTRY = {'ARG': 'Argentina', 'BRA': 'Brazil', 'GER': 'Germany', 'URG': 'Uruguay'}
 PAIRS = ('ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')
-LAGS = (1, 2, 3, 4)
+LAGS = tuple(range(1, 31))          # fit uses h = 1..3; longer lags for the plots (to 300 m)
 
 
 def field_variogram(r, c, y):
@@ -37,11 +37,13 @@ def field_variogram(r, c, y):
 
 def ceiling(acc):
     var = acc['ss'] / acc['n']
-    gam = np.array([acc['g'][h] / max(acc['k'][h], 1) for h in LAGS])
+    gam = np.array([acc['g'][h] / acc['k'][h] if acc['k'][h] else np.nan for h in LAGS])
     slope, nugget = np.polyfit(np.array(LAGS[:3], float), gam[:3], 1)
     nugget = max(float(nugget), 0.0)
     return {'within_var': var, 'gamma': dict(zip(map(str, LAGS), (gam / var).round(4).tolist())),
-            'nugget_frac': nugget / var, 'ceiling_within_r2': 1 - nugget / var, 'fields': acc['fields']}
+            'pairs': dict(zip(map(str, LAGS), [int(acc['k'][h]) for h in LAGS])),
+            'nugget_frac': nugget / var, 'fit_slope_frac': float(slope) / var,
+            'ceiling_within_r2': 1 - nugget / var, 'fields': acc['fields']}
 
 
 def main():

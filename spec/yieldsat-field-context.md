@@ -93,6 +93,38 @@ variation are uncorrelated even between adjacent cells.
      high. More apparent noise, so the ceiling comes out too low.
    - The headroom conclusion holds even if the ceiling were 0.15 lower.
 
+**Figures** (`results/figures/semivariogram/`, script `plot_semivariogram.py`;
+lags extended to 30 cells for the plots; the nugget fit stays on lags 1–3):
+
+![Semivariograms per pair](../results/figures/semivariogram/semivariogram_pairs.png)
+
+*Per pair: γ(h) / within-field variance (blue), the linear fit on lags 1–3
+extrapolated to 0 (red dashed), the nugget (red square, red band = noise),
+the predictable part (green).*
+
+![All pairs](../results/figures/semivariogram/semivariogram_overview.png)
+
+*Left: all pairs to 300 m; grey = reach of the 5×5 neighbourhood stream
+(±20 m). Right: short lags and the extrapolation to the nugget.*
+
+![Ceiling vs model](../results/figures/semivariogram/ceiling_vs_model.png)
+
+*Noise ceiling vs dense p3-nbr CV10 within-field R²; labels = share of the
+ceiling reached.*
+
+**What the figures show:**
+1. The curves are concave near 0 (fastest rise in the first 10–20 m). The
+   straight-line extrapolation is therefore somewhat high: see the caveat
+   above.
+2. URG-S jumps to 0.56 at 10 m: most of its within-field variance is
+   cell-to-cell noise.
+3. **No pair reaches its sill within 300 m** (γ at 300 m ≈ 0.83–0.96 of the
+   variance).
+   - Yield stays correlated over hundreds of metres; much of the predictable
+     pattern sits at 50–300 m, near field scale.
+   - The 5×5 neighbourhood (±20 m) sees only the start of that range.
+   - This supports field-level context (§4) over a slightly wider window.
+
 **Why the intercept is the noise.** Write y′ = s + e:
 - s: spatially correlated signal.
 - e: cell-independent noise with variance σₑ².
