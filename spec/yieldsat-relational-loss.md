@@ -235,14 +235,14 @@ saved season ids are per fold. The baseline numbers reproduce §4.
 ## 8. Image models, within-field (2026-10-09)
 
 The image models' test predictions, scored on the same cells as the point
-model. Matched by field season and grid cell ().
-Data: .
+model. Matched by field season and grid cell (`yieldsat_image_compare.match_fold`).
+Data: `results/image_within_field.json`.
 
 Suites and setting:
-- Image v1 = ; image v2 = ; both 324 experiments.
+- Image v1 = `image_full`; image v2 = `image_v2`; both 324 experiments.
 - Rows below: S2+ADM, paper label policy, mean over 9 pairs × 3 seeds.
 - These suites used validation selection. The point model is the one they
-  were compared with ().
+  were compared with (`before_full`).
 
 Each cell gives pooled R² / within-field R² / median within-field r / median
 variability ratio.
@@ -277,4 +277,4 @@ Partial paper-protocol runs (ARG-S, against dense p3-nbr within-field R²):
    - Extreme case, province LORO: k = 0.85, r = 0.43 → R² ≈ 0. This is the
      observed −0.004.
    - More contrast without a better pattern costs R². This is the argument
-     against the per-field spread term (§2, ).
+     against the per-field spread term (§2, `--var_weight`).
