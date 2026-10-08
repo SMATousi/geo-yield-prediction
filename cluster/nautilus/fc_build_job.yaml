@@ -1,6 +1,6 @@
 # Field-context arrays (spec/yieldsat-field-context.md, FC-02) from cache_dense on the PVC: per-field S2 mean/std and
 # within-field static z-scores + edge distance, written next to neighbourhood_dense. One field in memory at a time
-# (local Germany build: seconds, < 1 GiB) -> 1 CPU / 3 Gi. No credentials inside.
+# (cluster: ~330 Mi steady at 0.2 CPU; 3 Gi was 11%, below the utilization floor) -> 1 Gi request, 1.5 Gi limit. No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -29,8 +29,8 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
-          requests: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+          limits: {cpu: '1', memory: 1536Mi, ephemeral-storage: 5Gi}
+          requests: {cpu: '1', memory: 1Gi, ephemeral-storage: 5Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
       volumes:
