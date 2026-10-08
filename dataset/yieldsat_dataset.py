@@ -38,6 +38,9 @@ RETROSPECTIVE_MODES = ('harvest', 'all_slots')
 
 _T_POS = {c: i for i, c in enumerate(TEMPORAL_CHANNELS)}
 _S_POS = {c: i for i, c in enumerate(STATIC_CHANNELS)}
+_S2_CH = list(STREAMS['yieldsat_s2']['channels'])
+_S2_POS = np.array([_T_POS[c] for c in _S2_CH], dtype=np.int64)
+FIELD_REL_CHANNELS = ('rel_dem', 'rel_slope', 'rel_curvature', 'rel_twi', 'edge_dist')
 
 
 def stream_layout(streams, soil_uncertainty='none', aspect_encoding='raw'):
@@ -271,7 +274,7 @@ class YieldSATPointDataset(Dataset):
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
                  seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask',
-                 s2_obs_dropout=0.0):
+                 s2_obs_dropout=0.0, field_context_root=None):
         # 'keep': use the first dated slot's weather sum as the paper does (repro D1)
         self.weather_first_slot = weather_first_slot
         # training augmentation (spec/yieldsat-dense-series.md §10): each sample keeps a fraction
@@ -330,6 +333,26 @@ class YieldSATPointDataset(Dataset):
             self.layout['yieldsat_s2_nbr'] = {'temporal': True, 'channels': s2,
                                               'positions': np.array([_T_POS[c] for c in s2], dtype=np.int64),
                                               'out_channels': ['nbr5_' + c for c in s2]}
+        # field context (spec/yieldsat-field-context.md §4, yieldsat_build_field_context.py): the field's
+        # per-slot S2 mean/std, the cell's within-field S2 z-score and within-field static z-scores
+        self.field_context = None
+        if field_context_root:
+            self.field_context = {}
+            for c in self.countries:
+                d = Path(field_context_root) / c
+                with np.load(d / 'field_s2.npz') as z:
+                    fc = {'mean': z['mean'], 'std': z['std'],
+                          'pos': {int(k): i for i, k in enumerate(z['field_codes'])}}
+                fc['rel'] = np.load(d / 'field_rel.npy', mmap_mode='r')
+                self.field_context[c] = fc
+            self.layout['yieldsat_s2_field'] = {'temporal': True, 'channels': _S2_CH, 'positions': _S2_POS,
+                                                'out_channels': ['fmean_' + c for c in _S2_CH] +
+                                                                ['fstd_' + c for c in _S2_CH]}
+            self.layout['yieldsat_s2_dev'] = {'temporal': True, 'channels': _S2_CH, 'positions': _S2_POS,
+                                              'out_channels': ['dev_' + c for c in _S2_CH]}
+            self.layout['yieldsat_field_rel'] = {'temporal': False, 'channels': list(FIELD_REL_CHANNELS),
+                                                 'positions': np.zeros(0, dtype=np.int64),
+                                                 'out_channels': list(FIELD_REL_CHANNELS)}
 
     def __len__(self):
         return len(self.row)
@@ -361,6 +384,11 @@ class YieldSATPointDataset(Dataset):
         target_raw = np.empty(B, dtype=np.float32)
         nbr = (np.full((B, NUM_TIME_SLOTS, len(STREAMS['yieldsat_s2']['channels'])), np.nan, np.float32)
                if self.neighbourhood is not None else None)
+        fc = self.field_context is not None
+        if fc:
+            f_mean = np.empty((B, NUM_TIME_SLOTS, len(_S2_CH)), np.float32)
+            f_std = np.empty_like(f_mean)
+            f_rel = np.empty((B, len(FIELD_REL_CHANNELS)), np.float32)
         t_mean = np.empty((B, N_T), dtype=np.float32)
         t_std = np.empty((B, N_T), dtype=np.float32)
         s_mean = np.empty((B, N_S), dtype=np.float32)
@@ -383,6 +411,12 @@ class YieldSATPointDataset(Dataset):
             if nbr is not None:
                 order = np.argsort(rows)
                 nbr[sel[order]] = np.asarray(self.neighbourhood[country][rows[order]], dtype=np.float32)
+            if fc:
+                ctx = self.field_context[country]
+                fpos = np.array([ctx['pos'][int(k)] for k in r['field_code'][rows]], dtype=np.int64)
+                f_mean[sel], f_std[sel] = ctx['mean'][fpos], ctx['std'][fpos]
+                order = np.argsort(rows)
+                f_rel[sel[order]] = np.asarray(ctx['rel'][rows[order]], dtype=np.float32)
             st = self.normalizer.get(country)
             t_mean[sel], t_std[sel] = st['temporal_mean'], st['temporal_std']
             s_mean[sel], s_std[sel] = st['static_mean'], st['static_std']
@@ -413,10 +447,23 @@ class YieldSATPointDataset(Dataset):
             time_features = np.stack([rel, np.sin(doy), np.cos(doy)], axis=-1)
         time_features = np.where(time_valid[:, :, None], time_features, 0.0).astype(np.float32)
 
+        if fc:
+            sm, ss = t_mean[:, None, _S2_POS], t_std[:, None, _S2_POS]
+            f_ok = np.isfinite(f_mean) & np.isfinite(f_std) & (f_std > 0) & time_valid[:, :, None]
+            with np.errstate(invalid='ignore', divide='ignore'):
+                fvals = np.concatenate([(f_mean - sm) / ss, f_std / ss], axis=-1)
+                dev = np.clip((temporal[:, :, _S2_POS] - f_mean) / f_std, -5.0, 5.0)
+            dev_ok = f_ok & t_valid[:, :, _S2_POS]
+            fc_streams = {'yieldsat_s2_field': (fvals, np.concatenate([f_ok, f_ok], axis=-1)),
+                          'yieldsat_s2_dev': (dev, dev_ok),
+                          'yieldsat_field_rel': (f_rel, np.isfinite(f_rel))}
         inputs, masks, available = {}, {}, {}
         for name, lay in self.layout.items():
             pos = lay['positions']
-            if name == 'yieldsat_s2_nbr':
+            if fc and name in fc_streams:
+                v, m = fc_streams[name]
+                v = np.where(m, v, self.fill_value)
+            elif name == 'yieldsat_s2_nbr':
                 nv = np.isfinite(nbr) & time_valid[:, :, None]
                 v = np.where(nv, (nbr - t_mean[:, None, pos]) / t_std[:, None, pos], self.fill_value)
                 m = nv

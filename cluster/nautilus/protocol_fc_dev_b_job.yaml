@@ -1,0 +1,66 @@
+# FC-04 extra capacity: same units as protocol_fc_dev_job.yaml (shared claim pool), on 48 GB cards at 8 runs/GPU
+# (~13.6 GB GPU memory = 28%, RAM up to ~50 of 64 GiB, 12 CPU = 2x the 4-run request). No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-protocol-fc-dev-b
+spec:
+  completions: 8
+  parallelism: 8
+  backoffLimit: 1000
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-L40, NVIDIA-L40S, NVIDIA-RTX-A6000]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_fc_dev_units.json --concurrency 8
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '12', memory: 64Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '12', memory: 64Gi, ephemeral-storage: 80Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 4Gi}

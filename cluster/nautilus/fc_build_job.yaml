@@ -1,0 +1,38 @@
+# Field-context arrays (spec/yieldsat-field-context.md, FC-02) from cache_dense on the PVC: per-field S2 mean/std and
+# within-field static z-scores + edge distance, written next to neighbourhood_dense. One field in memory at a time
+# (local Germany build: seconds, < 1 GiB) -> 1 CPU / 3 Gi. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-fc-build
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: build
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          YIELDSAT_NUM_SLOTS=72 YIELDSAT_CACHE_NAME=cache_dense YIELDSAT_NBR_NAME=neighbourhood_dense
+          python yieldsat_build_field_context.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          echo FC_BUILD_COMPLETE
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+          requests: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}

@@ -97,6 +97,9 @@ def get_args_parser():
     p.add_argument('--level_weight', type=float, default=1.0)
     p.add_argument('--early_hidden', type=int, default=192, help='S4 early-fusion encoder width')
     p.add_argument('--early_depth', type=int, default=3)
+    p.add_argument('--field_context', action='store_true',
+                   help='field-context streams (spec/yieldsat-field-context.md): field S2 mean/std, the cell\'s '
+                        'within-field S2 z-score, within-field terrain z-scores and edge distance (<artifact_root>/<NBR_NAME>)')
     p.add_argument('--neighbourhood', action='store_true',
                    help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
     # knowledge pretraining (spec/yieldsat-point-knowledge-pretraining.md)
@@ -429,7 +432,8 @@ def main(args):
                   cutoff_days=args.cutoff_days, soil_uncertainty=args.soil_uncertainty,
                   aspect_encoding=args.aspect_encoding, seed=args.seed, fill_value=args.fill_value,
                   check_source=check, weather_first_slot=args.weather_first_slot,
-                  neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None)
+                  neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
+                  field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
     train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer,
                                     s2_obs_dropout=args.s2_obs_dropout, **common)
     val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
