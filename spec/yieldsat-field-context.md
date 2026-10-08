@@ -85,9 +85,25 @@ variation are uncorrelated even between adjacent cells.
 2. The variogram is still rising at h = 4 (γ ≈ 0.53–0.69 of the variance).
    Much of the predictable structure lives at scales beyond 40 m, larger than
    the current 5×5 neighbourhood.
-3. **Caveat:** the yield maps were harmonized to the 10 m grid, which smooths
-   adjacent cells. The nugget is therefore a lower bound on noise and the
-   ceiling an upper bound.
+3. **Caveat: an estimate, not a bound.** The errors go both ways.
+   - The yield maps were harmonized to the 10 m grid, which smooths adjacent
+     cells. Less apparent noise, so the ceiling comes out too high.
+   - Real variograms are usually concave near 0. A straight line through
+     h = 1..3 is flatter than the true curve at 0, so its intercept is too
+     high. More apparent noise, so the ceiling comes out too low.
+   - The headroom conclusion holds even if the ceiling were 0.15 lower.
+
+**Why the intercept is the noise.** Write y′ = s + e:
+- s: spatially correlated signal.
+- e: cell-independent noise with variance σₑ².
+
+For h > 0, γ(h) = σₑ² + γₛ(h) with γₛ(0) = 0. So γ extrapolated to 0 is
+σₑ², and no input can explain e: max within-field R² = 1 − σₑ² / var(y′).
+
+**Worked example, ARG-W** (γ / variance):
+- γ(1..3) = 0.310, 0.445, 0.508.
+- Least-squares line: slope 0.099, intercept 0.222 = nugget share.
+- Ceiling 0.78.
 
 ## 4. Field-context inputs (FC-02, FC-03)
 
