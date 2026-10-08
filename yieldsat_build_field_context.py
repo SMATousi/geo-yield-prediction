@@ -30,18 +30,29 @@ REL_POS = [STATIC_CHANNELS.index(c) for c in REL_CHANNELS]
 REL_OUT = tuple('rel_' + c for c in REL_CHANNELS) + ('edge_dist',)
 MIN_CELLS = 3
 EDGE_CAP = 50
+CHUNK = 8192                                                 # cells per read (2026-10-08: whole-field
+                                                             # float64 reads OOM-killed a 1.2 Gi pod on a 67k-cell field)
+
+
+def s2_sums(values):
+    """values (n, T, C) raw S2 -> count, sum, sum of squares over cells (T, C), float64."""
+    ok = np.isfinite(values)
+    v = np.where(ok, values, 0.0).astype(np.float64)
+    return ok.sum(0), v.sum(0), (v * v).sum(0)
+
+
+def s2_finish(cnt, s, ss):
+    """-> mean, std (NaN below MIN_CELLS), count."""
+    with np.errstate(invalid='ignore', divide='ignore'):
+        mean = s / cnt
+        var = np.maximum(ss / cnt - mean * mean, 0.0)
+    keep = cnt >= MIN_CELLS
+    return np.where(keep, mean, np.nan), np.where(keep, np.sqrt(var), np.nan), cnt
 
 
 def field_s2_stats(values):
     """values (n, T, C) raw S2 of one field season -> mean, std, count (T, C); NaN below MIN_CELLS."""
-    ok = np.isfinite(values)
-    cnt = ok.sum(0)
-    v = np.where(ok, values, 0.0)
-    with np.errstate(invalid='ignore', divide='ignore'):
-        mean = v.sum(0) / cnt
-        var = np.maximum((v * v).sum(0) / cnt - mean * mean, 0.0)
-    keep = cnt >= MIN_CELLS
-    return np.where(keep, mean, np.nan), np.where(keep, np.sqrt(var), np.nan), cnt
+    return s2_finish(*s2_sums(values))
 
 
 def edge_distance(rows, cols, cap=EDGE_CAP):
@@ -102,8 +113,11 @@ def build_country(artifact_root, country):
     t0 = time.time()
     for i, f in enumerate(fields):
         a, b = f['row_start'], f['row_end']
-        vals = _read_rows(src_t, a, b)[..., S2_POS].astype(np.float64)
-        means[i], stds[i], counts[i] = field_s2_stats(vals)
+        acc = [np.zeros((T, C)), np.zeros((T, C)), np.zeros((T, C))]
+        for k in range(a, b, CHUNK):                 # row chunks: peak memory independent of field size
+            for j, x in enumerate(s2_sums(_read_rows(src_t, k, min(b, k + CHUNK))[..., S2_POS])):
+                acc[j] += x
+        means[i], stds[i], counts[i] = s2_finish(*acc)
         _write_rows(tmp, a, field_rel(_read_rows(src_s, a, b), grid_row[a:b], grid_col[a:b]).astype(np.float32))
         if (i + 1) % 200 == 0:
             print(country, i + 1, 'of', F, 'fields, %.0f s' % (time.time() - t0), flush=True)
