@@ -118,6 +118,14 @@ def get_args_parser():
     p.add_argument('--init_sensor_ckpt', default='')
     p.add_argument('--encoders_only_transfer', action='store_true',
                    help='load only encoder weights from --init_sensor_ckpt (fusion may differ)')
+    # relation-matching loss (spec/yieldsat-relational-loss.md)
+    p.add_argument('--rel_weight', type=float, default=0.0,
+                   help='weight of the within-field relation-matching loss (0 = off); enables clustered batches')
+    p.add_argument('--rel_cluster', type=int, default=8, help='pixels per spatial cluster in a batch')
+    p.add_argument('--rel_radius', type=int, default=5, help='cluster / pair radius in grid cells (Chebyshev)')
+    p.add_argument('--rel_near_weight', type=float, default=0.5, help='weight of pairs at distance 1 (noisiest)')
+    p.add_argument('--rel_delta', type=float, default=1.0, help='Huber delta (normalized target units)')
+    p.add_argument('--var_weight', type=float, default=0.0, help='weight of the per-cluster std-matching term')
     p.add_argument('--s2_obs_dropout', type=float, default=0.0,
                    help='training only: each sample keeps a fraction U(x, 1) of its S2 observations (0 = off)')
     p.add_argument('--init_nonstrict_streams', action='store_true',
@@ -478,8 +486,13 @@ def main(args):
             return args.lr * (step + 1) / warm
         return args.lr * 0.5 * (1 + math.cos(math.pi * (step - warm) / max(1, total_steps - warm)))
 
-    sampler = FieldBalancedBatchSampler(train_ds.season_ranges, args.batch_size, args.steps_per_epoch,
-                                        alpha=args.field_alpha, block_size=block, seed=args.seed)
+    if args.mode == 'finetune' and (args.rel_weight > 0 or args.var_weight > 0):
+        from dataset.yieldsat_dataset import FieldClusterBatchSampler
+        sampler = FieldClusterBatchSampler(train_ds, args.batch_size, args.steps_per_epoch, cluster=args.rel_cluster,
+                                           radius=args.rel_radius, alpha=args.field_alpha, seed=args.seed)
+    else:
+        sampler = FieldBalancedBatchSampler(train_ds.season_ranges, args.batch_size, args.steps_per_epoch,
+                                            alpha=args.field_alpha, block_size=block, seed=args.seed)
     history, best, step = [], None, 0
     bad_epochs = 0
     diag_test_ds = None
@@ -508,7 +521,18 @@ def main(args):
                 if args.mode == 'pretrain':
                     loss, parts_loss = trainable(b)
                 else:
-                    _, loss = model.loss(b)
+                    pred_b, loss = model.loss(b)
+            if args.mode == 'finetune' and (args.rel_weight > 0 or args.var_weight > 0):
+                from yieldsat_relation_loss import relation_loss, variance_loss
+                if args.rel_weight > 0:
+                    lr_ = relation_loss(pred_b, b['target'], b['target_valid'], b['season'], b['grid_row'], b['grid_col'],
+                                        radius=args.rel_radius, near_weight=args.rel_near_weight, delta=args.rel_delta)
+                    loss = loss.float() + args.rel_weight * lr_
+                    comps.setdefault('rel', []).append(float(lr_))
+                if args.var_weight > 0:
+                    lv_ = variance_loss(pred_b, b['target'], b['target_valid'], b['season'])
+                    loss = loss.float() + args.var_weight * lv_
+                    comps.setdefault('var', []).append(float(lv_))
             opt.zero_grad(set_to_none=True)
             loss.float().backward()
             if args.grad_clip > 0:
@@ -609,6 +633,8 @@ def main(args):
         te = time.time()
         p, y, s, r, c = predict(model, test_ds, args, device)
         report['test'] = evaluate_predictions(p, y, s, test_ds.seasons)
+        from yieldsat_relation_loss import within_field_metrics
+        report['test']['within_field'] = within_field_metrics(p, y, s)   # spec/yieldsat-relational-loss.md §3
         report['test']['label'] = '{}; {}'.format(split['label'], report['label_policy'])
         report['test']['rows_evaluated'] = int(len(p))
         report['io']['test_rows_per_second'] = round(len(p) / max(1e-6, time.time() - te), 1)

@@ -515,6 +515,50 @@ class FieldBalancedBatchSampler(Sampler):
             yield np.concatenate(idx)[: self.batch_size].tolist()
 
 
+class FieldClusterBatchSampler(Sampler):
+    """Training batches of spatially clustered pixels for the relation loss
+    (spec/yieldsat-relational-loss.md, RL-01): ``batch_size // cluster`` seasons are
+    drawn with probability ``n_rows ** alpha``; in each, an anchor pixel is drawn
+    uniformly and ``cluster`` pixels are taken from the cells within ``radius``
+    (Chebyshev, in grid cells) of it, anchor included. Indices of one cluster are
+    consecutive in the batch."""
+
+    def __init__(self, ds, batch_size, batches_per_epoch, cluster=8, radius=5, alpha=0.5, seed=0):
+        self.ranges = np.asarray(ds.season_ranges, dtype=np.int64)
+        sizes = (self.ranges[:, 1] - self.ranges[:, 0]).astype(np.float64)
+        w = sizes ** alpha
+        self.p = w / w.sum()
+        self.grids = []
+        for a, b in self.ranges:
+            country = ds.countries[ds.country_of[a]]
+            r = ds.index[country]['rows']
+            rows = ds.row[a:b]
+            self.grids.append((np.asarray(r['grid_row'][rows], np.int32), np.asarray(r['grid_col'][rows], np.int32)))
+        self.batch_size, self.batches = batch_size, batches_per_epoch
+        self.cluster, self.radius, self.seed, self.epoch = max(2, cluster), radius, seed, 0
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+    def __len__(self):
+        return self.batches
+
+    def __iter__(self):
+        rng = np.random.default_rng((self.seed, self.epoch, 7))
+        per_batch = max(1, self.batch_size // self.cluster)
+        for _ in range(self.batches):
+            idx = []
+            for s in rng.choice(len(self.ranges), size=per_batch, p=self.p):
+                a, b = self.ranges[s]
+                gr, gc = self.grids[s]
+                k = rng.integers(0, b - a)
+                near = np.flatnonzero((np.abs(gr - gr[k]) <= self.radius) & (np.abs(gc - gc[k]) <= self.radius))
+                near = near[near != k]
+                pick = rng.choice(near, size=min(self.cluster - 1, len(near)), replace=False) if len(near) else near
+                idx.append(a + np.concatenate([[k], pick]))
+            yield np.concatenate(idx)[: self.batch_size].tolist()
+
+
 class SequentialBatchSampler(Sampler):
     def __init__(self, n, batch_size):
         self.n, self.batch_size = n, batch_size

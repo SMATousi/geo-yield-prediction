@@ -314,6 +314,23 @@ def cmd_units(a):
               for pair in sorted(PAPER_PAIRS, key=lambda x: -SIZE[x]) for f in ('F1', 'F0')
               if (pair, f) not in cached]
     tab = builds + tab
+    if a.batch == 'rel-dev':
+        # RL-04 (spec/yieldsat-relational-loss.md): relation-matching loss, 4 DEV pairs x CV10/LOYO
+        units = []
+        for u in dense_units(a.artifact_root):
+            pair, proto = u['id'].split('__')[1:3]
+            if pair not in ('ARG-W', 'BRA-C', 'GER-R', 'URG-S') or proto not in ('cv', 'loyo'):
+                continue
+            for lam in ('0.5', '1.0'):
+                tag = 'ours-p3nbr-dense-rel{}'.format(lam.replace('.', ''))
+                args = list(u['args'])
+                j = args.index('--output_dir')
+                args[j + 1] = args[j + 1].replace('ours-p3nbr-dense_seed0', tag + '_seed0')
+                units.append(dict(u, id=u['id'].replace('ours-p3nbr-dense', tag), args=args + ['--rel_weight', lam]))
+        Path('cluster/tabm/protocol_rel_dev_units.json').write_text(
+            json.dumps({'suite': 'protocol_rel_dev', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_rel_dev: {} units'.format(len(units)))
+        return
     if a.batch == 'obsdrop-all':
         # S2 observation dropout (min keep 0.1) on every pair and protocol (spec §10); same ids/paths as the
         # BRA-C/GER-W LOYO units of 'obsdrop', so those are not run twice
@@ -499,7 +516,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
