@@ -145,6 +145,14 @@ split, like the cache and the neighbourhood stream.
   is known at prediction time.
 - At test time a field's features use that field's own imagery. This is
   available whenever the field is predicted.
+- The test set gets the same streams, computed the same way from the test
+  field's own inputs. The only training-fold statistic is the usual S2
+  normalization.
+- **Caveat (footprint):** a field's extent is its set of cells in the
+  yield-map index, not an independent boundary polygon.
+  - Edge distance (and which cells enter the field means) therefore follows
+    the yield map's footprint: where yield data exist, not their values.
+  - In deployment the field boundary plays this role.
 
 | Stream | Kind | Channels | Definition |
 |---|---|---|---|
