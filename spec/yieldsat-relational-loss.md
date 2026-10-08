@@ -1,7 +1,7 @@
 # Relation-matching loss for within-field yield variability
 
-**Status (2026-10-08): proposed; baseline computed (§4).** Decision pending
-(project lead).
+**Status (2026-10-08): adopted; RL-01..RL-03 implemented (§6), RL-04
+running on the cluster.**
 
 Related:
 - [yieldsat-dense-series.md](./yieldsat-dense-series.md): the current best
@@ -132,3 +132,56 @@ Per pair, dense p3-nbr (within-field R² / median within-field r / median variab
 | RL-03 | Within-field metrics in `util/yieldsat_eval.py` and the reports | Match this spec's baseline numbers on existing predictions |
 | RL-04 | DEV test: dense p3-nbr + L_rel, λ_rel ∈ {0.5, 1}, 4 DEV pairs × CV10 + LOYO | Within-field R² up clearly (paired fold bootstrap) without lowering pooled R² |
 | RL-05 | If RL-04 passes: all pairs and protocols | As RL-04, all pairs |
+
+## 6. Implementation (RL-01..RL-03, 2026-10-08)
+
+- **Loss** (`yieldsat_relation_loss.py`): `relation_loss` builds all pairs in a
+  batch with the same field season, Chebyshev grid distance 1..R (R = 5
+  cells), both targets valid. Weight 0.5 for distance 1 (`--rel_near_weight`),
+  1 otherwise. Huber δ = 1 on the normalized target scale (`--rel_delta`).
+  `variance_loss` is the optional per-field std term (`--var_weight`, off
+  in RL-04).
+- **Sampler** (`FieldClusterBatchSampler` in `dataset/yieldsat_dataset.py`):
+  used whenever `--rel_weight` or `--var_weight` > 0. A batch is
+  batch_size / K clusters of K = 8 pixels (`--rel_cluster`). Each cluster:
+  a field season drawn ∝ n_pixels^0.5, a uniform anchor pixel, then 7 more
+  pixels within radius R of it. The MSE term sees the same batch, so the
+  pixel mix shifts somewhat towards small fields.
+- **Training** (`main_yieldsat_finetune.py`): L = MSE + `--rel_weight` ·
+  L_rel (+ `--var_weight` · L_var). Logged as `train_rel` / `train_var`.
+  Validation and test are unchanged (inputs only).
+- **Metrics:** `within_field_metrics` (§3) for every test fold in
+  `report.json` → `test.within_field`. Pair-level numbers are recomputed
+  from the pooled `test_predictions.npz`, as for the baseline.
+- **Tests:** `tests/test_relation_loss.py`:
+  - zero loss at perfect predictions;
+  - invariant to per-field constant shifts;
+  - cross-field pairs ignored;
+  - flattened fields penalized;
+  - variance term;
+  - metric extremes;
+  - sampler clusters stay in one field season within radius R.
+- **Smoke** (local, dense, GER-R CV10 fold 0, λ = 1, 2 × 150 steps only):
+  - trains stably, `train_rel` ≈ 0.27;
+  - test within-field R² 0.315, median variability ratio 0.63, pooled R²
+    0.356.
+  - Too short to compare with the baseline.
+
+## 7. RL-04 (DEV test)
+
+Job `smatousi-yieldsat-protocol-rel-dev`
+(`cluster/nautilus/protocol_rel_dev_job.yaml`, units
+`cluster/tabm/protocol_rel_dev_units.json`):
+- **Runs:** 130, dense p3-nbr exactly as the baseline (same splits, seed,
+  epochs, selection on the test fold, as in the paper protocol) plus
+  `--rel_weight` 0.5 (`ours-p3nbr-dense-rel05`) or 1.0
+  (`ours-p3nbr-dense-rel10`).
+- **Coverage:** ARG-W, BRA-C, GER-R, URG-S × CV10 (10 folds) and LOYO.
+- **Comparison:** per pair and protocol, paired with the baseline on the
+  same test pixels.
+  - Pooled R² and within-field R² deltas, with 95% CIs from a field-season
+    cluster bootstrap (2000 replicates; a fold bootstrap has too few folds
+    for LOYO).
+  - Per-field medians reported alongside.
+
+Results: pending.
