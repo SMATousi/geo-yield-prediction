@@ -1,7 +1,9 @@
 # Field context for within-field yield patterns
 
-**Status (2026-10-09): adopted (project lead). FC-01 done (§3); FC-02..FC-04
-in progress.**
+**Status (2026-10-09): FC-01..FC-04 done (§3, §6). Field context raises
+within-field R² by +0.018 (CV10) and +0.031 (LOYO), both significant, with
+pooled R² unchanged on average. FC-05 (all pairs, field context + relation
+loss) running.**
 
 Related:
 - [yieldsat-relational-loss.md](./yieldsat-relational-loss.md): within-field
@@ -185,3 +187,72 @@ split, like the cache and the neighbourhood stream.
 | FC-03 | Dataset streams + `--field_context` | Unit test: deviation stream equals (cell − field mean)/field std; no target used |
 | FC-04 | DEV test, as RL-04: 4 DEV pairs × CV10 + LOYO. Arms: dense p3-nbr + field context (`-fc`) and + field context + relation loss λ = 1 (`-fc-rel10`) | Within-field R² clearly up vs dense p3-nbr (field-season bootstrap), pooled R² not lower. Also compared with RL-04 `-rel10` |
 | FC-05 | If FC-04 passes: all 9 pairs × CV10/LOYO/LORO | As FC-04 |
+
+## 6. FC-04 results (2026-10-09)
+
+All 130 runs finished (none failed). Data: `results/fc_dev_fc04.json`;
+script `results/rel_cmp.py`. Paired with dense p3-nbr on the same test
+pixels; 95% field-season cluster bootstrap.
+
+**Pooled R² / within-field R²:**
+
+| Protocol | Pair | Baseline | + relation loss (RL-04, λ 1) | + field context | + field context + relation loss |
+|---|---|---|---|---|---|
+| CV10 | ARG-W | 0.824 / 0.367 | 0.830 / 0.383 | 0.821 / **0.403** | 0.822 / 0.394 |
+| CV10 | BRA-C | 0.502 / 0.275 | 0.510 / 0.290 | 0.481 / 0.280 | 0.494 / 0.277 |
+| CV10 | GER-R | 0.521 / 0.229 | 0.531 / 0.235 | 0.526 / 0.252 | 0.517 / 0.254 |
+| CV10 | URG-S | 0.419 / 0.098 | 0.420 / 0.101 | 0.413 / 0.105 | 0.419 / 0.105 |
+| **CV10** | **mean** | **0.567 / 0.242** | **0.573 / 0.252** | **0.560 / 0.260** | **0.563 / 0.258** |
+| LOYO | ARG-W | 0.742 / 0.151 | 0.729 / 0.179 | 0.724 / **0.210** | 0.725 / 0.181 |
+| LOYO | BRA-C | 0.116 / 0.147 | 0.147 / 0.162 | 0.166 / 0.180 | **0.207 / 0.200** |
+| LOYO | GER-R | 0.285 / 0.168 | 0.322 / 0.171 | 0.292 / 0.204 | 0.291 / 0.208 |
+| LOYO | URG-S | 0.355 / 0.086 | 0.347 / 0.080 | 0.359 / 0.083 | 0.345 / 0.086 |
+| **LOYO** | **mean** | **0.375 / 0.138** | **0.386 / 0.148** | **0.385 / 0.169** | **0.392 / 0.169** |
+
+**Mean Δ vs baseline over the 4 pairs [95% CI]:**
+
+| Protocol | Arm | Δ pooled R² | Δ within-field R² |
+|---|---|---|---|
+| CV10 | + relation loss | +0.006 [−0.002, +0.014] | +0.010 [+0.003, +0.017] |
+| CV10 | + field context | −0.006 [−0.018, +0.006] | **+0.018 [+0.008, +0.028]** |
+| CV10 | + field context + relation loss | −0.004 [−0.014, +0.005] | **+0.015 [+0.005, +0.025]** |
+| LOYO | + relation loss | +0.012 [−0.006, +0.029] | +0.010 [−0.006, +0.030] |
+| LOYO | + field context | +0.011 [−0.008, +0.030] | **+0.031 [+0.015, +0.051]** |
+| LOYO | + field context + relation loss | +0.017 [−0.002, +0.037] | **+0.031 [+0.016, +0.048]** |
+
+**Significant per-pair changes:**
+- Field context:
+  - within-field R²: ARG-W CV10 +0.036 and LOYO +0.059; GER-R CV10 +0.023
+    and LOYO +0.036; BRA-C LOYO +0.034;
+  - pooled R²: BRA-C CV10 −0.021.
+- Field context + relation loss: BRA-C LOYO pooled R² +0.091
+  [+0.051, +0.136] and within-field R² +0.054 [+0.037, +0.072].
+- URG-S (the noisiest pair, ceiling 0.48) does not move.
+
+**Reading:**
+1. **Field context passes the FC-04 criterion.**
+   - Within-field R² clearly up on both protocols: CV10 +0.018, LOYO
+     +0.031, CIs above 0.
+   - About 2–3× the relation loss alone.
+   - Pooled R² not lower on average.
+2. **The gain is larger out of distribution** (LOYO: within-field mean
+   0.138 → 0.169, +22% relative). Field-relative features describe the
+   field's internal contrast in a form that transfers across years better
+   than absolute reflectances.
+3. **Relation loss on top** adds nothing more within fields. It removes most
+   of the pooled cost (BRA-C CV10 −0.021 → −0.008, not significant) and gives
+   the best LOYO pooled R² (0.392). **FC-05 therefore runs field context +
+   relation loss (λ = 1).**
+4. **Still far from the ceiling:** CV10 within-field 0.26 vs ≈ 0.72.
+   - The gain is real but incremental.
+   - The variability ratio is unchanged (k ≈ r, §2): the pattern correlation
+     improves a little and the amplitude follows.
+
+## 7. FC-05
+
+Field context + relation loss (`ours-p3nbr-dense-fc-rel10`) on all 9 pairs ×
+CV10/LOYO/LORO:
+- 152 new units; the DEV pairs' CV10/LOYO folds come from FC-04.
+- Jobs: `cluster/nautilus/protocol_fc_all_job.yaml` (38 pods on 24 GB cards)
+  and `protocol_fc_all_b_job.yaml` (48 GB cards), sharing one unit pool.
+- Same comparison as FC-04, all pairs.

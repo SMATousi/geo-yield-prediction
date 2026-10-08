@@ -336,6 +336,24 @@ def cmd_units(a):
             json.dumps({'suite': suite, 'out_root': a.out_root, 'units': units}, indent=1))
         print('{}: {} units'.format(suite, len(units)))
         return
+    if a.batch == 'fc-all':
+        # FC-05 (spec/yieldsat-field-context.md): field context + relation loss (lambda 1) on every pair and
+        # protocol; the DEV pairs' CV10/LOYO folds already ran in FC-04 (same ids, outputs) and are left out
+        tag = 'ours-p3nbr-dense-fc-rel10'
+        units = []
+        for u in dense_units(a.artifact_root):
+            pair, proto = u['id'].split('__')[1:3]
+            if pair in ('ARG-W', 'BRA-C', 'GER-R', 'URG-S') and proto in ('cv', 'loyo'):
+                continue
+            args = list(u['args'])
+            j = args.index('--output_dir')
+            args[j + 1] = args[j + 1].replace('ours-p3nbr-dense_seed0', tag + '_seed0')
+            units.append(dict(u, id=u['id'].replace('ours-p3nbr-dense', tag),
+                              args=args + ['--field_context', '--rel_weight', '1.0']))
+        Path('cluster/tabm/protocol_fc_all_units.json').write_text(
+            json.dumps({'suite': 'protocol_fc_all', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_fc_all: {} units'.format(len(units)))
+        return
     if a.batch == 'obsdrop-all':
         # S2 observation dropout (min keep 0.1) on every pair and protocol (spec §10); same ids/paths as the
         # BRA-C/GER-W LOYO units of 'obsdrop', so those are not run twice
@@ -521,7 +539,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

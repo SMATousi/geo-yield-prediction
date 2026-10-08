@@ -95,7 +95,8 @@ for g, proto in PROTOS.items():
             res['%s|MEAN|%s' % (proto, v)] = {k: [pt[k], float(np.percentile(x, 2.5)), float(np.percentile(x, 97.5))]
                                               for k, x in mean.items()}
             print(proto, 'MEAN', v, json.dumps(res['%s|MEAN|%s' % (proto, v)]), flush=True)
-out = '/data/YieldSAT/yieldsat_results/protocol/rel_cmp_%s.json' % ('dev' if len(PAIRS) == 4 else 'all')
+out = '/data/YieldSAT/yieldsat_results/protocol/%s.json' % (sys.argv[3] if len(sys.argv) > 3 else
+                                                          'rel_cmp_%s' % ('dev' if len(PAIRS) == 4 else 'all'))
 json.dump(res, open(out, 'w'), default=float)
 print('RESJSON ' + json.dumps(res, default=float))
 print('RELDONE')
