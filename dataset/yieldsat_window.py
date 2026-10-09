@@ -4,12 +4,19 @@
 # One item is still one grid cell; its batch additionally carries the cell's 5x5 neighbourhood of the same
 # field season, gathered through the point dataset's own batch path (identical normalization, cutoff, masks
 # and fill):
-#   win_inputs[stream] - (B, 25, T, C) temporal / (B, 25, C) static, float16, fill_value where invalid or outside;
-#                        (B, 1, ...) for streams a model reads only at the centre (``window``)
-#   win_masks[stream]  - validity, same shapes (only with ``return_masks``; the paper models ignore masks)
+#   win_src[stream]    - (U, T, C) / (U, C) float16 values of the U distinct cells the batch's windows touch
+#                        (fill_value where invalid); the model gathers the windows on the GPU with
+#   win_index          - (B, 25) position in win_src of each window cell, -1 outside the field season
+#   win_drop           - (B, T) temporal-dropout slots (training augmentation), applied at the gather
+#   win_fill           - the fill value
+#   win_inputs[stream] - (B, 1, ...) for streams a model reads only at the centre (``window``); with
+#                        ``return_masks`` (tests) every stream is gathered here on the CPU as (B, 25, ...)
+#   win_masks[stream]  - validity (only with ``return_masks``; the paper models ignore masks)
 #   win_valid          - (B, 25) the neighbour exists (inside the field season and in this partition)
 # Window batches are large (dense S2: 2048 x 25 x 72 x 12 values), hence float16 and centre-only streams: the
-# DataLoader passes them through /dev/shm (2026-10-09: float32 + masks for every stream exhausted a 4 Gi shm).
+# DataLoader passes them through /dev/shm (2026-10-09: float32 + masks for every stream exhausted a 4 Gi shm), and
+# gathering them on the CPU left the GPUs idle (AFF on the dense series: workers at 90% CPU, GPU 0-35%); hence
+# float16, centre-only streams and the deferred (GPU-side) window gather.
 # Position k = (dr + 2) * 5 + (dc + 2); the centre is k = 12 and equals the point item.
 # Training augmentation: random 90-degree rotations of the window and temporal dropout of slots.
 # --------------------------------------------------------
@@ -111,6 +118,23 @@ class YieldSATWindowDataset(YieldSATPointDataset):
             T = out['time_valid'].shape[1]
             drop = torch.from_numpy(self._win_rng.random((B, T)) < self.temporal_dropout)
         rot_centre = torch.from_numpy(where.reshape(B, K)[:, CENTRE])
+        if not self.return_masks:                                       # deferred gather (training/eval)
+            win_src, win_inputs = {}, {}
+            for name, v in sub['inputs'].items():
+                m = sub['masks'][name]
+                if name in self.window_streams:
+                    win_src[name] = torch.where(m, v, torch.full_like(v, self.fill_value)).to(torch.float16)
+                else:
+                    gv, gm = v[rot_centre].unsqueeze(1), m[rot_centre].unsqueeze(1)
+                    if drop is not None and gv.dim() == 4:
+                        gm = gm & ~drop[:, None, :, None]
+                    win_inputs[name] = torch.where(gm, gv, torch.full_like(gv, self.fill_value)).to(torch.float16)
+            out['win_src'], out['win_inputs'], out['win_valid'] = win_src, win_inputs, pres
+            out['win_index'] = torch.from_numpy(where.reshape(B, K))
+            T = out['time_valid'].shape[1]
+            out['win_drop'] = drop if drop is not None else torch.zeros(B, T, dtype=torch.bool)
+            out['win_fill'] = torch.tensor(self.fill_value, dtype=torch.float32)
+            return out
         for name, v in sub['inputs'].items():
             m = sub['masks'][name]
             if name in self.window_streams:

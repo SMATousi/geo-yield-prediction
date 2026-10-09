@@ -22,19 +22,38 @@ S = 2 * R + 1
 TEMPORAL_FUSION_STREAMS = ('yieldsat_s2', 'yieldsat_weather')
 
 
-def _centre(v):
-    """Centre cell of a window stream, (B, 25, ...) or centre-only (B, 1, ...), as float32."""
-    return (v[:, CENTRE] if v.shape[1] == K else v[:, 0]).float()
+def _win(batch, name):
+    """(B, 25, ...) float32 window of a stream: as delivered (``win_inputs``, CPU-gathered) or gathered here from
+    the batch's distinct cells (``win_src`` / ``win_index``), with padding and temporal dropout applied."""
+    w = batch.get('win_inputs', {})
+    if name in w and w[name].shape[1] == K:
+        return w[name].float()
+    src, idx = batch['win_src'][name], batch['win_index']
+    g = src[idx.clamp(min=0)].float()                                  # (B, K, ...)
+    fill = batch['win_fill'].to(g.dtype)
+    g = torch.where((idx < 0).view(idx.shape + (1,) * (g.dim() - 2)), fill, g)
+    if g.dim() == 4:                                                    # temporal (B, K, T, C)
+        g = torch.where(batch['win_drop'][:, None, :, None], fill, g)
+    return g
+
+
+def _centre(batch, name):
+    """Centre cell of a stream (B, ...) as float32, whichever way the dataset delivered it."""
+    w = batch.get('win_inputs', {})
+    if name in w:
+        v = w[name]
+        return (v[:, CENTRE] if v.shape[1] == K else v[:, 0]).float()
+    return _win(batch, name)[:, CENTRE]
 
 
 def _window_cube(batch, layout, names=None):
     """Input fusion: (B, C, T, 5, 5) from the window streams; static streams repeated over T."""
-    win = batch['win_inputs']
     names = names or list(layout)
-    T = next(win[n].shape[2] for n in names if layout[n]['temporal'])
+    vals = {n: _win(batch, n) for n in names}
+    T = next(vals[n].shape[2] for n in names if layout[n]['temporal'])
     parts = []
     for n in names:
-        v = win[n].float()
+        v = vals[n]
         if layout[n]['temporal']:                                   # (B, K, T, C)
             parts.append(v.permute(0, 3, 2, 1))
         else:                                                       # (B, K, C)
@@ -182,19 +201,17 @@ class PaperAFF(_PaperModel):
         self.last_attention = None
 
     def _features(self, batch):
-        win = batch['win_inputs']
         feats = []
         for n, l in self.layout.items():
-            v = win[n]
             if n == 'yieldsat_s2':
-                v = v.float()
+                v = _win(batch, n)
                 x = v.permute(0, 3, 2, 1).reshape(v.shape[0], v.shape[3], v.shape[2], S, S)
                 feats.append(self.enc[n](x, batch))
             elif l['temporal']:
-                out, _ = self.enc[n](_centre(v))                         # (B, T, C) centre cell
+                out, _ = self.enc[n](_centre(batch, n))                  # (B, T, C) centre cell
                 feats.append(_last_valid(out, batch))
             else:
-                v = v.float()
+                v = _win(batch, n)
                 feats.append(self.enc[n](v.permute(0, 2, 1).reshape(v.shape[0], v.shape[2], S, S)))
         return torch.stack(feats, dim=1)                                 # (B, M, dim)
 
@@ -231,10 +248,9 @@ class PaperMMGF(_PaperModel):
         self.last_gate = None
 
     def forward(self, batch, apply_dropout=True):
-        win = batch['win_inputs']
         feats = []
         for n, l in self.layout.items():
-            v = _centre(win[n])
+            v = _centre(batch, n)
             if l['temporal']:
                 out, _ = self.enc[n](v)
                 feats.append(_last_valid(out, batch))

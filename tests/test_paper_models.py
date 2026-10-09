@@ -74,16 +74,17 @@ def test_augmentation_drops_slots_and_keeps_targets(corpus):  # noqa: F811
 
 
 def test_centre_only_streams(corpus):  # noqa: F811
+    from models_yieldsat_paper import _centre, _win
     idx = np.arange(32)
     full = _window_ds(corpus).get_batch(idx)
     part = _window_ds(corpus, window='s2_static').get_batch(idx)
-    assert part['win_inputs']['yieldsat_weather'].shape[1] == 1
-    assert torch.equal(part['win_inputs']['yieldsat_weather'][:, 0], full['win_inputs']['yieldsat_weather'][:, CENTRE])
-    assert torch.equal(part['win_inputs']['yieldsat_s2'], full['win_inputs']['yieldsat_s2'])
+    assert part['win_inputs']['yieldsat_weather'].shape[1] == 1 and 'yieldsat_weather' not in part['win_src']
+    assert torch.equal(_centre(part, 'yieldsat_weather'), _centre(full, 'yieldsat_weather'))
+    assert torch.equal(_win(part, 'yieldsat_s2'), _win(full, 'yieldsat_s2'))
     none = _window_ds(corpus, window='none').get_batch(idx)
     assert all(v.shape[1] == 1 for v in none['win_inputs'].values())
-    for n, v in none['win_inputs'].items():                     # fast path = centre of the full window
-        assert torch.equal(v[:, 0], full['win_inputs'][n][:, CENTRE])
+    for n in none['win_inputs']:                                 # fast path = centre of the full window
+        assert torch.equal(_centre(none, n), _centre(full, n))
 
 
 @pytest.mark.parametrize('name', list(PAPER_MODELS))
@@ -106,3 +107,16 @@ def test_last_valid_readout():
     out = torch.arange(2 * 5 * 1, dtype=torch.float32).view(2, 5, 1)
     tv = torch.tensor([[False, True, True, False, False], [True, True, True, True, True]])
     assert _last_valid(out, {'time_valid': tv}).view(-1).tolist() == [2.0, 9.0]
+
+
+@pytest.mark.parametrize('window', ['all', 's2_static'])
+def test_deferred_gather_matches_cpu_gather(corpus, window):  # noqa: F811
+    from models_yieldsat_paper import _centre, _win
+    idx = np.arange(40)
+    cpu = _window_ds(corpus, window=window, return_masks=True).get_batch(idx)
+    gpu = _window_ds(corpus, window=window).get_batch(idx)
+    assert 'win_src' in gpu and gpu['win_index'].shape == (40, K)
+    for n in cpu['win_inputs']:
+        if cpu['win_inputs'][n].shape[1] == K and n in gpu['win_src']:
+            assert torch.equal(_win(gpu, n), _win(cpu, n))
+        assert torch.equal(_centre(gpu, n), _centre(cpu, n))
