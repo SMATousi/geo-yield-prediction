@@ -82,6 +82,8 @@ class YieldSATWindowDataset(YieldSATPointDataset):
     def get_batch(self, idx):
         idx = np.asarray(idx, dtype=np.int64)
         B = len(idx)
+        if not self.window_streams and not self.return_masks:
+            return self._centre_batch(idx)
         W = self.win_items[idx].copy()
         if self.augment:
             if self._win_rng is None:
@@ -124,4 +126,26 @@ class YieldSATWindowDataset(YieldSATPointDataset):
         out['win_inputs'], out['win_valid'] = win_inputs, pres
         if self.return_masks:
             out['win_masks'] = win_masks
+        return out
+
+    def _centre_batch(self, idx):
+        """window='none': only the items themselves are read (no neighbour gathering), as (B, 1, ...)."""
+        out = super().get_batch(idx)
+        B = len(idx)
+        drop = None
+        if self.augment and self.temporal_dropout > 0:
+            if self._win_rng is None:
+                import os
+                self._win_rng = np.random.default_rng([os.getpid(), 7])
+            drop = torch.from_numpy(self._win_rng.random((B, out['time_valid'].shape[1])) < self.temporal_dropout)
+        win_inputs = {}
+        for name, v in out['inputs'].items():
+            m = out['masks'][name]
+            if drop is not None and v.dim() == 3:                       # temporal (B, T, C)
+                m = m & ~drop[:, :, None]
+            win_inputs[name] = torch.where(m, v, torch.full_like(v, self.fill_value)).unsqueeze(1).to(torch.float16)
+        out['win_inputs'] = win_inputs
+        pres = torch.zeros(B, K, dtype=torch.bool)
+        pres[:, CENTRE] = True
+        out['win_valid'] = pres
         return out

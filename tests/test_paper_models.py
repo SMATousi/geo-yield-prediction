@@ -82,6 +82,8 @@ def test_centre_only_streams(corpus):  # noqa: F811
     assert torch.equal(part['win_inputs']['yieldsat_s2'], full['win_inputs']['yieldsat_s2'])
     none = _window_ds(corpus, window='none').get_batch(idx)
     assert all(v.shape[1] == 1 for v in none['win_inputs'].values())
+    for n, v in none['win_inputs'].items():                     # fast path = centre of the full window
+        assert torch.equal(v[:, 0], full['win_inputs'][n][:, CENTRE])
 
 
 @pytest.mark.parametrize('name', list(PAPER_MODELS))
@@ -97,3 +99,10 @@ def test_paper_models_train_step(corpus, name):  # noqa: F811
     model.eval()
     with torch.no_grad():
         assert torch.isfinite(model(b, apply_dropout=False)).all()
+
+
+def test_last_valid_readout():
+    from models_yieldsat_paper import _last_valid
+    out = torch.arange(2 * 5 * 1, dtype=torch.float32).view(2, 5, 1)
+    tv = torch.tensor([[False, True, True, False, False], [True, True, True, True, True]])
+    assert _last_valid(out, {'time_valid': tv}).view(-1).tolist() == [2.0, 9.0]

@@ -43,6 +43,16 @@ def _window_cube(batch, layout, names=None):
     return x.reshape(x.shape[0], x.shape[1], T, S, S)
 
 
+def _last_valid(out, batch):
+    """LSTM output at each sample's last in-season slot (B, T, H) -> (B, H). On the dense series a season fills
+    ~15-35 of 72 slots; reading the last slot instead means ~40-55 padding steps after the season, which washed
+    the signal out for the feature-fusion models (2026-10-09, cluster AFF/MMGF train loss ~0.7 on ARG/BRA/URG)."""
+    tv = batch['time_valid']
+    T = tv.shape[1]
+    last = (T - 1) - torch.flip(tv, dims=[1]).float().argmax(dim=1)
+    return out[torch.arange(out.shape[0], device=out.device), last]
+
+
 def _mse(pred, batch):
     target = torch.where(batch['target_valid'], batch['target'], torch.full_like(batch['target'], float('nan')))
     return masked_yield_loss(pred, target, loss='mse')
@@ -76,10 +86,10 @@ class Block3DLSTM(nn.Module):
                                   nn.LeakyReLU() if act == 'leaky' else nn.ReLU())
         self.lstm = nn.LSTM(64, hidden, num_layers=layers, batch_first=True)
 
-    def forward(self, x):                                            # (B, C, T, 5, 5)
+    def forward(self, x, batch=None):                                # (B, C, T, 5, 5)
         h = self.conv(x).flatten(2).transpose(1, 2)                   # (B, T, 64)
         out, _ = self.lstm(h)
-        return out[:, -1]
+        return out[:, -1] if batch is None else _last_valid(out, batch)
 
 
 def _head(d):
@@ -179,10 +189,10 @@ class PaperAFF(_PaperModel):
             if n == 'yieldsat_s2':
                 v = v.float()
                 x = v.permute(0, 3, 2, 1).reshape(v.shape[0], v.shape[3], v.shape[2], S, S)
-                feats.append(self.enc[n](x))
+                feats.append(self.enc[n](x, batch))
             elif l['temporal']:
                 out, _ = self.enc[n](_centre(v))                         # (B, T, C) centre cell
-                feats.append(out[:, -1])
+                feats.append(_last_valid(out, batch))
             else:
                 v = v.float()
                 feats.append(self.enc[n](v.permute(0, 2, 1).reshape(v.shape[0], v.shape[2], S, S)))
@@ -227,7 +237,7 @@ class PaperMMGF(_PaperModel):
             v = _centre(win[n])
             if l['temporal']:
                 out, _ = self.enc[n](v)
-                feats.append(out[:, -1])
+                feats.append(_last_valid(out, batch))
             else:
                 feats.append(self.enc[n](v))
         f = torch.stack(feats, dim=1)                                    # (B, M, dim)
