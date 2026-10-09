@@ -58,16 +58,19 @@ def per_field(st):
 rng = np.random.default_rng(0)
 res = {}
 for g, proto in PROTOS.items():
-    grp = '%s/%s_season_noval_s0' % (root, g) if g == 'cv10' else '%s/%s_na_noval_s0' % (root, g)
-    if not os.path.isdir(grp):
-        cand = glob.glob('%s/%s_*_noval_s0' % (root, g))
-        if not cand:
-            continue
-        grp = cand[0]
+    # per pair, the first group holding its baseline: LORO is farm-level (loro_na_noval_s0) for most pairs and
+    # province-level (loro_na_province_noval_s0) for the Argentine pairs
+    groups = sorted(glob.glob('%s/%s_*noval_s0' % (root, g)), key=lambda d: ('province' in d, d))
+    if not groups:
+        continue
     boots = {v: [] for v in VARS}
     for pair in PAIRS:
+        grp = next((d for d in groups if os.path.isdir('%s/s2_adm/%s_seed0/%s' % (d, BASE, pair))
+                    and glob.glob('%s/s2_adm/%s_seed0/%s' % (d, VARS[0], pair))), None)
+        if grp is None:
+            continue
         base, nb = load(grp, BASE, pair)
-        if base is None or not glob.glob('%s/s2_adm/%s_seed0/%s' % (grp, VARS[0], pair)):
+        if base is None:
             continue
         keys = np.unique(base[2])
         sb = field_stats(*base, keys)

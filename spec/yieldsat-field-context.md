@@ -1,9 +1,8 @@
 # Field context for within-field yield patterns
 
-**Status (2026-10-09): FC-01..FC-04 done (§3, §6). Field context raises
-within-field R² by +0.018 (CV10) and +0.031 (LOYO), both significant, with
-pooled R² unchanged on average. FC-05 (all pairs, field context + relation
-loss) running.**
+**Status (2026-10-09): FC-01..FC-05 done (§3, §6, §7). On all 9 pairs, field context + relation loss
+raises within-field R² by +0.016 (CV10), +0.024 (LOYO) and +0.028 (LORO), all significant. Pooled R² is unchanged
+on CV10/LORO and +0.014 on LOYO.**
 
 Related:
 - [yieldsat-relational-loss.md](./yieldsat-relational-loss.md): within-field
@@ -256,3 +255,47 @@ CV10/LOYO/LORO:
 - Jobs: `cluster/nautilus/protocol_fc_all_job.yaml` (38 pods on 24 GB cards)
   and `protocol_fc_all_b_job.yaml` (48 GB cards), sharing one unit pool.
 - Same comparison as FC-04, all pairs.
+
+### 7.1 FC-05 results (2026-10-09)
+
+All 217 folds (152 new and 65 from FC-04); none failed. Data: `results/fc_all_fc05.json`; script
+`results/rel_cmp.py`. Field context + relation loss (λ = 1) vs dense p3-nbr on the same test pixels.
+
+Notes:
+- LORO uses the farm-level folds, except the Argentine pairs, which use province-level folds (as in the
+  dense results).
+- Cells: baseline → new (Δ); **bold Δ** = 95% field-season bootstrap CI excludes 0.
+- Mean row: the mean over the 9 pairs (Δ [95% CI]).
+
+| Pair | CV10 pooled R² | CV10 within-field R² | LOYO pooled R² | LOYO within-field R² | LORO pooled R² | LORO within-field R² |
+|---|---|---|---|---|---|---|
+| ARG-C | 0.724 → 0.724 (+0.000) | 0.448 → 0.455 (+0.007) | 0.542 → 0.512 (-0.030) | 0.301 → 0.324 (+0.023) | 0.543 → 0.548 (+0.005) | 0.335 → 0.377 (**+0.042**) |
+| ARG-S | 0.724 → 0.738 (**+0.014**) | 0.522 → 0.541 (**+0.019**) | 0.627 → 0.660 (**+0.034**) | 0.467 → 0.492 (**+0.025**) | 0.662 → 0.671 (+0.008) | 0.480 → 0.494 (**+0.015**) |
+| ARG-W | 0.824 → 0.822 (-0.002) | 0.367 → 0.394 (+0.027) | 0.742 → 0.725 (-0.017) | 0.151 → 0.181 (+0.030) | 0.777 → 0.756 (-0.021) | 0.276 → 0.269 (-0.008) |
+| BRA-C | 0.502 → 0.494 (-0.008) | 0.275 → 0.277 (+0.002) | 0.116 → 0.207 (**+0.091**) | 0.147 → 0.200 (**+0.054**) | 0.239 → 0.286 (+0.047) | 0.197 → 0.213 (+0.016) |
+| BRA-S | 0.434 → 0.440 (+0.006) | 0.229 → 0.249 (**+0.020**) | 0.308 → 0.315 (+0.006) | 0.169 → 0.191 (**+0.022**) | 0.341 → 0.357 (+0.017) | 0.184 → 0.201 (**+0.018**) |
+| BRA-W | 0.246 → 0.247 (+0.001) | 0.095 → 0.112 (**+0.017**) | 0.153 → 0.142 (-0.011) | 0.089 → 0.095 (+0.005) | 0.172 → 0.170 (-0.001) | 0.078 → 0.087 (+0.009) |
+| GER-R | 0.521 → 0.517 (-0.005) | 0.229 → 0.254 (**+0.024**) | 0.285 → 0.291 (+0.006) | 0.168 → 0.208 (**+0.039**) | 0.151 → 0.174 (+0.024) | 0.132 → 0.204 (**+0.072**) |
+| GER-W | 0.469 → 0.480 (+0.011) | 0.216 → 0.237 (**+0.021**) | 0.077 → 0.133 (+0.055) | 0.177 → 0.193 (**+0.016**) | 0.090 → -0.019 (-0.109) | 0.106 → 0.188 (**+0.082**) |
+| URG-S | 0.419 → 0.419 (-0.000) | 0.098 → 0.105 (**+0.007**) | 0.355 → 0.345 (-0.011) | 0.086 → 0.086 (-0.000) | 0.365 → 0.371 (+0.006) | 0.081 → 0.089 (**+0.008**) |
+| **Mean**  | **0.540 → 0.542** (+0.002 [-0.004, +0.008]) | **0.276 → 0.292** (+0.016 [+0.010, +0.022]) | **0.356 → 0.370** (+0.014 [+0.000, +0.028]) | **0.195 → 0.219** (+0.024 [+0.015, +0.033]) | **0.371 → 0.368** (-0.003 [-0.022, +0.018]) | **0.208 → 0.236** (+0.028 [+0.020, +0.036]) |
+
+**Reading:**
+1. **Within-field R² rises on every protocol** (+0.016 / +0.024 / +0.028), all significant.
+   - Per pair, significant in 7/9 (CV10), 5/9 (LOYO) and 6/9 (LORO).
+   - It does not fall significantly anywhere.
+2. **Pooled R² (the paper's metric) does not drop:**
+   - CV10 +0.002 and LORO −0.003, both not significant;
+   - LOYO +0.014 [+0.000, +0.028].
+3. **Largest gains are out of distribution.**
+   - BRA-C LOYO: pooled 0.116 → 0.207, within-field 0.147 → 0.200.
+   - GER-R and GER-W farm-LORO within-field: +0.072 and +0.082.
+4. **One bad case:** GER-W LORO pooled R² 0.090 → −0.019 (−0.109, CI [−0.234, +0.008]).
+   - The pattern improves strongly; the field levels of the held-out farms get worse.
+   - GER-W LORO is the smallest, most shifted group (see the distribution-shift figures).
+5. **Against the noise ceiling:** CV10 within-field 0.276 → 0.292, vs a ceiling of ≈ 0.72. A real but
+   incremental step.
+
+**Verdict:** adopt field context + relation loss as the default dense p3-nbr configuration.
+- Within-field accuracy up everywhere.
+- The paper metric is not worse: LOYO pooled 0.370 vs paper best 0.381 and paper LSTM 0.309.
