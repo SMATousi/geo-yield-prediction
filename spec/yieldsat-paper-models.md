@@ -157,3 +157,32 @@ RSS per process is ≈ 1.7 GiB on GER-R.
 - `cluster/nautilus/protocol_paper_models_job.yaml` and `protocol_paper_models_b_job.yaml`.
 
 **Table script:** `results/paper_models_table.py`. It was checked on the local backup of the existing runs.
+
+## 7. Cluster fixes during PM-04 (2026-10-09)
+
+1. **Shared memory and RAM.**
+   - **Problem:**
+     - Dense AFF/MMGF window batches (float32, every stream, masks) exhausted the 4 Gi `/dev/shm`.
+     - Pods at 6 runs reached 34–40 of 40 GiB.
+   - **Fix:**
+     - Window values are sent as float16.
+     - Streams a model reads only at the centre are sent as centre-only (MMGF: all; AFF: weather).
+     - Masks are optional; prefetch is 1 batch per worker.
+     - 4 runs per pod (36 Gi, 8 Gi shm).
+2. **Last-slot readout (a real bug).**
+   - **Problem:** AFF/MMGF read their LSTMs at the last of the 72 dense slots. A season fills ~15–35 slots,
+     so the LSTMs first saw ~40–55 padding steps. Train loss stayed ~0.7 and pooled R² ~0 on ARG/BRA/URG.
+   - **Fix:** read at the last in-season slot.
+     - ARG-W CV10 fold 0, 5 epochs: AFF val R² 0.79, MMGF 0.84.
+     - The 3D models (monthly, 24 slots) were not affected and were not rerun.
+   - **Cleanup:** stale outputs were moved to `*_stale_lastslot`; all AFF/MMGF units were rerun.
+3. **GPU utilization below 40% (project lead: at least 40%).**
+   - **Problem:** building the 5×5 windows on the CPU made AFF CPU-bound (workers at ~90% CPU, GPU
+     9–35%).
+   - **Fix:** the dataset now sends the batch's distinct cells (`win_src`) plus an index map, and the model
+     gathers the windows on the GPU. AFF dense trains at 14.2k vs 4.7k samples/s, with the same accuracy.
+   - **After deployment:** mean GPU utilization was 83–87%. AFF-heavy pods were still CPU-bound: ~0.17 s
+     of CPU per batch, mostly the point dataset's normalization of the 72-slot series for ~5.3 distinct
+     cells per sample.
+   - **Remedy:** the 122 AFF units not yet started moved to `protocol_paper_aff_job.yaml`: 24 CPU, 6 data
+     workers per run, ids `…__w6`, the same output paths.
