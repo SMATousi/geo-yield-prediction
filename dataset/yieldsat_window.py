@@ -4,9 +4,12 @@
 # One item is still one grid cell; its batch additionally carries the cell's 5x5 neighbourhood of the same
 # field season, gathered through the point dataset's own batch path (identical normalization, cutoff, masks
 # and fill):
-#   win_inputs[stream] - (B, 25, T, C) temporal / (B, 25, C) static, fill_value where invalid or outside
-#   win_masks[stream]  - validity, same shapes
+#   win_inputs[stream] - (B, 25, T, C) temporal / (B, 25, C) static, float16, fill_value where invalid or outside;
+#                        (B, 1, ...) for streams a model reads only at the centre (``window``)
+#   win_masks[stream]  - validity, same shapes (only with ``return_masks``; the paper models ignore masks)
 #   win_valid          - (B, 25) the neighbour exists (inside the field season and in this partition)
+# Window batches are large (dense S2: 2048 x 25 x 72 x 12 values), hence float16 and centre-only streams: the
+# DataLoader passes them through /dev/shm (2026-10-09: float32 + masks for every stream exhausted a 4 Gi shm).
 # Position k = (dr + 2) * 5 + (dc + 2); the centre is k = 12 and equals the point item.
 # Training augmentation: random 90-degree rotations of the window and temporal dropout of slots.
 # --------------------------------------------------------
@@ -29,8 +32,19 @@ class YieldSATWindowDataset(YieldSATPointDataset):
     """``augment=True`` (training only): random rot90 per sample and temporal dropout with probability
     ``temporal_dropout`` per slot (all temporal streams, all window cells)."""
 
-    def __init__(self, *args, augment=False, temporal_dropout=0.2, **kw):
+    def __init__(self, *args, augment=False, temporal_dropout=0.2, window='all', return_masks=False, **kw):
         super().__init__(*args, **kw)
+        # which streams get the full window: 'all', 's2_static' (S2 + static streams; other temporal streams at
+        # the centre only) or 'none' (every stream at the centre)
+        if window == 'all':
+            self.window_streams = set(self.layout)
+        elif window == 's2_static':
+            self.window_streams = {n for n, l in self.layout.items() if n == 'yieldsat_s2' or not l['temporal']}
+        elif window == 'none':
+            self.window_streams = set()
+        else:
+            raise ValueError('window must be all, s2_static or none')
+        self.return_masks = return_masks
         self.augment = augment
         self.temporal_dropout = float(temporal_dropout)
         self._win_rng = None
@@ -94,15 +108,20 @@ class YieldSATWindowDataset(YieldSATPointDataset):
         if self.augment and self.temporal_dropout > 0:
             T = out['time_valid'].shape[1]
             drop = torch.from_numpy(self._win_rng.random((B, T)) < self.temporal_dropout)
+        rot_centre = torch.from_numpy(where.reshape(B, K)[:, CENTRE])
         for name, v in sub['inputs'].items():
             m = sub['masks'][name]
-            gv = v[safe].view(B, K, *v.shape[1:])
-            gm = m[safe].view(B, K, *m.shape[1:])
-            shape = (B, K) + (1,) * (gv.dim() - 2)
-            gm = gm & pres.view(shape)
-            if drop is not None and gv.dim() == 4:                      # temporal (B, K, T, C)
+            if name in self.window_streams:
+                gv = v[safe].view(B, K, *v.shape[1:])
+                gm = m[safe].view(B, K, *m.shape[1:]) & pres.view((B, K) + (1,) * (v.dim() - 1))
+            else:
+                gv, gm = v[rot_centre].unsqueeze(1), m[rot_centre].unsqueeze(1)
+            if drop is not None and gv.dim() == 4:                      # temporal (B, K or 1, T, C)
                 gm = gm & ~drop[:, None, :, None]
-            gv = torch.where(gm, gv, torch.full_like(gv, self.fill_value))
-            win_inputs[name], win_masks[name] = gv, gm
-        out['win_inputs'], out['win_masks'], out['win_valid'] = win_inputs, win_masks, pres
+            win_inputs[name] = torch.where(gm, gv, torch.full_like(gv, self.fill_value)).to(torch.float16)
+            if self.return_masks:
+                win_masks[name] = gm
+        out['win_inputs'], out['win_valid'] = win_inputs, pres
+        if self.return_masks:
+            out['win_masks'] = win_masks
         return out

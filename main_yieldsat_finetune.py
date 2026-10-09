@@ -15,6 +15,7 @@
 # --------------------------------------------------------
 
 import argparse
+import functools
 import json
 import math
 import os
@@ -195,8 +196,10 @@ def get_args_parser():
 
 
 def _loader(ds, batch_sampler, workers):
+    # window batches (paper models) are large and travel through /dev/shm: one batch in flight per worker
+    extra = {'prefetch_factor': 1} if workers > 0 and hasattr(ds, 'win_items') else {}
     return DataLoader(ds, batch_sampler=batch_sampler, collate_fn=collate_point_batch,
-                      num_workers=workers, pin_memory=True, persistent_workers=False)
+                      num_workers=workers, pin_memory=True, persistent_workers=False, **extra)
 
 
 def _to(batch, device):
@@ -446,7 +449,10 @@ def main(args):
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
     window = args.model in PAPER_MODELS
-    DS = YieldSATWindowDataset if window else YieldSATPointDataset
+    if window:
+        DS = functools.partial(YieldSATWindowDataset, window=PAPER_MODELS[args.model].window)
+    else:
+        DS = YieldSATPointDataset
     train_kw = dict(augment=args.paper_aug, temporal_dropout=args.temporal_dropout) if window else {}
     train_ds = DS(args.source_root, args.artifact_root, parts['train'], normalizer,
                   s2_obs_dropout=args.s2_obs_dropout, **train_kw, **common)

@@ -41,12 +41,13 @@ def test_window_index_matches_grid(corpus):  # noqa: F811
 
 
 def test_window_batch_centre_equals_point_item_and_padding(corpus):  # noqa: F811
-    ds = _window_ds(corpus)
+    ds = _window_ds(corpus, return_masks=True)
     idx = np.arange(min(len(ds), 48))
     b = ds.get_batch(idx)
     point = super(YieldSATWindowDataset, ds).get_batch(idx)
     for n in point['inputs']:
-        assert torch.equal(b['win_inputs'][n][:, CENTRE], point['inputs'][n])
+        assert b['win_inputs'][n].dtype == torch.float16
+        assert torch.allclose(b['win_inputs'][n][:, CENTRE].float(), point['inputs'][n].half().float())
         assert torch.equal(b['inputs'][n], point['inputs'][n])
     assert torch.equal(b['target'], point['target'])
     absent = ~b['win_valid']
@@ -64,17 +65,28 @@ def test_rotation_permutes_consistently():
 
 
 def test_augmentation_drops_slots_and_keeps_targets(corpus):  # noqa: F811
-    ds = _window_ds(corpus, augment=True, temporal_dropout=0.5)
+    ds = _window_ds(corpus, augment=True, temporal_dropout=0.5, return_masks=True)
     idx = np.arange(min(len(ds), 48))
     b = ds.get_batch(idx)
-    plain = _window_ds(corpus).get_batch(idx)
+    plain = _window_ds(corpus, return_masks=True).get_batch(idx)
     assert torch.equal(b['target'], plain['target'])
     assert b['win_masks']['yieldsat_s2'].sum() < plain['win_masks']['yieldsat_s2'].sum()
 
 
+def test_centre_only_streams(corpus):  # noqa: F811
+    idx = np.arange(32)
+    full = _window_ds(corpus).get_batch(idx)
+    part = _window_ds(corpus, window='s2_static').get_batch(idx)
+    assert part['win_inputs']['yieldsat_weather'].shape[1] == 1
+    assert torch.equal(part['win_inputs']['yieldsat_weather'][:, 0], full['win_inputs']['yieldsat_weather'][:, CENTRE])
+    assert torch.equal(part['win_inputs']['yieldsat_s2'], full['win_inputs']['yieldsat_s2'])
+    none = _window_ds(corpus, window='none').get_batch(idx)
+    assert all(v.shape[1] == 1 for v in none['win_inputs'].values())
+
+
 @pytest.mark.parametrize('name', list(PAPER_MODELS))
 def test_paper_models_train_step(corpus, name):  # noqa: F811
-    ds = _window_ds(corpus, augment=True)
+    ds = _window_ds(corpus, augment=True, window=PAPER_MODELS[name].window)
     b = ds.get_batch(np.arange(min(len(ds), 32)))
     model = PAPER_MODELS[name](ds.layout)
     model.train()

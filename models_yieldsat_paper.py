@@ -22,6 +22,11 @@ S = 2 * R + 1
 TEMPORAL_FUSION_STREAMS = ('yieldsat_s2', 'yieldsat_weather')
 
 
+def _centre(v):
+    """Centre cell of a window stream, (B, 25, ...) or centre-only (B, 1, ...), as float32."""
+    return (v[:, CENTRE] if v.shape[1] == K else v[:, 0]).float()
+
+
 def _window_cube(batch, layout, names=None):
     """Input fusion: (B, C, T, 5, 5) from the window streams; static streams repeated over T."""
     win = batch['win_inputs']
@@ -29,7 +34,7 @@ def _window_cube(batch, layout, names=None):
     T = next(win[n].shape[2] for n in names if layout[n]['temporal'])
     parts = []
     for n in names:
-        v = win[n]
+        v = win[n].float()
         if layout[n]['temporal']:                                   # (B, K, T, C)
             parts.append(v.permute(0, 3, 2, 1))
         else:                                                       # (B, K, C)
@@ -45,6 +50,7 @@ def _mse(pred, batch):
 
 class _PaperModel(nn.Module):
     name = 'paper'
+    window = 'all'                  # streams the model reads over the 5x5 window (YieldSATWindowDataset ``window``)
 
     def loss(self, batch, apply_dropout=True):
         pred = self.forward(batch)
@@ -140,6 +146,7 @@ class PaperAFF(_PaperModel):
     """AFF / MMAF: S2 by the 3D-LSTM block, weather by an LSTM on the centre cell, each static modality by
     Conv2d(5x5) + Linear; scaled dot-product attention pooling with a learnable query."""
     name = 'paper_aff'
+    window = 's2_static'
 
     def __init__(self, layout, dim=64, attn_dropout=0.2):
         super().__init__()
@@ -170,12 +177,14 @@ class PaperAFF(_PaperModel):
         for n, l in self.layout.items():
             v = win[n]
             if n == 'yieldsat_s2':
+                v = v.float()
                 x = v.permute(0, 3, 2, 1).reshape(v.shape[0], v.shape[3], v.shape[2], S, S)
                 feats.append(self.enc[n](x))
             elif l['temporal']:
-                out, _ = self.enc[n](v[:, CENTRE])                       # (B, T, C) centre cell
+                out, _ = self.enc[n](_centre(v))                         # (B, T, C) centre cell
                 feats.append(out[:, -1])
             else:
+                v = v.float()
                 feats.append(self.enc[n](v.permute(0, 2, 1).reshape(v.shape[0], v.shape[2], S, S)))
         return torch.stack(feats, dim=1)                                 # (B, M, dim)
 
@@ -192,6 +201,7 @@ class PaperMMGF(_PaperModel):
     """MMGF: per-modality encoders on the centre pixel (LSTM for temporal, MLP for static) and a softmax gate
     over modalities computed from their concatenated features."""
     name = 'paper_mmgf'
+    window = 'none'
 
     def __init__(self, layout, dim=64):
         super().__init__()
@@ -214,7 +224,7 @@ class PaperMMGF(_PaperModel):
         win = batch['win_inputs']
         feats = []
         for n, l in self.layout.items():
-            v = win[n][:, CENTRE]
+            v = _centre(win[n])
             if l['temporal']:
                 out, _ = self.enc[n](v)
                 feats.append(out[:, -1])
