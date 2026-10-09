@@ -214,6 +214,40 @@ def dense_units(artifact_root):
     return units
 
 
+# The paper's best models (spec/yieldsat-paper-models.md): thesis A.1.2 training (Adam 0.006, batch 2048,
+# reduce-on-plateau, 50 epochs, early stop 10, rot90 + temporal dropout), -1 padding, 5x5 windows. Input fusion
+# (3D-LSTM, 3D-ConvLSTM) on the monthly series as in the thesis IF pipeline; feature fusion (AFF, MMGF) dense.
+PAPER_MODEL_ARGS = ['--fill_value', '-1', '--optimizer', 'adam', '--weight_decay', '0', '--lr', '0.006',
+                    '--lr_schedule', 'plateau', '--batch_size', '2048', '--eval_batch_size', '2048', '--epochs', '50',
+                    '--early_stop_patience', '10', '--steps_per_epoch', '0', '--min_steps_per_epoch', '50',
+                    '--max_steps_per_epoch', '1500', '--paper_aug', '--field_alpha', '1.0', '--block_size', '32',
+                    '--weather_first_slot', 'keep']
+PAPER_MODEL_STREAMS = list(STREAMS['s2_adm']) + ['yieldsat_coords']
+PAPER_MODELS_DENSE = {'paper_3dlstm': False, 'paper_3dconvlstm': False, 'paper_aff': True, 'paper_mmgf': True}
+
+
+def paper_model_units(artifact_root, models=tuple(PAPER_MODELS_DENSE)):
+    units = []
+    for pair, proto, group, folds in _rows(artifact_root):
+        if pair == 'ALL':
+            continue
+        country, crop = parse_pair(pair)
+        prefix = folds[0].rsplit('_fold', 1)[0]
+        for m in models:
+            dense = PAPER_MODELS_DENSE[m]
+            for i, name in enumerate(folds):
+                out = '{{out_root}}/paper/{}/s2_adm/{}_seed0/{}/fold{:02d}'.format(group, m, pair, i)
+                units.append({'id': '{}__{}__{}__f{}'.format(m, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                              'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV if dense else {},
+                              'stage': ['cache_dense/' + country if dense else 'cache/' + country, 'index/' + country,
+                                        'splits/{}*'.format(prefix), 'geometry/fields_geometry_*.json'],
+                              'args': COMMON + PAPER_MODEL_ARGS + ['--model', m, '--countries', country, '--crops', crop,
+                                                                  '--split', name, '--output_dir', out,
+                                                                  '--streams', *PAPER_MODEL_STREAMS]})
+    units.sort(key=lambda u: -SIZE[u['pair']])
+    return units
+
+
 PK_DENSE_ROOT = '/data/YieldSAT/yieldsat_results/pk_dense'
 
 
@@ -335,6 +369,12 @@ def cmd_units(a):
         Path('cluster/tabm/{}_units.json'.format(suite)).write_text(
             json.dumps({'suite': suite, 'out_root': a.out_root, 'units': units}, indent=1))
         print('{}: {} units'.format(suite, len(units)))
+        return
+    if a.batch == 'paper-models':
+        units = paper_model_units(a.artifact_root)
+        Path('cluster/tabm/protocol_paper_models_units.json').write_text(
+            json.dumps({'suite': 'protocol_paper_models', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_paper_models: {} units'.format(len(units)))
         return
     if a.batch == 'fc-all':
         # FC-05 (spec/yieldsat-field-context.md): field context + relation loss (lambda 1) on every pair and
@@ -539,7 +579,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

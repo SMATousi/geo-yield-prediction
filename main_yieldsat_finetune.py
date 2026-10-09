@@ -34,9 +34,13 @@ from dataset.yieldsat_schema import (CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STR
                                      OPTIONAL_STREAMS, PROVENANCE, STREAMS)
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
+from dataset.yieldsat_window import YieldSATWindowDataset
 from models_yieldsat import FUSIONS, PaperLSTMBaseline, YieldSATPointModel
+from models_yieldsat_paper import PAPER_MODELS
 from util.yieldsat_eval import evaluate_predictions, reconstruct_field, write_geotiff
 from yieldsat_objectives import OBJECTIVE_ROUTING, YieldSATPointPretrainer
+
+NO_AMP_MODELS = {'paper_lstm', 'paper_3dlstm', 'paper_aff', 'paper_mmgf'}   # cuDNN LSTMs do not run under bf16
 
 CONTRACTS = (CONTRACT_KEY, 'downloader_native_layers_v1')
 
@@ -72,8 +76,13 @@ def get_args_parser():
     p.add_argument('--no_crop_context', action='store_true')
     p.add_argument('--crops', nargs='+', default=None, choices=list(CROPS),
                    help='restrict every partition to these crops (paper: one country-crop pair)')
-    p.add_argument('--model', default='yieldsat_point', choices=['yieldsat_point', 'paper_lstm'],
-                   help='paper_lstm = the paper/tutorial pixel LSTM baseline (PC-05)')
+    p.add_argument('--model', default='yieldsat_point',
+                   choices=['yieldsat_point', 'paper_lstm', 'paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'paper_mmgf'],
+                   help='paper_lstm = the paper/tutorial pixel LSTM baseline (PC-05); paper_* = the paper\'s best '
+                        'models on 5x5 windows (spec/yieldsat-paper-models.md)')
+    p.add_argument('--paper_aug', action='store_true',
+                   help='paper_* models: random rot90 of the window and temporal dropout during training')
+    p.add_argument('--temporal_dropout', type=float, default=0.2, help='slot dropout probability with --paper_aug')
     p.add_argument('--normalization', default='train', choices=['train', 'supplied', 'none'],
                    help='feature normalization: train-fold stats, the file stats-*, or raw')
     p.add_argument('--target_normalization', default='train', choices=['train', 'none'])
@@ -140,7 +149,9 @@ def get_args_parser():
     p.add_argument('--batch_size', type=int, default=512)
     p.add_argument('--lr', type=float, default=1e-3)
     p.add_argument('--optimizer', default='adamw', choices=['adamw', 'adam'])
-    p.add_argument('--lr_schedule', default='cosine', choices=['cosine', 'constant'])
+    p.add_argument('--lr_schedule', default='cosine', choices=['cosine', 'constant', 'plateau'])
+    p.add_argument('--plateau_patience', type=int, default=3, help='plateau: epochs without improvement')
+    p.add_argument('--plateau_factor', type=float, default=0.1)
     p.add_argument('--grad_clip', type=float, default=1.0, help='0 disables clipping')
     p.add_argument('--no_amp', action='store_true', help='disable bf16 autocast')
     p.add_argument('--weight_decay', type=float, default=0.05)
@@ -289,7 +300,7 @@ def predict(model, ds, args, device, drop=None):
         b = _to(batch, device)
         with torch.autocast(device_type=device.type, dtype=torch.bfloat16,
                             enabled=device.type == 'cuda' and not args.no_amp
-                            and args.model != 'paper_lstm'):
+                            and args.model not in NO_AMP_MODELS):
             p = model(b, apply_dropout=False).float()
         preds.append((p * b['target_std'] + b['target_mean']).cpu().numpy())
         targets.append(batch['target_raw'].numpy())
@@ -434,9 +445,12 @@ def main(args):
                   check_source=check, weather_first_slot=args.weather_first_slot,
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
-    train_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['train'], normalizer,
-                                    s2_obs_dropout=args.s2_obs_dropout, **common)
-    val_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['val'], normalizer,
+    window = args.model in PAPER_MODELS
+    DS = YieldSATWindowDataset if window else YieldSATPointDataset
+    train_kw = dict(augment=args.paper_aug, temporal_dropout=args.temporal_dropout) if window else {}
+    train_ds = DS(args.source_root, args.artifact_root, parts['train'], normalizer,
+                  s2_obs_dropout=args.s2_obs_dropout, **train_kw, **common)
+    val_ds = DS(args.source_root, args.artifact_root, parts['val'], normalizer,
                                   max_rows_per_field=args.val_rows_per_field or None, **common) if parts['val'] else None
     block = args.block_size or (1 if args.backend == 'cache' else 64)
 
@@ -445,6 +459,10 @@ def main(args):
             raise SystemExit('the paper LSTM baseline has no pretraining mode')
         model = PaperLSTMBaseline(train_ds.layout, hidden_dim=args.lstm_hidden, num_layers=args.lstm_layers,
                                   head=args.lstm_head).to(device)
+    elif window:
+        if args.mode == 'pretrain':
+            raise SystemExit('the paper models have no pretraining mode')
+        model = PAPER_MODELS[args.model](train_ds.layout).to(device)
     else:
         model = YieldSATPointModel(train_ds.layout, embed_dim=args.embed_dim,
                                    num_latents=args.num_latents, depth=args.depth,
@@ -455,7 +473,7 @@ def main(args):
                                    level_weight=args.level_weight, early_hidden=args.early_hidden,
                                    early_depth=args.early_depth, num_slots=NUM_TIME_SLOTS).to(device)
     # cuDNN LSTMs do not run under bf16 autocast
-    amp = device.type == 'cuda' and not args.no_amp and args.model != 'paper_lstm'
+    amp = device.type == 'cuda' and not args.no_amp and args.model not in NO_AMP_MODELS
     if args.steps_per_epoch <= 0:
         steps = max(args.min_steps_per_epoch, math.ceil(len(train_ds) / args.batch_size))
         if args.max_steps_per_epoch > 0:
@@ -483,9 +501,13 @@ def main(args):
     total_steps = args.epochs * args.steps_per_epoch
     warm = int(args.warmup_epochs * args.steps_per_epoch)
 
+    plateau = {'lr': args.lr, 'bad': 0}
+
     def lr_at(step):
         if args.lr_schedule == 'constant':
             return args.lr
+        if args.lr_schedule == 'plateau':
+            return plateau['lr']
         if step < warm:
             return args.lr * (step + 1) / warm
         return args.lr * 0.5 * (1 + math.cos(math.pi * (step - warm) / max(1, total_steps - warm)))
@@ -556,7 +578,7 @@ def main(args):
             rec.update(pretrain_validation(trainable, val_ds, args, device, amp))
         if args.mode == 'finetune' and args.diag_test_each_epoch:
             if diag_test_ds is None:
-                diag_test_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['test'], normalizer,
+                diag_test_ds = DS(args.source_root, args.artifact_root, parts['test'], normalizer,
                                                     max_rows_per_field=args.test_rows_per_field, **common)
             pt_, yt_, st_, _, _ = predict(model, diag_test_ds, args, device)
             mt_ = evaluate_predictions(pt_, yt_, st_, diag_test_ds.seasons)
@@ -571,10 +593,15 @@ def main(args):
             if best is None or rec['val_pixel_rmse'] < best['val_pixel_rmse']:
                 best = dict(rec)
                 bad_epochs = 0
+                plateau['bad'] = 0
                 torch.save({'model': model.state_dict(), 'descriptor': model.descriptor(), 'args': vars(args)},
                            out_dir / 'checkpoint_best.pth')
             else:
                 bad_epochs += 1
+                plateau['bad'] += 1
+                if args.lr_schedule == 'plateau' and plateau['bad'] >= args.plateau_patience:
+                    plateau['lr'] *= args.plateau_factor          # reduce-on-plateau (thesis A.1.2)
+                    plateau['bad'] = 0
         history.append(rec)
         print(json.dumps(rec), flush=True)
         wb.log_epoch(rec)
@@ -632,8 +659,8 @@ def main(args):
         torch.save(model.sensor_state_dict(), out_dir / 'sensor_checkpoint_last.pth')
         if best is not None:
             model.load_state_dict(torch.load(out_dir / 'checkpoint_best.pth', map_location=device, weights_only=True)['model'])
-        test_ds = YieldSATPointDataset(args.source_root, args.artifact_root, parts['test'], normalizer,
-                                       max_rows_per_field=args.test_rows_per_field, **common)
+        test_ds = DS(args.source_root, args.artifact_root, parts['test'], normalizer,
+                     max_rows_per_field=args.test_rows_per_field, **common)
         te = time.time()
         p, y, s, r, c = predict(model, test_ds, args, device)
         report['test'] = evaluate_predictions(p, y, s, test_ds.seasons)
