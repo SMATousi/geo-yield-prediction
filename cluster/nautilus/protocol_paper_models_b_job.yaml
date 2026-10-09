@@ -1,9 +1,9 @@
-# PM-04 extra capacity: same units as protocol_paper_models_job.yaml (shared claim pool), 48 GB cards at 12 runs/GPU
-# (~20 GB GPU memory = 40%). No credentials inside.
+# PM-04 extra capacity: same units as protocol_paper_models_job.yaml (shared claim pool), 48 GB cards at 8 runs/GPU
+# (~14 GB GPU memory = 30%). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-protocol-paper-models-b
+  name: smatousi-yieldsat-protocol-paper-models2-b
 spec:
   completions: 8
   parallelism: 8
@@ -46,14 +46,14 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
-          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_paper_models_units.json --concurrency 12
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_paper_models_units.json --concurrency 8
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '24', memory: 80Gi, ephemeral-storage: 120Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '24', memory: 80Gi, ephemeral-storage: 120Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '24', memory: 64Gi, ephemeral-storage: 120Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '24', memory: 64Gi, ephemeral-storage: 120Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
@@ -64,4 +64,4 @@ spec:
       - name: scratch
         emptyDir: {}
       - name: dshm
-        emptyDir: {medium: Memory, sizeLimit: 4Gi}
+        emptyDir: {medium: Memory, sizeLimit: 8Gi}

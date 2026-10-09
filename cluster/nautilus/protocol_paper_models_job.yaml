@@ -1,10 +1,10 @@
 # PM-04 (spec/yieldsat-paper-models.md): the paper best models (3D-LSTM, 3D-ConvLSTM, AFF, MMGF) on all 9 pairs x
-# CV10/LOYO/LORO: 868 units, 48 GPUs x 6 runs. Local measurement: 0.7-2.2 GiB GPU memory per run (+0.5 context), so 6 runs
-# use ~35-45% of a 24 GB card; RSS ~2-6 GiB per run with workers; monthly + dense caches staged (120 Gi). No credentials inside.
+# CV10/LOYO/LORO: 868 units, 48 GPUs x 4 runs. Local measurement: 0.7-2.2 GiB GPU memory per run (+0.5 context), so 4 runs
+# use ~25-40% of a 24 GB card. Cluster (6 runs) measured ~6.3 GiB RAM per run incl. page cache: 4 runs, 36 Gi, 8 Gi shm; monthly + dense caches staged (120 Gi). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: smatousi-yieldsat-protocol-paper-models
+  name: smatousi-yieldsat-protocol-paper-models2
 spec:
   completions: 48
   parallelism: 48
@@ -47,14 +47,14 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
-          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_paper_models_units.json --concurrency 6
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_paper_models_units.json --concurrency 4
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
         env:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '12', memory: 40Gi, ephemeral-storage: 120Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '12', memory: 40Gi, ephemeral-storage: 120Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '12', memory: 36Gi, ephemeral-storage: 120Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '12', memory: 36Gi, ephemeral-storage: 120Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
@@ -65,4 +65,4 @@ spec:
       - name: scratch
         emptyDir: {}
       - name: dshm
-        emptyDir: {medium: Memory, sizeLimit: 4Gi}
+        emptyDir: {medium: Memory, sizeLimit: 8Gi}
