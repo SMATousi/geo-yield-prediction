@@ -568,9 +568,12 @@ class FieldClusterBatchSampler(Sampler):
     drawn with probability ``n_rows ** alpha``; in each, an anchor pixel is drawn
     uniformly and ``cluster`` pixels are taken from the cells within ``radius``
     (Chebyshev, in grid cells) of it, anchor included. Indices of one cluster are
-    consecutive in the batch."""
+    consecutive in the batch. ``clusters_per_field`` > 1 draws that many clusters from each
+    drawn season (fewer seasons per batch; the field encoder shares one context sample per
+    field, spec/yieldsat-field-encoder.md)."""
 
-    def __init__(self, ds, batch_size, batches_per_epoch, cluster=8, radius=5, alpha=0.5, seed=0):
+    def __init__(self, ds, batch_size, batches_per_epoch, cluster=8, radius=5, alpha=0.5, seed=0,
+                 clusters_per_field=1):
         self.ranges = np.asarray(ds.season_ranges, dtype=np.int64)
         sizes = (self.ranges[:, 1] - self.ranges[:, 0]).astype(np.float64)
         w = sizes ** alpha
@@ -583,6 +586,7 @@ class FieldClusterBatchSampler(Sampler):
             self.grids.append((np.asarray(r['grid_row'][rows], np.int32), np.asarray(r['grid_col'][rows], np.int32)))
         self.batch_size, self.batches = batch_size, batches_per_epoch
         self.cluster, self.radius, self.seed, self.epoch = max(2, cluster), radius, seed, 0
+        self.per_field = max(1, int(clusters_per_field))
 
     def set_epoch(self, epoch):
         self.epoch = epoch
@@ -595,7 +599,8 @@ class FieldClusterBatchSampler(Sampler):
         per_batch = max(1, self.batch_size // self.cluster)
         for _ in range(self.batches):
             idx = []
-            for s in rng.choice(len(self.ranges), size=per_batch, p=self.p):
+            n_seasons = -(-per_batch // self.per_field)
+            for s in np.repeat(rng.choice(len(self.ranges), size=n_seasons, p=self.p), self.per_field):
                 a, b = self.ranges[s]
                 gr, gc = self.grids[s]
                 k = rng.integers(0, b - a)

@@ -35,8 +35,10 @@ from dataset.yieldsat_schema import (CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STR
                                      OPTIONAL_STREAMS, PROVENANCE, STREAMS)
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
+from dataset.yieldsat_field_context_batch import FieldContextDataset
 from dataset.yieldsat_window import YieldSATWindowDataset
 from models_yieldsat import FUSIONS, PaperLSTMBaseline, YieldSATPointModel
+from models_yieldsat_field import FieldEncoderModel
 from models_yieldsat_paper import PAPER_MODELS
 from util.yieldsat_eval import evaluate_predictions, reconstruct_field, write_geotiff
 from yieldsat_objectives import OBJECTIVE_ROUTING, YieldSATPointPretrainer
@@ -78,9 +80,15 @@ def get_args_parser():
     p.add_argument('--crops', nargs='+', default=None, choices=list(CROPS),
                    help='restrict every partition to these crops (paper: one country-crop pair)')
     p.add_argument('--model', default='yieldsat_point',
-                   choices=['yieldsat_point', 'paper_lstm', 'paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'paper_mmgf'],
+                   choices=['yieldsat_point', 'paper_lstm', 'paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'paper_mmgf',
+                            'field_encoder'],
                    help='paper_lstm = the paper/tutorial pixel LSTM baseline (PC-05); paper_* = the paper\'s best '
                         'models on 5x5 windows (spec/yieldsat-paper-models.md)')
+    p.add_argument('--fe_context', type=int, default=64, help='field_encoder: context pixels per field season')
+    p.add_argument('--fe_seeds', type=int, default=4, help='field_encoder: field tokens (PMA seeds)')
+    p.add_argument('--fe_level_weight', type=float, default=1.0, help='field_encoder: weight of the field-level term')
+    p.add_argument('--fe_clusters_per_field', type=int, default=4,
+                   help='field_encoder: relation-loss clusters drawn per field season in a batch')
     p.add_argument('--paper_aug', action='store_true',
                    help='paper_* models: random rot90 of the window and temporal dropout during training')
     p.add_argument('--temporal_dropout', type=float, default=0.2, help='slot dropout probability with --paper_aug')
@@ -449,11 +457,15 @@ def main(args):
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
     window = args.model in PAPER_MODELS
+    field_enc = args.model == 'field_encoder'
     if window:
         DS = functools.partial(YieldSATWindowDataset, window=PAPER_MODELS[args.model].window)
+    elif field_enc:
+        DS = functools.partial(FieldContextDataset, context_k=args.fe_context, context_seed=args.seed)
     else:
         DS = YieldSATPointDataset
-    train_kw = dict(augment=args.paper_aug, temporal_dropout=args.temporal_dropout) if window else {}
+    train_kw = (dict(augment=args.paper_aug, temporal_dropout=args.temporal_dropout) if window else
+                dict(train=True) if field_enc else {})
     train_ds = DS(args.source_root, args.artifact_root, parts['train'], normalizer,
                   s2_obs_dropout=args.s2_obs_dropout, **train_kw, **common)
     val_ds = DS(args.source_root, args.artifact_root, parts['val'], normalizer,
@@ -470,14 +482,19 @@ def main(args):
             raise SystemExit('the paper models have no pretraining mode')
         model = PAPER_MODELS[args.model](train_ds.layout).to(device)
     else:
-        model = YieldSATPointModel(train_ds.layout, embed_dim=args.embed_dim,
-                                   num_latents=args.num_latents, depth=args.depth,
-                                   num_heads=args.num_heads, modality_embed=args.modality_embed,
-                                   modality_dropout=args.modality_dropout,
-                                   use_crop_context=use_crop, fusion=args.fusion,
-                                   cross_attn_layers=args.cross_attn_layers, level_head=args.level_head,
-                                   level_weight=args.level_weight, early_hidden=args.early_hidden,
-                                   early_depth=args.early_depth, num_slots=NUM_TIME_SLOTS).to(device)
+        point_kw = dict(embed_dim=args.embed_dim, num_latents=args.num_latents, depth=args.depth,
+                        num_heads=args.num_heads, modality_embed=args.modality_embed,
+                        modality_dropout=args.modality_dropout, use_crop_context=use_crop, fusion=args.fusion,
+                        cross_attn_layers=args.cross_attn_layers, level_head=args.level_head,
+                        level_weight=args.level_weight, early_hidden=args.early_hidden,
+                        early_depth=args.early_depth, num_slots=NUM_TIME_SLOTS)
+        if field_enc:
+            if args.mode == 'pretrain':
+                raise SystemExit('the field encoder has no pretraining mode')
+            model = FieldEncoderModel(train_ds.layout, seeds=args.fe_seeds, fe_level_weight=args.fe_level_weight,
+                                      **point_kw).to(device)
+        else:
+            model = YieldSATPointModel(train_ds.layout, **point_kw).to(device)
     # cuDNN LSTMs do not run under bf16 autocast
     amp = device.type == 'cuda' and not args.no_amp and args.model not in NO_AMP_MODELS
     if args.steps_per_epoch <= 0:
@@ -518,10 +535,11 @@ def main(args):
             return args.lr * (step + 1) / warm
         return args.lr * 0.5 * (1 + math.cos(math.pi * (step - warm) / max(1, total_steps - warm)))
 
-    if args.mode == 'finetune' and (args.rel_weight > 0 or args.var_weight > 0):
+    if args.mode == 'finetune' and (args.rel_weight > 0 or args.var_weight > 0 or field_enc):
         from dataset.yieldsat_dataset import FieldClusterBatchSampler
         sampler = FieldClusterBatchSampler(train_ds, args.batch_size, args.steps_per_epoch, cluster=args.rel_cluster,
-                                           radius=args.rel_radius, alpha=args.field_alpha, seed=args.seed)
+                                           radius=args.rel_radius, alpha=args.field_alpha, seed=args.seed,
+                                           clusters_per_field=args.fe_clusters_per_field if field_enc else 1)
     else:
         sampler = FieldBalancedBatchSampler(train_ds.season_ranges, args.batch_size, args.steps_per_epoch,
                                             alpha=args.field_alpha, block_size=block, seed=args.seed)
