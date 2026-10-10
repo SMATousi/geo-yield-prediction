@@ -4,7 +4,7 @@ deltas (per pair and for the mean over pairs). All statistics are additive per f
 replicate is a weighted sum."""
 import glob, os, json, sys, numpy as np
 root = '/data/YieldSAT/yieldsat_results/protocol/paper'
-BASE = 'ours-p3nbr-dense'
+BASE = os.environ.get('REL_BASE', 'ours-p3nbr-dense')
 VARS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['ours-p3nbr-dense-rel05', 'ours-p3nbr-dense-rel10']
 PAIRS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
 PROTOS = {'cv10': 'CV10', 'loyo': 'LOYO', 'loro': 'LORO'}

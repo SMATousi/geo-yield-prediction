@@ -1,6 +1,9 @@
 # Field encoder: learned field context for within-field yield
 
-**Status (2026-10-10): FE-01..FE-03 done (§6); FE-04 (DEV) submitted.**
+**Status (2026-10-10): FE-04 not passed (§7).**
+- **Result:** within-field R² +0.006 on CV10 (not significant) and +0.015 on LOYO (significant, driven by ARG-W).
+- **Pooled R²** is −0.009 and −0.017 (not significant).
+- FE-05 is not launched. Follow-up variants are proposed in §7.
 
 Related:
 - [yieldsat-field-context.md](./yieldsat-field-context.md): hand-made field context (field S2 mean/std, within-field
@@ -124,3 +127,49 @@ The full suite passes (179).
 
 **FE-04:** `cluster/nautilus/protocol_fe_dev_job.yaml`, 65 units (`cluster/tabm/protocol_fe_dev_units.json`), with the
 same budget and protocol as `ours-p3nbr-dense-fc-rel10`. `protocol_fe_all_units.json` (152 units) is prepared for FE-05.
+
+## 7. FE-04 results (2026-10-10)
+
+All 65 runs finished (none failed). Data: `results/fe_dev_fe04.json`; script `results/rel_cmp.py`, with
+`REL_BASE=ours-p3nbr-dense-fc-rel10`.
+- **Comparison:** the field encoder vs the current best model (dense p3-nbr + field context + relation loss) on the
+  same test pixels.
+- **Intervals:** 95% field-season cluster bootstrap; **bold** = CI excludes 0.
+
+| Protocol | Pair | Best: pooled / within | FE: pooled / within | Δ pooled R² | Δ within-field R² |
+|---|---|---|---|---|---|
+| CV10 | ARG-W | 0.822 / 0.394 | 0.821 / 0.403 | −0.001 [−0.018, +0.019] | +0.009 [−0.028, +0.052] |
+| CV10 | BRA-C | 0.494 / 0.277 | 0.474 / 0.288 | −0.020 [−0.050, +0.008] | +0.011 [−0.000, +0.025] |
+| CV10 | GER-R | 0.517 / 0.254 | 0.499 / 0.259 | −0.017 [−0.046, +0.011] | +0.005 [−0.012, +0.023] |
+| CV10 | URG-S | 0.419 / 0.105 | 0.420 / 0.104 | +0.001 [−0.012, +0.015] | −0.001 [−0.007, +0.004] |
+| **CV10** | **mean** | | | −0.009 [−0.021, +0.003] | +0.006 [−0.005, +0.018] |
+| LOYO | ARG-W | 0.725 / 0.181 | 0.711 / 0.251 | −0.013 [−0.046, +0.018] | **+0.069 [+0.024, +0.125]** |
+| LOYO | BRA-C | 0.207 / 0.200 | 0.161 / 0.191 | −0.047 [−0.116, +0.008] | −0.010 [−0.028, +0.007] |
+| LOYO | GER-R | 0.291 / 0.208 | 0.309 / 0.220 | +0.019 [−0.052, +0.078] | +0.013 [−0.002, +0.029] |
+| LOYO | URG-S | 0.345 / 0.086 | 0.317 / 0.075 | **−0.028 [−0.042, −0.014]** | **−0.011 [−0.017, −0.005]** |
+| **LOYO** | **mean** | | | −0.017 [−0.042, +0.005] | **+0.015 [+0.002, +0.031]** |
+
+**Reading:**
+1. **Not a pass.**
+   - Within-field R² is not clearly up: CV10 +0.006 is not significant; LOYO +0.015 is significant but driven by one
+     pair, ARG-W (+0.069).
+   - Pooled R² trends down: −0.009 and −0.017. URG-S LOYO is significantly worse on both metrics.
+2. **Training curves** (32 finished folds at mid-run):
+   - The field encoder peaks earlier: best epoch median 3 vs 5.
+   - It fits the training data slightly worse: train loss 0.594 vs 0.578 at the best epoch.
+   - So the extra capacity is not turning into better held-out prediction. "Stopping too early" is not the main
+     issue.
+3. **Where the pooled loss comes from:** the level head. ℓ is predicted from 64 context pixels and trained against
+   the field mean. A field-level error moves every pixel of a field, which hurts pooled R² and leaves within-field R²
+   untouched. This is consistent with the losses being largest where field levels are hard: BRA-C and URG-S LOYO.
+4. **Field-scale structure does exist:** ARG-W LOYO within-field +0.069, the largest gain of any method so far on a
+   held-out-year row.
+
+**Proposed follow-up (FE-04b, DEV, decision: project lead).** Remove the level-head risk and start from a trained
+encoder:
+- **(a) Fold-matched warm start.** Initialize the point encoder from the same fold's
+  `ours-p3nbr-dense-fc-rel10` checkpoint. This is the same training data, so there is no leakage. Train the field
+  branch with a lower learning rate for the encoder.
+- **(b) No separate level head:** ŷ = base prediction + d(h, r, F). The field encoder then only adds a within-field
+  correction on top of the best model, and the relation loss supervises it.
+- **(c)** K = 128 context pixels.
