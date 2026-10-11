@@ -23,7 +23,10 @@ from scipy.ndimage import gaussian_filter
 from dataset.yieldsat_schema import TEMPORAL_CHANNELS
 
 SIGMAS = (1, 2, 4, 8, 16)
-BANDS = ('<15 m', '15-30 m', '30-60 m', '60-120 m', '120-240 m', '>240 m')
+# band labels = wavelength range, from the Gaussians' half-amplitude wavelengths (pi * sigma / sqrt(ln2 / 2) = 5.3 sigma
+# cells: 53, 107, 213, 427, 854 m) and the 10 m grid's shortest representable wavelength (20 m, two cells).
+# Uncorrelated cell-to-cell noise (the nugget) falls 94% into the first band.
+BANDS = ('20-50 m', '50-110 m', '110-210 m', '210-430 m', '430-850 m', '>850 m')
 COUNTRY = {'ARG': 'Argentina', 'BRA': 'Brazil', 'GER': 'Germany', 'URG': 'Uruguay'}
 PAIRS = ('ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')
 B04, B08 = TEMPORAL_CHANNELS.index('B04'), TEMPORAL_CHANNELS.index('B08')

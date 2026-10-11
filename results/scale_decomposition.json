@@ -1,11 +1,11 @@
 {
  "bands": [
-  "<15 m",
-  "15-30 m",
-  "30-60 m",
-  "60-120 m",
-  "120-240 m",
-  ">240 m"
+  "20-50 m",
+  "50-110 m",
+  "110-210 m",
+  "210-430 m",
+  "430-850 m",
+  ">850 m"
  ],
  "sigmas_cells": [
   1,
@@ -2148,5 +2148,6 @@
     ]
    }
   }
- }
+ },
+ "band_note": "wavelength ranges: 20 m = shortest wavelength on the 10 m grid; upper edges = half-amplitude wavelengths of the Gaussians (5.3 sigma cells); 94% of uncorrelated cell-to-cell noise falls in the first band"
 }

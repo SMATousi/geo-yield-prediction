@@ -8,8 +8,8 @@ Within-field R² decomposes into three levels:
 3. **Cross-field models 0.25–0.29** (ours 0.29, the best).
 
 Two gaps follow:
-- **Missing from the inputs (≈ 0.22):** concentrated below 15 m, where every model explains 4% and the inputs barely
-  correlate with yield.
+- **Missing from the inputs (≈ 0.22):** concentrated at the cell-to-cell scale (20–50 m wavelengths), where every model
+  explains 4% and the inputs barely correlate with yield.
 - **Present but field-specific (≈ 0.21):** the same model class reaches 0.25 across fields vs 0.50 per field.
 
 Related:
@@ -78,8 +78,10 @@ paper model), on the field grid.
 **Decomposition:** per field season, centre the targets and predictions and place them on the 10 m grid.
 - Decompose each into bands with differences of Gaussians, using normalised convolution so that missing cells are
   handled.
-- σ ∈ {1, 2, 4, 8, 16} cells gives six bands: < 15 m, ≈ 15–30 m, 30–60 m, 60–120 m, 120–240 m, and > 240 m within the
-  field.
+- σ ∈ {1, 2, 4, 8, 16} cells gives six bands, labelled by wavelength: 20–50 m, 50–110 m, 110–210 m, 210–430 m,
+  430–850 m and > 850 m within the field.
+  - 20 m is the shortest wavelength the 10 m grid can hold (two cells).
+  - Each upper edge is the wavelength at which the Gaussian passes half the amplitude: 5.3 σ cells.
 
 **Per band and pair:**
 - **Target variance share:** where the within-field variability lives.
@@ -88,8 +90,8 @@ paper model), on the field grid.
 - **Input coherence:** the same decomposition applied to an input summary (peak-season NDVI from the monthly cache).
   The correlation of NDVI_b with y_b shows whether the inputs themselves carry the band's signal.
 
-**Expected outcome:** high correlation in the coarse bands, near zero in the finest. The finest band also holds most of
-the nugget (noise).
+**Expected outcome:** high correlation in the coarse bands, near zero in the finest. The finest band also holds 94% of
+any uncorrelated cell-to-cell noise (the nugget), checked on synthetic white noise.
 
 ## 4. IC-C: input-resolution degradation (after A + B)
 
@@ -176,7 +178,7 @@ Data: `results/scale_decomposition.json`, made by `yieldsat_scale_decomposition.
 
 ![Scale decomposition](../results/figures/input_information/scale_decomposition.png)
 
-| Band | <15 m | 15-30 m | 30-60 m | 60-120 m | 120-240 m | >240 m |
+| Band | 20-50 m | 50-110 m | 110-210 m | 210-430 m | 430-850 m | >850 m |
 |---|---|---|---|---|---|---|
 | Share of within-field variance | 0.49 | 0.10 | 0.09 | 0.08 | 0.06 | 0.19 |
 | Ours (best): explained | 0.04 | 0.24 | 0.40 | 0.48 | 0.52 | 0.55 |
@@ -187,15 +189,22 @@ Data: `results/scale_decomposition.json`, made by `yieldsat_scale_decomposition.
 | Paper best (MMGF): correlation | 0.20 | 0.47 | 0.61 | 0.67 | 0.69 | 0.70 |
 | Input peak-season NDVI: correlation | 0.09 | 0.25 | 0.36 | 0.40 | 0.40 | 0.36 |
 
+**Correction (2026-10-11):** the first version labelled the bands < 15 m … > 240 m. That conversion from σ to metres
+was wrong. The grid holds nothing below 10 m; the labels are now wavelength ranges (§3).
+
 **Reading:**
-1. **About half of within-field yield variance (0.49) is below 15 m.**
-   - Every model explains 4% of it, and peak NDVI correlates 0.09 with it.
-   - It holds the harvester noise (nugget ≈ 0.28 of the variance, field-context spec §3) and fine-scale signal that
-     Sentinel-2 cannot resolve: 10–20 m bands, the point-spread function, georegistration.
-2. **The 30–240 m bands are captured at 40–55%** of variance (correlation 0.64–0.75).
-   - Our advantage over MMGF comes from these scales: above 240 m, 0.55 vs 0.48.
+1. **About half of within-field yield variance (0.49) is at the shortest scales the 10 m grid resolves:** cell-to-cell
+   variation, wavelengths 20–50 m.
+   - Part of it is harvester noise. Uncorrelated noise falls 94% into this band, and the nugget is ≈ 0.28 of the
+     within-field variance (field-context spec §3), so ≈ 0.26 of the 0.49 is noise.
+   - The remaining ≈ 0.23 is short-range structured variability.
+   - Every model explains 4% of the band, and peak NDVI correlates 0.09 with it.
+   - Sentinel-2 cannot resolve it: 10 m visible/NIR and 20 m red-edge/SWIR bands (the 20 m bands' shortest
+     wavelength is 40 m), the point-spread function and georegistration error.
+2. **The 110–850 m bands are captured at 40–55%** of variance (correlation 0.64–0.75).
+   - Our advantage over MMGF comes from these scales: above 850 m, 0.55 vs 0.48.
 3. **Input-side check:** peak NDVI follows the same profile, 0.09 → 0.40 from fine to coarse. The inputs themselves
-   carry little information at the finest scale.
+   carry little information at the cell-to-cell scale.
 
 ### 7.3 Synthesis for the paper
 
@@ -204,7 +213,7 @@ Data: `results/scale_decomposition.json`, made by `yieldsat_scale_decomposition.
 | Level | Value | Gap to the level above | What closes the gap |
 |---|---|---|---|
 | Target noise ceiling | 0.72 | — | nothing; harvester noise |
-| Per-field input oracle | 0.50 | 0.22: signal not in the inputs, mostly < 15 m (IC-B) | finer spatial resolution (our own dataset; IC-C) |
+| Per-field input oracle | 0.50 | 0.22: signal not in the inputs, mostly at the 20–50 m cell-to-cell scale (IC-B) | finer spatial resolution (our own dataset; IC-C) |
 | Best cross-field model (ours) | 0.29 | 0.21: field-specific input-to-yield relations | more fields per condition, field-adaptive models (e.g. calibration with a few labels) |
 
 **The resolution argument holds for the first gap.** IC-B shows where the missing variability is and that no model or
