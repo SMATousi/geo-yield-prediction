@@ -1,5 +1,6 @@
 # IC-C phase 2: 5x5 neighbourhood arrays from cache_dense_c<k> into neighbourhood_dense_c<k> (after phase 1).
-# The dense neighbourhood build peaked at ~2.3 GiB (2026-10-06), so 3 Gi. No credentials inside.
+# Per-slot builder (2026-10-12; whole-field float64 was OOM-killed at 3.6 Gi): ~150 Mi on Germany, ~450 Mi expected on
+# the largest Argentine field; ~0.3 CPU measured -> 640 Mi / 500m. No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -29,8 +30,8 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '1', memory: 3600Mi, ephemeral-storage: 5Gi}
-          requests: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+          limits: {cpu: '600m', memory: 760Mi, ephemeral-storage: 5Gi}
+          requests: {cpu: '500m', memory: 640Mi, ephemeral-storage: 5Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
       affinity:
