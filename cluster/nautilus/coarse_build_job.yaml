@@ -1,0 +1,52 @@
+# IC-C (spec/yieldsat-input-information.md §4): coarsened-S2 cache variants (k = 2, 3, 6 -> 20, 30, 60 m), one indexed
+# pod per factor: cache_dense_c<k> (S2 block means), then the 5x5 neighbourhood and field-context arrays rebuilt from it
+# into neighbourhood_dense_c<k>. Field-by-field I/O (pread/pwrite); local Germany build: seconds, < 1 GiB. 1 CPU / 3 Gi.
+# No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-coarse-build
+spec:
+  completions: 3
+  parallelism: 3
+  completionMode: Indexed
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: build
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          K=$(echo 2 3 6 | cut -d' ' -f$((JOB_COMPLETION_INDEX + 1))) && export YIELDSAT_NUM_SLOTS=72 &&
+          python yieldsat_build_coarse.py --artifact_root /data/YieldSAT/yieldsat_artifacts --factor $K &&
+          YIELDSAT_CACHE_NAME=cache_dense_c$K YIELDSAT_NBR_NAME=neighbourhood_dense_c$K
+          python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          YIELDSAT_CACHE_NAME=cache_dense_c$K YIELDSAT_NBR_NAME=neighbourhood_dense_c$K
+          python yieldsat_build_field_context.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          echo COARSE_BUILD_COMPLETE k=$K
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {cpu: '1', memory: 3600Mi, ephemeral-storage: 5Gi}
+          requests: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values: [hpc-nrp-g1.nmsu.edu, tu.gp-engine.greatplains.net]
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}

@@ -376,6 +376,29 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_paper_models', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_paper_models: {} units'.format(len(units)))
         return
+    if a.batch == 'coarse-dev':
+        # IC-C (spec/yieldsat-input-information.md §4): the best model (dense p3-nbr + field context + relation loss) on
+        # S2 coarsened to 20 / 30 / 60 m (cache_dense_c<k>), 4 DEV pairs x CV10; the 10 m runs are FC-04
+        base = json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units']
+        units = []
+        for k in (2, 3, 6):
+            env = dict(DENSE_ENV, YIELDSAT_CACHE_NAME='cache_dense_c{}'.format(k),
+                       YIELDSAT_NBR_NAME='neighbourhood_dense_c{}'.format(k))
+            for u in base:
+                if not u['id'].startswith('ours-p3nbr-dense-fc-rel10__') or u['id'].split('__')[2] != 'cv':
+                    continue
+                tag = 'ours-p3nbr-dense-fc-rel10-c{}'.format(k)
+                args = list(u['args'])
+                j = args.index('--output_dir')
+                args[j + 1] = args[j + 1].replace('ours-p3nbr-dense-fc-rel10_seed0', tag + '_seed0')
+                stage = [x.replace('cache_dense/', 'cache_dense_c{}/'.format(k))
+                          .replace('neighbourhood_dense/', 'neighbourhood_dense_c{}/'.format(k)) for x in u['stage']]
+                units.append(dict(u, id=u['id'].replace('ours-p3nbr-dense-fc-rel10__', tag + '__'), env=env,
+                                  stage=stage, args=args))
+        Path('cluster/tabm/protocol_coarse_dev_units.json').write_text(
+            json.dumps({'suite': 'protocol_coarse_dev', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_coarse_dev: {} units'.format(len(units)))
+        return
     if a.batch == 'fe-b-dev':
         # FE-04b (spec/yieldsat-field-encoder.md §7): residual field encoder (no level head) on top of the best model,
         # warm-started from the same fold's ours-p3nbr-dense-fc-rel10 checkpoint (encoder lr x0.1), K = 128
@@ -618,7 +641,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
