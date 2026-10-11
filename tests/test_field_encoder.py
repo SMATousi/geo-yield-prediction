@@ -87,3 +87,19 @@ def test_context_order_does_not_matter(corpus):  # noqa: F811
         b2[k] = {n: t[perm] for n, t in b[k].items()}
     with torch.no_grad():
         assert torch.allclose(m(b, apply_dropout=False), m(b2, apply_dropout=False), atol=1e-5)
+
+
+def test_residual_mode_starts_at_the_point_model(corpus):  # noqa: F811
+    from models_yieldsat import YieldSATPointModel
+    ds = _ds(corpus)
+    b = ds.get_batch(np.arange(min(len(ds), 24)))
+    kw = dict(embed_dim=32, num_latents=4, depth=1, num_heads=2, modality_embed=8)
+    point = YieldSATPointModel(ds.layout, **kw).eval()
+    fe = FieldEncoderModel(ds.layout, seeds=2, mode='residual', **kw).eval()
+    fe.base.load_state_dict(point.state_dict())                   # warm start (fold-matched checkpoint)
+    with torch.no_grad():
+        assert torch.allclose(fe(b, apply_dropout=False), point(b, apply_dropout=False), atol=1e-6)
+    fe.train()
+    pred, loss = fe.loss(b)
+    loss.backward()
+    assert fe.dev[-1].weight.grad.abs().sum() > 0                 # the correction learns from step 0

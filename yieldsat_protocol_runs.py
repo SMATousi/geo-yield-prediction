@@ -376,6 +376,24 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_paper_models', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_paper_models: {} units'.format(len(units)))
         return
+    if a.batch == 'fe-b-dev':
+        # FE-04b (spec/yieldsat-field-encoder.md §7): residual field encoder (no level head) on top of the best model,
+        # warm-started from the same fold's ours-p3nbr-dense-fc-rel10 checkpoint (encoder lr x0.1), K = 128
+        base = json.loads(Path('cluster/tabm/protocol_fe_dev_units.json').read_text())['units']
+        units = []
+        for u in base:
+            args = list(u['args'])
+            j = args.index('--output_dir')
+            out = args[j + 1]
+            args[j + 1] = out.replace('ours-p3nbr-dense-fe_seed0', 'ours-p3nbr-dense-fe-b_seed0')
+            ckpt = out.replace('ours-p3nbr-dense-fe_seed0', 'ours-p3nbr-dense-fc-rel10_seed0') + '/checkpoint_best.pth'
+            units.append(dict(u, id=u['id'].replace('ours-p3nbr-dense-fe__', 'ours-p3nbr-dense-fe-b__'),
+                              args=args + ['--fe_mode', 'residual', '--fe_context', '128', '--fe_base_lr_mult', '0.1',
+                                           '--fe_init_ckpt', ckpt]))
+        Path('cluster/tabm/protocol_fe_b_dev_units.json').write_text(
+            json.dumps({'suite': 'protocol_fe_b_dev', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_fe_b_dev: {} units'.format(len(units)))
+        return
     if a.batch in ('fe-dev', 'fe-all'):
         # FE-04 / FE-05 (spec/yieldsat-field-encoder.md): field encoder on top of the best configuration
         # (dense p3-nbr + field context + relation loss); fe-dev = 4 DEV pairs x CV10/LOYO, fe-all = the rest
@@ -600,7 +618,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

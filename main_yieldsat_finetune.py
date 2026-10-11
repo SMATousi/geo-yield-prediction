@@ -87,6 +87,12 @@ def get_args_parser():
     p.add_argument('--fe_context', type=int, default=64, help='field_encoder: context pixels per field season')
     p.add_argument('--fe_seeds', type=int, default=4, help='field_encoder: field tokens (PMA seeds)')
     p.add_argument('--fe_level_weight', type=float, default=1.0, help='field_encoder: weight of the field-level term')
+    p.add_argument('--fe_mode', default='level', choices=['level', 'residual'],
+                   help='field_encoder: level/deviation heads (FE-04) or point prediction + correction (FE-04b)')
+    p.add_argument('--fe_init_ckpt', default='',
+                   help='field_encoder: initialise the point encoder from this checkpoint_best.pth (same fold)')
+    p.add_argument('--fe_base_lr_mult', type=float, default=1.0,
+                   help='field_encoder: learning-rate multiplier of the point encoder (warm start)')
     p.add_argument('--fe_clusters_per_field', type=int, default=4,
                    help='field_encoder: relation-loss clusters drawn per field season in a batch')
     p.add_argument('--paper_aug', action='store_true',
@@ -492,7 +498,11 @@ def main(args):
             if args.mode == 'pretrain':
                 raise SystemExit('the field encoder has no pretraining mode')
             model = FieldEncoderModel(train_ds.layout, seeds=args.fe_seeds, fe_level_weight=args.fe_level_weight,
-                                      **point_kw).to(device)
+                                      mode=args.fe_mode, **point_kw).to(device)
+            if args.fe_init_ckpt:
+                state = torch.load(args.fe_init_ckpt, map_location=device, weights_only=False)['model']
+                model.base.load_state_dict(state)
+                print('field encoder: point encoder initialised from', args.fe_init_ckpt, flush=True)
         else:
             model = YieldSATPointModel(train_ds.layout, **point_kw).to(device)
     # cuDNN LSTMs do not run under bf16 autocast
@@ -517,10 +527,15 @@ def main(args):
         trainable = YieldSATPointPretrainer(model).to(device)
     else:
         trainable = model
+    groups = [{'params': list(trainable.parameters()), 'lr_mult': 1.0}]
+    if field_enc and args.fe_base_lr_mult != 1.0:
+        base_ids = {id(q) for q in model.base.parameters()}
+        groups = [{'params': [q for q in model.base.parameters()], 'lr_mult': args.fe_base_lr_mult},
+                  {'params': [q for q in trainable.parameters() if id(q) not in base_ids], 'lr_mult': 1.0}]
     if args.optimizer == 'adam':
-        opt = torch.optim.Adam(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        opt = torch.optim.Adam(groups, lr=args.lr, weight_decay=args.weight_decay)
     else:
-        opt = torch.optim.AdamW(trainable.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        opt = torch.optim.AdamW(groups, lr=args.lr, weight_decay=args.weight_decay)
     total_steps = args.epochs * args.steps_per_epoch
     warm = int(args.warmup_epochs * args.steps_per_epoch)
 
@@ -565,7 +580,7 @@ def main(args):
         for batch in _loader(train_ds, sampler, args.num_workers):
             data_time += time.time() - tl
             for g in opt.param_groups:
-                g['lr'] = lr_at(step)
+                g['lr'] = lr_at(step) * g.get('lr_mult', 1.0)
             b = _to(batch, device)
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=amp):
                 if args.mode == 'pretrain':

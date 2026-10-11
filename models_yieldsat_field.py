@@ -7,6 +7,8 @@
 #   option 2          the target's h cross-attends to c_k + phi_rel(p_target - p_k) -> r
 #   option 3          level l = MLP(mean F) (field yield level), deviation d = MLP([h, r, mean F]); yhat = l + d
 #   loss              MSE(yhat, y) + fe_level_weight * MSE(l, field-season mean target)   (+ relation loss outside)
+#   mode 'residual'   (FE-04b) no level head: yhat = the point model's own prediction + d(h, r, mean F), with the last
+#                     layer of d zero-initialised, so training starts exactly at the (warm-started) point model
 # Inputs only: the context pixels are the target field season's own cells (FieldContextDataset).
 # --------------------------------------------------------
 
@@ -52,7 +54,7 @@ class Block(nn.Module):
 
 class FieldEncoderModel(nn.Module):
 
-    def __init__(self, layout, seeds=4, heads=4, fe_level_weight=1.0, **point_kw):
+    def __init__(self, layout, seeds=4, heads=4, fe_level_weight=1.0, mode='level', **point_kw):
         super().__init__()
         self.base = YieldSATPointModel(layout, **point_kw)
         D = self.base.config['embed_dim']
@@ -66,16 +68,23 @@ class FieldEncoderModel(nn.Module):
         self.cross = Block(D, heads)                                    # option 2: pixel -> field context
         self.level = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, D), nn.GELU(), nn.Linear(D, 1))
         self.dev = nn.Sequential(nn.LayerNorm(3 * D), nn.Linear(3 * D, D), nn.GELU(), nn.Linear(D, 1))
-        self.fe_level_weight = fe_level_weight
+        if mode not in ('level', 'residual'):
+            raise ValueError('mode must be level or residual')
+        self.mode = mode
+        self.fe_level_weight = fe_level_weight if mode == 'level' else 0.0
+        if mode == 'residual':
+            nn.init.zeros_(self.dev[-1].weight)
+            nn.init.zeros_(self.dev[-1].bias)
         self.config = dict(self.base.config, model='field_encoder', seeds=seeds, fe_heads=heads,
-                           fe_level_weight=fe_level_weight)
+                           fe_level_weight=self.fe_level_weight, fe_mode=mode)
 
     def _embed(self, batch, apply_dropout):
         latents, _ = self.base.forward_features(batch, apply_dropout=apply_dropout)
         return latents.mean(1)                                          # (N, D)
 
     def forward(self, batch, apply_dropout=True, return_level=False):
-        h = self._embed(batch, apply_dropout)                           # (B, D) targets
+        latents, _ = self.base.forward_features(batch, apply_dropout=apply_dropout)
+        h = latents.mean(1)                                             # (B, D) targets
         ctx = {'inputs': batch['ctx_inputs'], 'masks': batch['ctx_masks'], 'available': batch['ctx_available'],
                'crop': batch['ctx_crop'], 'time_features': batch['ctx_time_features'],
                'time_valid': batch['ctx_time_valid']}
@@ -94,8 +103,14 @@ class FieldEncoderModel(nn.Module):
         pt = torch.stack([batch['grid_row'], batch['grid_col']], -1).float()            # (B, 2)
         kv = tok[g] + self.pos_rel(pt.unsqueeze(1) - pc[g])            # (B, K, D) relative offsets
         r = self.cross(h.unsqueeze(1), kv).squeeze(1)                   # (B, D)
+        d = self.dev(torch.cat([h, r, f[g]], -1)).squeeze(-1)
+        if self.mode == 'residual':                                     # the point model's prediction + correction
+            level = self.base.head(latents)
+            if hasattr(self.base, 'level_mlp'):
+                level = level + self.base.season_level(batch)
+            return (level + d, level) if return_level else level + d
         level = self.level(f).squeeze(-1)[g]                            # (B,)
-        pred = level + self.dev(torch.cat([h, r, f[g]], -1)).squeeze(-1)
+        pred = level + d
         return (pred, level) if return_level else pred
 
     def loss(self, batch, apply_dropout=True):

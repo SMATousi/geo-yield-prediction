@@ -1,9 +1,6 @@
 # Field encoder: learned field context for within-field yield
 
-**Status (2026-10-10): FE-04 not passed (§7).**
-- **Result:** within-field R² +0.006 on CV10 (not significant) and +0.015 on LOYO (significant, driven by ARG-W).
-- **Pooled R²** is −0.009 and −0.017 (not significant).
-- FE-05 is not launched. Follow-up variants are proposed in §7.
+**Status (2026-10-11): FE-04 not passed (§7). FE-04b (DEV only, approved by the project lead) submitted (§8).**
 
 Related:
 - [yieldsat-field-context.md](./yieldsat-field-context.md): hand-made field context (field S2 mean/std, within-field
@@ -173,3 +170,31 @@ encoder:
 - **(b) No separate level head:** ŷ = base prediction + d(h, r, F). The field encoder then only adds a within-field
   correction on top of the best model, and the relation loss supervises it.
 - **(c)** K = 128 context pixels.
+
+## 8. FE-04b: residual field encoder, warm-started (2026-10-11)
+
+Approved by the project lead; DEV only. Everything else is as FE-04: the same 65 folds, budget, protocol, relation
+loss λ = 1, and baseline `ours-p3nbr-dense-fc-rel10`.
+
+**Changes from FE-04:**
+- **(a) Fold-matched warm start.** `--fe_init_ckpt` loads the same fold's `ours-p3nbr-dense-fc-rel10`
+  `checkpoint_best.pth` into the point encoder; `--fe_base_lr_mult 0.1`.
+  - It is trained on the same fold's training data, so there is no leakage.
+  - Under the paper protocol that checkpoint was itself chosen on the test fold, like every model in our tables.
+- **(b) `--fe_mode residual`:** ŷ = the point model's own prediction + d(h, r, mean F).
+  - There is no level head and no level loss.
+  - The last layer of d starts at zero, so training starts exactly at the baseline model (unit test).
+  - The field encoder can only add a within-field correction; the relation loss supervises it.
+- **(c)** K = 128 context pixels.
+
+**Local smoke** (GER-R CV10 fold 0, warm start from the §6 smoke baseline, 4 × 200 steps):
+- val R² 0.480 at epoch 0, then 0.470–0.481. FE-04 started at 0.11.
+- test pooled 0.481 / within 0.386; that smoke baseline: 0.460 / 0.387.
+- 41 s per epoch.
+
+**Sizing:** peak GPU memory per run is 4.14 GiB at K = 64 and 6.81 GiB at K = 128 (≈ 8.4 GB on the cluster).
+- 2 runs per 24 GB card (≈ 70%); 6 CPU, 24 Gi.
+- `cluster/nautilus/protocol_fe_b_dev_job.yaml`, units `cluster/tabm/protocol_fe_b_dev_units.json` (tag
+  `ours-p3nbr-dense-fe-b`).
+
+**Acceptance:** as FE-04. If it passes, FE-05 runs this configuration on all pairs.
