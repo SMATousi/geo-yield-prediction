@@ -27,20 +27,22 @@ S2_POS = np.array([TEMPORAL_CHANNELS.index(c) for c in OPTICAL])
 
 
 def coarsen_field(block, grid_row, grid_col, k):
-    """block (n, T, C) float16 dense rows of one field season -> same with S2 replaced by k x k block means."""
+    """block (n, T, C) float16 dense rows of one field season -> same with S2 replaced by k x k block means.
+    One slot at a time: peak memory ~2x the field's rows (2026-10-12: the whole-field float32 version reached
+    ~1.2 GB on a 67k-cell field and was OOM-killed at 600 Mi)."""
     n, T, _ = block.shape
     key = (grid_row // k).astype(np.int64) * 1000003 + (grid_col // k)
     _, inv = np.unique(key, return_inverse=True)
     nb = inv.max() + 1
     M = csr_matrix((np.ones(n, np.float32), (inv, np.arange(n))), shape=(nb, n))
-    v = block[:, :, S2_POS].astype(np.float32).reshape(n, -1)
-    ok = np.isfinite(v)
-    s = M @ np.where(ok, v, 0.0)
-    c = M @ ok.astype(np.float32)
-    with np.errstate(invalid='ignore', divide='ignore'):
-        mean = np.where(c > 0, s / c, np.nan)
     out = block.copy()
-    out[:, :, S2_POS] = mean[inv].reshape(n, T, len(S2_POS)).astype(block.dtype)
+    for t in range(T):
+        v = out[:, t, S2_POS].astype(np.float32)                         # (n, 12)
+        ok = np.isfinite(v)
+        s = M @ np.where(ok, v, 0.0)
+        c = M @ ok.astype(np.float32)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            out[:, t, S2_POS] = np.where(c > 0, s / c, np.nan)[inv].astype(block.dtype)
     return out
 
 
@@ -58,7 +60,10 @@ def build_country(root, country, k):
     shape, dtype = np.load(src, mmap_mode='r').shape, np.load(src, mmap_mode='r').dtype
     tmp = dst_dir / 'temporal.npy.partial'
     m = np.lib.format.open_memmap(tmp, mode='w+', dtype=dtype, shape=shape)
+    m.flush()                       # the header must reach the file before _write_rows reads it (CephFS, 2026-10-12)
     del m
+    with open(tmp, 'rb+') as fh:
+        os.fsync(fh.fileno())
     with np.load(root / 'index' / country / 'rows.npz') as z:
         gr, gc = z['grid_row'], z['grid_col']
     fields = json.loads((root / 'index' / country / 'fields.json').read_text())
