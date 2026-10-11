@@ -30,9 +30,9 @@ The argument has five steps:
 2. **Input side (IC-A):** even an oracle that learns each field's own input-to-yield mapping from that field's labels
    explains only part of the remainder. That gives an input-information bound.
 3. **Our model:** it reaches a large share of that bound. The gap to 0.72 is in the inputs, not the architecture.
-4. **Where the signal is (IC-B):** the inputs and the models capture the coarse within-field scales (≳ 50 m) and little
-   below ≈ 20–30 m. That is where Sentinel-2's effective resolution (10–20 m bands, point-spread function,
-   georegistration error) runs out.
+4. **Where the signal is (IC-B):** the inputs and the models capture the longer within-field wavelengths (≳ 110 m)
+   and almost nothing at the cell-to-cell scale (20–50 m wavelengths, the shortest the 10 m grid can hold). That is
+   where Sentinel-2's effective resolution (10 and 20 m bands, point-spread function, georegistration error) runs out.
 5. **Resolution causes it (IC-C):** coarsening the inputs lowers within-field R² monotonically. This motivates our own
    dataset, with finer spatial resolution.
 
@@ -201,7 +201,8 @@ was wrong. The grid holds nothing below 10 m; the labels are now wavelength rang
    - Every model explains 4% of the band, and peak NDVI correlates 0.09 with it.
    - Sentinel-2 cannot resolve it: 10 m visible/NIR and 20 m red-edge/SWIR bands (the 20 m bands' shortest
      wavelength is 40 m), the point-spread function and georegistration error.
-2. **The 110–850 m bands are captured at 40–55%** of variance (correlation 0.64–0.75).
+2. **Wavelengths of 110 m and longer are captured at 40–55%** of variance (correlation 0.64–0.75); the 50–110 m band
+   at 24%.
    - Our advantage over MMGF comes from these scales: above 850 m, 0.55 vs 0.48.
 3. **Input-side check:** peak NDVI follows the same profile, 0.09 → 0.40 from fine to coarse. The inputs themselves
    carry little information at the cell-to-cell scale.
