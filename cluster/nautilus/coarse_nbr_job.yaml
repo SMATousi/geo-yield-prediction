@@ -1,0 +1,46 @@
+# IC-C phase 2: 5x5 neighbourhood arrays from cache_dense_c<k> into neighbourhood_dense_c<k> (after phase 1).
+# The dense neighbourhood build peaked at ~2.3 GiB (2026-10-06), so 3 Gi. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-coarse-nbr
+spec:
+  completions: 3
+  parallelism: 3
+  completionMode: Indexed
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: build
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          K=$(echo 2 3 6 | cut -d' ' -f$((JOB_COMPLETION_INDEX + 1))) && export YIELDSAT_NUM_SLOTS=72 &&
+          YIELDSAT_CACHE_NAME=cache_dense_c$K YIELDSAT_NBR_NAME=neighbourhood_dense_c$K python yieldsat_build_neighbourhood.py --artifact_root /data/YieldSAT/yieldsat_artifacts &&
+          echo COARSE_NBR_COMPLETE k=$K
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {cpu: '1', memory: 3600Mi, ephemeral-storage: 5Gi}
+          requests: {cpu: '1', memory: 3Gi, ephemeral-storage: 5Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values: [hpc-nrp-g1.nmsu.edu, tu.gp-engine.greatplains.net]
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
