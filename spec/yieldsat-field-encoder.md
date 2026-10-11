@@ -1,6 +1,9 @@
 # Field encoder: learned field context for within-field yield
 
-**Status (2026-10-11): FE-04 not passed (§7). FE-04b (DEV only, approved by the project lead) submitted (§8).**
+**Status (2026-10-11): closed: neither variant passed.**
+- **FE-04** (§7): within-field +0.006 CV10 (not significant), +0.015 LOYO; pooled R² −0.01 / −0.02.
+- **FE-04b** (§9): significantly worse. Pooled −0.011 / −0.020 and within-field −0.005 / −0.009.
+- **No FE-05.** The hand-made field context (spec/yieldsat-field-context.md) stays the best model.
 
 Related:
 - [yieldsat-field-context.md](./yieldsat-field-context.md): hand-made field context (field S2 mean/std, within-field
@@ -198,3 +201,48 @@ loss λ = 1, and baseline `ours-p3nbr-dense-fc-rel10`.
   `ours-p3nbr-dense-fe-b`).
 
 **Acceptance:** as FE-04. If it passes, FE-05 runs this configuration on all pairs.
+
+## 9. FE-04b results (2026-10-11)
+
+All 65 runs finished (none failed). Data: `results/fe_b_dev_fe04b.json`; same comparison as §7, vs
+`ours-p3nbr-dense-fc-rel10` on the same test pixels; **bold** = 95% CI excludes 0.
+
+| Protocol | Pair | Best: pooled / within | FE-04b: pooled / within | Δ pooled R² | Δ within-field R² |
+|---|---|---|---|---|---|
+| CV10 | ARG-W | 0.822 / 0.394 | 0.811 / 0.384 | **−0.011 [−0.021, −0.002]** | −0.010 [−0.022, +0.002] |
+| CV10 | BRA-C | 0.494 / 0.277 | 0.485 / 0.270 | −0.010 [−0.023, +0.004] | −0.007 [−0.016, +0.004] |
+| CV10 | GER-R | 0.517 / 0.254 | 0.498 / 0.249 | **−0.019 [−0.034, −0.003]** | −0.004 [−0.012, +0.005] |
+| CV10 | URG-S | 0.419 / 0.105 | 0.413 / 0.106 | −0.006 [−0.015, +0.003] | +0.001 [−0.003, +0.004] |
+| **CV10** | **mean** | | | **−0.011 [−0.017, −0.005]** | **−0.005 [−0.009, −0.000]** |
+| LOYO | ARG-W | 0.725 / 0.181 | 0.709 / 0.180 | −0.016 [−0.037, +0.002] | −0.001 [−0.023, +0.021] |
+| LOYO | BRA-C | 0.207 / 0.200 | 0.184 / 0.176 | **−0.023 [−0.045, −0.005]** | **−0.025 [−0.038, −0.014]** |
+| LOYO | GER-R | 0.291 / 0.208 | 0.258 / 0.195 | −0.033 [−0.113, +0.029] | −0.013 [−0.038, +0.014] |
+| LOYO | URG-S | 0.345 / 0.086 | 0.339 / 0.089 | −0.006 [−0.015, +0.004] | +0.003 [−0.000, +0.006] |
+| **LOYO** | **mean** | | | **−0.020 [−0.039, −0.002]** | −0.009 [−0.018, +0.000] |
+
+**Reading:**
+1. **Worse than the best model on both metrics.**
+   - Significantly lower pooled R² on both protocols.
+   - Lower within-field R² on CV10.
+   - URG-S, the noisiest pair, is flat.
+2. **The runs drift down from where they start.** Each run starts exactly at the best model (zero-initialised
+   correction, warm start), yet the selected epoch is below it.
+   - The baseline checkpoint is already its best epoch (selected on the same test fold). Further training moves the
+     encoder away from it.
+   - The field-branch correction does not make up the difference.
+3. **FE-04's ARG-W LOYO gain (+0.069) does not reappear** (−0.001). It was most likely a different solution from a
+   fresh training run, not a field-encoding effect.
+
+**Conclusion:**
+- **Learned field context does not beat the hand-made one.** Field mean/std and within-field z-scores, which are
+  explicit and low-variance, already carry what a learned set encoder over 64–128 context pixels extracts from this
+  data.
+- **The line is closed.** The code stays in place (`--model field_encoder`, `--fe_mode`) for later use, e.g. on our own
+  dataset or with more fields.
+
+**Remaining options** (not planned; decision: project lead):
+- a frozen-encoder variant, which only trains the field branch;
+- a spatial field map (option 4 of the original proposal).
+
+The evidence so far says the within-field gap (0.29 vs a ceiling of ≈ 0.72) is limited by what the inputs carry
+rather than by how field context is modelled.
