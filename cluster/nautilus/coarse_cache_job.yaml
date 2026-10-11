@@ -1,5 +1,5 @@
 # IC-C phase 1: coarsened-S2 caches cache_dense_c<k> (k = 2, 3, 6), one indexed pod per factor. Measured 150-280 Mi at
-# 0.1-0.3 CPU (2026-10-12), so 512 Mi / 0.5 CPU (the first 3 Gi request was 5-9% used). No credentials inside.
+# 0.06-0.08 CPU (2026-10-12, I/O-bound), so 512 Mi / 100m CPU (the first 3 Gi / 1 CPU request was 5-9% used). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -29,8 +29,8 @@ spec:
         - name: YIELDSAT_GIT_REF
           value: main
         resources:
-          limits: {cpu: '500m', memory: 600Mi, ephemeral-storage: 5Gi}
-          requests: {cpu: '500m', memory: 512Mi, ephemeral-storage: 5Gi}
+          limits: {cpu: '120m', memory: 600Mi, ephemeral-storage: 5Gi}
+          requests: {cpu: '100m', memory: 512Mi, ephemeral-storage: 5Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
       affinity:
