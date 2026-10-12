@@ -71,6 +71,64 @@ results in the supplementary (\cref{tab:supp_full}).}
 \end{table*}
 ''')
 
+# ---- Table 1b (main, RX-1): field-level R2 and RMSE (t/ha), the paper's other metrics -------------------------------
+if 'field_r2' in pm['CV10|ARG-C'][OURS]:
+    rows = []
+    for proto in PROTOS:
+        vals = {t: [np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for k in ('field_r2', 'pixel_rmse', 'field_rmse')]
+                for t, _ in MODELS}
+        best = [max(v[0] for v in vals.values()), min(v[1] for v in vals.values()), min(v[2] for v in vals.values())]
+        cells = []
+        for t, _ in MODELS:
+            cs = []
+            for i, v in enumerate(vals[t]):
+                s_ = ('%.3f' if i == 0 else '%.2f') % v
+                cs.append(r'\textbf{%s}' % s_ if abs(v - best[i]) < 1e-12 else s_)
+            cells.append(' & '.join(cs))
+        rows.append(proto + ' & ' + ' & '.join(cells) + r' \\')
+    write('field_level.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l""" + 'ccc' * len(MODELS) + r"""}
+\toprule
+ & """ + ' & '.join(r'\multicolumn{3}{c}{%s}' % n for _, n in MODELS) + r""" \\
+""" + ''.join(r'\cmidrule(lr){%d-%d}' % (2 + 3 * i, 4 + 3 * i) for i in range(len(MODELS))) + r"""
+Protocol & """ + ' & '.join([r'Field $R^2$ & RMSE$_p$ & RMSE$_f$'] * len(MODELS)) + r""" \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Field-level $R^2$ and RMSE} (t/ha; RMSE$_p$: pixel, RMSE$_f$: field season = mean over its test
+cells), mean over the nine pairs, the metrics reported in~\cite{yieldsat}. Same models and test pixels as
+\cref{tab:main}; best per row in bold. Per pair in \cref{tab:supp_field}.}
+\label{tab:field}
+\end{table*}
+""")
+    rows = []
+    for proto in PROTOS:
+        for i, p in enumerate(PAIRS):
+            v = pm['%s|%s' % (proto, p)]
+            cells = ' & '.join('%s / %.2f' % (f2(v[t]['field_r2']), v[t]['field_rmse']) for t, _ in MODELS)
+            rows.append((r'\multirow{9}{*}{%s}' % proto if i == 0 else '') + ' & %s & %s \\\\' % (p, cells))
+        if proto != 'LORO':
+            rows.append(r'\midrule')
+    write('supp_field.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{ll""" + 'c' * len(MODELS) + r"""}
+\toprule
+Protocol & Pair & """ + ' & '.join(n for _, n in MODELS) + r""" \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-pair field-level results} (field-level $R^2$ / field RMSE in t/ha).}
+\label{tab:supp_field}
+\end{table*}
+""")
+
 # ---- Table 2 (main): ours vs the best paper model of each row ----------------------------------------------------
 rows = []
 for proto in PROTOS:

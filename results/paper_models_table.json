@@ -8,6 +8,9 @@
    "median_field_r": 0.6645150773148626,
    "median_var_ratio": 0.6918780121393159,
    "fields": 185,
+   "pixel_rmse": 1.9564984500667657,
+   "field_r2": 0.8825002125031349,
+   "field_rmse": 0.961945739976048,
    "cells": 1266445
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -16,6 +19,9 @@
    "median_field_r": 0.6837337326961107,
    "median_var_ratio": 0.7291364153150397,
    "fields": 185,
+   "pixel_rmse": 1.955987591838075,
+   "field_r2": 0.8617134662710555,
+   "field_rmse": 1.0435709485665976,
    "cells": 1266445
   },
   "paper_3dlstm": {
@@ -24,6 +30,9 @@
    "median_field_r": 0.5701630647831105,
    "median_var_ratio": 0.5649525659638495,
    "fields": 185,
+   "pixel_rmse": 2.187228191922099,
+   "field_r2": 0.8095344057445962,
+   "field_rmse": 1.2247298506012751,
    "cells": 1266445
   },
   "paper_3dconvlstm": {
@@ -32,6 +41,9 @@
    "median_field_r": 0.4829594441286181,
    "median_var_ratio": 0.5532966601252485,
    "fields": 185,
+   "pixel_rmse": 2.4184737706034363,
+   "field_r2": 0.7848077291428045,
+   "field_rmse": 1.3018033037623848,
    "cells": 1266445
   },
   "paper_aff": {
@@ -40,6 +52,9 @@
    "median_field_r": 0.6119142773735532,
    "median_var_ratio": 0.5431882260157194,
    "fields": 185,
+   "pixel_rmse": 2.185158229432291,
+   "field_r2": 0.825908989586942,
+   "field_rmse": 1.1709010839705807,
    "cells": 1266445
   },
   "paper_mmgf": {
@@ -48,6 +63,9 @@
    "median_field_r": 0.6591431925828279,
    "median_var_ratio": 0.6648628949750114,
    "fields": 185,
+   "pixel_rmse": 2.1061240406103305,
+   "field_r2": 0.8429537861962737,
+   "field_rmse": 1.1121049411961068,
    "cells": 1266445
   },
   "vs_best_paper_by_pooled_r2": {
@@ -86,6 +104,9 @@
    "median_field_r": 0.7213726635807858,
    "median_var_ratio": 0.7294997761319771,
    "fields": 440,
+   "pixel_rmse": 0.80198535559108,
+   "field_r2": 0.8345637256588343,
+   "field_rmse": 0.49164727135985903,
    "cells": 3134175
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -94,6 +115,9 @@
    "median_field_r": 0.7270067321871398,
    "median_var_ratio": 0.7421726079752504,
    "fields": 440,
+   "pixel_rmse": 0.781673156292868,
+   "field_r2": 0.8392774741561584,
+   "field_rmse": 0.48459244285394754,
    "cells": 3134175
   },
   "paper_3dlstm": {
@@ -102,6 +126,9 @@
    "median_field_r": 0.659147707220416,
    "median_var_ratio": 0.6893103025053215,
    "fields": 440,
+   "pixel_rmse": 0.8711352513960697,
+   "field_r2": 0.802042526541425,
+   "field_rmse": 0.5378042299663045,
    "cells": 3134175
   },
   "paper_3dconvlstm": {
@@ -110,6 +137,9 @@
    "median_field_r": 0.6376815463523884,
    "median_var_ratio": 0.6728784905592471,
    "fields": 440,
+   "pixel_rmse": 0.9005095554016304,
+   "field_r2": 0.7815356184540574,
+   "field_rmse": 0.5649741565188537,
    "cells": 3134175
   },
   "paper_aff": {
@@ -118,6 +148,9 @@
    "median_field_r": 0.687771900481523,
    "median_var_ratio": 0.6392637708002271,
    "fields": 440,
+   "pixel_rmse": 0.8307018091856311,
+   "field_r2": 0.8206676914244041,
+   "field_rmse": 0.5118792585934723,
    "cells": 3134175
   },
   "paper_mmgf": {
@@ -126,6 +159,9 @@
    "median_field_r": 0.711470558287213,
    "median_var_ratio": 0.7216636474116885,
    "fields": 440,
+   "pixel_rmse": 0.8223259476777137,
+   "field_r2": 0.8146526207066375,
+   "field_rmse": 0.5203930496131023,
    "cells": 3134175
   },
   "vs_best_paper_by_pooled_r2": {
@@ -164,6 +200,9 @@
    "median_field_r": 0.658004028557124,
    "median_var_ratio": 0.7085183661468993,
    "fields": 126,
+   "pixel_rmse": 1.002178762087818,
+   "field_r2": 0.9151828556045384,
+   "field_rmse": 0.6221630812997406,
    "cells": 925187
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -172,6 +211,9 @@
    "median_field_r": 0.7011590289110368,
    "median_var_ratio": 0.762622212348619,
    "fields": 126,
+   "pixel_rmse": 1.007660930134595,
+   "field_r2": 0.9082863371374913,
+   "field_rmse": 0.6469629834294933,
    "cells": 925187
   },
   "paper_3dlstm": {
@@ -180,6 +222,9 @@
    "median_field_r": 0.5756113867944872,
    "median_var_ratio": 0.5784992956719409,
    "fields": 126,
+   "pixel_rmse": 1.1323490980475106,
+   "field_r2": 0.8683644969213359,
+   "field_rmse": 0.7750842862640442,
    "cells": 925187
   },
   "paper_3dconvlstm": {
@@ -188,6 +233,9 @@
    "median_field_r": 0.501919850416852,
    "median_var_ratio": 0.6155615251374693,
    "fields": 126,
+   "pixel_rmse": 1.2771407323434272,
+   "field_r2": 0.8033416283229291,
+   "field_rmse": 0.9473678294611158,
    "cells": 925187
   },
   "paper_aff": {
@@ -196,6 +244,9 @@
    "median_field_r": 0.6001048803168604,
    "median_var_ratio": 0.5747435737499399,
    "fields": 126,
+   "pixel_rmse": 1.0918263925059557,
+   "field_r2": 0.879645139347772,
+   "field_rmse": 0.7411297224914797,
    "cells": 925187
   },
   "paper_mmgf": {
@@ -204,6 +255,9 @@
    "median_field_r": 0.6207229532648961,
    "median_var_ratio": 0.6706918116088993,
    "fields": 126,
+   "pixel_rmse": 1.0583172639414824,
+   "field_r2": 0.8793804232032667,
+   "field_rmse": 0.7419443187715172,
    "cells": 925187
   },
   "vs_best_paper_by_pooled_r2": {
@@ -242,6 +296,9 @@
    "median_field_r": 0.5646520876230671,
    "median_var_ratio": 0.6113606344202178,
    "fields": 118,
+   "pixel_rmse": 2.035072993424692,
+   "field_r2": 0.898012206555161,
+   "field_rmse": 0.5649584941776037,
    "cells": 859997
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -250,6 +307,9 @@
    "median_field_r": 0.5699891688813772,
    "median_var_ratio": 0.6115697487518973,
    "fields": 118,
+   "pixel_rmse": 2.050710000595933,
+   "field_r2": 0.8565830426834031,
+   "field_rmse": 0.6699504713707936,
    "cells": 859997
   },
   "paper_3dlstm": {
@@ -258,6 +318,9 @@
    "median_field_r": 0.5016137770145683,
    "median_var_ratio": 0.6006599304572425,
    "fields": 118,
+   "pixel_rmse": 2.169091652444418,
+   "field_r2": 0.8259037801968745,
+   "field_rmse": 0.738137238015285,
    "cells": 859997
   },
   "paper_3dconvlstm": {
@@ -266,6 +329,9 @@
    "median_field_r": 0.47123270690374647,
    "median_var_ratio": 0.5576909554514443,
    "fields": 118,
+   "pixel_rmse": 2.2613351385824987,
+   "field_r2": 0.7749762955975756,
+   "field_rmse": 0.8391828112653904,
    "cells": 859997
   },
   "paper_aff": {
@@ -274,6 +340,9 @@
    "median_field_r": 0.5445347780841381,
    "median_var_ratio": 0.5072763624012373,
    "fields": 118,
+   "pixel_rmse": 2.096407251728786,
+   "field_r2": 0.8465970849555186,
+   "field_rmse": 0.6928819550405433,
    "cells": 859997
   },
   "paper_mmgf": {
@@ -282,6 +351,9 @@
    "median_field_r": 0.5169793660033031,
    "median_var_ratio": 0.579167874548428,
    "fields": 118,
+   "pixel_rmse": 2.123241719675144,
+   "field_r2": 0.8277430652846987,
+   "field_rmse": 0.734227762892118,
    "cells": 859997
   },
   "vs_best_paper_by_pooled_r2": {
@@ -320,6 +392,9 @@
    "median_field_r": 0.4755063402007666,
    "median_var_ratio": 0.49205875318023373,
    "fields": 293,
+   "pixel_rmse": 0.9039686816161588,
+   "field_r2": 0.8320378786328884,
+   "field_rmse": 0.2839457932449303,
    "cells": 2296121
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -328,6 +403,9 @@
    "median_field_r": 0.508693119345076,
    "median_var_ratio": 0.5229774142896721,
    "fields": 293,
+   "pixel_rmse": 0.8991039756144059,
+   "field_r2": 0.8118228031692579,
+   "field_rmse": 0.3005475974927542,
    "cells": 2296121
   },
   "paper_3dlstm": {
@@ -336,6 +414,9 @@
    "median_field_r": 0.4463009296966571,
    "median_var_ratio": 0.4958996136034614,
    "fields": 293,
+   "pixel_rmse": 0.9365044222155933,
+   "field_r2": 0.7863710610598315,
+   "field_rmse": 0.3202283701698529,
    "cells": 2296121
   },
   "paper_3dconvlstm": {
@@ -344,6 +425,9 @@
    "median_field_r": 0.4172397785551525,
    "median_var_ratio": 0.4822651925742385,
    "fields": 293,
+   "pixel_rmse": 0.9553989552997587,
+   "field_r2": 0.7759935193338432,
+   "field_rmse": 0.3279140723808386,
    "cells": 2296121
   },
   "paper_aff": {
@@ -352,6 +436,9 @@
    "median_field_r": 0.4734534805025901,
    "median_var_ratio": 0.4278025632158367,
    "fields": 293,
+   "pixel_rmse": 0.9135147753027666,
+   "field_r2": 0.8343090689970372,
+   "field_rmse": 0.2820194961630526,
    "cells": 2296121
   },
   "paper_mmgf": {
@@ -360,6 +447,9 @@
    "median_field_r": 0.4581963867548139,
    "median_var_ratio": 0.501118042373599,
    "fields": 293,
+   "pixel_rmse": 0.9137384427046056,
+   "field_r2": 0.833018705695854,
+   "field_rmse": 0.28311551826857995,
    "cells": 2296121
   },
   "vs_best_paper_by_pooled_r2": {
@@ -398,6 +488,9 @@
    "median_field_r": 0.393630497356429,
    "median_var_ratio": 0.420990340136958,
    "fields": 140,
+   "pixel_rmse": 1.362949622648774,
+   "field_r2": 0.7728391117712031,
+   "field_rmse": 0.37979195171804225,
    "cells": 1104144
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -406,6 +499,9 @@
    "median_field_r": 0.394806974180709,
    "median_var_ratio": 0.38891658046604693,
    "fields": 140,
+   "pixel_rmse": 1.3619825369593466,
+   "field_r2": 0.7144635216277693,
+   "field_rmse": 0.42580403992877297,
    "cells": 1104144
   },
   "paper_3dlstm": {
@@ -414,6 +510,9 @@
    "median_field_r": 0.3200261556666735,
    "median_var_ratio": 0.3739055750412245,
    "fields": 140,
+   "pixel_rmse": 1.3993309007599262,
+   "field_r2": 0.6914292977624936,
+   "field_rmse": 0.4426457742886791,
    "cells": 1104144
   },
   "paper_3dconvlstm": {
@@ -422,6 +521,9 @@
    "median_field_r": 0.2965395476014544,
    "median_var_ratio": 0.38401197402083076,
    "fields": 140,
+   "pixel_rmse": 1.420571683118692,
+   "field_r2": 0.6808915488517042,
+   "field_rmse": 0.4501405437138328,
    "cells": 1104144
   },
   "paper_aff": {
@@ -430,6 +532,9 @@
    "median_field_r": 0.34966085153825843,
    "median_var_ratio": 0.34731424316129655,
    "fields": 140,
+   "pixel_rmse": 1.395257166972266,
+   "field_r2": 0.6750544516106252,
+   "field_rmse": 0.4542388482534219,
    "cells": 1104144
   },
   "paper_mmgf": {
@@ -438,6 +543,9 @@
    "median_field_r": 0.33587216387471014,
    "median_var_ratio": 0.39629189500395595,
    "fields": 140,
+   "pixel_rmse": 1.412937608545347,
+   "field_r2": 0.7007967934995549,
+   "field_rmse": 0.43587514001162225,
    "cells": 1104144
   },
   "vs_best_paper_by_pooled_r2": {
@@ -476,6 +584,9 @@
    "median_field_r": 0.5340248152340848,
    "median_var_ratio": 0.632804464623722,
    "fields": 111,
+   "pixel_rmse": 1.1564597393104756,
+   "field_r2": 0.8368390927523415,
+   "field_rmse": 0.5422493080811241,
    "cells": 302802
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -484,6 +595,9 @@
    "median_field_r": 0.5492347974209884,
    "median_var_ratio": 0.606378529015546,
    "fields": 111,
+   "pixel_rmse": 1.1621220052167252,
+   "field_r2": 0.8126018339863476,
+   "field_rmse": 0.5811304323022571,
    "cells": 302802
   },
   "paper_3dlstm": {
@@ -492,6 +606,9 @@
    "median_field_r": 0.4434276477390413,
    "median_var_ratio": 0.49193386538339323,
    "fields": 111,
+   "pixel_rmse": 1.2729881579778748,
+   "field_r2": 0.6712623021914244,
+   "field_rmse": 0.7696897542326667,
    "cells": 302802
   },
   "paper_3dconvlstm": {
@@ -500,6 +617,9 @@
    "median_field_r": 0.33199940014933693,
    "median_var_ratio": 0.43442826814048835,
    "fields": 111,
+   "pixel_rmse": 1.3162564537168175,
+   "field_r2": 0.6457232050140211,
+   "field_rmse": 0.7990285628758562,
    "cells": 302802
   },
   "paper_aff": {
@@ -508,6 +628,9 @@
    "median_field_r": 0.45334563307700354,
    "median_var_ratio": 0.48870098860528477,
    "fields": 111,
+   "pixel_rmse": 1.2081512623457382,
+   "field_r2": 0.7701859868507318,
+   "field_rmse": 0.6435454203849788,
    "cells": 302802
   },
   "paper_mmgf": {
@@ -516,6 +639,9 @@
    "median_field_r": 0.47649602672478375,
    "median_var_ratio": 0.5111155667551828,
    "fields": 111,
+   "pixel_rmse": 1.231628258866193,
+   "field_r2": 0.7333055192396432,
+   "field_rmse": 0.6932629083974609,
    "cells": 302802
   },
   "vs_best_paper_by_pooled_r2": {
@@ -554,6 +680,9 @@
    "median_field_r": 0.5283794674332265,
    "median_var_ratio": 0.5724017268172603,
    "fields": 188,
+   "pixel_rmse": 2.1475944654436074,
+   "field_r2": 0.7867244013124197,
+   "field_rmse": 0.876869337013764,
    "cells": 306843
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -562,6 +691,9 @@
    "median_field_r": 0.5543208756357138,
    "median_var_ratio": 0.5712154214762671,
    "fields": 188,
+   "pixel_rmse": 2.1257722197344258,
+   "field_r2": 0.7954579577239765,
+   "field_rmse": 0.8587279383330518,
    "cells": 306843
   },
   "paper_3dlstm": {
@@ -570,6 +702,9 @@
    "median_field_r": 0.4677145084174318,
    "median_var_ratio": 0.5118613083315822,
    "fields": 188,
+   "pixel_rmse": 2.270189588707581,
+   "field_r2": 0.7156572465898938,
+   "field_rmse": 1.0124775005696072,
    "cells": 306843
   },
   "paper_3dconvlstm": {
@@ -578,6 +713,9 @@
    "median_field_r": 0.4074726848389487,
    "median_var_ratio": 0.42956898214472683,
    "fields": 188,
+   "pixel_rmse": 2.3895321903276794,
+   "field_r2": 0.6275215825367554,
+   "field_rmse": 1.1588169940014759,
    "cells": 306843
   },
   "paper_aff": {
@@ -586,6 +724,9 @@
    "median_field_r": 0.48797705307170436,
    "median_var_ratio": 0.397407501852173,
    "fields": 188,
+   "pixel_rmse": 2.284916597352194,
+   "field_r2": 0.7086286597224736,
+   "field_rmse": 1.0249146822570585,
    "cells": 306843
   },
   "paper_mmgf": {
@@ -594,6 +735,9 @@
    "median_field_r": 0.49700620582811117,
    "median_var_ratio": 0.4879555493309903,
    "fields": 188,
+   "pixel_rmse": 2.2334979211612502,
+   "field_r2": 0.731000704647545,
+   "field_rmse": 0.9847814740304209,
    "cells": 306843
   },
   "vs_best_paper_by_pooled_r2": {
@@ -632,6 +776,9 @@
    "median_field_r": 0.2978009076980611,
    "median_var_ratio": 0.35277397312695835,
    "fields": 572,
+   "pixel_rmse": 1.2018938308475662,
+   "field_r2": 0.7686310473107598,
+   "field_rmse": 0.5144297102582466,
    "cells": 2177206
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -640,6 +787,9 @@
    "median_field_r": 0.30992954005471735,
    "median_var_ratio": 0.3590075352682198,
    "fields": 572,
+   "pixel_rmse": 1.202112259828104,
+   "field_r2": 0.7636358683745195,
+   "field_rmse": 0.519953240058409,
    "cells": 2177206
   },
   "paper_3dlstm": {
@@ -648,6 +798,9 @@
    "median_field_r": 0.2605216109047952,
    "median_var_ratio": 0.31309926268732446,
    "fields": 572,
+   "pixel_rmse": 1.2253780881977538,
+   "field_r2": 0.7421366739517101,
+   "field_rmse": 0.5430856061574806,
    "cells": 2177206
   },
   "paper_3dconvlstm": {
@@ -656,6 +809,9 @@
    "median_field_r": 0.23551615393827852,
    "median_var_ratio": 0.327406547642587,
    "fields": 572,
+   "pixel_rmse": 1.234402448545767,
+   "field_r2": 0.7409197596542091,
+   "field_rmse": 0.5443655686154656,
    "cells": 2177206
   },
   "paper_aff": {
@@ -664,6 +820,9 @@
    "median_field_r": 0.2760978980172105,
    "median_var_ratio": 0.2848961740599494,
    "fields": 572,
+   "pixel_rmse": 1.2211600575841082,
+   "field_r2": 0.7357750009453699,
+   "field_rmse": 0.5497439453714248,
    "cells": 2177206
   },
   "paper_mmgf": {
@@ -672,6 +831,9 @@
    "median_field_r": 0.279743459799207,
    "median_var_ratio": 0.323492998991659,
    "fields": 572,
+   "pixel_rmse": 1.2138622239867227,
+   "field_r2": 0.758989516000862,
+   "field_rmse": 0.5250388860952694,
    "cells": 2177206
   },
   "vs_best_paper_by_pooled_r2": {
@@ -710,6 +872,9 @@
    "median_field_r": 0.5784548961383827,
    "median_var_ratio": 0.6475175773843868,
    "fields": 185,
+   "pixel_rmse": 2.5186284787803377,
+   "field_r2": 0.6196581685318544,
+   "field_rmse": 1.7306891930213695,
    "cells": 1266445
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -718,6 +883,9 @@
    "median_field_r": 0.612769395406191,
    "median_var_ratio": 0.6318923270853287,
    "fields": 185,
+   "pixel_rmse": 2.5991169852289002,
+   "field_r2": 0.6443585606628606,
+   "field_rmse": 1.6735481602731404,
    "cells": 1266445
   },
   "paper_3dlstm": {
@@ -726,6 +894,9 @@
    "median_field_r": 0.4875829677670669,
    "median_var_ratio": 0.5669389039714824,
    "fields": 185,
+   "pixel_rmse": 3.183620927047021,
+   "field_r2": 0.3204620624764758,
+   "field_rmse": 2.3133369193470656,
    "cells": 1266445
   },
   "paper_3dconvlstm": {
@@ -734,6 +905,9 @@
    "median_field_r": 0.3002700714503563,
    "median_var_ratio": 0.47099815865085304,
    "fields": 185,
+   "pixel_rmse": 3.615244062250762,
+   "field_r2": 0.03589658094610826,
+   "field_rmse": 2.7554583230857133,
    "cells": 1266445
   },
   "paper_aff": {
@@ -742,6 +916,9 @@
    "median_field_r": 0.5588880130462368,
    "median_var_ratio": 0.5124522970191563,
    "fields": 185,
+   "pixel_rmse": 2.5673606432488008,
+   "field_r2": 0.580219397899776,
+   "field_rmse": 1.818206550864848,
    "cells": 1266445
   },
   "paper_mmgf": {
@@ -750,6 +927,9 @@
    "median_field_r": 0.5849550921510313,
    "median_var_ratio": 0.6158408343218741,
    "fields": 185,
+   "pixel_rmse": 2.6904390133105527,
+   "field_r2": 0.5601679477174764,
+   "field_rmse": 1.8611246984413148,
    "cells": 1266445
   },
   "vs_best_paper_by_pooled_r2": {
@@ -788,6 +968,9 @@
    "median_field_r": 0.6765894152074174,
    "median_var_ratio": 0.7115135853432921,
    "fields": 440,
+   "pixel_rmse": 0.9332458725582107,
+   "field_r2": 0.7253643117817554,
+   "field_rmse": 0.633456429643536,
    "cells": 3134175
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -796,6 +979,9 @@
    "median_field_r": 0.6938030813861016,
    "median_var_ratio": 0.7368251953141347,
    "fields": 440,
+   "pixel_rmse": 0.8902072692920278,
+   "field_r2": 0.7413181354265045,
+   "field_rmse": 0.6147821564200375,
    "cells": 3134175
   },
   "paper_3dlstm": {
@@ -804,6 +990,9 @@
    "median_field_r": 0.5924792510478377,
    "median_var_ratio": 0.6148478943773592,
    "fields": 440,
+   "pixel_rmse": 1.0636871292949737,
+   "field_r2": 0.5833166186809087,
+   "field_rmse": 0.7802636095557082,
    "cells": 3134175
   },
   "paper_3dconvlstm": {
@@ -812,6 +1001,9 @@
    "median_field_r": 0.5562402815899022,
    "median_var_ratio": 0.6642865142649255,
    "fields": 440,
+   "pixel_rmse": 1.1373824344190095,
+   "field_r2": 0.49692851516350833,
+   "field_rmse": 0.8573400525888096,
    "cells": 3134175
   },
   "paper_aff": {
@@ -820,6 +1012,9 @@
    "median_field_r": 0.6470934205669796,
    "median_var_ratio": 0.6198052544768937,
    "fields": 440,
+   "pixel_rmse": 1.0243932857818532,
+   "field_r2": 0.6092169173758416,
+   "field_rmse": 0.7556246896378648,
    "cells": 3134175
   },
   "paper_mmgf": {
@@ -828,6 +1023,9 @@
    "median_field_r": 0.6808774382425231,
    "median_var_ratio": 0.68598620177277,
    "fields": 440,
+   "pixel_rmse": 0.9696546312496312,
+   "field_r2": 0.655462522701086,
+   "field_rmse": 0.7095066941552854,
    "cells": 3134175
   },
   "vs_best_paper_by_pooled_r2": {
@@ -866,6 +1064,9 @@
    "median_field_r": 0.5134794041040718,
    "median_var_ratio": 0.7521910955510398,
    "fields": 126,
+   "pixel_rmse": 1.2136825256317723,
+   "field_r2": 0.8620042221475281,
+   "field_rmse": 0.7935884034280964,
    "cells": 925187
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -874,6 +1075,9 @@
    "median_field_r": 0.5583023322923031,
    "median_var_ratio": 0.7161514190604799,
    "fields": 126,
+   "pixel_rmse": 1.253654746368672,
+   "field_r2": 0.8191622971511262,
+   "field_rmse": 0.9084622894385738,
    "cells": 925187
   },
   "paper_3dlstm": {
@@ -882,6 +1086,9 @@
    "median_field_r": 0.4943033226402831,
    "median_var_ratio": 0.6467134207355225,
    "fields": 126,
+   "pixel_rmse": 1.460360620882439,
+   "field_r2": 0.7230503940787849,
+   "field_rmse": 1.124249723058751,
    "cells": 925187
   },
   "paper_3dconvlstm": {
@@ -890,6 +1097,9 @@
    "median_field_r": 0.4070170703109943,
    "median_var_ratio": 0.5789208642676092,
    "fields": 126,
+   "pixel_rmse": 1.5925373340766455,
+   "field_r2": 0.6993651223884814,
+   "field_rmse": 1.17133762871493,
    "cells": 925187
   },
   "paper_aff": {
@@ -898,6 +1108,9 @@
    "median_field_r": 0.4958533263297362,
    "median_var_ratio": 0.5535945664595704,
    "fields": 126,
+   "pixel_rmse": 1.9107068448120803,
+   "field_r2": 0.5242502665698936,
+   "field_rmse": 1.4735052593615183,
    "cells": 925187
   },
   "paper_mmgf": {
@@ -906,6 +1119,9 @@
    "median_field_r": 0.5837662106681687,
    "median_var_ratio": 0.6943067205732076,
    "fields": 126,
+   "pixel_rmse": 1.5287599131938445,
+   "field_r2": 0.6817095205476174,
+   "field_rmse": 1.2052419451825502,
    "cells": 925187
   },
   "vs_best_paper_by_pooled_r2": {
@@ -944,6 +1160,9 @@
    "median_field_r": 0.44773703831652284,
    "median_var_ratio": 0.5863795137978081,
    "fields": 118,
+   "pixel_rmse": 2.71230180321958,
+   "field_r2": -0.015416039048607333,
+   "field_rmse": 1.782643312720265,
    "cells": 859997
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -952,6 +1171,9 @@
    "median_field_r": 0.4889488574312121,
    "median_var_ratio": 0.5265631479417429,
    "fields": 118,
+   "pixel_rmse": 2.568292412725453,
+   "field_r2": 0.20793021021132974,
+   "field_rmse": 1.5744329473204364,
    "cells": 859997
   },
   "paper_3dlstm": {
@@ -960,6 +1182,9 @@
    "median_field_r": 0.4500167548897228,
    "median_var_ratio": 0.6115879383104634,
    "fields": 118,
+   "pixel_rmse": 2.7994722475900824,
+   "field_r2": -0.028184016539764878,
+   "field_rmse": 1.7938158991130284,
    "cells": 859997
   },
   "paper_3dconvlstm": {
@@ -968,6 +1193,9 @@
    "median_field_r": 0.3926117591199633,
    "median_var_ratio": 0.5584846984600468,
    "fields": 118,
+   "pixel_rmse": 2.908348422810581,
+   "field_r2": -0.21061945531507198,
+   "field_rmse": 1.946463522589739,
    "cells": 859997
   },
   "paper_aff": {
@@ -976,6 +1204,9 @@
    "median_field_r": 0.49605086608181614,
    "median_var_ratio": 0.46238060209340315,
    "fields": 118,
+   "pixel_rmse": 2.6403993859540154,
+   "field_r2": 0.07692149457181374,
+   "field_rmse": 1.6996588655240978,
    "cells": 859997
   },
   "paper_mmgf": {
@@ -984,6 +1215,9 @@
    "median_field_r": 0.4771862877902032,
    "median_var_ratio": 0.5481856858096013,
    "fields": 118,
+   "pixel_rmse": 2.6621420047870585,
+   "field_r2": 0.03466991317039547,
+   "field_rmse": 1.738122437468401,
    "cells": 859997
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1022,6 +1256,9 @@
    "median_field_r": 0.43638315816410234,
    "median_var_ratio": 0.46489191329171675,
    "fields": 293,
+   "pixel_rmse": 0.9995572149269515,
+   "field_r2": 0.5520232911365461,
+   "field_rmse": 0.4637217655155933,
    "cells": 2296121
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1030,6 +1267,9 @@
    "median_field_r": 0.47630917759500085,
    "median_var_ratio": 0.49363654429302745,
    "fields": 293,
+   "pixel_rmse": 0.99509495128837,
+   "field_r2": 0.5215977190377096,
+   "field_rmse": 0.47921056483923097,
    "cells": 2296121
   },
   "paper_3dlstm": {
@@ -1038,6 +1278,9 @@
    "median_field_r": 0.3784685940693479,
    "median_var_ratio": 0.45969400656515735,
    "fields": 293,
+   "pixel_rmse": 1.1165239691651783,
+   "field_r2": 0.13936457086199094,
+   "field_rmse": 0.6427459865085956,
    "cells": 2296121
   },
   "paper_3dconvlstm": {
@@ -1046,6 +1289,9 @@
    "median_field_r": 0.36717999443055893,
    "median_var_ratio": 0.4346329586353735,
    "fields": 293,
+   "pixel_rmse": 1.1084552276098174,
+   "field_r2": 0.21216577838850792,
+   "field_rmse": 0.6149604474525302,
    "cells": 2296121
   },
   "paper_aff": {
@@ -1054,6 +1300,9 @@
    "median_field_r": 0.44202253718346013,
    "median_var_ratio": 0.413820526874468,
    "fields": 293,
+   "pixel_rmse": 0.9908193615715045,
+   "field_r2": 0.5628842434664376,
+   "field_rmse": 0.45806593318805994,
    "cells": 2296121
   },
   "paper_mmgf": {
@@ -1062,6 +1311,9 @@
    "median_field_r": 0.42421381000461345,
    "median_var_ratio": 0.4555713554278787,
    "fields": 293,
+   "pixel_rmse": 0.9681673721782984,
+   "field_r2": 0.641304581612641,
+   "field_rmse": 0.4149470467674499,
    "cells": 2296121
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1100,6 +1352,9 @@
    "median_field_r": 0.3541706702970324,
    "median_var_ratio": 0.39246346914693814,
    "fields": 140,
+   "pixel_rmse": 1.4452839679982568,
+   "field_r2": 0.39433348815450986,
+   "field_rmse": 0.6201485876282682,
    "cells": 1104144
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1108,6 +1363,9 @@
    "median_field_r": 0.3569405726642525,
    "median_var_ratio": 0.360712926322782,
    "fields": 140,
+   "pixel_rmse": 1.4547144832140257,
+   "field_r2": 0.2298154723603083,
+   "field_rmse": 0.6993206829696288,
    "cells": 1104144
   },
   "paper_3dlstm": {
@@ -1116,6 +1374,9 @@
    "median_field_r": 0.322533292085857,
    "median_var_ratio": 0.35350158198227066,
    "fields": 140,
+   "pixel_rmse": 1.5201093736533569,
+   "field_r2": -0.029134565172239668,
+   "field_rmse": 0.8083790701732683,
    "cells": 1104144
   },
   "paper_3dconvlstm": {
@@ -1124,6 +1385,9 @@
    "median_field_r": 0.2904388450310989,
    "median_var_ratio": 0.3713614001637009,
    "fields": 140,
+   "pixel_rmse": 1.5631253193178238,
+   "field_r2": -0.2101199440391861,
+   "field_rmse": 0.8765832897475412,
    "cells": 1104144
   },
   "paper_aff": {
@@ -1132,6 +1396,9 @@
    "median_field_r": 0.34458045632311984,
    "median_var_ratio": 0.3475720277968889,
    "fields": 140,
+   "pixel_rmse": 1.4862950258458227,
+   "field_r2": 0.04762911083768051,
+   "field_rmse": 0.777646164200634,
    "cells": 1104144
   },
   "paper_mmgf": {
@@ -1140,6 +1407,9 @@
    "median_field_r": 0.3103759652735556,
    "median_var_ratio": 0.3762346853378402,
    "fields": 140,
+   "pixel_rmse": 1.530428435429899,
+   "field_r2": -0.05089627782873074,
+   "field_rmse": 0.8168812073316885,
    "cells": 1104144
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1178,6 +1448,9 @@
    "median_field_r": 0.4632713931328005,
    "median_var_ratio": 0.5552588393436577,
    "fields": 111,
+   "pixel_rmse": 1.4137708575147332,
+   "field_r2": 0.49526358571943974,
+   "field_rmse": 0.9537252258858238,
    "cells": 302802
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1186,6 +1459,9 @@
    "median_field_r": 0.5067532184011866,
    "median_var_ratio": 0.5239816020607915,
    "fields": 111,
+   "pixel_rmse": 1.4075510453801474,
+   "field_r2": 0.4569166962443876,
+   "field_rmse": 0.9892912694137975,
    "cells": 302802
   },
   "paper_3dlstm": {
@@ -1194,6 +1470,9 @@
    "median_field_r": 0.3935234007493659,
    "median_var_ratio": 0.4507961885708152,
    "fields": 111,
+   "pixel_rmse": 1.4464603998128538,
+   "field_r2": 0.4301619527515923,
+   "field_rmse": 1.0133668011593495,
    "cells": 302802
   },
   "paper_3dconvlstm": {
@@ -1202,6 +1481,9 @@
    "median_field_r": 0.19371055078799804,
    "median_var_ratio": 0.35104266735005857,
    "fields": 111,
+   "pixel_rmse": 1.5154336199544938,
+   "field_r2": 0.3004132790488321,
+   "field_rmse": 1.122824109887158,
    "cells": 302802
   },
   "paper_aff": {
@@ -1210,6 +1492,9 @@
    "median_field_r": 0.39234335487958505,
    "median_var_ratio": 0.3643774849180572,
    "fields": 111,
+   "pixel_rmse": 1.370197992774059,
+   "field_r2": 0.5167971133259823,
+   "field_rmse": 0.9331591327335754,
    "cells": 302802
   },
   "paper_mmgf": {
@@ -1218,6 +1503,9 @@
    "median_field_r": 0.4271645905841432,
    "median_var_ratio": 0.479755612796666,
    "fields": 111,
+   "pixel_rmse": 1.3727865483692752,
+   "field_r2": 0.505046544883438,
+   "field_rmse": 0.9444372998751562,
    "cells": 302802
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1256,6 +1544,9 @@
    "median_field_r": 0.478282289405298,
    "median_var_ratio": 0.5234013101624012,
    "fields": 188,
+   "pixel_rmse": 2.8310392128313855,
+   "field_r2": -0.0041759255875033485,
+   "field_rmse": 1.9026951071868012,
    "cells": 306843
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1264,6 +1555,9 @@
    "median_field_r": 0.5134529791928228,
    "median_var_ratio": 0.5132382207013991,
    "fields": 188,
+   "pixel_rmse": 2.744941528255858,
+   "field_r2": 0.0198455784218724,
+   "field_rmse": 1.879799589632507,
    "cells": 306843
   },
   "paper_3dlstm": {
@@ -1272,6 +1566,9 @@
    "median_field_r": 0.3945507415697712,
    "median_var_ratio": 0.40524570735404086,
    "fields": 188,
+   "pixel_rmse": 2.620315478290379,
+   "field_r2": 0.3601734844537444,
+   "field_rmse": 1.5187819103704863,
    "cells": 306843
   },
   "paper_3dconvlstm": {
@@ -1280,6 +1577,9 @@
    "median_field_r": 0.34076395743164656,
    "median_var_ratio": 0.35491758658030526,
    "fields": 188,
+   "pixel_rmse": 2.7060972927388973,
+   "field_r2": 0.34310067907738473,
+   "field_rmse": 1.5389117131296681,
    "cells": 306843
   },
   "paper_aff": {
@@ -1288,6 +1588,9 @@
    "median_field_r": 0.4389525985986273,
    "median_var_ratio": 0.3974657979311764,
    "fields": 188,
+   "pixel_rmse": 2.7158307056875373,
+   "field_r2": 0.18205185670236157,
+   "field_rmse": 1.71722492779908,
    "cells": 306843
   },
   "paper_mmgf": {
@@ -1296,6 +1599,9 @@
    "median_field_r": 0.45994343102950436,
    "median_var_ratio": 0.41689187096668723,
    "fields": 188,
+   "pixel_rmse": 2.8524724048837,
+   "field_r2": 0.11093106554378884,
+   "field_rmse": 1.7903255785912093,
    "cells": 306843
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1334,6 +1640,9 @@
    "median_field_r": 0.2876194161162196,
    "median_var_ratio": 0.3537803770308157,
    "fields": 572,
+   "pixel_rmse": 1.265803453128829,
+   "field_r2": 0.630152021198873,
+   "field_rmse": 0.650406881016085,
    "cells": 2177206
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1342,6 +1651,9 @@
    "median_field_r": 0.28948704159464045,
    "median_var_ratio": 0.3490760205003637,
    "fields": 572,
+   "pixel_rmse": 1.2761111570307746,
+   "field_r2": 0.6149907105338712,
+   "field_rmse": 0.663604170219875,
    "cells": 2177206
   },
   "paper_3dlstm": {
@@ -1350,6 +1662,9 @@
    "median_field_r": 0.21765466654428034,
    "median_var_ratio": 0.32972797210966054,
    "fields": 572,
+   "pixel_rmse": 1.3931482603159617,
+   "field_r2": 0.38704693117880107,
+   "field_rmse": 0.8373116123167508,
    "cells": 2177206
   },
   "paper_3dconvlstm": {
@@ -1358,6 +1673,9 @@
    "median_field_r": 0.1811148423823325,
    "median_var_ratio": 0.31690423445269855,
    "fields": 572,
+   "pixel_rmse": 1.421424229822288,
+   "field_r2": 0.35443029005405113,
+   "field_rmse": 0.8593005207894515,
    "cells": 2177206
   },
   "paper_aff": {
@@ -1366,6 +1684,9 @@
    "median_field_r": 0.23213190885262697,
    "median_var_ratio": 0.26557614068552526,
    "fields": 572,
+   "pixel_rmse": 1.3837903946485248,
+   "field_r2": 0.3965614428983042,
+   "field_rmse": 0.8307876473440011,
    "cells": 2177206
   },
   "paper_mmgf": {
@@ -1374,6 +1695,9 @@
    "median_field_r": 0.273655326428111,
    "median_var_ratio": 0.3561955511575036,
    "fields": 572,
+   "pixel_rmse": 1.3436080353975661,
+   "field_r2": 0.4947751730769543,
+   "field_rmse": 0.7601789585282055,
    "cells": 2177206
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1412,6 +1736,9 @@
    "median_field_r": 0.5725257141260325,
    "median_var_ratio": 0.6430089054671663,
    "fields": 185,
+   "pixel_rmse": 2.5157404358819755,
+   "field_r2": 0.6372757107611084,
+   "field_rmse": 1.6901309483547204,
    "cells": 1266445
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1420,6 +1747,9 @@
    "median_field_r": 0.6102032141918531,
    "median_var_ratio": 0.689554846234725,
    "fields": 185,
+   "pixel_rmse": 2.501680012179911,
+   "field_r2": 0.6419229653409336,
+   "field_rmse": 1.6792689940812788,
    "cells": 1266445
   },
   "paper_3dlstm": {
@@ -1428,6 +1758,9 @@
    "median_field_r": 0.45888786413154187,
    "median_var_ratio": 0.5830739673596752,
    "fields": 185,
+   "pixel_rmse": 3.0099288752040874,
+   "field_r2": 0.35611510529103185,
+   "field_rmse": 2.2518328662397438,
    "cells": 1266445
   },
   "paper_3dconvlstm": {
@@ -1436,6 +1769,9 @@
    "median_field_r": 0.2770667509143932,
    "median_var_ratio": 0.4889201643338509,
    "fields": 185,
+   "pixel_rmse": 3.415310878540541,
+   "field_r2": 0.15054987544757448,
+   "field_rmse": 2.586431478534913,
    "cells": 1266445
   },
   "paper_aff": {
@@ -1444,6 +1780,9 @@
    "median_field_r": 0.5454440321720867,
    "median_var_ratio": 0.5126599109115914,
    "fields": 185,
+   "pixel_rmse": 2.635431226254254,
+   "field_r2": 0.6198717560423478,
+   "field_rmse": 1.730203175606901,
    "cells": 1266445
   },
   "paper_mmgf": {
@@ -1452,6 +1791,9 @@
    "median_field_r": 0.5794572292764425,
    "median_var_ratio": 0.5812431219283206,
    "fields": 185,
+   "pixel_rmse": 2.5177216382252263,
+   "field_r2": 0.6048115247983402,
+   "field_rmse": 1.7641445628814585,
    "cells": 1266445
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1490,6 +1832,9 @@
    "median_field_r": 0.6871648940917932,
    "median_var_ratio": 0.7531378901326712,
    "fields": 440,
+   "pixel_rmse": 0.8876702296471596,
+   "field_r2": 0.763845637503762,
+   "field_rmse": 0.5874031200356838,
    "cells": 3134175
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1498,6 +1843,9 @@
    "median_field_r": 0.709750462895723,
    "median_var_ratio": 0.7578305793627127,
    "fields": 440,
+   "pixel_rmse": 0.8765199946237183,
+   "field_r2": 0.7750824619591521,
+   "field_rmse": 0.5732577346504876,
    "cells": 3134175
   },
   "paper_3dlstm": {
@@ -1506,6 +1854,9 @@
    "median_field_r": 0.5719289693096905,
    "median_var_ratio": 0.6587366869839681,
    "fields": 440,
+   "pixel_rmse": 1.0962362095139695,
+   "field_r2": 0.5814140113826947,
+   "field_rmse": 0.7820429515427768,
    "cells": 3134175
   },
   "paper_3dconvlstm": {
@@ -1514,6 +1865,9 @@
    "median_field_r": 0.517549355397477,
    "median_var_ratio": 0.6495661417722275,
    "fields": 440,
+   "pixel_rmse": 1.2217129586606208,
+   "field_r2": 0.4866323325601237,
+   "field_rmse": 0.8660690502857402,
    "cells": 3134175
   },
   "paper_aff": {
@@ -1522,6 +1876,9 @@
    "median_field_r": 0.6599563351448279,
    "median_var_ratio": 0.6316437210082821,
    "fields": 440,
+   "pixel_rmse": 0.9609869430634773,
+   "field_r2": 0.7005616580631512,
+   "field_rmse": 0.6614423033048951,
    "cells": 3134175
   },
   "paper_mmgf": {
@@ -1530,6 +1887,9 @@
    "median_field_r": 0.6957522991320995,
    "median_var_ratio": 0.761236818901419,
    "fields": 440,
+   "pixel_rmse": 0.9511912705575851,
+   "field_r2": 0.7045017117005418,
+   "field_rmse": 0.6570762159036647,
    "cells": 3134175
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1568,6 +1928,9 @@
    "median_field_r": 0.5831626675719673,
    "median_var_ratio": 0.7325656637936838,
    "fields": 126,
+   "pixel_rmse": 1.1278132895259678,
+   "field_r2": 0.8836358716065453,
+   "field_rmse": 0.7287389355591628,
    "cells": 925187
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1576,6 +1939,9 @@
    "median_field_r": 0.623724857346446,
    "median_var_ratio": 0.7351961251789985,
    "fields": 126,
+   "pixel_rmse": 1.180711788978799,
+   "field_r2": 0.8607201036060415,
+   "field_rmse": 0.7972722184271822,
    "cells": 925187
   },
   "paper_3dlstm": {
@@ -1584,6 +1950,9 @@
    "median_field_r": 0.5315022202105342,
    "median_var_ratio": 0.6013283899933132,
    "fields": 126,
+   "pixel_rmse": 1.4852327174674262,
+   "field_r2": 0.6956776517673051,
+   "field_rmse": 1.178499321173032,
    "cells": 925187
   },
   "paper_3dconvlstm": {
@@ -1592,6 +1961,9 @@
    "median_field_r": 0.41476468716276527,
    "median_var_ratio": 0.5269048039175703,
    "fields": 126,
+   "pixel_rmse": 1.6127857739682028,
+   "field_r2": 0.6387483302434327,
+   "field_rmse": 1.284006863100177,
    "cells": 925187
   },
   "paper_aff": {
@@ -1600,6 +1972,9 @@
    "median_field_r": 0.5211854736062781,
    "median_var_ratio": 0.5471528105592992,
    "fields": 126,
+   "pixel_rmse": 1.5962169554080288,
+   "field_r2": 0.6170012346385165,
+   "field_rmse": 1.3220902440109163,
    "cells": 925187
   },
   "paper_mmgf": {
@@ -1608,6 +1983,9 @@
    "median_field_r": 0.5844579003461143,
    "median_var_ratio": 0.6205593390757207,
    "fields": 126,
+   "pixel_rmse": 1.4259907502554283,
+   "field_r2": 0.7030148358122698,
+   "field_rmse": 1.1642058866343623,
    "cells": 925187
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1646,6 +2024,9 @@
    "median_field_r": 0.5108524681809112,
    "median_var_ratio": 0.5199741444253533,
    "fields": 118,
+   "pixel_rmse": 2.516360342049109,
+   "field_r2": 0.3201534127254655,
+   "field_rmse": 1.4586392837519815,
    "cells": 859997
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1654,6 +2035,9 @@
    "median_field_r": 0.5111139117257195,
    "median_var_ratio": 0.6413637238214667,
    "fields": 118,
+   "pixel_rmse": 2.4367237081523094,
+   "field_r2": 0.4248016112249685,
+   "field_rmse": 1.3416871959974948,
    "cells": 859997
   },
   "paper_3dlstm": {
@@ -1662,6 +2046,9 @@
    "median_field_r": 0.45687689001889287,
    "median_var_ratio": 0.5770261669844048,
    "fields": 118,
+   "pixel_rmse": 2.559016698368638,
+   "field_r2": 0.3291320451974762,
+   "field_rmse": 1.4489752541257968,
    "cells": 859997
   },
   "paper_3dconvlstm": {
@@ -1670,6 +2057,9 @@
    "median_field_r": 0.3615643020453859,
    "median_var_ratio": 0.5006011102484906,
    "fields": 118,
+   "pixel_rmse": 2.561855969067386,
+   "field_r2": 0.33921988170817974,
+   "field_rmse": 1.438039874480007,
    "cells": 859997
   },
   "paper_aff": {
@@ -1678,6 +2068,9 @@
    "median_field_r": 0.5020376355951494,
    "median_var_ratio": 0.42122634159640066,
    "fields": 118,
+   "pixel_rmse": 2.4616645260349777,
+   "field_r2": 0.36125796142110966,
+   "field_rmse": 1.4138560508723783,
    "cells": 859997
   },
   "paper_mmgf": {
@@ -1686,6 +2079,9 @@
    "median_field_r": 0.5016652831338113,
    "median_var_ratio": 0.5509327558259212,
    "fields": 118,
+   "pixel_rmse": 2.467628642974399,
+   "field_r2": 0.3557187797706981,
+   "field_rmse": 1.4199733089297033,
    "cells": 859997
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1724,6 +2120,9 @@
    "median_field_r": 0.444971532374875,
    "median_var_ratio": 0.515591871967849,
    "fields": 293,
+   "pixel_rmse": 0.9760611626650587,
+   "field_r2": 0.6153151395175189,
+   "field_rmse": 0.4297167778739762,
    "cells": 2296121
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1732,6 +2131,9 @@
    "median_field_r": 0.46798550141811696,
    "median_var_ratio": 0.5417282393312708,
    "fields": 293,
+   "pixel_rmse": 0.9635973298114653,
+   "field_r2": 0.6464323527583993,
+   "field_rmse": 0.41197040890881764,
    "cells": 2296121
   },
   "paper_3dlstm": {
@@ -1740,6 +2142,9 @@
    "median_field_r": 0.38312210882044184,
    "median_var_ratio": 0.4323504159496838,
    "fields": 293,
+   "pixel_rmse": 1.0490505322573296,
+   "field_r2": 0.4627939633420578,
+   "field_rmse": 0.5078087798248534,
    "cells": 2296121
   },
   "paper_3dconvlstm": {
@@ -1748,6 +2153,9 @@
    "median_field_r": 0.3446886910092019,
    "median_var_ratio": 0.4392801576472799,
    "fields": 293,
+   "pixel_rmse": 1.0728398232637981,
+   "field_r2": 0.4378010884222473,
+   "field_rmse": 0.5194870951654739,
    "cells": 2296121
   },
   "paper_aff": {
@@ -1756,6 +2164,9 @@
    "median_field_r": 0.4278698690246288,
    "median_var_ratio": 0.38453829196804235,
    "fields": 293,
+   "pixel_rmse": 1.0178368064076055,
+   "field_r2": 0.4836513525658851,
+   "field_rmse": 0.4978531795832807,
    "cells": 2296121
   },
   "paper_mmgf": {
@@ -1764,6 +2175,9 @@
    "median_field_r": 0.4213912191128154,
    "median_var_ratio": 0.4680069134079975,
    "fields": 293,
+   "pixel_rmse": 0.9786448071785009,
+   "field_r2": 0.6188129972706733,
+   "field_rmse": 0.4277586548019264,
    "cells": 2296121
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1802,6 +2216,9 @@
    "median_field_r": 0.3394980085999205,
    "median_var_ratio": 0.3991658563917848,
    "fields": 140,
+   "pixel_rmse": 1.4289453190666856,
+   "field_r2": 0.4897025702285075,
+   "field_rmse": 0.5692337854131648,
    "cells": 1104144
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1810,6 +2227,9 @@
    "median_field_r": 0.35270828916014973,
    "median_var_ratio": 0.39122473588654655,
    "fields": 140,
+   "pixel_rmse": 1.4300885986005094,
+   "field_r2": 0.44571373307502316,
+   "field_rmse": 0.5932613250827277,
    "cells": 1104144
   },
   "paper_3dlstm": {
@@ -1818,6 +2238,9 @@
    "median_field_r": 0.2998700309025906,
    "median_var_ratio": 0.36931772885267367,
    "fields": 140,
+   "pixel_rmse": 1.4529298674045015,
+   "field_r2": 0.4764086011842812,
+   "field_rmse": 0.5766007858929021,
    "cells": 1104144
   },
   "paper_3dconvlstm": {
@@ -1826,6 +2249,9 @@
    "median_field_r": 0.24181825785951627,
    "median_var_ratio": 0.33745710315332167,
    "fields": 140,
+   "pixel_rmse": 1.5107719931356207,
+   "field_r2": 0.2510654924352449,
+   "field_rmse": 0.6896057894357474,
    "cells": 1104144
   },
   "paper_aff": {
@@ -1834,6 +2260,9 @@
    "median_field_r": 0.34098713217683585,
    "median_var_ratio": 0.3388990031703908,
    "fields": 140,
+   "pixel_rmse": 1.4678080249766507,
+   "field_r2": 0.2173911070775818,
+   "field_rmse": 0.7049387229587443,
    "cells": 1104144
   },
   "paper_mmgf": {
@@ -1842,6 +2271,9 @@
    "median_field_r": 0.30149691531465417,
    "median_var_ratio": 0.37701975750818645,
    "fields": 140,
+   "pixel_rmse": 1.4913129842817585,
+   "field_r2": 0.0916251933658907,
+   "field_rmse": 0.7594715654104144,
    "cells": 1104144
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1880,6 +2312,9 @@
    "median_field_r": 0.46796899009458465,
    "median_var_ratio": 0.6215029380710745,
    "fields": 111,
+   "pixel_rmse": 1.540347746308467,
+   "field_r2": 0.3847119610562679,
+   "field_rmse": 1.0530044027976253,
    "cells": 302802
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1888,6 +2323,9 @@
    "median_field_r": 0.49863626634926145,
    "median_var_ratio": 0.5719282935925492,
    "fields": 111,
+   "pixel_rmse": 1.518600674129666,
+   "field_r2": 0.254190089212468,
+   "field_rmse": 1.1593245319607075,
    "cells": 302802
   },
   "paper_3dlstm": {
@@ -1896,6 +2334,9 @@
    "median_field_r": 0.4223203349611385,
    "median_var_ratio": 0.4412837641915885,
    "fields": 111,
+   "pixel_rmse": 1.6595698282321203,
+   "field_r2": 0.1369119657951463,
+   "field_rmse": 1.2471494472517437,
    "cells": 302802
   },
   "paper_3dconvlstm": {
@@ -1904,6 +2345,9 @@
    "median_field_r": 0.1611468056113954,
    "median_var_ratio": 0.30122310033847294,
    "fields": 111,
+   "pixel_rmse": 1.8367012132673528,
+   "field_r2": -0.4026054393405405,
+   "field_rmse": 1.5898593676818982,
    "cells": 302802
   },
   "paper_aff": {
@@ -1912,6 +2356,9 @@
    "median_field_r": 0.3975254772887493,
    "median_var_ratio": 0.36102361187411997,
    "fields": 111,
+   "pixel_rmse": 1.684259387512368,
+   "field_r2": -0.03095461979866765,
+   "field_rmse": 1.3630466674736497,
    "cells": 302802
   },
   "paper_mmgf": {
@@ -1920,6 +2367,9 @@
    "median_field_r": 0.4152794727981887,
    "median_var_ratio": 0.4026803192193638,
    "fields": 111,
+   "pixel_rmse": 1.7862091476451094,
+   "field_r2": -0.20455664554046193,
+   "field_rmse": 1.4733453770530067,
    "cells": 302802
   },
   "vs_best_paper_by_pooled_r2": {
@@ -1958,6 +2408,9 @@
    "median_field_r": 0.44409603461501995,
    "median_var_ratio": 0.5621359378502138,
    "fields": 188,
+   "pixel_rmse": 2.8113889549276014,
+   "field_r2": 0.08812675605664444,
+   "field_rmse": 1.8131408188899802,
    "cells": 306843
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -1966,6 +2419,9 @@
    "median_field_r": 0.5025190762745106,
    "median_var_ratio": 0.4040462124055808,
    "fields": 188,
+   "pixel_rmse": 2.9755573946130083,
+   "field_r2": -0.24050563397523117,
+   "field_rmse": 2.1147725728825884,
    "cells": 306843
   },
   "paper_3dlstm": {
@@ -1974,6 +2430,9 @@
    "median_field_r": 0.299582858645454,
    "median_var_ratio": 0.12473843236544654,
    "fields": 188,
+   "pixel_rmse": 2.974481508864255,
+   "field_r2": -0.10779952868495757,
+   "field_rmse": 1.998457361777184,
    "cells": 306843
   },
   "paper_3dconvlstm": {
@@ -1982,6 +2441,9 @@
    "median_field_r": 0.11333276497577226,
    "median_var_ratio": 0.0772674695390782,
    "fields": 188,
+   "pixel_rmse": 3.2202072122289658,
+   "field_r2": -0.5222432623332509,
+   "field_rmse": 2.3426441778212035,
    "cells": 306843
   },
   "paper_aff": {
@@ -1990,6 +2452,9 @@
    "median_field_r": 0.41710122908609115,
    "median_var_ratio": 0.35253201456763494,
    "fields": 188,
+   "pixel_rmse": 3.111890491912387,
+   "field_r2": -0.6426407532116385,
+   "field_rmse": 2.433523785281423,
    "cells": 306843
   },
   "paper_mmgf": {
@@ -1998,6 +2463,9 @@
    "median_field_r": 0.4394934876116712,
    "median_var_ratio": 0.449935321135692,
    "fields": 188,
+   "pixel_rmse": 3.085901711851222,
+   "field_r2": -0.6227650452632991,
+   "field_rmse": 2.4187563410637063,
    "cells": 306843
   },
   "vs_best_paper_by_pooled_r2": {
@@ -2036,6 +2504,9 @@
    "median_field_r": 0.2886308842978784,
    "median_var_ratio": 0.3712971646614202,
    "fields": 572,
+   "pixel_rmse": 1.2567975361809487,
+   "field_r2": 0.6617924959743615,
+   "field_rmse": 0.621963819765653,
    "cells": 2177206
   },
   "ours-p3nbr-dense-fc-rel10": {
@@ -2044,6 +2515,9 @@
    "median_field_r": 0.30242596374935315,
    "median_var_ratio": 0.33350515093779454,
    "fields": 572,
+   "pixel_rmse": 1.2508740329942913,
+   "field_r2": 0.6593981119826413,
+   "field_rmse": 0.6241615736635657,
    "cells": 2177206
   },
   "paper_3dlstm": {
@@ -2052,6 +2526,9 @@
    "median_field_r": 0.223731717275323,
    "median_var_ratio": 0.3177192973250802,
    "fields": 572,
+   "pixel_rmse": 1.309127335427862,
+   "field_r2": 0.5693772018352549,
+   "field_rmse": 0.701813974706692,
    "cells": 2177206
   },
   "paper_3dconvlstm": {
@@ -2060,6 +2537,9 @@
    "median_field_r": 0.19805002954851925,
    "median_var_ratio": 0.2859296843683703,
    "fields": 572,
+   "pixel_rmse": 1.3555321666888676,
+   "field_r2": 0.4681937955166512,
+   "field_rmse": 0.7799202603510397,
    "cells": 2177206
   },
   "paper_aff": {
@@ -2068,6 +2548,9 @@
    "median_field_r": 0.2557062311999875,
    "median_var_ratio": 0.256773763462331,
    "fields": 572,
+   "pixel_rmse": 1.3119359782536073,
+   "field_r2": 0.5611931029933216,
+   "field_rmse": 0.7084516644084401,
    "cells": 2177206
   },
   "paper_mmgf": {
@@ -2076,6 +2559,9 @@
    "median_field_r": 0.26798411823560186,
    "median_var_ratio": 0.3383602884523602,
    "fields": 572,
+   "pixel_rmse": 1.2907803538428126,
+   "field_r2": 0.5931870879316004,
+   "field_rmse": 0.6821358376289389,
    "cells": 2177206
   },
   "vs_best_paper_by_pooled_r2": {

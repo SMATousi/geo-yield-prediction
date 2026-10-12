@@ -1,6 +1,6 @@
 # Experiments for review robustness
 
-**Status (2026-10-12): RX-3 done (§RX-3 results); RX-1 computing; RX-2 running on the cluster.**
+**Status (2026-10-12): RX-3 done (§RX-3 results); RX-1 done; RX-2 running on the cluster.**
 
 Related:
 - [yieldsat-paper-models.md](./yieldsat-paper-models.md) §8: the main comparison (paper protocol).
@@ -144,3 +144,21 @@ Nothing from the year being predicted is used.
      field.
 4. **Practical message:** prior-year maps are a cheap, small improvement (+0.011) that combines additively with the
    model. They are not a substitute for better inputs.
+
+## RX-1 results (2026-10-12)
+
+**Setup:** `results/paper_models_table.json` (now with `pixel_rmse`, `field_r2`, `field_rmse`); cells give field R² /
+pixel RMSE / field RMSE (t/ha), mean over the 9 pairs.
+
+| Protocol | 3D-LSTM | 3D-ConvLSTM | AFF | MMGF | Ours (base) | Ours |
+|---|---|---|---|---|---|---|
+| CV10 | 0.768 / 1.50 / 0.71 | 0.735 / 1.57 / 0.77 | 0.789 / 1.47 / 0.67 | 0.791 / 1.46 / 0.67 | 0.836 / 1.40 / 0.58 | 0.818 / 1.39 / 0.61 |
+| LOYO | 0.321 / 1.84 / 1.20 | 0.225 / 1.95 / 1.30 | 0.389 / 1.79 / 1.16 | 0.404 / 1.77 / 1.14 | 0.473 / 1.70 / 1.06 | 0.473 / 1.69 / 1.05 |
+| LORO | 0.389 / 1.84 / 1.19 | 0.205 / 1.98 / 1.34 | 0.321 / 1.81 / 1.20 | 0.316 / 1.78 / 1.20 | 0.538 / 1.67 / 0.99 | 0.496 / 1.68 / 1.03 |
+
+**Reading:**
+1. **Both of our models beat every paper model on the paper's field-level metrics**, by large margins out of
+   distribution: LOYO 0.473 vs 0.404 (MMGF); LORO 0.50–0.54 vs 0.39 (3D-LSTM). Field RMSE is lower everywhere.
+2. **Trade-off:** field context + relation loss sharpens the within-field pattern at a small cost in field-level R²
+   relative to the base model: −0.018 (CV10), −0.042 (LORO), unchanged on LOYO.
+3. **Paper:** a main table (`tables/field_level.tex`) and a per-pair supplementary table (`tables/supp_field.tex`).
