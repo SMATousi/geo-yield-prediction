@@ -377,4 +377,45 @@ extrapolation of $\gamma(h)$, $h=1..3$ cells, to $h=0$; ceiling $=1-$ nugget sha
 \label{tab:supp_noise}
 \end{table}
 ''')
+# ---- IC-C: input-resolution degradation (written once results/coarse_dev_icc.json exists) ---------------------------
+if (R / 'coarse_dev_icc.json').exists():
+    cc = J('coarse_dev_icc.json')
+    DEV = ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
+    tags = [(2, '20\,m'), (3, '30\,m'), (6, '60\,m')]
+    rows = []
+    for p in DEV + ['MEAN']:
+        if p == 'MEAN':
+            cells = []
+            for k, _ in tags:
+                v = cc['CV10|MEAN|%s-c%d' % (OURS, k)]
+                cells.append('%s & %s' % (ci(v['pooled_r2']), ci(v['within_r2'])))
+            base_w = np.mean([cc['CV10|%s' % q]['baseline']['within_r2'] for q in DEV])
+            rows.append(r'\midrule' + '\n' + r'Mean & %s & %s \\' % (f2(base_w), ' & '.join(cells)))
+            continue
+        v = cc['CV10|%s' % p]
+        cells = []
+        for k, _ in tags:
+            m_ = v['%s-c%d' % (OURS, k)]
+            cells.append('%s & %s' % (ci([m_['d_pooled_r2']] + m_['ci_pooled_r2']), ci([m_['d_within_r2']] + m_['ci_within_r2'])))
+        rows.append(r'%s & %s & %s \\' % (p, f2(v['baseline']['within_r2']), ' & '.join(cells)))
+    write('supp_resolution.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lc""" + 'cc' * len(tags) + r"""}
+\toprule
+ & 10\,m & """ + ' & '.join(r'\multicolumn{2}{c}{S2 at %s}' % lab for _, lab in tags) + r""" \\
+""" + ''.join(r'\cmidrule(lr){%d-%d}' % (3 + 2 * i, 4 + 2 * i) for i in range(len(tags))) + r"""
+Pair & within $R^2$ & """ + ' & '.join([r'$\Delta$ pooled & $\Delta$ within'] * len(tags)) + r""" \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Input resolution}: \method{} with Sentinel-2 coarsened to 20, 30 and 60\,m (mean of aligned
+$k\times k$ blocks within the field; targets stay at 10\,m), CV10 on the four development pairs; change vs.\ 10\,m
+with 95\% field-season cluster-bootstrap intervals.}
+\label{tab:supp_resolution}
+\end{table*}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))

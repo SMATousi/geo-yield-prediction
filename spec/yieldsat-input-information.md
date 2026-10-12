@@ -1,6 +1,6 @@
 # How much within-field information do the inputs carry?
 
-**Status (2026-10-12): IC-A, IC-B (§7) and IC-D (§8) done. IC-C running on the cluster.**
+**Status (2026-10-12): done. IC-A, IC-B (§7), IC-D (§8), IC-C (§9).**
 
 Within-field R² decomposes into three levels:
 1. **Noise ceiling 0.72:** about 28% of within-field variance is noise.
@@ -277,3 +277,53 @@ model-free (KSG) estimates.
 | Noise ceiling | 0.72 (variogram nugget) | — |
 | Per-field information | 0.50 (oracle) | 0.55 (per-field median) |
 | Cross-field information | 0.29 (ours; GBM 0.25) | 0.29 (pooled) |
+
+## 9. Results: IC-C, input-resolution degradation (2026-10-12)
+
+**Setup:**
+- All 120 runs finished, none failed.
+- Data: `results/coarse_dev_icc.json`; script `results/rel_cmp.py`, with `REL_BASE=ours-p3nbr-dense-fc-rel10`.
+- Model: the best model (dense p3-nbr + field context + relation loss) with Sentinel-2 coarsened to 20 / 30 / 60 m,
+  as k × k block means within the field season.
+  - The 5×5 neighbourhood and field-context inputs are rebuilt from the coarsened S2.
+  - Weather, terrain, soil and the 10 m targets are unchanged.
+- Protocol: CV10 on the 4 DEV pairs.
+- Comparison: paired with the 10 m runs on the same test pixels; 95% field-season cluster bootstrap; **bold** = CI
+  excludes 0.
+- Figure: `results/figures/input_information/resolution.png` (script `plot_resolution.py`).
+
+| Pair | 10 m: pooled / within | 20 m: Δ pooled / Δ within | 30 m: Δ pooled / Δ within | 60 m: Δ pooled / Δ within |
+|---|---|---|---|---|
+| ARG-W | 0.822 / 0.394 | **-0.010 [-0.019, -0.002]** / **-0.033 [-0.053, -0.012]** | -0.008 [-0.020, +0.005] / **-0.066 [-0.092, -0.042]** | **-0.019 [-0.034, -0.001]** / **-0.110 [-0.142, -0.077]** |
+| BRA-C | 0.494 / 0.277 | **-0.015 [-0.024, -0.004]** / -0.010 [-0.019, +0.002] | -0.014 [-0.028, +0.001] / **-0.013 [-0.027, -0.001]** | **-0.045 [-0.069, -0.022]** / **-0.041 [-0.056, -0.025]** |
+| GER-R | 0.517 / 0.254 | -0.004 [-0.031, +0.027] / -0.004 [-0.023, +0.015] | +0.009 [-0.013, +0.032] / -0.013 [-0.028, +0.002] | -0.013 [-0.046, +0.025] / **-0.055 [-0.078, -0.031]** |
+| URG-S | 0.419 / 0.105 | +0.004 [-0.004, +0.011] / -0.003 [-0.007, +0.002] | +0.003 [-0.006, +0.012] / -0.003 [-0.009, +0.002] | -0.005 [-0.014, +0.006] / **-0.013 [-0.018, -0.007]** |
+| **Mean** | 0.563 / 0.257 | -0.006 [-0.014, +0.002] / **-0.012 [-0.020, -0.005]** | -0.002 [-0.010, +0.005] / **-0.024 [-0.032, -0.016]** | **-0.020 [-0.031, -0.008]** / **-0.055 [-0.065, -0.044]** |
+
+![Input resolution](../results/figures/input_information/resolution.png)
+
+**Reading:**
+1. **Within-field R² falls steadily as the inputs get coarser.**
+   - Mean change: −0.012 (20 m), −0.024 (30 m), −0.055 (60 m), all significant. In relative terms that is −5%, −9%
+     and −21% of the 10 m value (0.257).
+   - There is no plateau between 10 and 30 m. The model uses the spatial detail that the 10 m inputs provide.
+2. **Pooled R² is barely affected until 60 m:** −0.006 and −0.002 (not significant), then −0.020 (significant).
+   - Field-level accuracy depends on field-scale information, which survives coarsening.
+   - The within-field pattern depends on fine-scale information. Resolution is a within-field problem, which is why
+     the standard pooled metric hides it.
+3. **The pairs differ as the other analyses predict.**
+   - ARG-W has the most within-field structure (10 m within-field R² 0.39, noise ceiling 0.78) and loses the most:
+     −0.033, −0.066, −0.110.
+   - URG-S, the noisiest pair (ceiling 0.48), barely changes (−0.003 to −0.013).
+4. **Mechanism:** the median within-field correlation r falls with resolution (ARG-W 0.70 → 0.64 → 0.60 → 0.52), and
+   so does the variability ratio k. Coarser inputs blur the predicted pattern itself, not only its amplitude.
+5. **Caveat:** block-averaging 10 m S2 emulates a coarser sensor only approximately. A real coarser sensor also has a
+   wider point-spread function and different noise. The curve shows the sensitivity to spatial detail in the inputs.
+   It does not by itself predict the gain from a specific finer sensor.
+
+**Synthesis (updated §7.3):**
+- Within-field accuracy depends causally on input resolution. Removing spatial detail removes within-field skill
+  steadily, and pooled skill hardly at all.
+- Together with IC-B (most of the missing within-field variance sits at the 20–50 m cell-to-cell scale) and IC-A/IC-D
+  (the inputs carry ≈ 0.50 per field but only ≈ 0.29 across fields), this supports the paper's case: finer-resolution
+  inputs are needed to capture within-field variability, and our dataset provides them.
