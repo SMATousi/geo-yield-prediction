@@ -418,4 +418,34 @@ with 95\% field-season cluster-bootstrap intervals.}
 \end{table*}
 """)
 
+# ---- RX-3: prior-year field calibration (LOYO) -------------------------------------------------------------------------
+if (R / 'prior_year.json').exists():
+    py = J('prior_year.json')
+    M = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5']
+    lab = {'M0': 'Model', 'M1': 'Persist.', 'M2': 'Blend', 'M3': 'Resid.', 'M4': 'Blend+res.', 'M5': 'Rescale'}
+    rows = [r'%s & %d & %s \\' % (p, py[p]['seasons'], ' & '.join(f2(py[p]['within_r2'][m]['all']) for m in M)) for p in PAIRS if p in py]
+    rows.append(r'\midrule' + '\n' + r'Mean & %d & %s \\' % (sum(py[p]['seasons'] for p in PAIRS if p in py),
+                                                          ' & '.join(f2(py['MEAN_PAIRS'][m]) for m in M)))
+    rows.append(r'$\Delta$ vs.\ model & & & %s \\' % ' & '.join(ci(py['DELTA_VS_M0'][m]) for m in M[1:]))
+    write('supp_prior_year.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lc""" + 'c' * len(M) + r"""}
+\toprule
+Pair & Seasons & """ + ' & '.join(lab[m] for m in M) + r""" \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Prior-year field calibration} (LOYO; within-field $R^2$ on test field seasons whose physical field
+has an earlier season). The farmer's yield map of the same field from an earlier year is aligned to this year's cells.
+\emph{Persist.}: last year's anomaly pattern alone; \emph{Blend}: model + last year's pattern; \emph{Resid.}: the
+model's own error pattern from last year added to this year's prediction; \emph{Rescale}: per-field amplitude fitted
+on last year. Coefficients are fitted on training years only. Bottom row: mean change vs.\ the model with 95\%
+field-season bootstrap intervals.}
+\label{tab:supp_prior_year}
+\end{table*}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))
