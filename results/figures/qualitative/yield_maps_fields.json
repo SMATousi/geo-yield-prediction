@@ -1,0 +1,121 @@
+{
+ "main": {
+  "ARG-S": {
+   "field": "Argentina_DUP1_farm52_field691_soybean_2020",
+   "cells": 3762,
+   "within_r2": {
+    "Ours": 0.504142490557778,
+    "MMGF": 0.49024082263325985
+   }
+  },
+  "BRA-C": {
+   "field": "Brazil_DUP2_farm9_field551_corn_2018",
+   "cells": 14670,
+   "within_r2": {
+    "Ours": 0.30297512982627894,
+    "MMGF": 0.21009668864370334
+   }
+  },
+  "GER-R": {
+   "field": "Germany_DUP3_farm3_field240_rapeseed_2018",
+   "cells": 4380,
+   "within_r2": {
+    "Ours": 0.3002994730037447,
+    "MMGF": 0.396708484486024
+   }
+  },
+  "URG-S": {
+   "field": "Uruguay_DUP4_farm4_field147_soybean_2019",
+   "cells": 3229,
+   "within_r2": {
+    "Ours": 0.08461392969955106,
+    "MMGF": 0.09212009958879275
+   }
+  }
+ },
+ "supp_a": {
+  "ARG-C": {
+   "field": "Argentina_DUP1_farm45_field623_corn_2021",
+   "cells": 15159,
+   "within_r2": {
+    "Ours": 0.44410378110857096,
+    "Ours (base)": 0.48898866005384534,
+    "MMGF": 0.40734647488083564
+   }
+  },
+  "ARG-S": {
+   "field": "Argentina_DUP1_farm52_field691_soybean_2020",
+   "cells": 3762,
+   "within_r2": {
+    "Ours": 0.504142490557778,
+    "Ours (base)": 0.532012530830902,
+    "MMGF": 0.49024082263325985
+   }
+  },
+  "ARG-W": {
+   "field": "Argentina_DUP1_farm44_field457_wheat_2021",
+   "cells": 2489,
+   "within_r2": {
+    "Ours": 0.4440452321663849,
+    "Ours (base)": 0.34580994287275324,
+    "MMGF": 0.3803341058937778
+   }
+  },
+  "BRA-C": {
+   "field": "Brazil_DUP2_farm9_field551_corn_2018",
+   "cells": 14670,
+   "within_r2": {
+    "Ours": 0.30297512982627894,
+    "Ours (base)": 0.3608449637322495,
+    "MMGF": 0.21009668864370334
+   }
+  },
+  "BRA-S": {
+   "field": "Brazil_DUP2_farm5_field150_soybean_2019",
+   "cells": 20593,
+   "within_r2": {
+    "Ours": 0.24447488739147993,
+    "Ours (base)": 0.2147332464230367,
+    "MMGF": 0.13781008732764188
+   }
+  }
+ },
+ "supp_b": {
+  "BRA-W": {
+   "field": "Brazil_DUP2_farm5_field212_wheat_2019",
+   "cells": 2059,
+   "within_r2": {
+    "Ours": 0.13957080091279783,
+    "Ours (base)": 0.1315036276057936,
+    "MMGF": 0.05310430934404331
+   }
+  },
+  "GER-R": {
+   "field": "Germany_DUP3_farm3_field240_rapeseed_2018",
+   "cells": 4380,
+   "within_r2": {
+    "Ours": 0.3002994730037447,
+    "Ours (base)": -0.016362237848151384,
+    "MMGF": 0.396708484486024
+   }
+  },
+  "GER-W": {
+   "field": "Germany_DUP3_farm5_field268_wheat_2017",
+   "cells": 3205,
+   "within_r2": {
+    "Ours": 0.2584551462702044,
+    "Ours (base)": 0.22889097886229726,
+    "MMGF": 0.20960369336344065
+   }
+  },
+  "URG-S": {
+   "field": "Uruguay_DUP4_farm4_field147_soybean_2019",
+   "cells": 3229,
+   "within_r2": {
+    "Ours": 0.08461392969955106,
+    "Ours (base)": 0.058719624467515996,
+    "MMGF": 0.09212009958879275
+   }
+  }
+ }
+}
