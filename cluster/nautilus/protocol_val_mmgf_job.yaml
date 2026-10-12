@@ -38,6 +38,7 @@ spec:
                 - k8s-3090-01.usd.edu
                 - k8s-chase-ci-07.calit2.optiputer.net
                 - ry-gpu-02.sdsc.optiputer.net
+                - hcc-chase-shor-c4705.unl.edu
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
