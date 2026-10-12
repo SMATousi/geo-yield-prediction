@@ -1,6 +1,6 @@
 # Experiments for review robustness
 
-**Status (2026-10-12): adopted (project lead). RX-1, RX-2 and RX-3 in progress.**
+**Status (2026-10-12): RX-3 done (§RX-3 results); RX-1 computing; RX-2 running on the cluster.**
 
 Related:
 - [yieldsat-paper-models.md](./yieldsat-paper-models.md) §8: the main comparison (paper protocol).
@@ -82,3 +82,65 @@ Nothing from the year being predicted is used.
 - Reference: the per-field oracle (same-year labels; not attainable in practice).
 
 **Question:** how much of the field-specific gap (§7.1 of the input-information spec) last year's map recovers.
+
+## RX-3 results (2026-10-12)
+
+**Setup:**
+- Data: `results/prior_year.json`, made by `yieldsat_prior_year.py`.
+- Model: the best model (`ours-p3nbr-dense-fc-rel10`), LOYO predictions.
+- Cases: 737 test field seasons with an aligned earlier season of the same physical field (≥ 200 matched cells),
+  3.85M cells in total.
+- Metric: within-field R² on those seasons.
+
+| Pair | Seasons (same crop / previous year) | M0 | M1 | M2 | M3 | M4 | M5 |
+|---|---|---|---|---|---|---|---|
+| ARG-C | 63 (10 / 44) | 0.345 | 0.097 | 0.351 | 0.345 | 0.353 | 0.244 |
+| ARG-S | 170 (94 / 119) | 0.481 | 0.148 | 0.491 | 0.484 | 0.491 | 0.441 |
+| ARG-W | 58 (11 / 44) | 0.184 | 0.048 | 0.218 | 0.182 | 0.218 | 0.125 |
+| BRA-C | 57 (7 / 57) | 0.171 | 0.044 | 0.167 | 0.172 | 0.175 | 0.158 |
+| BRA-S | 128 (64 / 126) | 0.251 | 0.045 | 0.251 | 0.252 | 0.253 | 0.220 |
+| BRA-W | 57 (13 / 55) | 0.098 | 0.029 | 0.103 | 0.100 | 0.105 | 0.091 |
+| GER-R | 30 (4 / 8) | 0.240 | 0.137 | 0.266 | 0.247 | 0.254 | 0.187 |
+| GER-W | 107 (75 / 68) | 0.247 | 0.122 | 0.265 | 0.260 | 0.266 | 0.197 |
+| URG-S | 67 (67 / 49) | 0.094 | -0.001 | 0.094 | 0.094 | 0.094 | 0.065 |
+| **Mean** | 737 | **0.234** | **0.074** | **0.245** | **0.237** | **0.245** | **0.192** |
+
+**Paired field-season bootstrap**, mean over pairs, Δ within-field R² vs M0 with 95% CI:
+
+| Method | Δ vs M0 |
+|---|---|
+| M1 persistence | **-0.160 [-0.178, -0.141]** |
+| M2 blend | **+0.011 [+0.005, +0.018]** |
+| M3 residual transfer | **+0.003 [+0.002, +0.004]** |
+| M4 blend + residual | **+0.011 [+0.005, +0.019]** |
+| M5 per-field amplitude | **-0.042 [-0.059, -0.028]** |
+
+**By subset:**
+
+| Subset (pooled over pairs) | M0 | M1 | M2 | M3 | M4 | M5 |
+|---|---|---|---|---|---|---|
+| all | 0.246 | 0.070 | 0.251 | 0.248 | 0.254 | 0.205 |
+| same crop | 0.269 | 0.094 | 0.280 | 0.274 | 0.281 | 0.243 |
+| rotation | 0.238 | 0.062 | 0.241 | 0.239 | 0.244 | 0.191 |
+| previous year | 0.237 | 0.068 | 0.241 | 0.238 | 0.245 | 0.195 |
+
+**Reading:**
+1. **Last year's yield map adds little:**
+   - Blending it with the model raises within-field R² by +0.011 (0.234 → 0.245, significant).
+   - The model's own error from last year, transferred to this year, adds +0.003 (significant but negligible).
+   - Rescaling the model's amplitude per field from last year hurts (−0.042).
+2. **Within-field yield patterns are weakly persistent across years.**
+   - Persistence alone (last year's anomaly pattern, optimally scaled) reaches only 0.074, far below the model's
+     0.234.
+   - It is higher when last year had the same crop (0.094) than after a rotation (0.062).
+   - The season's weather, which the model sees through S2 and weather inputs, reshapes the within-field pattern each
+     year.
+3. **The field-specific gap does not persist across years.** The per-field oracle's advantage (0.50 vs 0.29,
+   input-information spec §7.1) comes from same-year labels. Last year's labels of the same field recover only ≈ 0.01
+   of it.
+   - The field-specific input-to-yield relation is largely season-specific (field × year interaction), not a fixed
+     property of the field.
+   - This tightens the paper's interpretation of the second gap: it cannot be closed by collecting one prior year per
+     field.
+4. **Practical message:** prior-year maps are a cheap, small improvement (+0.011) that combines additively with the
+   model. They are not a substitute for better inputs.
