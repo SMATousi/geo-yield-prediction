@@ -376,6 +376,31 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_paper_models', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_paper_models: {} units'.format(len(units)))
         return
+    if a.batch == 'val-protocol':
+        # RX-2 (spec/yieldsat-review-experiments.md): the best model and MMGF with model selection on a validation fold
+        # (YieldSAT's own paper_* manifests; same test folds as the noval_* manifests of the main runs)
+        src = []
+        for f in ('protocol_fc_dev_units.json', 'protocol_fc_all_units.json', 'protocol_paper_models_units.json'):
+            src += json.loads(Path('cluster/tabm', f).read_text())['units']
+        units = []
+        for u in src:
+            tag = u['id'].split('__')[0]
+            if tag not in ('ours-p3nbr-dense-fc-rel10', 'paper_mmgf'):
+                continue
+            args = list(u['args'])
+            i = args.index('--split')
+            assert args[i + 1].startswith('noval_')
+            args[i + 1] = args[i + 1][len('noval_'):]
+            j = args.index('--output_dir')
+            args[j + 1] = args[j + 1].replace('/%s_seed0/' % tag, '/%s-val_seed0/' % tag)
+            stage = [x.replace('splits/noval_', 'splits/') for x in u['stage']]
+            units.append(dict(u, id=u['id'].replace(tag + '__', tag + '-val__'), args=args, stage=stage))
+        for name, keep in (('ours', 'ours-'), ('mmgf', 'paper_mmgf')):
+            sub = [u for u in units if u['id'].startswith(keep)]
+            Path('cluster/tabm/protocol_val_{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': 'protocol_val_' + name, 'out_root': a.out_root, 'units': sub}, indent=1))
+            print('protocol_val_{}: {} units'.format(name, len(sub)))
+        return
     if a.batch == 'coarse-dev':
         # IC-C (spec/yieldsat-input-information.md §4): the best model (dense p3-nbr + field context + relation loss) on
         # S2 coarsened to 20 / 30 / 60 m (cache_dense_c<k>), 4 DEV pairs x CV10; the 10 m runs are FC-04
@@ -641,7 +666,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
