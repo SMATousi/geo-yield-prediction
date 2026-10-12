@@ -13,9 +13,10 @@ import numpy as np
 
 ROOT = os.path.join(sys.argv[1] if len(sys.argv) > 1 else '/data/YieldSAT/yieldsat_results/protocol', 'paper')
 OUT = sys.argv[2] if len(sys.argv) > 2 else 'paper_models_table.json'
-PAPER = ['paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'paper_mmgf']
-OURS = ['ours-p3nbr-dense', 'ours-p3nbr-dense-fc-rel10']
-BEST_OURS = 'ours-p3nbr-dense-fc-rel10'
+# model lists overridable for other comparisons (e.g. RX-2, spec/yieldsat-review-experiments.md)
+PAPER = os.environ.get('PMT_PAPER', 'paper_3dlstm,paper_3dconvlstm,paper_aff,paper_mmgf').split(',')
+OURS = os.environ.get('PMT_OURS', 'ours-p3nbr-dense,ours-p3nbr-dense-fc-rel10').split(',')
+BEST_OURS = os.environ.get('PMT_BEST', 'ours-p3nbr-dense-fc-rel10')
 PAIRS = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 PROTOS = {'cv10': 'CV10', 'loyo': 'LOYO', 'loro': 'LORO'}
 MIN_PIX, B = 50, 2000
@@ -43,7 +44,7 @@ def field_stats(p, y, s, keys):
     n = np.bincount(inv).astype(float)
     sy, sp = np.bincount(inv, y), np.bincount(inv, p)
     yc, pc = y - (sy / n)[inv], p - (sp / n)[inv]
-    st = dict(n=n, sy=sy, syy=np.bincount(inv, y * y), sse=np.bincount(inv, (p - y) ** 2),
+    st = dict(n=n, sy=sy, sp=sp, syy=np.bincount(inv, y * y), sse=np.bincount(inv, (p - y) ** 2),
               wsse=np.bincount(inv, (pc - yc) ** 2), wsst=np.bincount(inv, yc ** 2),
               spy=np.bincount(inv, pc * yc), spp=np.bincount(inv, pc * pc))
     return {k: v[idx] for k, v in st.items()}
@@ -54,6 +55,14 @@ def summarize(st, w=None):
     n, sy, syy = (w * st['n']).sum(), (w * st['sy']).sum(), (w * st['syy']).sum()
     return {'pooled_r2': 1 - (w * st['sse']).sum() / (syy - sy * sy / n),
             'within_r2': 1 - (w * st['wsse']).sum() / (w * st['wsst']).sum()}
+
+
+def field_level(st):
+    """RX-1: pixel RMSE and field-level R2 / RMSE (field season = mean over its test cells), pooled over fields."""
+    fy, fp = st['sy'] / st['n'], st['sp'] / st['n']
+    return {'pixel_rmse': float(np.sqrt(st['sse'].sum() / st['n'].sum())),
+            'field_r2': float(1 - np.sum((fp - fy) ** 2) / np.sum((fy - fy.mean()) ** 2)),
+            'field_rmse': float(np.sqrt(np.mean((fp - fy) ** 2)))}
 
 
 def per_field(st):
@@ -79,7 +88,7 @@ for g, proto in PROTOS.items():
                 row[tag] = {'folds': nf, 'incomplete': True}
                 continue
             stats[tag] = field_stats(*d, keys)
-            row[tag] = {**summarize(stats[tag]), **per_field(stats[tag]), 'cells': int(len(d[0]))}
+            row[tag] = {**summarize(stats[tag]), **per_field(stats[tag]), **field_level(stats[tag]), 'cells': int(len(d[0]))}
         done = [t for t in PAPER if t in stats]
         if BEST_OURS in stats and done:
             W = rng.multinomial(len(keys), np.full(len(keys), 1 / len(keys)), size=B).astype(float)
