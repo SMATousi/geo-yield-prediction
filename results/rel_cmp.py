@@ -3,7 +3,7 @@ Pooled R2 and within-field metrics per pair x protocol, plus a paired field-seas
 deltas (per pair and for the mean over pairs). All statistics are additive per field season, so a bootstrap
 replicate is a weighted sum."""
 import glob, os, json, sys, numpy as np
-root = '/data/YieldSAT/yieldsat_results/protocol/paper'
+root = os.environ.get('REL_ROOT', '/data/YieldSAT/yieldsat_results/protocol') + '/paper'   # REL_ROOT: e.g. the local backup
 BASE = os.environ.get('REL_BASE', 'ours-p3nbr-dense')
 VARS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['ours-p3nbr-dense-rel05', 'ours-p3nbr-dense-rel10']
 PAIRS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
@@ -98,8 +98,8 @@ for g, proto in PROTOS.items():
             res['%s|MEAN|%s' % (proto, v)] = {k: [pt[k], float(np.percentile(x, 2.5)), float(np.percentile(x, 97.5))]
                                               for k, x in mean.items()}
             print(proto, 'MEAN', v, json.dumps(res['%s|MEAN|%s' % (proto, v)]), flush=True)
-out = '/data/YieldSAT/yieldsat_results/protocol/%s.json' % (sys.argv[3] if len(sys.argv) > 3 else
-                                                          'rel_cmp_%s' % ('dev' if len(PAIRS) == 4 else 'all'))
+out = os.environ.get('REL_OUT') or '/data/YieldSAT/yieldsat_results/protocol/%s.json' % (
+    sys.argv[3] if len(sys.argv) > 3 else 'rel_cmp_%s' % ('dev' if len(PAIRS) == 4 else 'all'))
 json.dump(res, open(out, 'w'), default=float)
 print('RESJSON ' + json.dumps(res, default=float))
 print('RELDONE')

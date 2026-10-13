@@ -1,6 +1,6 @@
 # Ablations and seed variance of the best model
 
-**Status (2026-10-13): A1 done (from existing runs, §A1 results); A2–A4 and the seeds submitted to the cluster.**
+**Status (2026-10-13): A1 and A2–A4 done (results below); seeds running (MMGF done, ours in progress).**
 
 Related:
 - [yieldsat-paper-models.md](./yieldsat-paper-models.md) §8: the main comparison (paper protocol, seed 0).
@@ -95,3 +95,50 @@ From the existing runs (all 217 folds of both models), base model without field 
 3. **Exceptions:** LOYO BRA-C (within −0.054, pooled −0.165) and LOYO GER-W (pooled −0.142, within +0.020). These are
    the two LOYO rows that regressed with the dense series (yieldsat-dense-series.md §9–10). The cause is a sparse
    early year. S2 observation dropout fixes GER-W LOYO but costs as much on other rows, so it was not adopted.
+
+## A2–A4 results (2026-10-13)
+
+**Setup:**
+- Data: `results/ablation_dev.json`, made by `results/rel_cmp.py` with `REL_BASE=ours-p3nbr-dense-fc-rel10`,
+  `REL_ROOT=/root/yieldsat_backups/protocol_results`.
+- All 455 runs complete.
+- Each variant is compared with the full model on identical test pixels: 4 DEV pairs × CV10 / LOYO, seed 0.
+- Full model, mean over the DEV pairs: pooled / within 0.563 / 0.257 (CV10), 0.392 / 0.169 (LOYO).
+
+Δ = variant − full model, mean over the 4 DEV pairs, 95% paired field-season bootstrap; per-pair column: significant
+within / pooled change (+ better without the component, − worse, · n.s.), in the order ARG-W, BRA-C, GER-R, URG-S.
+
+| Variant | CV10 Δ within | CV10 Δ pooled | CV10 per pair | LOYO Δ within | LOYO Δ pooled | LOYO per pair |
+|---|---|---|---|---|---|---|
+| A2 no neighbourhood | −0.006 [−0.014, +0.004] | −0.008 [−0.018, +0.004] | ·· ·− ·· ·· | **+0.015 [+0.001, +0.030]** | +0.003 [−0.013, +0.019] | +· ·· ·· ·· |
+| A3 no weather | +0.005 [−0.002, +0.013] | +0.003 [−0.006, +0.013] | ·· ·· ·· ·· | −0.011 [−0.028, +0.006] | −0.015 [−0.043, +0.007] | ·· −− −· −· |
+| A3 no soil | −0.003 [−0.011, +0.005] | +0.003 [−0.006, +0.011] | ·· ·· ·· ·· | +0.005 [−0.009, +0.021] | −0.007 [−0.029, +0.016] | ++ ·· −− ·+ |
+| A3 no DEM / terrain | +0.003 [−0.007, +0.012] | −0.000 [−0.009, +0.009] | ·· ·· ·· ·+ | +0.003 [−0.011, +0.018] | +0.005 [−0.018, +0.027] | ·· +· −· −· |
+| A4 no field S2 statistics | −0.003 [−0.010, +0.005] | −0.001 [−0.011, +0.009] | ·· ·· ·· −· | +0.009 [−0.003, +0.021] | −0.006 [−0.027, +0.015] | ·· ·· ·· −· |
+| A4 no within-field anomaly | −0.003 [−0.011, +0.006] | **+0.008 [+0.001, +0.018]** | ·· ·· ·· ·· | +0.003 [−0.008, +0.015] | +0.005 [−0.014, +0.023] | ·· ·· ·· −· |
+| A4 no within-field position | +0.003 [−0.004, +0.010] | −0.002 [−0.015, +0.011] | ·· ·· ·· ·+ | −0.001 [−0.014, +0.014] | +0.005 [−0.012, +0.021] | ·· ·· ·· −· |
+
+**Reading:**
+1. **No single component is necessary once the others are present.** Every mean change is within ±0.015, and only two
+   of 28 mean intervals exclude zero, both in favour of removing the component.
+2. **Neighbourhood (A2):**
+   - Removing it costs −0.006 within-field on CV10 (n.s.) and *improves* LOYO within-field R² by +0.015
+     (borderline).
+   - In round 2 (monthly series, no field context) the neighbourhood stream was the best addition. With the dense
+     series and the field context it is redundant.
+   - The field S2 statistics and the within-field anomaly describe the cell relative to its surroundings at field
+     scale, which likely covers what the 5×5 mean added.
+3. **Field-context parts (A4):** each part alone is dispensable (all within-field changes n.s.). The whole field
+   context added +0.018 within-field on CV10 (supp. ablation table), so the three streams carry largely the same
+   information: each one lets the model separate the field level from the cell's deviation.
+4. **Auxiliary inputs (A3):**
+   - Weather matters only out of distribution in time: no weather is worse in LOYO for 3 of 4 pairs (n.s. on the
+     mean, −0.011 within, −0.015 pooled). This is expected, since weather is what differs between years.
+   - Soil and terrain change nothing on average. Per pair the effects have both signs (soil: better on ARG-W, worse
+     on GER-R in LOYO).
+5. **Caveat:** single seed. The seed runs (§3) give the run-to-run spread; changes of ±0.005 are probably within it.
+
+**Implication for the paper:** the paper's ablation can say the dense series is the largest gain (A1), the field
+context matters as a whole, and the neighbourhood, auxiliary inputs and individual field-context streams are
+interchangeable given the rest. A simpler model without the neighbourhood stream is a candidate (decision for the
+project lead).
