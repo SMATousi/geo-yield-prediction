@@ -124,8 +124,9 @@ MMGF 0.791 / 0.734, 0.404 / 0.249, 0.316 / 0.138 (CV10 / LOYO / LORO).
    - The within-field metric is far less sensitive to selection than the pooled one, which supports using it.
 3. **The gap to MMGF widens out of distribution** (pooled +0.058 LOYO, +0.097 LORO), largely because MMGF collapses on
    the German LORO pairs (pooled −0.348 GER-R, −0.316 GER-W vs ours 0.007 and 0.034).
-4. **Paper:** a main table (`tables/clean_protocol.tex`) and a per-pair supplementary table
-   (`tables/supp_clean_protocol.tex`).
+4. **Paper:** not reported in the current version (project lead's decision, 2026-10-13). The tables can be
+   regenerated with `PT_CLEAN=1 python results/paper_tables.py <tables dir>` (`tables/clean_protocol.tex`, main;
+   `tables/supp_clean_protocol.tex`, per pair).
 
 ## RX-3 results (2026-10-12)
 

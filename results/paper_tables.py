@@ -3,6 +3,7 @@
     python results/paper_tables.py /root/papers/cvpr2027/6acc6bc704326590bc2084c4/tables
 """
 import json
+import os
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -507,7 +508,8 @@ field-season bootstrap intervals.}
 """)
 
 # ---- RX-2: clean validation protocol (epoch selection on a validation fold) -------------------------------------------
-if (R / 'clean_protocol.json').exists():
+# not in the current paper version (project lead's decision, 2026-10-13); PT_CLEAN=1 writes the tables
+if os.environ.get('PT_CLEAN') == '1' and (R / 'clean_protocol.json').exists():
     cp = J('clean_protocol.json')
     VAL, MVAL, MTEST = OURS + '-val', 'paper_mmgf-val', 'paper_mmgf'
     cols = [(OURS, MTEST), (VAL, MVAL)]
