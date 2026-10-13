@@ -439,7 +439,7 @@ extrapolation of $\gamma(h)$, $h=1..3$ cells, to $h=0$; ceiling $=1-$ nugget sha
 if (R / 'coarse_dev_icc.json').exists():
     cc = J('coarse_dev_icc.json')
     DEV = ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
-    tags = [(2, '20\,m'), (3, '30\,m'), (6, '60\,m')]
+    tags = [(2, r'20\,m'), (3, r'30\,m'), (6, r'60\,m')]
     rows = []
     for p in DEV + ['MEAN']:
         if p == 'MEAN':
@@ -503,6 +503,70 @@ model's own error pattern from last year added to this year's prediction; \emph{
 on last year. Coefficients are fitted on training years only. Bottom row: mean change vs.\ the model with 95\%
 field-season bootstrap intervals.}
 \label{tab:supp_prior_year}
+\end{table*}
+""")
+
+# ---- RX-2: clean validation protocol (epoch selection on a validation fold) -------------------------------------------
+if (R / 'clean_protocol.json').exists():
+    cp = J('clean_protocol.json')
+    VAL, MVAL, MTEST = OURS + '-val', 'paper_mmgf-val', 'paper_mmgf'
+    cols = [(OURS, MTEST), (VAL, MVAL)]
+    rows = []
+    for proto in PROTOS:
+        mean = lambda t, k: np.mean([cp['%s|%s' % (proto, p)][t][k] for p in PAIRS])
+        cells = []
+        for o, b in cols:
+            for k in ('pooled_r2', 'within_r2'):
+                vo, vb = mean(o, k), mean(b, k)
+                cells.append('%s / %s' % (r'\textbf{%s}' % f2(vo) if vo >= vb else f2(vo), r'\textbf{%s}' % f2(vb) if vb > vo else f2(vb)))
+        d = [cp['%s|%s' % (proto, p)]['vs_best_paper_by_within_r2'] for p in PAIRS]
+        cnt = lambda k: '%d / %d' % (sum(x['ci_' + k][0] > 0 for x in d), sum(x['ci_' + k][1] < 0 for x in d))
+        rows.append(r'%s & %s & %s & %s \\' % (proto, ' & '.join(cells), cnt('within_r2'), cnt('pooled_r2')))
+    write('clean_protocol.tex', r"""\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{Selection on test fold (paper)} & \multicolumn{2}{c}{Selection on validation fold} & \multicolumn{2}{c}{Better / worse (validation)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Protocol & Pooled $R^2$ & Within-field $R^2$ & Pooled $R^2$ & Within-field $R^2$ & Within & Pooled \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Clean model selection.} \method{} / MMGF, mean over the nine pairs, with the training epoch selected
+on the test fold (the YieldSAT protocol) or on a separate validation fold (YieldSAT's validation manifests; identical
+test pixels). \emph{Better / worse}: number of pairs in which \method{} is significantly better / worse than MMGF
+under validation selection (95\% field-season cluster bootstrap).}
+\label{tab:clean_protocol}
+\end{table*}
+""")
+    rows = []
+    for proto in PROTOS:
+        for i, p in enumerate(PAIRS):
+            v = cp['%s|%s' % (proto, p)]
+            d = v['vs_best_paper_by_within_r2']
+            rows.append(r'%s & %s & %s & %s & %s \\' % (
+                proto if i == 0 else '', p,
+                ' & '.join('%s / %s' % (f2(v[t]['pooled_r2']), f2(v[t]['within_r2'])) for t in (OURS, MTEST, VAL, MVAL)),
+                ci([d['d_within_r2']] + d['ci_within_r2']), ci([d['d_pooled_r2']] + d['ci_pooled_r2'])))
+        rows.append(r'\midrule')
+    write('supp_clean_protocol.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llcccccc}
+\toprule
+ & & \multicolumn{2}{c}{Selection on test fold} & \multicolumn{2}{c}{Selection on validation fold} & \multicolumn{2}{c}{\method{} $-$ MMGF (validation)} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+Protocol & Pair & \method{} & MMGF & \method{} & MMGF & $\Delta$ within & $\Delta$ pooled \\
+\midrule
+""" + '\n'.join(rows[:-1]) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Clean model selection, per pair.} Cells: pooled / within-field $R^2$. Last two columns: difference
+under validation selection with 95\% field-season cluster bootstrap intervals (bold: excludes 0).}
+\label{tab:supp_clean_protocol}
 \end{table*}
 """)
 

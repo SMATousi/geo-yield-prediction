@@ -1,6 +1,6 @@
 # Experiments for review robustness
 
-**Status (2026-10-12): RX-3 done (§RX-3 results); RX-1 done; RX-2 running on the cluster.**
+**Status (2026-10-13): RX-1, RX-2 and RX-3 done (results sections below).**
 
 Related:
 - [yieldsat-paper-models.md](./yieldsat-paper-models.md) §8: the main comparison (paper protocol).
@@ -82,6 +82,50 @@ Nothing from the year being predicted is used.
 - Reference: the per-field oracle (same-year labels; not attainable in practice).
 
 **Question:** how much of the field-specific gap (§7.1 of the input-information spec) last year's map recovers.
+
+## RX-2 results (2026-10-13)
+
+**Setup:**
+- Data: `results/clean_protocol.json`, made by `results/paper_models_table.py` with
+  `PMT_OURS=ours-p3nbr-dense-fc-rel10-val,ours-p3nbr-dense-fc-rel10,paper_mmgf PMT_PAPER=paper_mmgf-val
+  PMT_BEST=ours-p3nbr-dense-fc-rel10-val`.
+- All 2 × 217 runs complete; the test pixels are identical to the main runs (the test-selected numbers reproduce
+  `paper_models_table.json` exactly).
+- Bootstrap: ours vs MMGF, both selected on the validation fold (paired field-season cluster bootstrap, 2,000 resamples).
+
+**Mean over the 9 pairs, pooled / within-field R²:**
+
+| Protocol | Ours (test sel.) | MMGF (test sel.) | **Ours (val. sel.)** | **MMGF (val. sel.)** | Within: better / worse | Pooled: better / worse |
+|---|---|---|---|---|---|---|
+| CV10 | 0.542 / 0.292 | 0.506 / 0.257 | **0.502 / 0.277** | 0.472 / 0.241 | 6 / 0 | 4 / 0 |
+| LOYO | 0.370 / 0.219 | 0.320 / 0.203 | **0.287 / 0.204** | 0.229 / 0.184 | 4 / 0 | 3 / 1 |
+| LORO | 0.368 / 0.236 | 0.288 / 0.207 | **0.299 / 0.220** | 0.202 / 0.185 | 7 / 0 | 5 / 1 |
+
+Mean difference ours − MMGF under validation selection: within +0.036 / +0.020 / +0.035, pooled +0.031 / +0.058 /
++0.097 (CV10 / LOYO / LORO).
+
+**Field-level R²** (mean over pairs), test / validation selection: ours 0.818 / 0.761, 0.473 / 0.305, 0.496 / 0.373;
+MMGF 0.791 / 0.734, 0.404 / 0.249, 0.316 / 0.138 (CV10 / LOYO / LORO).
+
+**Significantly worse cells (validation selection):**
+- LOYO BRA-S, pooled −0.033 [−0.069, −0.000] (within +0.015, significant). This is the same cell that was worse under
+  test selection.
+- LORO ARG-C, pooled −0.082 [−0.143, −0.025] (within −0.004, n.s.). Under test selection the two were level (0.548 vs
+  0.542); validation selection costs ours 0.127 pooled here and MMGF only 0.039.
+
+**Reading:**
+1. **The comparison holds under clean selection.**
+   - Ours is better within fields in every protocol and never significantly worse within fields (17 of 27 cells
+     significantly better).
+   - Pooled, ours is better on average in every protocol, significantly in 12 of 27 cells, worse in 2.
+2. **Test-fold selection inflates both models**, mostly out of distribution and mostly the pooled score.
+   - Ours: pooled −0.040 / −0.083 / −0.069; within −0.015 / −0.015 / −0.016 (CV10 / LOYO / LORO).
+   - MMGF: pooled −0.034 / −0.091 / −0.086; within −0.016 / −0.019 / −0.022.
+   - The within-field metric is far less sensitive to selection than the pooled one, which supports using it.
+3. **The gap to MMGF widens out of distribution** (pooled +0.058 LOYO, +0.097 LORO), largely because MMGF collapses on
+   the German LORO pairs (pooled −0.348 GER-R, −0.316 GER-W vs ours 0.007 and 0.034).
+4. **Paper:** a main table (`tables/clean_protocol.tex`) and a per-pair supplementary table
+   (`tables/supp_clean_protocol.tex`).
 
 ## RX-3 results (2026-10-12)
 
