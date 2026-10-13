@@ -59,3 +59,29 @@ def test_dataset_streams_match_definition(corpus):  # noqa: F811
     pred, loss = model.loss(b)
     loss.backward()
     assert torch.isfinite(loss) and pred.shape == (len(idx),)
+
+
+def test_field_context_stream_subset(corpus):  # noqa: F811
+    """A4 ablation (spec/yieldsat-ablations-seeds.md): --fc_streams keeps only the chosen field-context streams."""
+    _, art, _ = corpus
+    for c in ('Germany', 'Uruguay'):
+        build_country(art, c)
+    full, _, _ = _dataset(corpus, field_context_root=str(art / NBR_NAME))
+    sub, _, _ = _dataset(corpus, field_context_root=str(art / NBR_NAME),
+                         field_context_streams=('yieldsat_s2_field', 'yieldsat_field_rel'))
+    assert 'yieldsat_s2_dev' not in sub.layout and 'yieldsat_s2_field' in sub.layout
+    assert set(full.layout) - set(sub.layout) == {'yieldsat_s2_dev'}
+    idx = np.arange(min(len(sub), 40))
+    b, bf = sub.get_batch(idx), full.get_batch(idx)
+    assert 'yieldsat_s2_dev' not in b['inputs']
+    for k in b['inputs']:                                            # kept streams unchanged
+        assert torch.equal(b['inputs'][k], bf['inputs'][k])
+    model = YieldSATPointModel(sub.layout, embed_dim=32, num_latents=4, depth=1, num_heads=2, modality_embed=8)
+    pred, loss = model.loss(b)
+    assert torch.isfinite(loss) and pred.shape == (len(idx),)
+    try:
+        _dataset(corpus, field_context_root=str(art / NBR_NAME), field_context_streams=('yieldsat_s2',))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('unknown field-context stream accepted')

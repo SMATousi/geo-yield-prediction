@@ -370,6 +370,74 @@ def cmd_units(a):
             json.dumps({'suite': suite, 'out_root': a.out_root, 'units': units}, indent=1))
         print('{}: {} units'.format(suite, len(units)))
         return
+    if a.batch == 'ablation-dev':
+        # A2-A4 (spec/yieldsat-ablations-seeds.md): leave-one-out ablations of the best model on the 4 DEV pairs x
+        # CV10/LOYO (the FC-04 units of ours-p3nbr-dense-fc-rel10 are the reference)
+        base = [u for u in json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units']
+                if u['id'].startswith('ours-p3nbr-dense-fc-rel10__')]
+        fc = ('yieldsat_s2_field', 'yieldsat_s2_dev', 'yieldsat_field_rel')
+        variants = {
+            'nonbr': dict(drop_args=['--neighbourhood']),                                       # A2
+            'noweather': dict(drop_streams=['yieldsat_weather']),                               # A3
+            'nosoil': dict(drop_streams=['yieldsat_soil']),
+            'noterrain': dict(drop_streams=['yieldsat_dem', 'yieldsat_terrain']),
+            'nofstats': dict(extra=['--fc_streams', fc[1], fc[2]]),                             # A4
+            'nofdev': dict(extra=['--fc_streams', fc[0], fc[2]]),
+            'nofpos': dict(extra=['--fc_streams', fc[0], fc[1]]),
+        }
+        units = []
+        for name, v in variants.items():
+            tag = 'ours-p3nbr-dense-fc-rel10-abl-' + name
+            for u in base:
+                args = [x for x in u['args'] if x not in v.get('drop_args', [])]
+                if v.get('drop_streams'):
+                    j = args.index('--streams')
+                    k = j + 1
+                    while k < len(args) and not args[k].startswith('--'):
+                        k += 1
+                    kept = [x for x in args[j + 1:k] if x not in v['drop_streams']]
+                    assert len(kept) == k - j - 1 - len(v['drop_streams'])
+                    args = args[:j + 1] + kept + args[k:]
+                j = args.index('--output_dir')
+                args[j + 1] = args[j + 1].replace('ours-p3nbr-dense-fc-rel10_seed0', tag + '_seed0')
+                units.append(dict(u, id=u['id'].replace('ours-p3nbr-dense-fc-rel10__', tag + '__'),
+                                  args=args + v.get('extra', [])))
+        Path('cluster/tabm/protocol_ablation_dev_units.json').write_text(
+            json.dumps({'suite': 'protocol_ablation_dev', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_ablation_dev: {} units'.format(len(units)))
+        return
+    if a.batch == 'seeds':
+        # seed variance (spec/yieldsat-ablations-seeds.md): the best model and MMGF with seeds 1 and 2 on all 217 folds
+        src = []
+        for f in ('protocol_fc_dev_units.json', 'protocol_fc_all_units.json', 'protocol_paper_models_units.json'):
+            src += json.loads(Path('cluster/tabm', f).read_text())['units']
+        out = {'ours': [], 'mmgf': []}
+        for seed in (1, 2):
+            for u in src:
+                tag = u['id'].split('__')[0]
+                if tag not in ('ours-p3nbr-dense-fc-rel10', 'paper_mmgf'):
+                    continue
+                args = list(u['args'])
+                i = args.index('--seed')
+                assert args[i + 1] == '0'
+                args[i + 1] = str(seed)
+                j = args.index('--output_dir')
+                assert '/%s_seed0/' % tag in args[j + 1]
+                args[j + 1] = args[j + 1].replace('/%s_seed0/' % tag, '/%s_seed%d/' % (tag, seed))
+                out['ours' if tag.startswith('ours') else 'mmgf'].append(
+                    dict(u, id=u['id'].replace(tag + '__', '%s-s%d__' % (tag, seed)), args=args))
+        for name, units in out.items():
+            units.sort(key=lambda u: -SIZE[u['pair']])
+            Path('cluster/tabm/protocol_seeds_{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': 'protocol_seeds_' + name, 'out_root': a.out_root, 'units': units}, indent=1))
+            print('protocol_seeds_{}: {} units'.format(name, len(units)))
+        # one pool for our model: the DEV ablations first (quick read-out), then the seeds
+        abl = json.loads(Path('cluster/tabm/protocol_ablation_dev_units.json').read_text())['units']
+        both = abl + out['ours']
+        Path('cluster/tabm/protocol_abl_seeds_ours_units.json').write_text(
+            json.dumps({'suite': 'protocol_abl_seeds_ours', 'out_root': a.out_root, 'units': both}, indent=1))
+        print('protocol_abl_seeds_ours: {} units'.format(len(both)))
+        return
     if a.batch == 'paper-models':
         units = paper_model_units(a.artifact_root)
         Path('cluster/tabm/protocol_paper_models_units.json').write_text(
@@ -666,7 +734,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

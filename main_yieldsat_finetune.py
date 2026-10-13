@@ -124,6 +124,10 @@ def get_args_parser():
     p.add_argument('--field_context', action='store_true',
                    help='field-context streams (spec/yieldsat-field-context.md): field S2 mean/std, the cell\'s '
                         'within-field S2 z-score, within-field terrain z-scores and edge distance (<artifact_root>/<NBR_NAME>)')
+    p.add_argument('--fc_streams', nargs='+', default=None,
+                   choices=['yieldsat_s2_field', 'yieldsat_s2_dev', 'yieldsat_field_rel'],
+                   help='with --field_context: keep only these field-context streams (A4 ablation, '
+                        'spec/yieldsat-ablations-seeds.md); default all three')
     p.add_argument('--neighbourhood', action='store_true',
                    help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
     # knowledge pretraining (spec/yieldsat-point-knowledge-pretraining.md)
@@ -462,6 +466,10 @@ def main(args):
                   check_source=check, weather_first_slot=args.weather_first_slot,
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
+    if args.fc_streams is not None:
+        if not args.field_context:
+            raise SystemExit('--fc_streams needs --field_context')
+        common['field_context_streams'] = tuple(args.fc_streams)
     window = args.model in PAPER_MODELS
     field_enc = args.model == 'field_encoder'
     if window:

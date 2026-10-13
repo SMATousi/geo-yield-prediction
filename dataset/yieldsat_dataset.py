@@ -41,6 +41,7 @@ _S_POS = {c: i for i, c in enumerate(STATIC_CHANNELS)}
 _S2_CH = list(STREAMS['yieldsat_s2']['channels'])
 _S2_POS = np.array([_T_POS[c] for c in _S2_CH], dtype=np.int64)
 FIELD_REL_CHANNELS = ('rel_dem', 'rel_slope', 'rel_curvature', 'rel_twi', 'edge_dist')
+FIELD_CONTEXT_STREAMS = ('yieldsat_s2_field', 'yieldsat_s2_dev', 'yieldsat_field_rel')
 
 
 def stream_layout(streams, soil_uncertainty='none', aspect_encoding='raw'):
@@ -274,7 +275,7 @@ class YieldSATPointDataset(Dataset):
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
                  seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask',
-                 s2_obs_dropout=0.0, field_context_root=None):
+                 s2_obs_dropout=0.0, field_context_root=None, field_context_streams=None):
         # 'keep': use the first dated slot's weather sum as the paper does (repro D1)
         self.weather_first_slot = weather_first_slot
         # training augmentation (spec/yieldsat-dense-series.md §10): each sample keeps a fraction
@@ -353,6 +354,14 @@ class YieldSATPointDataset(Dataset):
             self.layout['yieldsat_field_rel'] = {'temporal': False, 'channels': list(FIELD_REL_CHANNELS),
                                                  'positions': np.zeros(0, dtype=np.int64),
                                                  'out_channels': list(FIELD_REL_CHANNELS)}
+            # A4 ablation (spec/yieldsat-ablations-seeds.md): keep only these field-context streams
+            if field_context_streams is not None:
+                unknown = set(field_context_streams) - set(FIELD_CONTEXT_STREAMS)
+                if unknown or not field_context_streams:
+                    raise ValueError('field_context_streams must be a non-empty subset of {}'.format(FIELD_CONTEXT_STREAMS))
+                for name in FIELD_CONTEXT_STREAMS:
+                    if name not in field_context_streams:
+                        del self.layout[name]
 
     def __len__(self):
         return len(self.row)
