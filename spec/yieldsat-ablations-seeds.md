@@ -138,7 +138,13 @@ within / pooled change (+ better without the component, − worse, · n.s.), in 
      on GER-R in LOYO).
 5. **Caveat:** single seed. The seed runs (§3) give the run-to-run spread; changes of ±0.005 are probably within it.
 
-**Implication for the paper:** the paper's ablation can say the dense series is the largest gain (A1), the field
-context matters as a whole, and the neighbourhood, auxiliary inputs and individual field-context streams are
-interchangeable given the rest. A simpler model without the neighbourhood stream is a candidate (decision for the
-project lead).
+**Implication for the paper:** the field context matters as a whole; the neighbourhood, auxiliary inputs and
+individual field-context streams are interchangeable given the rest. A simpler model without the neighbourhood stream
+is a candidate (decision for the project lead).
+
+**In the paper (2026-10-13):**
+- A2–A4: `tables/supp_ablation_loo.tex` (supplementary, Ablations), one sentence in Experiments (Components).
+- A1: not an ablation in the paper (project lead: everything is dense). It is reported in a supplementary section on
+  the monthly preprocessed release (`sec:supp_monthly`, `tables/supp_monthly.tex`).
+- The 14.1 vs 6.9 clear observations per cell come from the DS-01 sample of 20 German field seasons
+  (yieldsat-dense-series.md), not the whole dataset; the paper says so.

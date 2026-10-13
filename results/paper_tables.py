@@ -273,6 +273,73 @@ bold when the interval excludes 0.}
 \end{table}
 ''')
 
+# ---- Supp S3b: leave-one-out ablations of the full model (A2-A4, spec/yieldsat-ablations-seeds.md) ------------------
+if (R / 'ablation_dev.json').exists():
+    ab = J('ablation_dev.json')
+    groups = [('Spatial context', [('nonbr', r'neighbourhood stream')]),
+              ('Auxiliary inputs', [('noweather', 'weather'), ('nosoil', 'soil'), ('noterrain', 'DEM and terrain')]),
+              ('Field context', [('nofstats', 'field S2 statistics'), ('nofdev', 'within-field S2 anomaly'),
+                                 ('nofpos', 'within-field position')])]
+    rows = []
+    for gname, items in groups:
+        rows.append(r'\multicolumn{5}{l}{\emph{%s}} \\' % gname)
+        for key, label in items:
+            t = OURS + '-abl-' + key
+            rows.append(r'$-$ %s & %s \\' % (label, ' & '.join(ci(ab['%s|MEAN|%s' % (p, t)][m])
+                                                           for p in ('CV10', 'LOYO') for m in ('pooled_r2', 'within_r2'))))
+    write('supp_ablation_loo.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Removed from \method{} & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Leave-one-out ablations} of \method{} on the development pairs (ARG-W, BRA-C, GER-R, URG-S): mean
+change over the four pairs when one input stream is removed, with 95\% field-season cluster-bootstrap intervals (bold
+when the interval excludes 0). Positive values mean the model is better without the stream.}
+\label{tab:supp_ablation_loo}
+\end{table*}
+""")
+
+# ---- Supp: monthly preprocessed release vs dense series (A1, spec/yieldsat-ablations-seeds.md) ------------------------
+if (R / 'ablation_a1_dense.json').exists():
+    a1 = J('ablation_a1_dense.json')
+    DENSE, MONTHLY = 'ours-p3nbr-dense', 'ours-p3nbr'
+    rows = []
+    for proto in PROTOS:
+        v = [a1['%s|%s' % (proto, p)] for p in PAIRS]
+        d = [x['vs_best_paper_by_within_r2'] for x in v]
+        mean = lambda t, k: np.mean([x[t][k] for x in v])
+        cnt = lambda k: '%d / %d' % (sum(x['ci_' + k][0] > 0 for x in d), sum(x['ci_' + k][1] < 0 for x in d))
+        rows.append(r'%s & %s / %s & %s / %s & %s & %s & %s & %s \\' % (
+            proto, f2(mean(MONTHLY, 'pooled_r2')), f2(mean(MONTHLY, 'within_r2')),
+            f2(mean(DENSE, 'pooled_r2')), f2(mean(DENSE, 'within_r2')),
+            f2(np.mean([x['d_pooled_r2'] for x in d]), True), cnt('pooled_r2'),
+            f2(np.mean([x['d_within_r2'] for x in d]), True), cnt('within_r2')))
+    write('supp_monthly.tex', r"""\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & Monthly (24 slots) & Dense (72 slots) & \multicolumn{2}{c}{$\Delta$ pooled $R^2$} & \multicolumn{2}{c}{$\Delta$ within-field $R^2$} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Protocol & pooled / within & pooled / within & mean & better / worse & mean & better / worse \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Monthly preprocessed release vs.\ dense series}, \method{} (base), mean over the nine pairs.
+\emph{Better / worse}: number of pairs in which the dense series is significantly better / worse (95\% field-season
+cluster bootstrap).}
+\label{tab:supp_monthly}
+\end{table*}
+""")
+
 # ---- Supp S4: learned field encoder (negative result) ---------------------------------------------------------------
 fe, fb = J('fe_dev_fe04.json'), J('fe_b_dev_fe04b.json')
 rows = []
