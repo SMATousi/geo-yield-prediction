@@ -1,6 +1,6 @@
 # Ablations and seed variance of the best model
 
-**Status (2026-10-13): A1 and A2–A4 done (results below); seeds running (MMGF done, ours in progress).**
+**Status (2026-10-13): all done: A1, A2–A4 and seeds (results below; in the paper).**
 
 Related:
 - [yieldsat-paper-models.md](./yieldsat-paper-models.md) §8: the main comparison (paper protocol, seed 0).
@@ -148,3 +148,47 @@ is a candidate (decision for the project lead).
   the monthly preprocessed release (`sec:supp_monthly`, `tables/supp_monthly.tex`).
 - The 14.1 vs 6.9 clear observations per cell come from the DS-01 sample of 20 German field seasons
   (yieldsat-dense-series.md), not the whole dataset; the paper says so.
+
+## Seed results (2026-10-13)
+
+**Setup:**
+- Data: `results/seed_table.json`, made by `results/seed_table.py` (local backup).
+- Ours (`ours-p3nbr-dense-fc-rel10`) and MMGF, seeds 0, 1 and 2, all 217 folds each (1,302 runs; seeds 1–2: 868 new
+  runs, none given up).
+- All 27 pair × protocol cells complete for both models.
+
+**9-pair mean, mean ± sd over 3 seeds:**
+
+| Protocol | Ours pooled | MMGF pooled | Δ pooled (seed-avg, 95% CI) | Pairs better / worse | Ours within | MMGF within | Δ within (seed-avg, 95% CI) | Pairs better / worse |
+|---|---|---|---|---|---|---|---|---|
+| CV10 | 0.543 ± 0.001 | 0.507 ± 0.001 | **+0.036 [+0.028, +0.046]** | 9 / 0 | 0.292 ± 0.002 | 0.259 ± 0.002 | **+0.033 [+0.028, +0.038]** | 9 / 0 |
+| LOYO | 0.369 ± 0.006 | 0.332 ± 0.012 | **+0.036 [+0.018, +0.057]** | 4 / 1 | 0.222 ± 0.003 | 0.202 ± 0.003 | **+0.020 [+0.013, +0.028]** | 5 / 0 |
+| LORO | 0.367 ± 0.011 | 0.292 ± 0.005 | **+0.075 [+0.058, +0.093]** | 6 / 0 | 0.235 ± 0.002 | 0.199 ± 0.008 | **+0.036 [+0.029, +0.043]** | 9 / 0 |
+
+Per seed, ours − MMGF (9-pair mean):
+
+| Protocol | Pooled, seeds 0 / 1 / 2 | Within, seeds 0 / 1 / 2 |
+|---|---|---|
+| CV10 | +0.036 / +0.035 / +0.037 | +0.034 / +0.031 / +0.033 |
+| LOYO | +0.050 / +0.029 / +0.030 | +0.016 / +0.017 / +0.027 |
+| LORO | +0.080 / +0.081 / +0.065 | +0.028 / +0.035 / +0.043 |
+
+Median seed sd of a single pair × protocol cell, within-field R² (ours / MMGF): 0.004 / 0.004 (CV10),
+0.010 / 0.007 (LOYO), 0.012 / 0.011 (LORO); pooled: 0.004 / 0.005, 0.011 / 0.019, 0.010 / 0.011.
+
+**Reading:**
+1. **The main comparison is robust to the seed.**
+   - Ours is ahead of MMGF in every protocol, every seed and both metrics.
+   - The seed-averaged within-field difference is significant in 9 / 5 / 9 pairs (CV10 / LOYO / LORO) and never
+     significantly negative.
+   - Pooled: significant in 9 / 4 / 6 pairs; worse only in LOYO BRA-S (−0.038), the same cell as with seed 0.
+2. **Seed 0 was representative for ours** (within 0.292 / 0.219 / 0.236 vs seed means 0.292 / 0.222 / 0.235). For
+   MMGF it was its worst LOYO pooled seed (0.320 vs mean 0.332), so the seed-0 LOYO pooled margin (+0.050) shrinks to
+   +0.036 with seeds averaged. All other margins change by at most 0.008 (LORO within-field grows from +0.028 to
+   +0.036).
+3. **Nine-pair means are stable** (within-field sd ≤ 0.003 for ours, ≤ 0.008 for MMGF); single cells vary by
+   0.004–0.012. Ablation differences of ±0.005 on single runs (A2–A4) are within this run-to-run variation.
+
+**In the paper:** `tables/supp_seeds.tex` and a supplementary section (`sec:supp_seeds`); one sentence in the main
+results (Overall comparison); a run-to-run note in the leave-one-out ablation paragraph. The main tables stay at seed
+0 (the other paper models have one seed).

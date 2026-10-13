@@ -340,6 +340,41 @@ cluster bootstrap).}
 \end{table*}
 """)
 
+# ---- Supp: seed variance (spec/yieldsat-ablations-seeds.md) --------------------------------------------------------
+if (R / 'seed_table.json').exists():
+    sd = J('seed_table.json')
+    pm_ = lambda d: r'%.3f {\scriptsize$\pm$%.3f}' % (d['mean'], d['sd'])
+    rows = []
+    for proto in PROTOS:
+        m = sd['%s|MEAN' % proto]
+        cells = [sd['%s|%s' % (proto, p)]['diff'] for p in PAIRS]
+        cnt = lambda k: '%d / %d' % (sum(x[k]['ci'][0] > 0 for x in cells), sum(x[k]['ci'][1] < 0 for x in cells))
+        rows.append(r'%s & %s & %s & %s & %s & %s & %s & %s & %s \\' % (
+            proto, pm_(m[OURS]['pooled_r2']), pm_(m['paper_mmgf']['pooled_r2']),
+            ci([m['diff']['pooled_r2']['mean']] + m['diff']['pooled_r2']['ci']), cnt('pooled_r2'),
+            pm_(m[OURS]['within_r2']), pm_(m['paper_mmgf']['within_r2']),
+            ci([m['diff']['within_r2']['mean']] + m['diff']['within_r2']['ci']), cnt('within_r2')))
+    write('supp_seeds.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{4}{c}{Pooled $R^2$} & \multicolumn{4}{c}{Within-field $R^2$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Protocol & \method{} & MMGF & $\Delta$ & better / worse & \method{} & MMGF & $\Delta$ & better / worse \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Seed variance.} \method{} and MMGF trained with three seeds on all 217 folds: mean $\pm$ standard
+deviation over seeds of the nine-pair mean. $\Delta$: seed-averaged difference with a 95\% field-season cluster
+bootstrap interval (each resample scores all seeds of both models). \emph{Better / worse}: number of pairs in which
+the seed-averaged difference is significant.}
+\label{tab:supp_seeds}
+\end{table*}
+""")
+
 # ---- Supp S4: learned field encoder (negative result) ---------------------------------------------------------------
 fe, fb = J('fe_dev_fe04.json'), J('fe_b_dev_fe04b.json')
 rows = []
