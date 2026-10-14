@@ -36,6 +36,9 @@ Related:
   - one float32 output copy.
   - Before, ARG-S on the dense series would have needed about 70 GB of RAM. Same result as nanmean / nanstd (test
     `tests/test_yieldsat_tabm.py::test_chunked_standardize_matches_nan_reference`).
+- `train_lgbm` builds feature rows on demand (capped training rows, test rows in chunks of 200k) instead of a full
+  concatenated copy of values and masks (~22 GB for ARG-S; the first LightGBM pods were OOM-killed at 40 Gi,
+  2026-10-14). Same predictions (test `test_lgbm_rows_on_demand_matches_full_matrix`).
 - `yieldsat_protocol_runs.py units --batch tab-dense` writes four unit files: GPU (TabM + MLP) and CPU-only
   (LightGBM), each split into big pairs (ARG-S, BRA-S, URG-S, ARG-C) and small pairs.
 - **Jobs** (`cluster/nautilus/tab_dense_*_job.yaml`):
