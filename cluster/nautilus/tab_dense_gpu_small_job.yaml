@@ -19,7 +19,7 @@ spec:
             - matchExpressions:
               - key: nvidia.com/gpu.product
                 operator: In
-                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090]
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090, NVIDIA-L40, NVIDIA-L40S, NVIDIA-RTX-A6000, NVIDIA-A100-SXM4-80GB, NVIDIA-A100-PCIE-40GB, NVIDIA-A100-80GB-PCIe, NVIDIA-L4]
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
@@ -40,6 +40,7 @@ spec:
                 - ry-gpu-02.sdsc.optiputer.net
                 - hcc-chase-shor-c4705.unl.edu
                 - ry-gpu-06.sdsc.optiputer.net
+                - suncave-3
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
