@@ -53,6 +53,18 @@ Related:
   - LightGBM runs in CPU-only pods, so no GPU sits idle.
   - The LightGBM jobs are submitted after the GPU jobs have built the flat matrices.
 
+## 3b. TabM batch size (2026-10-14)
+
+- At batch 4096, TabM on the dense F0 features runs out of GPU memory in the backward pass on a 24 GB GPU: it
+  needs about 25.5 GB (BRA-W, both attempts).
+- TabM runs instead as `tabm-f0-dense-bs2048`: batch 2048, 6,000 steps, evaluation every 200 steps. The same
+  number of training cells and the same early-stopping horizon in cells as the monthly runs.
+- Batch: `yieldsat_protocol_runs.py units --batch tab-dense-tabm`; jobs
+  `cluster/nautilus/tab_dense_tabm_{big,small}_job.yaml`.
+- The superseded `tabm-f0-dense` units are held (claim marker `held: superseded`). Any that finish on a larger GPU
+  write under their own tag and are not mixed with the batch-2048 runs.
+- The analysis uses `tabm-f0-dense-bs2048`.
+
 ## 4. Analysis
 
 `results/paper_models_table.py` with `PMT_OURS=ours-p3nbr-dense-fc-rel10,ours-p3nbr-dense

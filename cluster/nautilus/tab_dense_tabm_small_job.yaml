@@ -1,0 +1,69 @@
+# TabM (batch 2048, 6000 steps) on the dense F0 features, small pairs (spec/yieldsat-tabular-dense.md): batch 4096
+# OOMs a 24 GB GPU. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-tab-dense-tabm-small
+spec:
+  completions: 6
+  parallelism: 6
+  backoffLimit: 1000
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090, NVIDIA-L40, NVIDIA-L40S, NVIDIA-RTX-A6000, NVIDIA-A100-SXM4-80GB, NVIDIA-A100-PCIE-40GB, NVIDIA-A100-80GB-PCIe, NVIDIA-L4]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
+                - k8s-chase-ci-07.calit2.optiputer.net
+                - ry-gpu-02.sdsc.optiputer.net
+                - hcc-chase-shor-c4705.unl.edu
+                - ry-gpu-06.sdsc.optiputer.net
+                - suncave-3
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          pip install --quiet --no-cache-dir tabm==0.0.3 rtdl_num_embeddings lightgbm &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_tab_dense_tabm_small_units.json
+          --artifact_root /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: main
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '4', memory: 16Gi, ephemeral-storage: 20Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '4', memory: 16Gi, ephemeral-storage: 20Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 2Gi}

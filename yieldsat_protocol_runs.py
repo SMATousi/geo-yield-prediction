@@ -474,6 +474,25 @@ def cmd_units(a):
                 json.dumps({'suite': 'protocol_tab_dense_' + k, 'out_root': a.out_root, 'units': units}, indent=1))
             print('protocol_tab_dense_{}: {} units'.format(k, len(units)))
         return
+    if a.batch == 'tab-dense-tabm':
+        # TabM on the dense F0 features OOMs a 24 GB GPU in backward at batch 4096 (~25.5 GB; 2026-10-14):
+        # batch 2048 with twice the steps and evaluation interval (same samples seen), new tag
+        big = {'ARG-S', 'BRA-S', 'URG-S', 'ARG-C'}
+        out = {'big': [], 'small': []}
+        for k in ('gpu_big', 'gpu_small'):
+            for u in json.loads(Path('cluster/tabm/protocol_tab_dense_{}_units.json'.format(k)).read_text())['units']:
+                if not u['id'].startswith('tabm-f0-dense__'):
+                    continue
+                args = list(u['args'])
+                args[args.index('--tag') + 1] = 'tabm-f0-dense-bs2048'
+                out['big' if u['pair'] in big else 'small'].append(
+                    dict(u, id=u['id'].replace('tabm-f0-dense__', 'tabm-f0-dense-bs2048__'),
+                         args=args + ['--batch_size', '2048', '--max_steps', '6000', '--eval_every', '200']))
+        for k, units in out.items():
+            Path('cluster/tabm/protocol_tab_dense_tabm_{}_units.json'.format(k)).write_text(
+                json.dumps({'suite': 'protocol_tab_dense_tabm_' + k, 'out_root': a.out_root, 'units': units}, indent=1))
+            print('protocol_tab_dense_tabm_{}: {} units'.format(k, len(units)))
+        return
     if a.batch == 'cost-bench':
         # cost table (spec/yieldsat-ablations-seeds.md §cost): every model once on GER-R CV10 fold 0, alone on one GPU,
         # 2 epochs x 200 steps; the trainer reports training and test throughput (report.io)
@@ -793,7 +812,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
