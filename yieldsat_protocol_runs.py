@@ -438,6 +438,29 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_abl_seeds_ours', 'out_root': a.out_root, 'units': both}, indent=1))
         print('protocol_abl_seeds_ours: {} units'.format(len(both)))
         return
+    if a.batch == 'cost-bench':
+        # cost table (spec/yieldsat-ablations-seeds.md §cost): every model once on GER-R CV10 fold 0, alone on one GPU,
+        # 2 epochs x 200 steps; the trainer reports training and test throughput (report.io)
+        want = {'paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'paper_mmgf', 'ours-p3nbr-dense', 'ours-p3nbr-dense-fc-rel10'}
+        src = (json.loads(Path('cluster/tabm/protocol_paper_models_units.json').read_text())['units'] +
+               json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units'] + dense_units(a.artifact_root))
+        units, seen = [], set()
+        for u in src:
+            tag, pair, proto, fold = u['id'].split('__')
+            if tag not in want or tag in seen or (pair, proto, fold) != ('GER-R', 'cv', 'f0'):
+                continue
+            seen.add(tag)
+            args = list(u['args'])
+            j = args.index('--output_dir')
+            args[j + 1] = args[j + 1].replace('{out_root}/paper/', '{out_root}/cost_bench/paper/')
+            units.append(dict(u, id='cost-' + u['id'], args=args + ['--epochs', '2', '--min_steps_per_epoch', '200',
+                                                                       '--max_steps_per_epoch', '200',
+                                                                       '--early_stop_patience', '0']))
+        assert seen == want, want - seen
+        Path('cluster/tabm/protocol_cost_bench_units.json').write_text(
+            json.dumps({'suite': 'protocol_cost_bench', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_cost_bench: {} units'.format(len(units)))
+        return
     if a.batch == 'paper-models':
         units = paper_model_units(a.artifact_root)
         Path('cluster/tabm/protocol_paper_models_units.json').write_text(
@@ -734,7 +757,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
