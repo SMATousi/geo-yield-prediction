@@ -346,14 +346,14 @@ if (R / 'seed_table.json').exists():
     pm_ = lambda d: r'%.3f {\scriptsize$\pm$%.3f}' % (d['mean'], d['sd'])
     rows = []
     for proto in PROTOS:
-        m = sd['%s|MEAN' % proto]
+        sm = sd['%s|MEAN' % proto]
         cells = [sd['%s|%s' % (proto, p)]['diff'] for p in PAIRS]
         cnt = lambda k: '%d / %d' % (sum(x[k]['ci'][0] > 0 for x in cells), sum(x[k]['ci'][1] < 0 for x in cells))
         rows.append(r'%s & %s & %s & %s & %s & %s & %s & %s & %s \\' % (
-            proto, pm_(m[OURS]['pooled_r2']), pm_(m['paper_mmgf']['pooled_r2']),
-            ci([m['diff']['pooled_r2']['mean']] + m['diff']['pooled_r2']['ci']), cnt('pooled_r2'),
-            pm_(m[OURS]['within_r2']), pm_(m['paper_mmgf']['within_r2']),
-            ci([m['diff']['within_r2']['mean']] + m['diff']['within_r2']['ci']), cnt('within_r2')))
+            proto, pm_(sm[OURS]['pooled_r2']), pm_(sm['paper_mmgf']['pooled_r2']),
+            ci([sm['diff']['pooled_r2']['mean']] + sm['diff']['pooled_r2']['ci']), cnt('pooled_r2'),
+            pm_(sm[OURS]['within_r2']), pm_(sm['paper_mmgf']['within_r2']),
+            ci([sm['diff']['within_r2']['mean']] + sm['diff']['within_r2']['ci']), cnt('within_r2')))
     write('supp_seeds.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
@@ -372,6 +372,34 @@ deviation over seeds of the nine-pair mean. $\Delta$: seed-averaged difference w
 bootstrap interval (each resample scores all seeds of both models). \emph{Better / worse}: number of pairs in which
 the seed-averaged difference is significant.}
 \label{tab:supp_seeds}
+\end{table*}
+""")
+
+# ---- Supp: computational cost (cost-bench batch + all run reports, spec/yieldsat-ablations-seeds.md) ------------------
+if (R / 'cost_bench.json').exists() and (R / 'cost_reports.json').exists():
+    cb, cr = J('cost_bench.json'), J('cost_reports.json')
+    rows = []
+    for t, name in MODELS:
+        b, c = cb[t], cr[t]
+        rows.append(r'%s & %.2f & %.1f & %s & %s & %.1f & %.0f & %.0f \\' % (
+            name, c['params'][0] / 1e6, c['peak_gpu_gb_median'], '{:,}'.format(int(round(b['samples_per_second'], -2))),
+            '{:,}'.format(int(round(b['test_rows_per_second'], -2))), c['train_samples_median'] / 1e6,
+            c['train_samples_median'] / b['samples_per_second'] / 60, c['train_samples_total'] / b['samples_per_second'] / 3600))
+    write('supp_cost.tex', r"""\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lccccccc}
+\toprule
+ & Params & Peak GPU & Training & Inference & Cells to & GPU time & GPU time \\
+Model & (M) & memory (GB) & (cells/s) & (cells/s) & stop (M) & per fold (min) & 217 folds (h) \\
+\midrule
+""" + '\n'.join(rows).replace(',', '{,}') + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Computational cost.} Throughput: each model alone on one NVIDIA A10 (GER-R, CV10 fold 0), including
+data loading. Peak GPU memory and the number of training cells processed until early stopping: medians over the 217
+folds of the main experiments. GPU time = cells to stop / training throughput (training only).}
+\label{tab:supp_cost}
 \end{table*}
 """)
 

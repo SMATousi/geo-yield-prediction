@@ -1,0 +1,39 @@
+{
+ "setup": "GER-R CV10 fold 0, one run alone on one NVIDIA A10, 2 epochs x 200 steps (yieldsat_protocol_runs.py --batch cost-bench); samples_per_second = training cells per second incl. data loading; test_rows_per_second = inference cells per second incl. data loading",
+ "ours-p3nbr-dense-fc-rel10": {
+  "samples_per_second": 5292.0,
+  "test_rows_per_second": 12515.8,
+  "peak_gpu_gb": 1.58,
+  "batch_size": 512
+ },
+ "ours-p3nbr-dense": {
+  "samples_per_second": 7501.8,
+  "test_rows_per_second": 20825.1,
+  "peak_gpu_gb": 1.1,
+  "batch_size": 512
+ },
+ "paper_3dconvlstm": {
+  "samples_per_second": 4967.9,
+  "test_rows_per_second": 15575.7,
+  "peak_gpu_gb": 2.19,
+  "batch_size": 2048
+ },
+ "paper_3dlstm": {
+  "samples_per_second": 25680.3,
+  "test_rows_per_second": 40936.5,
+  "peak_gpu_gb": 0.92,
+  "batch_size": 2048
+ },
+ "paper_aff": {
+  "samples_per_second": 9752.4,
+  "test_rows_per_second": 21406.2,
+  "peak_gpu_gb": 2.11,
+  "batch_size": 2048
+ },
+ "paper_mmgf": {
+  "samples_per_second": 33300.8,
+  "test_rows_per_second": 25846.8,
+  "peak_gpu_gb": 1.85,
+  "batch_size": 2048
+ }
+}

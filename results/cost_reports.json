@@ -1,0 +1,62 @@
+{
+ "paper_3dlstm": {
+  "runs": 217,
+  "params": [
+   190657
+  ],
+  "train_samples_median": 14747648.0,
+  "train_samples_total": 4235339776.0,
+  "epochs_median": 15.0,
+  "peak_gpu_gb_median": 0.92
+ },
+ "paper_3dconvlstm": {
+  "runs": 217,
+  "params": [
+   2696193
+  ],
+  "train_samples_median": 14991360.0,
+  "train_samples_total": 4490752000.0,
+  "epochs_median": 15.0,
+  "peak_gpu_gb_median": 2.2
+ },
+ "paper_aff": {
+  "runs": 217,
+  "params": [
+   248449
+  ],
+  "train_samples_median": 14745600.0,
+  "train_samples_total": 4297181184.0,
+  "epochs_median": 15.0,
+  "peak_gpu_gb_median": 2.11
+ },
+ "paper_mmgf": {
+  "runs": 217,
+  "params": [
+   131463
+  ],
+  "train_samples_median": 14319616.0,
+  "train_samples_total": 4060297216.0,
+  "epochs_median": 14.0,
+  "peak_gpu_gb_median": 1.85
+ },
+ "ours-p3nbr-dense": {
+  "runs": 217,
+  "params": [
+   1434625
+  ],
+  "train_samples_median": 10752000.0,
+  "train_samples_total": 2429312000.0,
+  "epochs_median": 16.0,
+  "peak_gpu_gb_median": 1.13
+ },
+ "ours-p3nbr-dense-fc-rel10": {
+  "runs": 217,
+  "params": [
+   2041505
+  ],
+  "train_samples_median": 10751691.0,
+  "train_samples_total": 2538239808.0,
+  "epochs_median": 16.0,
+  "peak_gpu_gb_median": 1.59
+ }
+}

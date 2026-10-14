@@ -192,3 +192,27 @@ Median seed sd of a single pair × protocol cell, within-field R² (ours / MMGF)
 **In the paper:** `tables/supp_seeds.tex` and a supplementary section (`sec:supp_seeds`); one sentence in the main
 results (Overall comparison); a run-to-run note in the leave-one-out ablation paragraph. The main tables stay at seed
 0 (the other paper models have one seed).
+
+## Computational cost (2026-10-14)
+
+**Setup:**
+- Throughput: `yieldsat_protocol_runs.py units --batch cost-bench` (`cluster/nautilus/cost_bench_job.yaml`). Every model
+  once on GER-R CV10 fold 0, alone on one NVIDIA A10, 2 epochs × 200 steps; `report.io` gives training and test
+  cells/s, including data loading → `results/cost_bench.json`.
+- Parameters, median peak GPU memory, cells processed until early stopping: all 217 run reports of each model
+  (`results/cost_reports.json`). Wall-clock times of the main runs are not used (4–8 runs shared a GPU; mixed GPU
+  types).
+- GPU time = cells to stop / training throughput (training only).
+
+| Model | Params (M) | Peak GPU (GB) | Train cells/s | Inference cells/s | Cells to stop (M) | Min / fold | GPU-h, 217 folds |
+|---|---|---|---|---|---|---|---|
+| 3D-LSTM | 0.19 | 0.9 | 25,700 | 40,900 | 14.7 | 10 | 46 |
+| 3D-ConvLSTM | 2.70 | 2.2 | 5,000 | 15,600 | 15.0 | 50 | 251 |
+| AFF | 0.25 | 2.1 | 9,800 | 21,400 | 14.7 | 25 | 122 |
+| MMGF | 0.13 | 1.9 | 33,300 | 25,800 | 14.3 | 7 | 34 |
+| Ours (base) | 1.43 | 1.1 | 7,500 | 20,800 | 10.8 | 24 | 90 |
+| Ours | 2.04 | 1.6 | 5,300 | 12,500 | 10.8 | 34 | 133 |
+
+**Reading:** ours is about 5× the training cost of MMGF per fold (34 vs 7 GPU-min), cheaper than the 3D-ConvLSTM, and
+predicts 12,500 cells/s (a 100 ha field in under a second). In the paper: `tables/supp_cost.tex`, `sec:supp_cost`, one
+line in the method's implementation details.
