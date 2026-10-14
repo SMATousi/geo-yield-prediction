@@ -90,3 +90,27 @@ def test_chunked_standardize_matches_nan_reference():
     ref = np.where(np.isfinite((v - mean) / std), (v - mean) / std, 0)
     assert z.dtype == np.float32 and np.isfinite(z).all()
     np.testing.assert_allclose(z, ref, rtol=1e-6, atol=1e-6)
+
+
+def test_lgbm_rows_on_demand_matches_full_matrix():
+    """train_lgbm builds feature rows on demand (2026-10-14); predictions equal the full-matrix version."""
+    lgb = pytest.importorskip('lightgbm')
+    import argparse
+    from main_yieldsat_tabm import cap_rows, train_lgbm
+    rng = np.random.default_rng(0)
+    n = 3000
+    values = rng.normal(size=(n, 6)).astype(np.float32)
+    values[rng.random(values.shape) < 0.1] = np.nan
+    masks = (rng.random((n, 3)) < 0.8).astype(np.uint8)
+    y = np.nan_to_num(values[:, 0]) * 2 + rng.normal(size=n)
+    pair = {'values': values, 'masks': masks, 'target': y, 'season': np.repeat(np.arange(30), 100)}
+    rows = {'train': np.arange(0, 2400), 'val': np.zeros(0, np.int64), 'test': np.arange(2400, n)}
+    args = argparse.Namespace(lgbm_rows_per_field=60, val_rows_per_field=0, seed=0, lgbm_threads=2, lgbm_rounds=50)
+    pt, _ = train_lgbm(args, pair, rows)
+    X = np.concatenate([values, masks.astype(np.float32)], 1)                 # the previous full-matrix path
+    tr = cap_rows(pair['season'], rows['train'][np.isfinite(y[rows['train']])], 60, 0)
+    params = {'objective': 'regression', 'learning_rate': 0.05, 'num_leaves': 63, 'min_data_in_leaf': 100,
+              'feature_fraction': 0.5, 'bagging_fraction': 0.8, 'bagging_freq': 1, 'lambda_l2': 1.0,
+              'num_threads': 2, 'verbose': -1, 'seed': 0}
+    ref = lgb.train(params, lgb.Dataset(X[tr], y[tr]), num_boost_round=50).predict(X[rows['test']])
+    np.testing.assert_allclose(pt, ref, rtol=1e-6)

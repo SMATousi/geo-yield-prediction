@@ -280,22 +280,28 @@ def train_nn(args, pair, rows, Vn, device, Xn=None):
 def train_lgbm(args, pair, rows):
     import lightgbm as lgb
     y = pair['target']
-    X = np.concatenate([pair['values'], pair['masks'].astype(np.float32)] +
-                       ([pair['plain']] if 'plain' in pair else []), 1)
+
+    def X(idx):
+        # feature rows on demand: a full concatenated copy of the matrix is ~22 GB for ARG-S on the dense
+        # series (OOM at 40 Gi, 2026-10-14); only the capped training rows and test chunks are materialised
+        return np.concatenate([pair['values'][idx], pair['masks'][idx].astype(np.float32)] +
+                              ([pair['plain'][idx]] if 'plain' in pair else []), 1)
     tr = rows['train'][np.isfinite(y[rows['train']])]
     tr = cap_rows(pair['season'], tr, args.lgbm_rows_per_field, args.seed)
     va = cap_rows(pair['season'], rows['val'], args.val_rows_per_field, args.seed) if len(rows['val']) else None
-    dtr = lgb.Dataset(X[tr], y[tr], free_raw_data=True)
+    dtr = lgb.Dataset(X(tr), y[tr], free_raw_data=True)
     params = {'objective': 'regression', 'learning_rate': 0.05, 'num_leaves': 63, 'min_data_in_leaf': 100,
               'feature_fraction': 0.5, 'bagging_fraction': 0.8, 'bagging_freq': 1, 'lambda_l2': 1.0,
               'num_threads': args.lgbm_threads, 'verbose': -1, 'seed': args.seed}
     cb = []
     valid = []
     if va is not None:
-        valid = [lgb.Dataset(X[va], y[va], reference=dtr)]
+        valid = [lgb.Dataset(X(va), y[va], reference=dtr)]
         cb = [lgb.early_stopping(100, verbose=False)]
     booster = lgb.train(params, dtr, num_boost_round=args.lgbm_rounds, valid_sets=valid, callbacks=cb)
-    pt = booster.predict(X[rows['test']], num_iteration=booster.best_iteration or None)
+    te = rows['test']
+    pt = np.concatenate([booster.predict(X(te[a:a + 200000]), num_iteration=booster.best_iteration or None)
+                         for a in range(0, len(te), 200000)]) if len(te) else np.zeros(0)
     return pt, {'best_iteration': booster.best_iteration, 'train_rows': int(len(tr)), 'model': {'lgbm': params}}
 
 
