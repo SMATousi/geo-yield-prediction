@@ -71,3 +71,22 @@ def test_flat_builder_schema_validity_and_folds(tmp_path):
     z = standardize(v, mean, std)
     assert np.isfinite(z).all() and (z[np.isnan(v)] == 0).all()
     np.testing.assert_allclose(np.nanmean(z[r['train']][:, vi['B04@11']]), 0, atol=1e-5)
+
+
+def test_chunked_standardize_matches_nan_reference():
+    """standardize_stats / standardize are chunked (dense-series matrices, 2026-10-14); same result as nanmean/nanstd."""
+    rng = np.random.default_rng(0)
+    v = rng.normal(3, 2, (1000, 7)).astype(np.float32)
+    v[rng.random(v.shape) < 0.2] = np.nan
+    v[:, 6] = np.nan                                                  # an all-invalid column
+    rows = np.sort(rng.choice(1000, 700, replace=False))
+    mean, std = standardize_stats(v, rows, chunk=97)
+    with np.errstate(invalid='ignore'):
+        rm, rs = np.nanmean(v[rows], 0), np.nanstd(v[rows], 0)
+    np.testing.assert_allclose(mean[:6], rm[:6], rtol=1e-5)
+    np.testing.assert_allclose(std[:6], rs[:6], rtol=1e-5)
+    assert mean[6] == 0 and std[6] == 1
+    z = standardize(v, mean, std, chunk=97)
+    ref = np.where(np.isfinite((v - mean) / std), (v - mean) / std, 0)
+    assert z.dtype == np.float32 and np.isfinite(z).all()
+    np.testing.assert_allclose(z, ref, rtol=1e-6, atol=1e-6)

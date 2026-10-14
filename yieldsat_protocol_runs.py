@@ -438,6 +438,42 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_abl_seeds_ours', 'out_root': a.out_root, 'units': both}, indent=1))
         print('protocol_abl_seeds_ours: {} units'.format(len(both)))
         return
+    if a.batch == 'tab-dense':
+        # flat-feature baselines (TabM, MLP, LightGBM; F0) on the dense series, per pair x CV10/LOYO/LORO
+        # (spec/yieldsat-tabular-dense.md). The flat matrices are built first, one unit per pair. Big pairs (>= 1.3M
+        # cells) and small pairs run in separate jobs (memory sizing); LightGBM runs in CPU-only jobs.
+        big = {'ARG-S', 'BRA-S', 'URG-S', 'ARG-C'}
+        files = {k: [] for k in ('gpu_big', 'gpu_small', 'lgbm_big', 'lgbm_small')}
+        for pair in sorted(PAPER_PAIRS, key=lambda x: -SIZE[x]):
+            size = 'big' if pair in big else 'small'
+            files['gpu_' + size].append({'id': 'build-dense__F0__' + pair, 'pair': pair, 'n_folds': 1, 'env': DENSE_ENV,
+                                         'args': ['--build_only', '--features', 'F0', '--pairs', pair, '--tag', 'build']})
+        tab = []
+        for pair, proto, group, folds in _rows(a.artifact_root):
+            if pair == 'ALL':
+                continue
+            for base in ('tabm-f0', 'mlp-f0', 'lgbm-f0'):
+                tag = base + '-dense'
+                chunk = len(folds) if base in ('mlp-f0', 'lgbm-f0') else 3
+                for c in range(0, len(folds), chunk):
+                    fl = list(range(c, min(c + chunk, len(folds))))
+                    targs = list(TAB[base])
+                    if base == 'lgbm-f0':
+                        targs[targs.index('--lgbm_threads') + 1] = '8'
+                    tab.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, '-'.join(map(str, fl))), 'pair': pair,
+                                'n_folds': len(fl), 'env': DENSE_ENV,
+                                'args': targs + ['--tag', tag, '--fold_set', 'noval', '--protocols', proto,
+                                                 '--folds', *map(str, fl), '--seed', '0', '--val_rows_per_field', '0',
+                                                 '--pairs', pair]})
+        tab.sort(key=lambda u: -SIZE[u['pair']] * u['n_folds'])
+        for u in tab:
+            kind = 'lgbm' if u['id'].startswith('lgbm') else 'gpu'
+            files['{}_{}'.format(kind, 'big' if u['pair'] in big else 'small')].append(u)
+        for k, units in files.items():
+            Path('cluster/tabm/protocol_tab_dense_{}_units.json'.format(k)).write_text(
+                json.dumps({'suite': 'protocol_tab_dense_' + k, 'out_root': a.out_root, 'units': units}, indent=1))
+            print('protocol_tab_dense_{}: {} units'.format(k, len(units)))
+        return
     if a.batch == 'cost-bench':
         # cost table (spec/yieldsat-ablations-seeds.md §cost): every model once on GER-R CV10 fold 0, alone on one GPU,
         # 2 epochs x 200 steps; the trainer reports training and test throughput (report.io)
@@ -757,7 +793,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

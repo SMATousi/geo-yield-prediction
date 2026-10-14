@@ -106,17 +106,34 @@ def fold_rows(pair, split):
     return out
 
 
-def standardize_stats(values, train_rows):
-    """Per-column mean/std over valid (finite) training values."""
-    v = values[train_rows]
-    with np.errstate(invalid='ignore'):
-        mean = np.nanmean(v, 0)
-        std = np.nanstd(v, 0)
+def standardize_stats(values, train_rows, chunk=100000):
+    """Per-column mean/std over valid (finite) training values (as nanmean / nanstd, ddof 0).
+
+    Chunked, two passes in float64: no copy of the training rows (the dense-series matrices of the
+    largest pairs are ~18 GB, 2026-10-14)."""
+    rows = np.asarray(train_rows)
+    s = np.zeros(values.shape[1]); c = np.zeros(values.shape[1])
+    for a in range(0, len(rows), chunk):
+        v = np.asarray(values[rows[a:a + chunk]], dtype=np.float64)
+        f = np.isfinite(v)
+        s += np.where(f, v, 0.0).sum(0); c += f.sum(0)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        mean = s / c
+    ss = np.zeros(values.shape[1])
+    for a in range(0, len(rows), chunk):
+        v = np.asarray(values[rows[a:a + chunk]], dtype=np.float64) - mean
+        ss += np.where(np.isfinite(v), v * v, 0.0).sum(0)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        std = np.sqrt(ss / c)
     mean = np.where(np.isfinite(mean), mean, 0.0)
     std = np.where(np.isfinite(std) & (std > 0), std, 1.0)
     return mean.astype(np.float32), std.astype(np.float32)
 
 
-def standardize(values, mean, std):
-    z = (values - mean) / std
-    return np.where(np.isfinite(z), z, 0.0).astype(np.float32)
+def standardize(values, mean, std, chunk=100000):
+    """(values - mean) / std, invalid -> 0, float32; chunked so only one float32 copy is made."""
+    out = np.empty(values.shape, dtype=np.float32)
+    for a in range(0, len(values), chunk):
+        z = (np.asarray(values[a:a + chunk], dtype=np.float32) - mean) / std
+        out[a:a + chunk] = np.where(np.isfinite(z), z, np.float32(0.0))
+    return out
