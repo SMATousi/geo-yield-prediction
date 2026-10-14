@@ -300,8 +300,8 @@ def train_lgbm(args, pair, rows):
         cb = [lgb.early_stopping(100, verbose=False)]
     booster = lgb.train(params, dtr, num_boost_round=args.lgbm_rounds, valid_sets=valid, callbacks=cb)
     te = rows['test']
-    pt = np.concatenate([booster.predict(X(te[a:a + 200000]), num_iteration=booster.best_iteration or None)
-                         for a in range(0, len(te), 200000)]) if len(te) else np.zeros(0)
+    pt = np.concatenate([booster.predict(X(te[a:a + 50000]), num_iteration=booster.best_iteration or None)
+                         for a in range(0, len(te), 50000)]) if len(te) else np.zeros(0)
     return pt, {'best_iteration': booster.best_iteration, 'train_rows': int(len(tr)), 'model': {'lgbm': params}}
 
 
