@@ -281,11 +281,21 @@ def train_lgbm(args, pair, rows):
     import lightgbm as lgb
     y = pair['target']
 
-    def X(idx):
-        # feature rows on demand: a full concatenated copy of the matrix is ~22 GB for ARG-S on the dense
-        # series (OOM at 40 Gi, 2026-10-14); only the capped training rows and test chunks are materialised
-        return np.concatenate([pair['values'][idx], pair['masks'][idx].astype(np.float32)] +
-                              ([pair['plain'][idx]] if 'plain' in pair else []), 1)
+    blocks = [pair['values'], pair['masks']] + ([pair['plain']] if 'plain' in pair else [])
+    widths = [b.shape[1] for b in blocks]
+
+    def X(idx, chunk=50000):
+        # feature rows on demand, filled in place chunk by chunk: a full concatenated copy of the matrix is ~22 GB
+        # for ARG-S on the dense series, and even the capped training rows (~1.3M) OOM-killed a 40 Gi pod when built
+        # through temporaries (2026-10-14)
+        out = np.empty((len(idx), sum(widths)), dtype=np.float32)
+        for a in range(0, len(idx), chunk):
+            sl = idx[a:a + chunk]
+            c = 0
+            for b, w in zip(blocks, widths):
+                out[a:a + len(sl), c:c + w] = b[sl]
+                c += w
+        return out
     tr = rows['train'][np.isfinite(y[rows['train']])]
     tr = cap_rows(pair['season'], tr, args.lgbm_rows_per_field, args.seed)
     va = cap_rows(pair['season'], rows['val'], args.val_rows_per_field, args.seed) if len(rows['val']) else None
