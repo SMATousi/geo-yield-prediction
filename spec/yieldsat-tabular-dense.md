@@ -1,6 +1,6 @@
 # Flat-feature baselines on the dense series
 
-**Status (2026-10-14): implemented; running on the cluster.**
+**Status (2026-10-15): done (§5 results).**
 
 Related:
 - [yieldsat-tabm.md](./yieldsat-tabm.md): the flat view (feature sets F0 / F1), TabM, MLP and LightGBM, run so far on
@@ -70,3 +70,41 @@ Related:
 `results/paper_models_table.py` with `PMT_OURS=ours-p3nbr-dense-fc-rel10,ours-p3nbr-dense
 PMT_PAPER=tabm-f0-dense,mlp-f0-dense,lgbm-f0-dense,paper_mmgf PMT_BEST=ours-p3nbr-dense-fc-rel10` → pooled and
 within-field R², ours vs the best flat-feature model (paired field-season bootstrap).
+
+## 5. Results (2026-10-15)
+
+- **Data:** `results/tabular_dense.json` (`results/paper_models_table.py`, the env in §4).
+- **Runs:** all 217 folds of each model (`tabm-f0-dense-bs2048`, `mlp-f0-dense`, `lgbm-f0-dense`) complete.
+- **Test pixels:** identical to ours and MMGF.
+
+Mean over the 9 pairs, pooled / within-field R²:
+
+| Protocol | Ours | Ours (base) | TabM | MLP | LightGBM | MMGF |
+|---|---|---|---|---|---|---|
+| CV10 | **0.542 / 0.292** | 0.540 / 0.276 | 0.523 / 0.282 | 0.509 / 0.256 | 0.520 / 0.264 | 0.506 / 0.257 |
+| LOYO | **0.370 / 0.219** | 0.356 / 0.195 | 0.253 / 0.189 | 0.237 / 0.147 | 0.287 / 0.139 | 0.320 / 0.203 |
+| LORO | 0.368 / **0.236** | **0.371** / 0.208 | 0.303 / 0.214 | 0.292 / 0.186 | 0.307 / 0.170 | 0.288 / 0.207 |
+
+**Ours vs the best baseline of each pair** (among TabM, MLP, LightGBM and MMGF, chosen per pair on the same test data;
+paired field-season bootstrap). Pairs significantly better / worse:
+
+| Protocol | best baseline by within-field (pairs) | within better / worse | pooled better / worse |
+|---|---|---|---|
+| CV10 | TabM 8, LightGBM 1 | 4 / 0 | 4 / 0 |
+| LOYO | MMGF 6, TabM 3 | 5 / 0 | 4 / 1 |
+| LORO | TabM 5, MMGF 3, MLP 1 | 5 / 0 | 6 / 0 |
+
+**Reading:**
+1. **TabM is the strongest baseline in distribution.**
+   - On CV10 it beats MMGF on both metrics (0.523 / 0.282 vs 0.506 / 0.257) and comes within 0.010 of our
+     within-field R² (0.292).
+   - It is the best baseline in 8 of 9 pairs. Ours is still significantly better within fields in 4 of them and never
+     worse.
+2. **Out of distribution the flat-feature models fall behind the sequence models.**
+   - LOYO pooled: TabM 0.253 and LightGBM 0.287, against MMGF 0.320 and ours 0.370.
+   - LORO: TabM within 0.214, against ours 0.236.
+   - Hand-made per-cell features generalise worse across years and regions.
+3. **Ours is never significantly worse within fields** than the best baseline of any pair, in any protocol. Pooled, it
+   is worse in 1 LOYO pair (by within criterion) and 2 (by pooled criterion).
+4. **The dense series helps the flat models too:** TabM on CV10 goes from 0.510 / 0.268 (monthly) to 0.523 / 0.282
+   (dense).
