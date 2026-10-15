@@ -18,7 +18,21 @@ PAIRS = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W',
 PROTOS = ['CV10', 'LOYO', 'LORO']
 OURS, BASE = 'ours-p3nbr-dense-fc-rel10', 'ours-p3nbr-dense'
 PAPER = [('paper_3dlstm', '3D-LSTM'), ('paper_3dconvlstm', '3D-ConvLSTM'), ('paper_aff', 'AFF'), ('paper_mmgf', 'MMGF')]
-MODELS = PAPER + [(BASE, r'\method{} (base)'), (OURS, r'\method{}')]
+#: Strong per-cell baselines added to the paper's set (spec/yieldsat-tabular-dense.md): the dense series flattened
+#: into features (F0) for TabM and LightGBM.
+STRONG = [('tabm-f0-dense-bs2048', 'TabM'), ('lgbm-f0-dense', 'LightGBM')]
+MODELS = PAPER + STRONG + [(BASE, r'\method{} (base)'), (OURS, r'\method{}')]
+GROUPS = [(r'YieldSAT models~\cite{yieldsat}', len(PAPER)), ('Strong baselines (added)', len(STRONG)), ('Ours', 2)]
+
+
+def group_header(width: int, first_col: int = 2) -> str:
+    """A header row naming the three model groups, `width` columns per model, plus its cmidrules."""
+    cells, rules, c = [], [], first_col
+    for name, n in GROUPS:
+        cells.append(r'\multicolumn{%d}{c}{%s}' % (n * width, name))
+        rules.append(r'\cmidrule(lr){%d-%d}' % (c, c + n * width - 1))
+        c += n * width
+    return ' & ' + ' & '.join(cells) + r' \\' + '\n' + ''.join(rules) + '\n'
 
 
 def f2(x, signed=False):
@@ -52,11 +66,11 @@ for proto in PROTOS:
     rows.append(proto + ' & ' + ' & '.join(cells) + r' \\')
 write('main_results.tex', r'''\begin{table*}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
+\scriptsize
+\setlength{\tabcolsep}{2.6pt}
 \begin{tabular}{l''' + 'cc' * len(MODELS) + r'''}
 \toprule
- & ''' + ' & '.join(r'\multicolumn{2}{c}{%s}' % n for _, n in MODELS) + r''' \\
+''' + group_header(2) + r''' & ''' + ' & '.join(r'\multicolumn{2}{c}{%s}' % n for _, n in MODELS) + r''' \\
 ''' + ''.join(r'\cmidrule(lr){%d-%d}' % (2 + 2 * i, 3 + 2 * i) for i in range(len(MODELS))) + r'''
 Protocol & ''' + ' & '.join(['Pooled & Within'] * len(MODELS)) + r''' \\
 \midrule
@@ -65,9 +79,10 @@ Protocol & ''' + ' & '.join(['Pooled & Within'] * len(MODELS)) + r''' \\
 \end{tabular}
 \caption{\textbf{Pixel-level $R^2$ on YieldSAT}, mean over the nine country--crop pairs. \emph{Pooled}: the
 paper's metric (all test pixels of all folds pooled). \emph{Within}: within-field $R^2$ (\cref{eq:within}),
-which scores only the spatial pattern inside each field. The four left-hand models are our reimplementations of
-the best models of \cite{yieldsat} on identical splits, inputs and test pixels. Best per row in bold. Per-pair
-results in the supplementary (\cref{tab:supp_full}).}
+which scores only the spatial pattern inside each field. \emph{YieldSAT models}: our reimplementations of the best
+models of \cite{yieldsat}. \emph{Strong baselines}: TabM~\cite{gorishniy2025tabm} and LightGBM~\cite{ke2017lightgbm} on
+the same dense series flattened into per-cell features, added by us. All models use identical splits, inputs and test
+pixels. Best per row in bold. Per-pair results in the supplementary (\cref{tab:supp_full}).}
 \label{tab:main}
 \end{table*}
 ''')
@@ -76,32 +91,29 @@ results in the supplementary (\cref{tab:supp_full}).}
 if 'field_r2' in pm['CV10|ARG-C'][OURS]:
     rows = []
     for proto in PROTOS:
-        vals = {t: [np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for k in ('field_r2', 'pixel_rmse', 'field_rmse')]
+        vals = {t: [np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for k in ('field_r2', 'field_rmse')]
                 for t, _ in MODELS}
-        best = [max(v[0] for v in vals.values()), min(v[1] for v in vals.values()), min(v[2] for v in vals.values())]
+        best = [max(v[0] for v in vals.values()), min(v[1] for v in vals.values())]
         cells = []
         for t, _ in MODELS:
-            cs = []
-            for i, v in enumerate(vals[t]):
-                s_ = ('%.3f' if i == 0 else '%.2f') % v
-                cs.append(r'\textbf{%s}' % s_ if abs(v - best[i]) < 1e-12 else s_)
-            cells.append(' & '.join(cs))
+            r2, rmse = vals[t]
+            a = r'\textbf{%.3f}' % r2 if abs(r2 - best[0]) < 1e-12 else '%.3f' % r2
+            b = r'\textbf{%.2f}' % rmse if abs(rmse - best[1]) < 1e-12 else '%.2f' % rmse
+            cells.append('%s / %s' % (a, b))
         rows.append(proto + ' & ' + ' & '.join(cells) + r' \\')
     write('field_level.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{l""" + 'ccc' * len(MODELS) + r"""}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{l""" + 'c' * len(MODELS) + r"""}
 \toprule
- & """ + ' & '.join(r'\multicolumn{3}{c}{%s}' % n for _, n in MODELS) + r""" \\
-""" + ''.join(r'\cmidrule(lr){%d-%d}' % (2 + 3 * i, 4 + 3 * i) for i in range(len(MODELS))) + r"""
-Protocol & """ + ' & '.join([r'Field $R^2$ & RMSE$_p$ & RMSE$_f$'] * len(MODELS)) + r""" \\
+""" + group_header(1) + r"""Protocol & """ + ' & '.join(n for _, n in MODELS) + r""" \\
 \midrule
 """ + '\n'.join(rows) + r"""
 \bottomrule
 \end{tabular}
-\caption{\textbf{Field-level $R^2$ and RMSE} (t/ha; RMSE$_p$: pixel, RMSE$_f$: field season = mean over its test
-cells), mean over the nine pairs, the metrics reported in~\cite{yieldsat}. Same models and test pixels as
+\caption{\textbf{Field-level $R^2$ / RMSE} (t/ha; a field season's prediction and target are the means over its
+test cells), mean over the nine pairs, the metrics reported in~\cite{yieldsat}. Same models and test pixels as
 \cref{tab:main}; best per row in bold. Per pair in \cref{tab:supp_field}.}
 \label{tab:field}
 \end{table*}
@@ -130,7 +142,7 @@ Protocol & Pair & """ + ' & '.join(n for _, n in MODELS) + r""" \\
 \end{table*}
 """)
 
-# ---- Table 2 (main): ours vs the best paper model of each row ----------------------------------------------------
+# ---- Table 2 (main): ours vs the best of the six baselines of each row ----------------------------------------------------
 rows = []
 for proto in PROTOS:
     d = [pm['%s|%s' % (proto, p)]['vs_best_paper_by_within_r2'] for p in PAIRS]
@@ -153,8 +165,8 @@ Protocol & mean $\Delta$ & better / worse & mean $\Delta$ & better / worse \\
 ''' + '\n'.join(rows) + r'''
 \bottomrule
 \end{tabular}
-\caption{\textbf{\method{} vs.\ the best paper model of each pair}, chosen per pair and metric on the same test
-data (which favours the baselines). \emph{better / worse}: number of the nine pairs in which \method{} is
+\caption{\textbf{\method{} vs.\ the best baseline of each pair}, chosen per pair and metric among all six baselines
+(the four YieldSAT models, TabM and LightGBM) on the same test data, which favours the baselines. \emph{better / worse}: number of the nine pairs in which \method{} is
 significantly better / worse (95\% field-season cluster bootstrap).}
 \label{tab:vs_best}
 \end{table}
@@ -379,7 +391,7 @@ the seed-averaged difference is significant.}
 if (R / 'cost_bench.json').exists() and (R / 'cost_reports.json').exists():
     cb, cr = J('cost_bench.json'), J('cost_reports.json')
     rows = []
-    for t, name in MODELS:
+    for t, name in [m for m in MODELS if m[0] in cb]:          # TabM / LightGBM were not benchmarked
         b, c = cb[t], cr[t]
         rows.append(r'%s & %.2f & %.1f & %s & %s & %.1f & %.0f & %.0f \\' % (
             name, c['params'][0] / 1e6, c['peak_gpu_gb_median'], '{:,}'.format(int(round(b['samples_per_second'], -2))),
