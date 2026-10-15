@@ -100,9 +100,17 @@ Niemi.
   - its resolved polygons cover under 40% of the field outline.
 
   This excludes 10 of 75 (§4).
-- **Target raster: still to do.** The pipeline's 10,000-cell grid has field-specific, non-square cells
-  (5.00–5.21 m). The model target will be rasterised from the resolved polygons onto the imagery grid,
-  area-weighted.
+- **Target raster (2026-10-15, `geo-data-downloader rasterize-yield`).** The pipeline's 10,000-cell grid has
+  field-specific, non-square cells (5.00–5.21 m), so it is not used.
+  - The target is rasterised from the resolved polygons onto each field's Sentinel-2 10 m grid, the same CRS,
+    transform and shape as its S2 bands, as in YieldSAT.
+  - A cell's yield is the mean polygon yield weighted by exact polygon-cell intersection area. Cells with less than
+    50% polygon coverage are masked; the coverage band is kept.
+  - Checks: the intersected area equals the polygon area, and the raster mean equals the polygon mean, in every
+    clean field.
+  - The 65 clean field-seasons give **192,325 target pixels** (median 2,545 per field, 141–9,216).
+  - Files: `layers/<id>/yield/<id>_yield_s2_10m.tif`. Details are in geo-data-downloader
+    `specs/phase-5b-ground-truth/requirements.md` §5.
 
 ## 3. The dataset (65 field-seasons after QC)
 
@@ -141,7 +149,8 @@ Niemi.
 > are resolved geometrically, and yield (Mg/ha of dry matter) is the moisture-corrected mass divided by the
 > rectangle's effective area. Polygons outside three interquartile ranges of their field are removed, as are
 > field-seasons with implausible yields or coverage. The resolved polygons, about 1.3 M in total, are rasterised onto
-> the imagery grid to give the target.
+> each field's Sentinel-2 10 m grid by exact area weighting; cells less than half covered are masked, leaving
+> 192,325 target pixels.
 
 ## 6. Open items
 
@@ -149,6 +158,6 @@ Niemi.
 2. The writer bug (2 field-seasons): a one-line fix in the pipeline, which needs the project lead's go-ahead.
 3. The 10 QC-flagged field-seasons: exclude them (current choice), or fix the units. For 4, the original exports
    are available.
-4. Rasterise the target onto the imagery grid (10 m Sentinel-2 / 3 m PlanetScope), area-weighted, with a minimum
-   coverage per cell.
+4. Target raster: done on the S2 10 m grid. Open: whether 0.5 is the right minimum coverage, and a 3 m version if
+   PlanetScope is bought.
 5. Verify the RITAS citation.
