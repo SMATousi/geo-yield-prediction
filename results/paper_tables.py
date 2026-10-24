@@ -714,4 +714,118 @@ under validation selection with 95\% field-season cluster bootstrap intervals (b
 \end{table*}
 """)
 
+# ---- Own dataset (spec/own-dataset-training.md): S2 only vs high-resolution inputs, 3 seeds -----------------------
+OWN_FILE = 'own_cmp_all.json' if (R / 'own_cmp_all.json').exists() else 'own2_cmp.json'
+if (R / OWN_FILE).exists():
+    oc, st, nco = J(OWN_FILE), J('own_dataset_stats.json'), J('noise_ceiling_own.json')
+    OWN_PAIRS, OWN_PROTOS = ['MO-S', 'MO-C'], ['CV10', 'LOYO']
+    COLS = [(pr, p) for pr in OWN_PROTOS for p in OWN_PAIRS]
+    ARMS = [(OURS + '-ps10', r'+ PS, 10\,m mean'), (OURS + '-ps3x3', r'+ PS, 3$\times$3 sub-grid'),
+            (OURS + '-pswin', r'+ PS, 30\,m window'), (OURS + '-ps3x3-pswin', r'+ PS, 3$\times$3 + 30\,m window'),
+            (OURS + '-ps3x3sp', r'+ PS, 3$\times$3 sub-grid, conv.'), (OURS + '-dem10', r'+ DEM 1\,m, 10$\times$10 patch'),
+            (OURS + '-ps3x3sp-dem10', r'+ PS 3$\times$3 conv.\ + DEM patch')]
+    ARMS = [(t, lab) for t, lab in ARMS if all(t in oc['%s|%s' % c] and not oc['%s|%s' % c][t].get('incomplete')
+                                               for c in COLS)]
+    MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps10', '-ps3x3', '-pswin', '-ps3x3-pswin'))]
+    sd = lambda m: float(np.std(m['seed_within_r2']))
+
+    def cell(m):
+        s_ = '%s {\\scriptsize(%s)}' % (f2(m['within_r2']), f2(m['d_within_r2'], True))
+        lo, hi = m['ci_within_r2']
+        return r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_
+    rows = [r'S2 only & %s & & \\' % ' & '.join(f2(oc['%s|%s' % c]['baseline']['within_r2']) for c in COLS)]
+    for t, lab in ARMS:
+        if t not in MAIN_ARMS:
+            continue
+        rows.append(r'%s & %s & %s & %s \\' % (lab, ' & '.join(cell(oc['%s|%s' % c][t]) for c in COLS),
+                                                ci(oc['CV10|MEAN|%s' % t]['within_r2']), ci(oc['LOYO|MEAN|%s' % t]['within_r2'])))
+    write('owndata_main.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} & \multicolumn{2}{c}{Mean $\Delta$ within $R^2$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Inputs & Soybean & Corn & Soybean & Corn & CV10 & LOYO \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\midrule
+Noise ceiling & %s & %s & %s & %s & & \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{High-resolution inputs on our Missouri dataset.} Within-field $R^2$ of \method{} with Sentinel-2
+only and with PlanetScope (PS, 3.3\,m) added, seeds 0--2 pooled; in brackets the change vs.\ S2 only (bold: 95\%%
+field-season cluster bootstrap interval excludes 0). Last columns: mean change over the two crops with its interval.
+The 30\,m window is the cell and its eight neighbours on the PS grid, read by a convolutional encoder.}
+\label{tab:owndata}
+\end{table*}
+""" % tuple(f2(nco[p]['ceiling_within_r2']) for _ in OWN_PROTOS for p in OWN_PAIRS))
+
+    # supplementary: every arm, within and pooled change per pair with intervals, seed spread
+    rows = [r'S2 only & %s \\' % ' & '.join(
+        r'%s {\scriptsize$\pm$%s} & %s' % (f2(oc['%s|%s' % c]['baseline']['within_r2']), ('%.3f' % sd(oc['%s|%s' % c]['baseline'])),
+                                          f2(oc['%s|%s' % c]['baseline']['pooled_r2'])) for c in COLS)]
+    for t, lab in ARMS:
+        rows.append(r'%s & %s \\' % (lab, ' & '.join(
+            '%s & %s' % (ci([oc['%s|%s' % c][t]['d_within_r2']] + oc['%s|%s' % c][t]['ci_within_r2']),
+                         ci([oc['%s|%s' % c][t]['d_pooled_r2']] + oc['%s|%s' % c][t]['ci_pooled_r2'])) for c in COLS)))
+    write('supp_owndata_full.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{2}{c}{CV10 soybean} & \multicolumn{2}{c}{CV10 corn} & \multicolumn{2}{c}{LOYO soybean} & \multicolumn{2}{c}{LOYO corn} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+Inputs & within & pooled & within & pooled & within & pooled & within & pooled \\
+\midrule
+""" + rows[0] + '\n' + r'\midrule' + '\n' + '\n'.join(rows[1:]) + r"""
+\bottomrule
+\end{tabular}}
+\caption{\textbf{Our dataset, all input variants.} First row: $R^2$ of S2 only (within-field with its seed standard
+deviation, and pooled). Other rows: change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold:
+excludes 0), seeds 0--2 pooled. ``conv.'': convolutional encoder over the sub-grid instead of flat channels.}
+\label{tab:supp_owndata_full}
+\end{table*}
+""")
+
+    # supplementary: dataset statistics
+    def yrs(c):
+        y = sorted(st[c]['years'])
+        return '%s--%s' % (y[0], y[-1]) if len(y) > 1 else y[0]
+    srow = lambda name, f: r'%s & %s & %s & %s \\' % (name, f('soybean'), f('corn'), f('all'))
+    rows = [srow('Field seasons', lambda c: '%d' % st[c]['field_seasons']),
+            srow('Physical fields', lambda c: '%d' % st[c]['physical_fields']),
+            srow(r'Labelled 10\,m cells', lambda c: '{:,}'.format(st[c]['cells']).replace(',', '{,}')),
+            srow('Harvest years', yrs),
+            srow('Cells per field season',
+                 lambda c: '%d (%d--%d)' % (st[c]['cells_median'], st[c]['cells_min'], st[c]['cells_max'])),
+            srow('Labelled area (ha)', lambda c: '%.0f' % st[c]['area_ha']),
+            srow('Field-mean yield (Mg/ha)', lambda c: '%.1f' % st[c]['target_mean'] if c != 'all' else '--'),
+            srow('Within-field std (Mg/ha)', lambda c: '%.2f' % st[c]['target_std_within'] if c != 'all' else '--'),
+            srow('Clear S2 / PS slots per cell',
+                 lambda c: '%d / %d' % (st[c]['s2_clear_slots_median'], st[c]['ps_clear_slots_median'])),
+            srow('PS scenes (8-band)', lambda c: '{:,} ({:,})'.format(st[c]['ps_scenes'], st[c]['ps_scenes_8band']).replace(',', '{,}')),
+            srow('Noise ceiling',
+                 lambda c: f2(nco['MO-S' if c == 'soybean' else 'MO-C']['ceiling_within_r2']) if c != 'all' else '--')]
+    write('supp_owndata_stats.tex', r"""\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{lccc}
+\toprule
+ & Soybean & Corn & All \\
+\midrule
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Our Missouri dataset as used for training} (the one field season of another crop is not used).
+Cells per field season, yields and slots: medians (range for cells). Yield in dry matter. Slots: the 72 ten-day
+slots of the dense series inside the season. Noise ceiling: within-field $R^2$ (\cref{sec:supp_information}).}
+\label{tab:supp_owndata_stats}
+\end{table}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))
