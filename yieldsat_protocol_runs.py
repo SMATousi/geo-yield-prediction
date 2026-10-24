@@ -356,7 +356,9 @@ def cmd_units(a):
     if a.batch == 'own2':
         # round 2 (spec/own-dataset-training.md §7): seeds 1-2 of the three arms, three seeds of the spatial arms
         units = own_units(OWN_ARMS, (1, 2)) + own_units(OWN_ARMS_SPATIAL, (0, 1, 2))
-        units.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
+        # the spatial encoders (both of them in -ps3x3sp-dem10) first: a GPU failure shows early
+        units.sort(key=lambda u: ('dem10' not in u['id'].split('__')[0] or 'ps3x3sp' not in u['id'],
+                                  'ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
         Path('cluster/tabm/protocol_own2_units.json').write_text(
             json.dumps({'suite': 'protocol_own2', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_own2: {} units'.format(len(units)))
