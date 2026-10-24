@@ -1,6 +1,6 @@
 # Training on our own dataset: does PlanetScope's resolution raise within-field R²?
 
-**Status (2026-10-24): 96/96 units done; results in §6 (`results/own_cmp.json`).**
+**Status (2026-10-24): round 1 done (96/96, §6); round 2 running (seeds + spatial encoders, 480 units, §7).**
 
 Related:
 - [own-dataset-ground-truth.md](./own-dataset-ground-truth.md): the yield maps (65 clean field-seasons, 10 m target).
@@ -23,6 +23,7 @@ when S2 is coarsened (20/30/60 m: −0.012/−0.024/−0.055) and that half the 
 | D3 | **Three arms** (separates "more data" from "finer resolution"): S2 only; S2 + PlanetScope averaged to the 10 m cell (`-ps10`); S2 + PlanetScope on a 3×3 sub-grid of the cell (`-ps3x3`) |
 | D4 | **Target and cell grid:** the 10 m yield raster on each field's S2 grid (own-dataset-ground-truth.md). DEM and terrain on the same 10 m grid (project lead): the 1 m DEM averaged per cell, terrain derived from that 10 m DEM |
 | D5 | **QC-clean field-seasons only** (65; 64 after D2) |
+| D6 | **Round 2** (project lead, after round 1): two more seeds (1, 2) of all arms; a spatial encoder for the PlanetScope 3×3 sub-grid; the 1 m DEM on each cell's 10×10 sub-grid through a spatial encoder |
 
 ## 3. Dataset (`yieldsat_build_owndata.py`, country `Missouri`)
 
@@ -38,6 +39,7 @@ Built in the YieldSAT artifact contract, so the dense-series code reads it uncha
 | DEM, terrain | USGS 3DEP 1 m; 5 m TWI | DEM averaged to 10 m; Horn slope (°), downslope aspect (°), Zevenbergen–Thorne profile curvature (×100) from the 10 m DEM; TWI = mean of the 5 m TWI |
 | Soil | POLARIS 30 m (clay, sand, silt, pH, OM → `soc` slot) per cell; SoilGrids centroid for the rest | The SoilGrids centroid file has no CEC, coarse fragments or nitrogen: those 18 channels are empty (masked) |
 | PlanetScope | 8-band SR (4-band 2018–2020), UDM2 | Per scene, area-weighted onto the 10 m grid and onto the 3×3 sub-grid (3.33 m); per cell and bin the scene nearest the bin centre whose cell is ≥ 90% clear (UDM2); sub-cells ≥ 50% clear. 4-band scenes fill blue/green/red/NIR of the 8-band order |
+| DEM 10×10 patch (round 2) | USGS 3DEP 1 m | The 1 m DEM on the cell's 10×10 sub-grid (average resampling onto the yield grid ÷ 10), minus the cell mean (the mean is the `dem` channel), m; `dem10x10.npy` (N, 100) f16, `dem_patch_sums.npz`; train-only mean/std (`dem_patch_normalization`). All 190,124 cells valid; within-cell std per field 0.016–0.22 m (`--dem_patch_only`, 1.5 s) |
 | Neighbourhood, field context | existing builders | 5×5 S2 neighbourhood mean; field S2 mean/std, within-field z-scores, within-field terrain z-scores, edge distance |
 
 **Contents:** 64 field-seasons, **190,124 cells**, 55 physical fields (shared ground across years: 8 fields with
@@ -59,6 +61,12 @@ Built in the YieldSAT artifact contract, so the dense-series code reads it uncha
   `ps_field_sums.npz`); masked where not clear or outside the slot window. They share the S2 slot times.
 - `main_yieldsat_finetune.py --planetscope 10m|3x3`.
 - `yieldsat_protocol_runs.py units --batch own`: 96 units (3 arms × 32 folds), `cluster/tabm/protocol_own_units.json`.
+- Round 2: `models_multimodal_encoder.py` `PatchTemporalEncoder` (per slot two shared 3×3 convolutions over the
+  3×3 sub-grid, values and validity as channels, flattened map → 64-d slot feature → the usual masked temporal
+  transformer) and `PatchStaticEncoder` (3×3 conv, strided 3×3 conv, MLP over the flattened 5×5 map). Selected
+  per stream by the layout `grid` and the model's `spatial_streams` (`--ps_spatial`, `--dem_patch`).
+  `units --batch own2`: 480 units, `cluster/tabm/protocol_own2_units.json`; job `protocol_own2_job.yaml` (20 pods × 4).
+  `results/rel_cmp.py` `REL_SEEDS=0,1,2` pools seeds (per-seed statistics summed per field season).
 
 ## 5. Evaluation
 
@@ -82,11 +90,30 @@ Within-field R² (pooled out of fold):
 Pooled pixel R²: CV10 MO-S 0.285 / 0.320 / 0.271, MO-C 0.441 / 0.519 / 0.481; LOYO MO-S 0.234 / 0.238 / 0.322,
 MO-C 0.235 / 0.259 / 0.274 (S2 / +PS10 / +PS3x3). Noise ceiling (within-field): MO-S 0.80, MO-C 0.92.
 
+All arms carry the spatial context of the best model: the 5×5 S2 neighbourhood stream and the field context
+(field S2 mean/std, within-field S2 z-scores, within-field terrain z-scores, edge distance).
+
 Reading: PlanetScope helps in 6 of 8 within-field comparisons, but only +PS3x3 on LOYO soybean is significant.
 The 3×3 sub-grid does not beat the 10 m average except under LOYO soybean, so the gain so far comes from the
 extra (cleaner, better registered) observations more than from sub-10 m detail. One seed; corn has 15 seasons.
 
-## 7. Log
+## 7. Round 2: seeds and spatial sub-grid encoders (running)
+
+| Arm | Inputs beyond S2-only | Seeds |
+|---|---|---|
+| `ours-p3nbr-dense-fc-rel10` | — | 0 (round 1), 1, 2 |
+| `-ps10` | PlanetScope averaged to 10 m | 0, 1, 2 |
+| `-ps3x3` | PlanetScope 3×3, flat (72 channels) | 0, 1, 2 |
+| `-ps3x3sp` | PlanetScope 3×3, spatial encoder | 0, 1, 2 |
+| `-dem10` | 1 m DEM 10×10 patch, spatial encoder | 0, 1, 2 |
+| `-ps3x3sp-dem10` | both | 0, 1, 2 |
+
+Questions: is the LOYO soybean PS 3×3 gain stable over seeds; does a spatial encoder get more from the 3×3
+sub-grid than the flat channels; does sub-cell micro-relief add within-field signal. Evaluation as §5, seeds
+pooled, each arm against S2 only.
+
+## 8. Log
 
 - 2026-10-24: dataset built and checked (§3); CPU smoke of the S2 and 3×3 arms (2 × 30 steps) runs end to end.
 - 2026-10-24: cluster run (12 pods × 4) done, 96/96, no failures; results §6.
+- 2026-10-24: round 2 built (DEM patch, spatial encoders; CPU smoke and tests pass), 480 units submitted (§7).

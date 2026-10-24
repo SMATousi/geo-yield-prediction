@@ -1,7 +1,8 @@
 """RL-04/RL-05 comparison: relation-loss runs vs the dense p3-nbr baseline (same splits, same seed).
 Pooled R2 and within-field metrics per pair x protocol, plus a paired field-season cluster bootstrap of the
 deltas (per pair and for the mean over pairs). All statistics are additive per field season, so a bootstrap
-replicate is a weighted sum."""
+replicate is a weighted sum. REL_SEEDS=0,1,2 pools seeds: each seed's statistics are computed on its own (its own
+within-field centring) and summed per field season; the per-seed within-field R2 are reported as well."""
 import glob, os, json, sys, numpy as np
 root = (os.environ.get('REL_ROOT', '/data/YieldSAT/yieldsat_results/protocol')   # REL_ROOT: e.g. the local backup
         + '/' + os.environ.get('REL_SUB', 'paper'))                               # REL_SUB=own: our dataset
@@ -9,11 +10,12 @@ BASE = os.environ.get('REL_BASE', 'ours-p3nbr-dense')
 VARS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['ours-p3nbr-dense-rel05', 'ours-p3nbr-dense-rel10']
 PAIRS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
 PROTOS = {'cv10': 'CV10', 'loyo': 'LOYO', 'loro': 'LORO'}
+SEEDS = [int(x) for x in os.environ.get('REL_SEEDS', '0').split(',')]
 MIN_PIX, B = 50, 2000
 
 
-def load(grp, tag, pair):
-    fs = sorted(glob.glob('%s/s2_adm/%s_seed0/%s/fold*/test_predictions.npz' % (grp, tag, pair)))
+def load(grp, tag, pair, seed=0):
+    fs = sorted(glob.glob('%s/s2_adm/%s_seed%d/%s/fold*/test_predictions.npz' % (grp, tag, seed, pair)))
     if not fs:
         return None, 0
     P, Y, S = [], [], []
@@ -37,6 +39,14 @@ def field_stats(p, y, s, keys):
               wsse=np.bincount(inv, (pc - yc) ** 2), wsst=np.bincount(inv, yc ** 2),
               spy=np.bincount(inv, pc * yc), spp=np.bincount(inv, pc * pc))
     return {k: v[idx] for k, v in st.items()}
+
+
+def pooled_stats(runs, keys):
+    """Per field-season statistics summed over seeds (one (pred, target, season) run per seed), and each
+    seed's own within-field R2."""
+    per = [field_stats(*r, keys) for r in runs]
+    return ({k: sum(p[k] for p in per) for k in per[0]},
+            [float(summarize(p)['within_r2']) for p in per])
 
 
 def summarize(st, w=None):
@@ -70,22 +80,24 @@ for g, proto in PROTOS.items():
                     and glob.glob('%s/s2_adm/%s_seed0/%s' % (d, VARS[0], pair))), None)
         if grp is None:
             continue
-        base, nb = load(grp, BASE, pair)
-        if base is None:
+        base = [load(grp, BASE, pair, sd) for sd in SEEDS]
+        if any(b[0] is None for b in base) or len({b[1] for b in base}) > 1:
             continue
-        keys = np.unique(base[2])
-        sb = field_stats(*base, keys)
+        nb = base[0][1]
+        keys = np.unique(base[0][0][2])
+        sb, seed_b = pooled_stats([b[0] for b in base], keys)
         W = rng.multinomial(len(keys), np.full(len(keys), 1 / len(keys)), size=B).astype(float)
-        row = {'baseline': {**summarize(sb), **per_field(sb), 'folds': nb}}
+        row = {'baseline': {**summarize(sb), **per_field(sb), 'folds': nb, 'seed_within_r2': seed_b}}
         for v in VARS:
-            d, nv = load(grp, v, pair)
-            if d is None or nv < nb or set(np.unique(d[2])) != set(keys):
+            ds = [load(grp, v, pair, sd) for sd in SEEDS]
+            nv = min(d[1] for d in ds)
+            if any(d[0] is None or set(np.unique(d[0][2])) != set(keys) for d in ds) or nv < nb:
                 row[v] = {'folds': nv, 'incomplete': True}
                 continue
-            sv = field_stats(*d, keys)
+            sv, seed_v = pooled_stats([d[0] for d in ds], keys)
             dl = {m: np.array([summarize(sv, w)[m] - summarize(sb, w)[m] for w in W]) for m in ('pooled_r2', 'within_r2')}
             boots[v].append(dl)
-            m = {**summarize(sv), **per_field(sv), 'folds': nv}
+            m = {**summarize(sv), **per_field(sv), 'folds': nv, 'seed_within_r2': seed_v}
             for k in ('pooled_r2', 'within_r2'):
                 m['d_' + k] = m[k] - row['baseline'][k]
                 m['ci_' + k] = [float(np.percentile(dl[k], 2.5)), float(np.percentile(dl[k], 97.5))]
