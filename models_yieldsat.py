@@ -10,6 +10,8 @@
 #   yieldsat_dem      masked_static    (B, 1)
 #   yieldsat_terrain  masked_static    (B, 4)     (5 with cyclic aspect)
 #   yieldsat_soil     soil_profile     (B, 48)    (96 with uncertainty)
+# Sub-grid streams of our own dataset (layout ``grid``) named in ``spatial_streams`` get a convolutional
+# encoder instead: planetscope_3x3 patch_temporal, yieldsat_dem_patch patch_static.
 # ``fusion`` selects how the encodings are combined (YS-11):
 #   perceiver_summary - one summary token per stream -> LatentFusionTransformer
 #                       (the original configuration, unchanged)
@@ -42,13 +44,23 @@ FUSION_LAYOUT_KEYS = ('fusion', 'encoder_output', 'num_latents', 'depth', 'num_h
 
 
 def encoder_config(layout, embed_dim, time_dim=3, num_slots=24, temporal_hidden=128,
-                   temporal_depth=2, static_hidden=64, output='summary'):
+                   temporal_depth=2, static_hidden=64, output='summary', spatial_streams=()):
     """MultiModalEncoder config for a dataset ``stream_layout``. ``output``
-    ('summary' | 'tokens') applies to the temporal and soil encoders."""
+    ('summary' | 'tokens') applies to the temporal and soil encoders; streams in ``spatial_streams``
+    (with a layout ``grid`` = (side, channels)) get the convolutional sub-grid encoders."""
     cfg = {}
     for name, lay in layout.items():
         n = len(lay['out_channels'])
-        if lay['temporal']:
+        if name in spatial_streams:
+            side, ch = lay['grid']
+            if lay['temporal']:
+                cfg[name] = {'type': 'patch_temporal', 'side': side, 'channels': ch, 'time_dim': time_dim,
+                             'max_len': num_slots, 'hidden_dim': temporal_hidden, 'depth': temporal_depth,
+                             'embed_dim': embed_dim, 'norm_source': 'prenormalized'}
+            else:
+                cfg[name] = {'type': 'patch_static', 'side': side, 'channels': ch, 'embed_dim': embed_dim,
+                             'hidden_dim': static_hidden, 'norm_source': 'prenormalized'}
+        elif lay['temporal']:
             cfg[name] = {'type': 'masked_temporal', 'in_dim': n, 'time_dim': time_dim,
                          'max_len': num_slots, 'hidden_dim': temporal_hidden,
                          'depth': temporal_depth, 'embed_dim': embed_dim,
@@ -60,7 +72,7 @@ def encoder_config(layout, embed_dim, time_dim=3, num_slots=24, temporal_hidden=
         else:
             cfg[name] = {'type': 'masked_static', 'in_dim': n, 'embed_dim': embed_dim,
                          'hidden_dim': static_hidden, 'norm_source': 'prenormalized'}
-        if output == 'tokens' and cfg[name]['type'] in ('masked_temporal', 'soil_profile'):
+        if output == 'tokens' and cfg[name]['type'] in ('masked_temporal', 'soil_profile', 'patch_temporal'):
             cfg[name]['output'] = 'tokens'
     return cfg
 
@@ -108,8 +120,13 @@ class YieldSATPointModel(nn.Module):
                  modality_embed=32, modality_dropout=0.1, use_crop_context=True,
                  head_dropout=0.0, loss='mse', time_dim=3, num_slots=24,
                  fusion='perceiver_summary', cross_attn_layers=None, level_head=False, level_weight=1.0,
-                 early_hidden=192, early_depth=3):
+                 early_hidden=192, early_depth=3, spatial_streams=()):
         super().__init__()
+        unknown = set(spatial_streams) - {n for n, l in layout.items() if 'grid' in l}
+        if unknown:
+            raise ValueError('spatial_streams without a sub-grid layout: {}'.format(sorted(unknown)))
+        if spatial_streams and fusion == 'early':
+            raise ValueError('spatial_streams needs a per-stream fusion')
         if fusion not in FUSIONS:
             raise ValueError('fusion must be one of {}'.format(FUSIONS))
         tokens = fusion == 'perceiver_tokens'
@@ -140,7 +157,7 @@ class YieldSATPointModel(nn.Module):
             return
         self.encoders = MultiModalEncoder(
             encoder_config(layout, embed_dim, time_dim=time_dim, num_slots=num_slots,
-                           output=self.encoder_output),
+                           output=self.encoder_output, spatial_streams=tuple(spatial_streams)),
             embed_dim=embed_dim, modality_dropout=modality_dropout)
         self.token_names = self.streams + ((CROP_CONTEXT,) if use_crop_context else ())
         if use_crop_context:
@@ -191,6 +208,8 @@ class YieldSATPointModel(nn.Module):
         self._build_level(level_head, level_weight, embed_dim, time_dim, num_slots)
         if level_head:
             self.config.update(level_head=True, level_weight=level_weight)
+        if spatial_streams:
+            self.config.update(spatial_streams=sorted(spatial_streams))
 
     # ---- S4 early fusion / S5 season level (spec/yieldsat-improvement.md) ----
     def _build_early(self, layout, embed_dim, time_dim, num_slots, use_crop_context, hidden, depth,

@@ -120,7 +120,8 @@ def image_units(artifact_root, pooled_protocols=('cv',)):
                     args += ['--init_ckpt', '/data/YieldSAT/yieldsat_results/{}/donors/{}/s2_adm/seed0/'
                              'checkpoint_best.pth'.format(donors, WARM[pair]),
                              '--lr', '{:g}'.format(float(margs[margs.index('--lr') + 1]) * 0.3)]
-                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                uid = tag if seed == 0 else '{}-s{}'.format(tag, seed)
+                units.append({'id': '{}__{}__{}__f{}'.format(uid, pair, proto, i), 'pair': pair, 'n_folds': 1,
                               'script': 'main_yieldsat_image.py',
                               'stage': ['index/' + c for c in countries] + ['splits/{}*'.format(prefix)],
                               'stage_image': {'key': pair, 'countries': countries,
@@ -174,7 +175,8 @@ def pk_units(artifact_root):
             for arm in PK_ARMS:
                 tag = 'ours-p3nbr-{}'.format(arm)
                 out = '{{out_root}}/paper/{}/{}/{}_seed0/{}/fold{:02d}'.format(group, inputs, tag, pair, i)
-                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                uid = tag if seed == 0 else '{}-s{}'.format(tag, seed)
+                units.append({'id': '{}__{}__{}__f{}'.format(uid, pair, proto, i), 'pair': pair, 'n_folds': 1,
                               'script': 'main_yieldsat_finetune.py', 'pretrain_unit': unit,
                               'stage': ['cache/' + country, 'index/' + country, 'neighbourhood/' + country,
                                         'splits/{}*'.format(prefix), 'geometry/fields_geometry_*.json'],
@@ -312,28 +314,36 @@ OWN_FOLDS = {('MO-S', 'cv'): 10, ('MO-S', 'loyo'): 7, ('MO-C', 'cv'): 10, ('MO-C
 # data, S2 only and with PlanetScope averaged to the 10 m cell or on its 3x3 sub-grid
 OWN_ARMS = {'ours-p3nbr-dense-fc-rel10': [], 'ours-p3nbr-dense-fc-rel10-ps10': ['--planetscope', '10m'],
             'ours-p3nbr-dense-fc-rel10-ps3x3': ['--planetscope', '3x3']}
+# round 2: spatial (convolutional) encoders of the sub-grid streams, PlanetScope 3x3 and the 1 m DEM 10x10 patch
+OWN_ARMS_SPATIAL = {'ours-p3nbr-dense-fc-rel10-ps3x3sp': ['--planetscope', '3x3', '--ps_spatial'],
+                    'ours-p3nbr-dense-fc-rel10-dem10': ['--dem_patch'],
+                    'ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10': ['--planetscope', '3x3', '--ps_spatial', '--dem_patch']}
 
 
-def own_units():
+def own_units(arms=OWN_ARMS, seeds=(0,)):
     inputs, margs, _ = NN['ours-p3nbr']
     units = []
     for (pair, proto), n in OWN_FOLDS.items():
         prefix = 'noval_' + paper_row_prefix(pair, proto)
         group = '{}_noval_s0'.format(GROUP[proto])
-        for tag, extra in OWN_ARMS.items():
+        for (tag, extra), seed in ((a, s) for a in arms.items() for s in seeds):
             for i in range(n):
-                out = '{{out_root}}/own/{}/{}/{}_seed0/{}/fold{:02d}'.format(group, inputs, tag, pair, i)
+                out = '{{out_root}}/own/{}/{}/{}_seed{}/{}/fold{:02d}'.format(group, inputs, tag, seed, pair, i)
                 stage = (['cache_dense/Missouri', 'neighbourhood_dense/Missouri', 'index/Missouri',
                           'splits/{}*'.format(prefix), 'geometry/fields_geometry_Missouri.json'])
-                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                uid = tag if seed == 0 else '{}-s{}'.format(tag, seed)
+                units.append({'id': '{}__{}__{}__f{}'.format(uid, pair, proto, i), 'pair': pair, 'n_folds': 1,
                               'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV, 'stage': stage,
                               'args': COMMON + margs + ['--weather_first_slot', 'keep', '--skip_source_check',
                                        '--countries', 'Missouri', '--crops', OWN_PAIRS[pair],
                                        '--split', '{}_fold{:02d}'.format(prefix, i), '--output_dir', out,
                                        '--streams', *STREAMS[inputs], '--field_context', '--rel_weight', '1.0']
                                       + extra})
+                if seed:
+                    a = units[-1]['args']
+                    a[a.index('--seed') + 1] = str(seed)
     # PlanetScope 3x3 first (largest inputs), soybean before corn
-    units.sort(key=lambda u: (not u['id'].split('__')[0].endswith('ps3x3'), u['pair'] != 'MO-S'))
+    units.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
     return units
 
 
@@ -343,6 +353,13 @@ def cmd_units(a):
         Path('cluster/tabm/protocol_own_units.json').write_text(
             json.dumps({'suite': 'protocol_own', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_own: {} units'.format(len(units)))
+    if a.batch == 'own2':
+        # round 2 (spec/own-dataset-training.md §7): seeds 1-2 of the three arms, three seeds of the spatial arms
+        units = own_units(OWN_ARMS, (1, 2)) + own_units(OWN_ARMS_SPATIAL, (0, 1, 2))
+        units.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
+        Path('cluster/tabm/protocol_own2_units.json').write_text(
+            json.dumps({'suite': 'protocol_own2', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_own2: {} units'.format(len(units)))
         return
     nn, tab = [], []
     nn_tags = [t for t in NN if a.with_lstm or not t.startswith('lstm-')]
@@ -849,7 +866,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

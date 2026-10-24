@@ -10,7 +10,9 @@ cache (yieldsat_build_dense.py):
   index/Missouri/         rows.npz, fields.json, index_manifest.json, target_side.json
   geometry/fields_geometry_Missouri.json   physical field (shared ground across years), centroid, county
   neighbourhood_dense/Missouri/            ps10.npy (N, 72, 8) f16, ps3x3.npy (N, 72, 72) f16,
-                          ps_times.npy (N, 72) f32, ps_field_sums.npz (PlanetScope streams, D6)
+                          ps_times.npy (N, 72) f32, ps_field_sums.npz (PlanetScope streams, D6),
+                          dem10x10.npy (N, 100) f16 + dem_patch_sums.npz: the 1 m DEM on each cell's
+                          10x10 sub-grid minus the cell mean, m (``--dem_patch_only`` adds it to a built root)
 
 Slots, S2 and weather follow the dense YieldSAT rules (10-day bins from January of harvest year - 1, masked
 outside [seeding, harvest]; per cell the clear S2 acquisition nearest the bin centre; weather summed over
@@ -58,6 +60,7 @@ PS4_POS = (1, 3, 5, 7)                  # 4-band SR (blue, green, red, nir) in t
 SUB = 3                                 # PlanetScope sub-cells per 10 m cell side (3.33 m)
 PS_CELL_CLEAR = 0.9                     # a cell's PlanetScope observation: >= 90% of its area clear
 PS_SUB_CLEAR = 0.5                      # a sub-cell's: >= 50% clear
+DEM_SUB = 10                            # 1 m DEM sub-cells per 10 m cell side
 
 
 def day(d):
@@ -557,6 +560,51 @@ def write_cache_meta(out, recs, N):
                          'sub_clear': PS_SUB_CLEAR, '4band_positions': list(PS4_POS)}}, indent=1))
 
 
+def _dem_patch(task):
+    ws, f, rows, cols, grid = task
+    z = _warp(Path(ws) / 'layers' / f['vgir_id'] / 'dem' / 'dem_1m.tif', [1], grid, Resampling.average,
+              scale=DEM_SUB)[0]
+    H, W = grid[1]
+    z = z.reshape(H, DEM_SUB, W, DEM_SUB).transpose(0, 2, 1, 3).reshape(H, W, DEM_SUB * DEM_SUB)[rows, cols]
+    with np.errstate(invalid='ignore'):
+        rel = z - np.nanmean(z, axis=1, keepdims=True)
+    return f['vgir_id'], rel.astype(np.float32)
+
+
+def write_dem_patch(ws, artifact_root, workers):
+    """dem10x10.npy (N, 100) f16, row order of the built index: per cell the 1 m DEM on its 10x10 sub-grid
+    (row-major, north first) minus the cell's mean elevation (the mean is the ``dem`` static channel), and
+    dem_patch_sums.npz (per field season count / sum / sum of squares, train-only normalization)."""
+    out = Path(artifact_root)
+    idx = np.load(out / 'index' / COUNTRY / 'rows.npz')
+    recs = json.loads((out / 'index' / COUNTRY / 'fields.json').read_text())
+    recs = recs['fields'] if isinstance(recs, dict) else recs
+    by_id = {f['vgir_id']: f for f in field_table(ws)}
+    tasks = []
+    for r in recs:
+        grid, rows, cols, _ = _grid_and_cells(ws, r['field_shared_name'])
+        s, e = r['row_start'], r['row_end']
+        assert (idx['grid_row'][s:e] == rows).all() and (idx['grid_col'][s:e] == cols).all(), r['field_shared_name']
+        tasks.append((ws, by_id[r['field_shared_name']], rows, cols, grid))
+    N = len(idx['grid_row'])
+    arr = np.full((N, DEM_SUB * DEM_SUB), np.nan, np.float16)
+    cnt, sm, ssq = np.zeros(len(recs)), np.zeros(len(recs)), np.zeros(len(recs))
+    pos = {r['field_shared_name']: i for i, r in enumerate(recs)}
+    with Pool(workers) as pool:
+        for vgir, rel in pool.imap_unordered(_dem_patch, tasks):
+            i = pos[vgir]
+            arr[recs[i]['row_start']:recs[i]['row_end']] = rel
+            ok = np.isfinite(rel)
+            cnt[i], sm[i], ssq[i] = ok.sum(), rel[ok].sum(), (rel[ok] ** 2).sum()
+            print('  {} {} cells, {:.1%} valid, within-cell std {:.3f} m'.format(
+                vgir, len(rel), ok.mean(), np.sqrt(ssq[i] / max(cnt[i], 1))), flush=True)
+    d = out / 'neighbourhood_dense' / COUNTRY
+    np.save(d / 'dem10x10.npy', arr)
+    np.savez(d / 'dem_patch_sums.npz', field_codes=np.array([r['field_code'] for r in recs]),
+             count=cnt, sum=sm, sumsq=ssq)
+    print('dem10x10: {} cells, {:.1%} valid'.format(N, np.isfinite(arr).mean()))
+
+
 PAIRS = ('MO-S', 'MO-C')
 PROTOCOLS = ('cv', 'loyo')
 
@@ -580,5 +628,9 @@ if __name__ == '__main__':
     import sys
     if '--splits_only' in sys.argv:
         write_splits(sys.argv[sys.argv.index('--artifact_root') + 1])
+    elif '--dem_patch_only' in sys.argv:
+        arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
+        write_dem_patch(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),
+                        int(arg('--workers', 8)))
     else:
         main()

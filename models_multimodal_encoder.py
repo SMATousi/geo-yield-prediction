@@ -300,6 +300,71 @@ class MaskedStaticEncoder(nn.Module):
         return (x[:, self.in_dim:] > 0).any(dim=1, keepdim=True)
 
 
+class PatchTemporalEncoder(nn.Module):
+    """Point-mode temporal encoder for a sub-grid stream (own dataset: PlanetScope on the cell's 3x3
+    sub-grid). Input as MaskedTemporalEncoder, ``(B, T, 2*side*side*channels + time_dim)`` with the
+    values sub-cell-major (row-major sub-cells, then channels). Per slot, two 3x3 convolutions over the
+    sub-grid (values and validity as channels, weights shared across sub-cells) and a projection of the
+    flattened map give one slot feature, which a MaskedTemporalEncoder summarizes over the slots."""
+
+    def __init__(self, side, channels, embed_dim, time_dim=3, max_len=24, hidden_dim=128, depth=2,
+                 conv_dim=32, feat_dim=64, output='summary'):
+        super().__init__()
+        self.side, self.channels = side, channels
+        self.in_dim = side * side * channels
+        self.time_dim = time_dim
+        self.embed_dim = embed_dim
+        self.conv = nn.Sequential(nn.Conv2d(2 * channels, conv_dim, 3, padding=1), nn.GELU(),
+                                  nn.Conv2d(conv_dim, conv_dim, 3, padding=1), nn.GELU())
+        self.feat = nn.Linear(conv_dim * side * side, feat_dim)
+        self.temporal = MaskedTemporalEncoder(feat_dim, embed_dim, time_dim=time_dim, max_len=max_len,
+                                              hidden_dim=hidden_dim, depth=depth, output=output)
+
+    def forward(self, x):
+        expected = 2 * self.in_dim + self.time_dim
+        if x.ndim != 3 or x.shape[-1] != expected:
+            raise ValueError('PatchTemporalEncoder expects (B, T, {}), got {}'.format(expected, tuple(x.shape)))
+        B, T = x.shape[:2]
+        s, c = self.side, self.channels
+        vm = x[..., :2 * self.in_dim].reshape(B * T, 2, s, s, c).permute(0, 1, 4, 2, 3).reshape(B * T, 2 * c, s, s)
+        f = self.feat(self.conv(vm).flatten(1)).reshape(B, T, -1)
+        m = (x[..., self.in_dim:2 * self.in_dim].sum(-1, keepdim=True) > 0).to(f.dtype).expand_as(f)
+        return self.temporal(torch.cat([f * m, m, x[..., 2 * self.in_dim:]], dim=-1))
+
+    def token_mask(self, x):
+        slot_valid = x[..., self.in_dim:2 * self.in_dim].sum(-1) > 0
+        if self.temporal.output == 'tokens':
+            return slot_valid
+        return slot_valid.any(dim=1, keepdim=True)
+
+
+class PatchStaticEncoder(nn.Module):
+    """Point-mode static encoder for a sub-grid stream (own dataset: the 1 m DEM on the cell's 10x10
+    sub-grid). Input ``(B, 2*side*side*channels)`` = ``[values * mask, mask]``, sub-cell-major; a 3x3
+    convolution, a strided 3x3 convolution and an MLP over the flattened map, ``(B, 1, embed_dim)``."""
+
+    def __init__(self, side, channels, embed_dim, hidden_dim=64, conv_dim=16):
+        super().__init__()
+        self.side, self.channels = side, channels
+        self.in_dim = side * side * channels
+        self.embed_dim = embed_dim
+        self.conv = nn.Sequential(nn.Conv2d(2 * channels, conv_dim, 3, padding=1), nn.GELU(),
+                                  nn.Conv2d(conv_dim, conv_dim, 3, stride=2, padding=1), nn.GELU())
+        n = conv_dim * ((side + 1) // 2) ** 2
+        self.net = nn.Sequential(nn.Linear(n, hidden_dim), nn.GELU(), nn.Linear(hidden_dim, hidden_dim), nn.GELU())
+        self.proj = nn.Linear(hidden_dim, embed_dim)
+
+    def forward(self, x):
+        if x.ndim != 2 or x.shape[-1] != 2 * self.in_dim:
+            raise ValueError('PatchStaticEncoder expects (B, {}), got {}'.format(2 * self.in_dim, tuple(x.shape)))
+        s, c = self.side, self.channels
+        vm = x.reshape(-1, 2, s, s, c).permute(0, 1, 4, 2, 3).reshape(-1, 2 * c, s, s)
+        return self.proj(self.net(self.conv(vm).flatten(1))).unsqueeze(1)
+
+    def token_mask(self, x):
+        return (x[:, self.in_dim:] > 0).any(dim=1, keepdim=True)
+
+
 class SoilProfileEncoder(nn.Module):
     """Depth-aware encoder for property x depth soil vectors (SoilGrids-style).
 
@@ -403,6 +468,8 @@ class MultiModalEncoder(nn.Module):
             'masked_temporal': MaskedTemporalEncoder,
             'masked_static': MaskedStaticEncoder,
             'soil_profile': SoilProfileEncoder,
+            'patch_temporal': PatchTemporalEncoder,
+            'patch_static': PatchStaticEncoder,
         }
 
     def __init__(self, encoders_cfg, embed_dim=192, modality_dropout=0.0):
@@ -444,7 +511,8 @@ class MultiModalEncoder(nn.Module):
             x = torch.as_tensor(x)
         kind = self.encoder_types[name]
         axis = 2 if kind == 'sar' else -1 if kind in (
-            'timeseries', 'tabular', 'masked_temporal', 'masked_static', 'soil_profile') else 1
+            'timeseries', 'tabular', 'masked_temporal', 'masked_static', 'soil_profile', 'patch_temporal',
+            'patch_static') else 1
         return normalize_modality(self.norm_sources[name], x, channel_axis=axis)
 
     def forward(self, inputs):

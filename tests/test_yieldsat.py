@@ -744,3 +744,26 @@ def test_pool_job_filter_claims_only_matching_jobs(corpus, tmp_path):
                        use_wandb=False, health_check=False) == 0
     done = {p.name.split('.')[0] for p in (plan_dir / 'state').glob('*.done.json')}
     assert done == {rid for rid, r in runs.items() if r['pair'] == 'GER-W'}
+
+
+def test_patch_encoders_read_the_sub_grid_spatially():
+    from models_multimodal_encoder import PatchStaticEncoder, PatchTemporalEncoder
+    torch.manual_seed(0)
+    enc = PatchStaticEncoder(side=10, channels=1, embed_dim=16)
+    v = torch.randn(4, 100)
+    m = torch.ones(4, 100)
+    out = enc(torch.cat([v * m, m], -1))
+    assert out.shape == (4, 1, 16)
+    assert not enc.token_mask(torch.cat([v * 0, m * 0], -1)).any()
+    # same values in another spatial arrangement (transposed patch) -> another embedding
+    vt = v.reshape(4, 10, 10).transpose(1, 2).reshape(4, 100)
+    assert not torch.allclose(out, enc(torch.cat([vt, m], -1)))
+    tenc = PatchTemporalEncoder(side=3, channels=8, embed_dim=16, max_len=6)
+    x = torch.randn(2, 6, 72)
+    mk = torch.ones(2, 6, 72)
+    mk[:, 3:] = 0                                            # slots 3.. carry no observation
+    packed = torch.cat([x * mk, mk, torch.zeros(2, 6, 3)], -1)
+    assert tenc(packed).shape == (2, 1, 16)
+    x2 = x.clone()
+    x2[:, 3:] = 99.0                                         # values in masked slots do not matter
+    assert torch.allclose(tenc(packed), tenc(torch.cat([x2 * mk, mk, torch.zeros(2, 6, 3)], -1)))

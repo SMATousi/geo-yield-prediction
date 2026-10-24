@@ -30,6 +30,7 @@ from torch.utils.data import DataLoader
 from dataset.yieldsat_dataset import (
     CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
     YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats, ps_normalization,
+    dem_patch_normalization, DEM_PATCH,
 )
 from dataset.yieldsat_schema import (ALL_COUNTRIES, CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, NBR_NAME, NUM_TIME_SLOTS,
                                      OPTIONAL_STREAMS, PROVENANCE, STREAMS)
@@ -133,6 +134,12 @@ def get_args_parser():
     p.add_argument('--planetscope', nargs='+', default=(), choices=['10m', '3x3'],
                    help='own dataset (spec/own-dataset-training.md): PlanetScope SR per slot, averaged over the '
                         '10 m cell and/or on its 3x3 sub-grid (<artifact_root>/<NBR_NAME>/<country>/ps*.npy)')
+    p.add_argument('--ps_spatial', action='store_true',
+                   help='with --planetscope 3x3: encode the sub-grid with per-slot convolutions (patch_temporal) '
+                        'instead of as 72 flat channels')
+    p.add_argument('--dem_patch', action='store_true',
+                   help='own dataset: add the 1 m DEM on the cell\'s 10x10 sub-grid (minus the cell mean), '
+                        'convolutional encoder (<artifact_root>/<NBR_NAME>/<country>/dem10x10.npy)')
     # knowledge pretraining (spec/yieldsat-point-knowledge-pretraining.md)
     p.add_argument('--knowledge', action='store_true',
                    help='pretrain mode: add concept grounding + relational distillation')
@@ -475,6 +482,15 @@ def main(args):
                       planetscope_norm={c: ps_normalization(nbr_root, c, [f['field_code'] for f in parts['train']
                                                                          if f['country'] == c])
                                         for c in args.countries})
+    if args.ps_spatial and '3x3' not in args.planetscope:
+        raise SystemExit('--ps_spatial needs --planetscope 3x3')
+    if args.dem_patch:
+        nbr_root = Path(args.artifact_root) / NBR_NAME
+        common.update(planetscope_root=str(nbr_root),
+                      dem_patch_norm={c: dem_patch_normalization(nbr_root, c, [f['field_code'] for f in parts['train']
+                                                                                if f['country'] == c])
+                                      for c in args.countries})
+    spatial = ((('planetscope_3x3',) if args.ps_spatial else ()) + ((DEM_PATCH,) if args.dem_patch else ()))
     if args.fc_streams is not None:
         if not args.field_context:
             raise SystemExit('--fc_streams needs --field_context')
@@ -511,6 +527,8 @@ def main(args):
                         cross_attn_layers=args.cross_attn_layers, level_head=args.level_head,
                         level_weight=args.level_weight, early_hidden=args.early_hidden,
                         early_depth=args.early_depth, num_slots=NUM_TIME_SLOTS)
+        if spatial:
+            point_kw['spatial_streams'] = spatial
         if field_enc:
             if args.mode == 'pretrain':
                 raise SystemExit('the field encoder has no pretraining mode')
