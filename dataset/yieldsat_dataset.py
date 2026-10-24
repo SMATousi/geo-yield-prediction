@@ -463,7 +463,9 @@ class YieldSATPointDataset(Dataset):
             R = (3 * r['grid_row'][rows[gi]])[:, None] + d[None, :]
             C = (3 * r['grid_col'][rows[gi]])[:, None] + d[None, :]
             v = np.asarray(stack[scene[gi, k][:, None, None], R[:, :, None], C[:, None, :]], dtype=np.float32)
-            out[sel[gi], k] = ((v - mean) / std).reshape(len(gi), -1)
+            v -= mean
+            v /= std
+            out[sel[gi], k] = v.reshape(len(gi), -1)
 
     def cutoff_day(self, seeding_day, harvest_day):
         if self.cutoff_mode == 'before_harvest':
@@ -581,9 +583,10 @@ class YieldSATPointDataset(Dataset):
             if fc and name in fc_streams:
                 v, m = fc_streams[name]
                 v = np.where(m, v, self.fill_value)
-            elif name in ps:
+            elif name in ps:                            # batch-owned arrays: masked in place (the 30 m window is large)
                 m = np.isfinite(ps[name]) & time_valid[:, :, None]
-                v = np.where(m, ps[name], self.fill_value)
+                v = ps[name]
+                v[~m] = self.fill_value
             elif name == DEM_PATCH:
                 m = np.isfinite(dpatch)
                 v = np.where(m, dpatch, self.fill_value)

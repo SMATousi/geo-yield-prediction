@@ -1,13 +1,13 @@
 # Own dataset round 3 (spec/own-dataset-training.md §8): the 30 m PlanetScope window (9x9 at 3.33 m, conv encoder),
-# alone and with the flat 3x3 sub-grid, 3 seeds, 192 units. 12 pods x 4; 20 Gi for the window stacks (3.4 GB, page
-# cache shared by the 4 runs). No credentials inside.
+# alone and with the flat 3x3 sub-grid, 3 seeds, 192 units. 16 pods x 2 runs, 24 Gi: 4 window runs with 4,096-cell
+# evaluation batches ran 20 Gi pods out of memory (one run ~10 GB host on CPU at 1,024). No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: smatousi-yieldsat-protocol-own3
 spec:
-  completions: 12
-  parallelism: 12
+  completions: 16
+  parallelism: 16
   backoffLimit: 1000
   ttlSecondsAfterFinished: 604800
   template:
@@ -50,14 +50,14 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
-          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_own3_units.json --concurrency 4
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_own3_units.json --concurrency 2
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/owndata_artifacts
         env:
         - name: YIELDSAT_GIT_REF
           value: own-dataset-training
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 20Gi, ephemeral-storage: 80Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 20Gi, ephemeral-storage: 80Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 80Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}

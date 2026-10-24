@@ -320,8 +320,9 @@ OWN_ARMS_SPATIAL = {'ours-p3nbr-dense-fc-rel10-ps3x3sp': ['--planetscope', '3x3'
                     'ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10': ['--planetscope', '3x3', '--ps_spatial', '--dem_patch']}
 # round 3: the 30 m PlanetScope window (cell + 8 neighbours at 3.33 m, convolutional encoder), alone and next to the
 # flat 3x3 sub-grid (the best round-2 arm)
-OWN_ARMS_WINDOW = {'ours-p3nbr-dense-fc-rel10-pswin': ['--planetscope', 'win'],
-                   'ours-p3nbr-dense-fc-rel10-ps3x3-pswin': ['--planetscope', '3x3', 'win']}
+# (evaluation batches of 1,024 cells: the default 4,096 window batches ran 20 Gi pods out of memory)
+OWN_ARMS_WINDOW = {'ours-p3nbr-dense-fc-rel10-pswin': ['--planetscope', 'win', '--eval_batch_size', '1024'],
+                   'ours-p3nbr-dense-fc-rel10-ps3x3-pswin': ['--planetscope', '3x3', 'win', '--eval_batch_size', '1024']}
 
 
 def own_units(arms=OWN_ARMS, seeds=(0,)):

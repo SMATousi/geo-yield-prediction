@@ -73,7 +73,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -147,7 +149,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -221,7 +225,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -295,7 +301,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -369,7 +377,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -443,7 +453,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -517,7 +529,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -591,7 +605,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -665,7 +681,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -739,7 +757,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -813,7 +833,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -887,7 +909,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -961,7 +985,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1035,7 +1061,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1109,7 +1137,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1183,7 +1213,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1257,7 +1289,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1331,7 +1365,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1405,7 +1441,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1479,7 +1517,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1553,7 +1593,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1627,7 +1669,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1701,7 +1745,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1775,7 +1821,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1849,7 +1897,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1923,7 +1973,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -1997,7 +2049,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2071,7 +2125,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2145,7 +2201,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2219,7 +2277,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2293,7 +2353,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2367,7 +2429,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2441,7 +2505,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2515,7 +2581,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2589,7 +2657,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2663,7 +2733,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2737,7 +2809,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2811,7 +2885,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2885,7 +2961,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -2959,7 +3037,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3033,7 +3113,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3107,7 +3189,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3181,7 +3265,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3255,7 +3341,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3329,7 +3417,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3403,7 +3493,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3477,7 +3569,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3551,7 +3645,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3625,7 +3721,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3699,7 +3797,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3773,7 +3873,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3847,7 +3949,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3921,7 +4025,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -3995,7 +4101,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4069,7 +4177,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4143,7 +4253,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4217,7 +4329,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4291,7 +4405,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4365,7 +4481,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4439,7 +4557,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4513,7 +4633,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4587,7 +4709,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4661,7 +4785,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4735,7 +4861,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4809,7 +4937,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4883,7 +5013,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -4957,7 +5089,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5031,7 +5165,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5105,7 +5241,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5179,7 +5317,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5253,7 +5393,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5327,7 +5469,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5401,7 +5545,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5475,7 +5621,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5549,7 +5697,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5623,7 +5773,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5697,7 +5849,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5771,7 +5925,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5845,7 +6001,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5919,7 +6077,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -5993,7 +6153,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6067,7 +6229,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6141,7 +6305,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6215,7 +6381,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6289,7 +6457,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6363,7 +6533,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6437,7 +6609,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6511,7 +6685,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6585,7 +6761,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6659,7 +6837,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6733,7 +6913,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6807,7 +6989,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6881,7 +7065,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -6955,7 +7141,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7029,7 +7217,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7103,7 +7293,9 @@
     "1.0",
     "--planetscope",
     "3x3",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7176,7 +7368,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7249,7 +7443,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7322,7 +7518,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7395,7 +7593,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7468,7 +7668,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7541,7 +7743,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7614,7 +7818,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7687,7 +7893,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7760,7 +7968,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7833,7 +8043,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7906,7 +8118,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -7979,7 +8193,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8052,7 +8268,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8125,7 +8343,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8198,7 +8418,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8271,7 +8493,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8344,7 +8568,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8417,7 +8643,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8490,7 +8718,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8563,7 +8793,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8636,7 +8868,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8709,7 +8943,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8782,7 +9018,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8855,7 +9093,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -8928,7 +9168,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9001,7 +9243,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9074,7 +9318,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9147,7 +9393,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9220,7 +9468,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9293,7 +9543,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9366,7 +9618,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9439,7 +9693,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9512,7 +9768,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9585,7 +9843,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9658,7 +9918,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9731,7 +9993,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9804,7 +10068,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9877,7 +10143,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -9950,7 +10218,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10023,7 +10293,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10096,7 +10368,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10169,7 +10443,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10242,7 +10518,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10315,7 +10593,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10388,7 +10668,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10461,7 +10743,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10534,7 +10818,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10607,7 +10893,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10680,7 +10968,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10753,7 +11043,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10826,7 +11118,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10899,7 +11193,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -10972,7 +11268,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11045,7 +11343,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11118,7 +11418,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11191,7 +11493,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11264,7 +11568,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11337,7 +11643,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11410,7 +11718,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11483,7 +11793,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11556,7 +11868,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11629,7 +11943,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11702,7 +12018,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11775,7 +12093,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11848,7 +12168,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11921,7 +12243,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -11994,7 +12318,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12067,7 +12393,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12140,7 +12468,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12213,7 +12543,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12286,7 +12618,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12359,7 +12693,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12432,7 +12768,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12505,7 +12843,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12578,7 +12918,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12651,7 +12993,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12724,7 +13068,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12797,7 +13143,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12870,7 +13218,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -12943,7 +13293,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13016,7 +13368,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13089,7 +13443,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13162,7 +13518,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13235,7 +13593,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13308,7 +13668,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13381,7 +13743,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13454,7 +13818,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13527,7 +13893,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13600,7 +13968,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13673,7 +14043,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13746,7 +14118,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13819,7 +14193,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13892,7 +14268,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -13965,7 +14343,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -14038,7 +14418,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   },
   {
@@ -14111,7 +14493,9 @@
     "--rel_weight",
     "1.0",
     "--planetscope",
-    "win"
+    "win",
+    "--eval_batch_size",
+    "1024"
    ]
   }
  ]
