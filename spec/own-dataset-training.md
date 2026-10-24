@@ -1,6 +1,6 @@
 # Training on our own dataset: does PlanetScope's resolution raise within-field R²?
 
-**Status (2026-10-24): dataset built and checked; units written; cluster run starting.**
+**Status (2026-10-24): 96/96 units done; results in §6 (`results/own_cmp.json`).**
 
 Related:
 - [own-dataset-ground-truth.md](./own-dataset-ground-truth.md): the yield maps (65 clean field-seasons, 10 m target).
@@ -66,6 +66,27 @@ Within-field R² (the main objective) and pooled pixel / field R², pooled out o
 paired fold bootstrap of each PlanetScope arm against S2 only. Also the noise ceiling of our maps (semivariogram
 nugget, as yieldsat-field-context.md §3).
 
-## 6. Log
+## 6. Results (2026-10-24, `results/rel_cmp.py`, REL_SUB=own; Δ vs S2 only, 95% paired field-season bootstrap CI)
+
+Within-field R² (pooled out of fold):
+
+| Protocol | Pair | S2 only | + PS 10 m (Δ, CI) | + PS 3×3 (Δ, CI) |
+|---|---|---|---|---|
+| CV10 | MO-S | 0.219 | 0.234 (+0.015, −0.023…+0.057) | 0.209 (−0.011, −0.051…+0.024) |
+| CV10 | MO-C | 0.461 | 0.480 (+0.019, −0.034…+0.059) | 0.453 (−0.008, −0.048…+0.068) |
+| LOYO | MO-S | 0.161 | 0.194 (+0.034, −0.005…+0.081) | **0.231 (+0.070, +0.025…+0.115)** |
+| LOYO | MO-C | 0.418 | 0.452 (+0.033, −0.056…+0.140) | 0.414 (−0.004, −0.094…+0.137) |
+| CV10 | mean | | +0.017 (−0.015…+0.045) | −0.010 (−0.036…+0.032) |
+| LOYO | mean | | +0.034 (−0.015…+0.089) | +0.033 (−0.015…+0.105) |
+
+Pooled pixel R²: CV10 MO-S 0.285 / 0.320 / 0.271, MO-C 0.441 / 0.519 / 0.481; LOYO MO-S 0.234 / 0.238 / 0.322,
+MO-C 0.235 / 0.259 / 0.274 (S2 / +PS10 / +PS3x3). Noise ceiling (within-field): MO-S 0.80, MO-C 0.92.
+
+Reading: PlanetScope helps in 6 of 8 within-field comparisons, but only +PS3x3 on LOYO soybean is significant.
+The 3×3 sub-grid does not beat the 10 m average except under LOYO soybean, so the gain so far comes from the
+extra (cleaner, better registered) observations more than from sub-10 m detail. One seed; corn has 15 seasons.
+
+## 7. Log
 
 - 2026-10-24: dataset built and checked (§3); CPU smoke of the S2 and 3×3 arms (2 × 30 steps) runs end to end.
+- 2026-10-24: cluster run (12 pods × 4) done, 96/96, no failures; results §6.
