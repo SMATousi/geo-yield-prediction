@@ -1,6 +1,6 @@
 # Training on our own dataset: does PlanetScope's resolution raise within-field R²?
 
-**Status (2026-10-24): round 1 done (96/96, §6); round 2 running (seeds + spatial encoders, 480 units, §7).**
+**Status (2026-10-24): rounds 1 and 2 done (576 runs, no failures); results §6 (seed 0) and §7 (3 seeds, final).**
 
 Related:
 - [own-dataset-ground-truth.md](./own-dataset-ground-truth.md): the yield maps (65 clean field-seasons, 10 m target).
@@ -97,7 +97,7 @@ Reading: PlanetScope helps in 6 of 8 within-field comparisons, but only +PS3x3 o
 The 3×3 sub-grid does not beat the 10 m average except under LOYO soybean, so the gain so far comes from the
 extra (cleaner, better registered) observations more than from sub-10 m detail. One seed; corn has 15 seasons.
 
-## 7. Round 2: seeds and spatial sub-grid encoders (running)
+## 7. Round 2: seeds and spatial sub-grid encoders
 
 | Arm | Inputs beyond S2-only | Seeds |
 |---|---|---|
@@ -112,8 +112,43 @@ Questions: is the LOYO soybean PS 3×3 gain stable over seeds; does a spatial en
 sub-grid than the flat channels; does sub-cell micro-relief add within-field signal. Evaluation as §5, seeds
 pooled, each arm against S2 only.
 
+**Results (2026-10-24, 480/480 + round 1; `REL_SEEDS=0,1,2`, `results/own2_cmp.json`).** Each seed's
+statistics on its own, summed per field season; Δ vs S2 only with the 95% paired field-season bootstrap CI.
+Seed 0 reproduces §6 exactly.
+
+Within-field R²:
+
+| Arm | CV10 MO-S | CV10 MO-C | LOYO MO-S | LOYO MO-C | CV10 mean Δ | LOYO mean Δ |
+|---|---|---|---|---|---|---|
+| S2 only | 0.211 | 0.440 | 0.193 | 0.381 | | |
+| + PS 10 m | 0.221 (+0.010) | 0.498 (+0.058) | **0.221 (+0.028)** | 0.444 (+0.062) | +0.034 (−0.013…+0.068) | +0.045 (−0.002…+0.082) |
+| + PS 3×3 flat | **0.237 (+0.027)** | 0.462 (+0.022) | **0.234 (+0.040)** | **0.445 (+0.064)** | **+0.024 (+0.008…+0.046)** | **+0.052 (+0.029…+0.081)** |
+| + PS 3×3 spatial | 0.220 (+0.009) | 0.443 (+0.003) | **0.223 (+0.030)** | 0.419 (+0.038) | +0.006 (−0.026…+0.031) | **+0.034 (+0.003…+0.058)** |
+| + DEM 10×10 | 0.196 (−0.015) | 0.431 (−0.009) | 0.190 (−0.003) | 0.375 (−0.006) | −0.012 (−0.035…+0.007) | −0.005 (−0.029…+0.023) |
+| + PS 3×3 spatial + DEM | 0.218 (+0.008) | 0.453 (+0.013) | 0.216 (+0.022) | 0.349 (−0.032) | +0.011 (−0.014…+0.032) | −0.005 (−0.030…+0.035) |
+
+Bold: CI excludes 0. Pooled pixel R² (S2 → best arm): CV10 MO-S 0.293 → 0.335 (PS spatial + DEM), MO-C
+0.431 → 0.523 (PS 10 m, CI +0.011…+0.186); LOYO MO-S 0.245 → 0.332 (PS 3×3), MO-C 0.219 → 0.322 (PS spatial
++ DEM, CI +0.013…+0.220). Mean pooled Δ, LOYO: PS 3×3 +0.091 (+0.021…+0.186), PS 10 m +0.075 (0.000…+0.157).
+
+Seed spread is large: S2-only within-field R² per seed CV10 MO-S 0.187–0.225, MO-C 0.389–0.470, LOYO MO-C
+0.305–0.420. One seed can flip the sign of a ±0.02 effect (round 1's CV10 MO-S PS 3×3: −0.011 at seed 0,
++0.027 over 3 seeds).
+
+Reading:
+- **PlanetScope raises within-field R²**, most consistently as the flat 3×3 sub-grid: significant in 3 of 4
+  pairs and in both protocol means (+0.024 CV10, +0.052 LOYO), larger out of year. Gains are 2–6 points against
+  a noise ceiling of 0.80 (soy) / 0.92 (corn).
+- **The convolutional sub-grid encoder does not help**: it is below the flat channels everywhere (mean −0.018 CV10,
+  −0.018 LOYO). On 3×3 the flat linear map already sees every sub-cell; weight sharing removes position-specific
+  weights without adding context.
+- **The 1 m DEM patch adds no within-field signal** (−0.003 to −0.015, CIs include 0) and lowers the PS gain when
+  combined. Within-cell relief is 2–22 cm and mostly the cell's own plane, which the 10 m slope / curvature
+  already carry. It raises pooled R² in LOYO corn (+0.055), i.e. a level effect between fields, not within.
+
 ## 8. Log
 
 - 2026-10-24: dataset built and checked (§3); CPU smoke of the S2 and 3×3 arms (2 × 30 steps) runs end to end.
 - 2026-10-24: cluster run (12 pods × 4) done, 96/96, no failures; results §6.
 - 2026-10-24: round 2 built (DEM patch, spatial encoders; CPU smoke and tests pass), 480 units submitted (§7).
+- 2026-10-24: round 2 done (480/480, no failures; 20 A10/3090 pods + 4 L4, ~6 h); results §7.
