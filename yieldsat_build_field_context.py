@@ -22,7 +22,7 @@ from pathlib import Path
 
 import numpy as np
 from dataset.yieldsat_cache import static_valid_mask
-from dataset.yieldsat_schema import CACHE_NAME, COUNTRIES, NBR_NAME, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS
+from dataset.yieldsat_schema import ALL_COUNTRIES, CACHE_NAME, COUNTRIES, NBR_NAME, STATIC_CHANNELS, STREAMS, TEMPORAL_CHANNELS
 
 S2_POS = [TEMPORAL_CHANNELS.index(c) for c in STREAMS['yieldsat_s2']['channels']]
 REL_CHANNELS = ('dem', 'slope', 'curvature', 'twi')
@@ -135,7 +135,7 @@ def build_country(artifact_root, country):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--artifact_root', required=True)
-    p.add_argument('--countries', nargs='+', default=list(COUNTRIES), choices=COUNTRIES)
+    p.add_argument('--countries', nargs='+', default=list(COUNTRIES), choices=ALL_COUNTRIES)
     a = p.parse_args()
     for c in a.countries:
         print(json.dumps(build_country(a.artifact_root, c)), flush=True)

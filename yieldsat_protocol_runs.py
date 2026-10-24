@@ -306,7 +306,44 @@ def _rows(artifact_root):
         yield pair, proto, group, folds
 
 
+OWN_PAIRS = {'MO-S': 'soybean', 'MO-C': 'corn'}
+OWN_FOLDS = {('MO-S', 'cv'): 10, ('MO-S', 'loyo'): 7, ('MO-C', 'cv'): 10, ('MO-C', 'loyo'): 5}
+# spec/own-dataset-training.md: the best model (dense p3-nbr + field context + relation loss) on our Missouri
+# data, S2 only and with PlanetScope averaged to the 10 m cell or on its 3x3 sub-grid
+OWN_ARMS = {'ours-p3nbr-dense-fc-rel10': [], 'ours-p3nbr-dense-fc-rel10-ps10': ['--planetscope', '10m'],
+            'ours-p3nbr-dense-fc-rel10-ps3x3': ['--planetscope', '3x3']}
+
+
+def own_units():
+    inputs, margs, _ = NN['ours-p3nbr']
+    units = []
+    for (pair, proto), n in OWN_FOLDS.items():
+        prefix = 'noval_' + paper_row_prefix(pair, proto)
+        group = '{}_noval_s0'.format(GROUP[proto])
+        for tag, extra in OWN_ARMS.items():
+            for i in range(n):
+                out = '{{out_root}}/own/{}/{}/{}_seed0/{}/fold{:02d}'.format(group, inputs, tag, pair, i)
+                stage = (['cache_dense/Missouri', 'neighbourhood_dense/Missouri', 'index/Missouri',
+                          'splits/{}*'.format(prefix), 'geometry/fields_geometry_Missouri.json'])
+                units.append({'id': '{}__{}__{}__f{}'.format(tag, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                              'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV, 'stage': stage,
+                              'args': COMMON + margs + ['--weather_first_slot', 'keep', '--skip_source_check',
+                                       '--countries', 'Missouri', '--crops', OWN_PAIRS[pair],
+                                       '--split', '{}_fold{:02d}'.format(prefix, i), '--output_dir', out,
+                                       '--streams', *STREAMS[inputs], '--field_context', '--rel_weight', '1.0']
+                                      + extra})
+    # PlanetScope 3x3 first (largest inputs), soybean before corn
+    units.sort(key=lambda u: (not u['id'].split('__')[0].endswith('ps3x3'), u['pair'] != 'MO-S'))
+    return units
+
+
 def cmd_units(a):
+    if a.batch == 'own':
+        units = own_units()
+        Path('cluster/tabm/protocol_own_units.json').write_text(
+            json.dumps({'suite': 'protocol_own', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_own: {} units'.format(len(units)))
+        return
     nn, tab = [], []
     nn_tags = [t for t in NN if a.with_lstm or not t.startswith('lstm-')]
     for pair, proto, group, folds in _rows(a.artifact_root):
@@ -812,7 +849,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)

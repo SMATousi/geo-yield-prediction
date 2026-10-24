@@ -27,7 +27,7 @@ from dataset.yieldsat_source import same_snapshot
 
 PARTITIONS = ('train', 'val', 'test')
 PAPER_PROTOCOLS = ('cv', 'loro', 'loyo')
-COUNTRY_CODES = {'Argentina': 'ARG', 'Brazil': 'BRA', 'Germany': 'GER', 'Uruguay': 'URG'}
+COUNTRY_CODES = {'Argentina': 'ARG', 'Brazil': 'BRA', 'Germany': 'GER', 'Uruguay': 'URG', 'Missouri': 'MO'}
 CROP_CODES = {'corn': 'C', 'rapeseed': 'R', 'soybean': 'S', 'wheat': 'W'}
 # the nine country-crop subsets reported in the YieldSAT paper
 PAPER_PAIRS = ('ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')

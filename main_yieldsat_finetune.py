@@ -29,9 +29,9 @@ from torch.utils.data import DataLoader
 
 from dataset.yieldsat_dataset import (
     CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
-    YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats,
+    YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats, ps_normalization,
 )
-from dataset.yieldsat_schema import (CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, NBR_NAME, NUM_TIME_SLOTS,
+from dataset.yieldsat_schema import (ALL_COUNTRIES, CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, NBR_NAME, NUM_TIME_SLOTS,
                                      OPTIONAL_STREAMS, PROVENANCE, STREAMS)
 from dataset.yieldsat_splits import load_field_table, load_split
 from dataset.yieldsat_source import load_country_index
@@ -53,7 +53,7 @@ def get_args_parser():
     p.add_argument('--data_contract', required=True, choices=CONTRACTS)
     p.add_argument('--source_root', default=os.environ.get('YIELDSAT_SOURCE_ROOT'))
     p.add_argument('--artifact_root', default=os.environ.get('YIELDSAT_ARTIFACT_ROOT'))
-    p.add_argument('--countries', nargs='+', choices=COUNTRIES, required=True)
+    p.add_argument('--countries', nargs='+', choices=ALL_COUNTRIES, required=True)
     p.add_argument('--split', required=True, help='split manifest name under artifact_root/splits')
     p.add_argument('--mode', default='finetune', choices=['finetune', 'pretrain'])
     p.add_argument('--backend', default='cache', choices=['cache', 'h5'])
@@ -130,6 +130,9 @@ def get_args_parser():
                         'spec/yieldsat-ablations-seeds.md); default all three')
     p.add_argument('--neighbourhood', action='store_true',
                    help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
+    p.add_argument('--planetscope', nargs='+', default=(), choices=['10m', '3x3'],
+                   help='own dataset (spec/own-dataset-training.md): PlanetScope SR per slot, averaged over the '
+                        '10 m cell and/or on its 3x3 sub-grid (<artifact_root>/<NBR_NAME>/<country>/ps*.npy)')
     # knowledge pretraining (spec/yieldsat-point-knowledge-pretraining.md)
     p.add_argument('--knowledge', action='store_true',
                    help='pretrain mode: add concept grounding + relational distillation')
@@ -466,6 +469,12 @@ def main(args):
                   check_source=check, weather_first_slot=args.weather_first_slot,
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
+    if args.planetscope:
+        nbr_root = Path(args.artifact_root) / NBR_NAME
+        common.update(planetscope_root=str(nbr_root), planetscope_streams=tuple(args.planetscope),
+                      planetscope_norm={c: ps_normalization(nbr_root, c, [f['field_code'] for f in parts['train']
+                                                                         if f['country'] == c])
+                                        for c in args.countries})
     if args.fc_streams is not None:
         if not args.field_context:
             raise SystemExit('--fc_streams needs --field_context')

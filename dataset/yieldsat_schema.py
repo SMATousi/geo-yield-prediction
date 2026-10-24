@@ -19,6 +19,10 @@ import numpy as np
 CONTRACT_KEY = 'yieldsat_preprocessed_v1'
 SOURCE_FILENAME = 'merge_s2-soil-dem-weather-coords.nc'
 COUNTRIES = ('Argentina', 'Brazil', 'Germany', 'Uruguay')
+# Our own yield maps in the same artifact contract (spec/own-dataset-training.md), built by
+# yieldsat_build_owndata.py rather than from a YieldSAT NetCDF: always run with --skip_source_check.
+OWN_COUNTRIES = ('Missouri',)
+ALL_COUNTRIES = COUNTRIES + OWN_COUNTRIES
 import os as _os
 
 # Slot count and cache directories. Defaults are the monthly release contract

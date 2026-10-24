@@ -42,6 +42,21 @@ _S2_CH = list(STREAMS['yieldsat_s2']['channels'])
 _S2_POS = np.array([_T_POS[c] for c in _S2_CH], dtype=np.int64)
 FIELD_REL_CHANNELS = ('rel_dem', 'rel_slope', 'rel_curvature', 'rel_twi', 'edge_dist')
 FIELD_CONTEXT_STREAMS = ('yieldsat_s2_field', 'yieldsat_s2_dev', 'yieldsat_field_rel')
+# PlanetScope streams of our own dataset (spec/own-dataset-training.md, yieldsat_build_owndata.py): per slot the
+# 8 SR bands averaged over the 10 m cell, or on a 3x3 sub-grid of the cell (3.33 m, sub-cell-major)
+PS_BANDS = ('coastal_blue', 'blue', 'green_i', 'green', 'yellow', 'red', 'rededge', 'nir')
+PS_STREAMS = {'10m': ('planetscope_10m', 'ps10.npy', 1), '3x3': ('planetscope_3x3', 'ps3x3.npy', 9)}
+
+
+def ps_normalization(nbr_root, country, field_codes):
+    """Per-band PlanetScope mean / std over the given (training) field seasons, from ps_field_sums.npz."""
+    with np.load(Path(nbr_root) / country / 'ps_field_sums.npz') as z:
+        pos = {int(k): i for i, k in enumerate(z['field_codes'])}
+        sel = [pos[int(k)] for k in field_codes]
+        cnt, s, ss = z['count'][sel].sum(0), z['sum'][sel].sum(0), z['sumsq'][sel].sum(0)
+    mean = s / np.maximum(cnt, 1)
+    std = np.sqrt(np.maximum(ss / np.maximum(cnt, 1) - mean * mean, 0.0))
+    return {'mean': mean.astype(np.float32), 'std': np.where(std > 0, std, 1.0).astype(np.float32)}
 
 
 def stream_layout(streams, soil_uncertainty='none', aspect_encoding='raw'):
@@ -275,7 +290,8 @@ class YieldSATPointDataset(Dataset):
                  backend='cache', cutoff_mode='before_harvest', cutoff_days=30,
                  soil_uncertainty='none', aspect_encoding='raw', max_rows_per_field=None,
                  seed=0, check_source=True, fill_value=0.0, neighbourhood_root=None, weather_first_slot='mask',
-                 s2_obs_dropout=0.0, field_context_root=None, field_context_streams=None):
+                 s2_obs_dropout=0.0, field_context_root=None, field_context_streams=None,
+                 planetscope_root=None, planetscope_streams=(), planetscope_norm=None):
         # 'keep': use the first dated slot's weather sum as the paper does (repro D1)
         self.weather_first_slot = weather_first_slot
         # training augmentation (spec/yieldsat-dense-series.md §10): each sample keeps a fraction
@@ -362,6 +378,18 @@ class YieldSATPointDataset(Dataset):
                 for name in FIELD_CONTEXT_STREAMS:
                     if name not in field_context_streams:
                         del self.layout[name]
+        # PlanetScope (own dataset only): rows aligned with the cache; train-only per-band normalization
+        # (``planetscope_norm[country]`` from ps_normalization)
+        self.planetscope = {}
+        for key in planetscope_streams or ():
+            name, fname, n_sub = PS_STREAMS[key]
+            self.planetscope[name] = ({c: np.load(Path(planetscope_root) / c / fname, mmap_mode='r')
+                                       for c in self.countries}, n_sub)
+            out = (['ps_' + b for b in PS_BANDS] if n_sub == 1 else
+                   ['ps{}_{}'.format(i, b) for i in range(n_sub) for b in PS_BANDS])
+            self.layout[name] = {'temporal': True, 'channels': out, 'positions': np.zeros(0, dtype=np.int64),
+                                 'out_channels': out}
+        self.planetscope_norm = planetscope_norm
 
     def __len__(self):
         return len(self.row)
@@ -393,6 +421,8 @@ class YieldSATPointDataset(Dataset):
         target_raw = np.empty(B, dtype=np.float32)
         nbr = (np.full((B, NUM_TIME_SLOTS, len(STREAMS['yieldsat_s2']['channels'])), np.nan, np.float32)
                if self.neighbourhood is not None else None)
+        ps = {name: np.empty((B, NUM_TIME_SLOTS, 8 * n_sub), np.float32)
+              for name, (_, n_sub) in self.planetscope.items()}
         fc = self.field_context is not None
         if fc:
             f_mean = np.empty((B, NUM_TIME_SLOTS, len(_S2_CH)), np.float32)
@@ -420,6 +450,12 @@ class YieldSATPointDataset(Dataset):
             if nbr is not None:
                 order = np.argsort(rows)
                 nbr[sel[order]] = np.asarray(self.neighbourhood[country][rows[order]], dtype=np.float32)
+            for name, (arrays, n_sub) in self.planetscope.items():
+                order = np.argsort(rows)
+                v = np.asarray(arrays[country][rows[order]], dtype=np.float32)
+                pn = self.planetscope_norm[country]
+                mean, std = np.tile(pn['mean'], n_sub), np.tile(pn['std'], n_sub)
+                ps[name][sel[order]] = (v - mean) / std
             if fc:
                 ctx = self.field_context[country]
                 fpos = np.array([ctx['pos'][int(k)] for k in r['field_code'][rows]], dtype=np.int64)
@@ -472,6 +508,9 @@ class YieldSATPointDataset(Dataset):
             if fc and name in fc_streams:
                 v, m = fc_streams[name]
                 v = np.where(m, v, self.fill_value)
+            elif name in ps:
+                m = np.isfinite(ps[name]) & time_valid[:, :, None]
+                v = np.where(m, ps[name], self.fill_value)
             elif name == 'yieldsat_s2_nbr':
                 nv = np.isfinite(nbr) & time_valid[:, :, None]
                 v = np.where(nv, (nbr - t_mean[:, None, pos]) / t_std[:, None, pos], self.fill_value)
