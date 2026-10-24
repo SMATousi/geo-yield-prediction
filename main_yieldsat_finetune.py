@@ -30,7 +30,7 @@ from torch.utils.data import DataLoader
 from dataset.yieldsat_dataset import (
     CUTOFF_MODES, FieldBalancedBatchSampler, NormalizerView, SequentialBatchSampler,
     YieldSATNormalizer, YieldSATPointDataset, collate_point_batch, load_supplied_stats, ps_normalization,
-    dem_patch_normalization, DEM_PATCH,
+    dem_patch_normalization, DEM_PATCH, PS_WINDOW,
 )
 from dataset.yieldsat_schema import (ALL_COUNTRIES, CONTRACT_KEY, COUNTRIES, CROPS, DEFAULT_STREAMS, NBR_NAME, NUM_TIME_SLOTS,
                                      OPTIONAL_STREAMS, PROVENANCE, STREAMS)
@@ -131,9 +131,10 @@ def get_args_parser():
                         'spec/yieldsat-ablations-seeds.md); default all three')
     p.add_argument('--neighbourhood', action='store_true',
                    help='S6: add the 5x5 neighbourhood S2 stream (<artifact_root>/neighbourhood)')
-    p.add_argument('--planetscope', nargs='+', default=(), choices=['10m', '3x3'],
+    p.add_argument('--planetscope', nargs='+', default=(), choices=['10m', '3x3', 'win'],
                    help='own dataset (spec/own-dataset-training.md): PlanetScope SR per slot, averaged over the '
-                        '10 m cell and/or on its 3x3 sub-grid (<artifact_root>/<NBR_NAME>/<country>/ps*.npy)')
+                        '10 m cell and/or on its 3x3 sub-grid (<artifact_root>/<NBR_NAME>/<country>/ps*.npy); '
+                        'win: the 30 m (9x9 at 3.33 m) window around the cell, convolutional encoder')
     p.add_argument('--ps_spatial', action='store_true',
                    help='with --planetscope 3x3: encode the sub-grid with per-slot convolutions (patch_temporal) '
                         'instead of as 72 flat channels')
@@ -490,7 +491,8 @@ def main(args):
                       dem_patch_norm={c: dem_patch_normalization(nbr_root, c, [f['field_code'] for f in parts['train']
                                                                                 if f['country'] == c])
                                       for c in args.countries})
-    spatial = ((('planetscope_3x3',) if args.ps_spatial else ()) + ((DEM_PATCH,) if args.dem_patch else ()))
+    spatial = ((('planetscope_3x3',) if args.ps_spatial else ()) + ((DEM_PATCH,) if args.dem_patch else ())
+               + ((PS_WINDOW,) if 'win' in args.planetscope else ()))
     if args.fc_streams is not None:
         if not args.field_context:
             raise SystemExit('--fc_streams needs --field_context')

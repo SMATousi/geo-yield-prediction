@@ -12,7 +12,10 @@ cache (yieldsat_build_dense.py):
   neighbourhood_dense/Missouri/            ps10.npy (N, 72, 8) f16, ps3x3.npy (N, 72, 72) f16,
                           ps_times.npy (N, 72) f32, ps_field_sums.npz (PlanetScope streams, D6),
                           dem10x10.npy (N, 100) f16 + dem_patch_sums.npz: the 1 m DEM on each cell's
-                          10x10 sub-grid minus the cell mean, m (``--dem_patch_only`` adds it to a built root)
+                          10x10 sub-grid minus the cell mean, m (``--dem_patch_only`` adds it to a built root),
+                          ps_win/<field_code>.npy (scenes, 3(H+2), 3(W+2), 8) f16 + ps_win_scene.npy (N, 72) i16:
+                          the PlanetScope scene chosen per cell and slot on the field's 3.33 m grid padded by one
+                          cell, from which the dataset cuts each cell's 30 m (9x9) window (``--ps_window_only``)
 
 Slots, S2 and weather follow the dense YieldSAT rules (10-day bins from January of harvest year - 1, masked
 outside [seeding, harvest]; per cell the clear S2 acquisition nearest the bin centre; weather summed over
@@ -571,14 +574,88 @@ def _dem_patch(task):
     return f['vgir_id'], rel.astype(np.float32)
 
 
-def write_dem_patch(ws, artifact_root, workers):
-    """dem10x10.npy (N, 100) f16, row order of the built index: per cell the 1 m DEM on its 10x10 sub-grid
-    (row-major, north first) minus the cell's mean elevation (the mean is the ``dem`` static channel), and
-    dem_patch_sums.npz (per field season count / sum / sum of squares, train-only normalization)."""
+def _ps_window(task):
+    """One field: the round-1 PlanetScope selection (per cell and slot the scene nearest the bin centre whose
+    cell is >= 90% clear) and the selected scenes on the padded 3.33 m grid (sub-pixels < 50% clear are NaN)."""
+    ws, f, rows, cols, grid = task
+    ld = Path(ws) / 'layers' / f['vgir_id']
+    tr, (H, W), crs = grid
+    pgrid = (tr * rasterio.Affine.translation(-1, -1), (H + 2, W + 2), crs)
+    n = len(rows)
+    seeding, harvest = f['planting_day'], f['harvest_day']
+    ps = [s for s in _ps_scenes(ld) if seeding <= s[0] <= harvest]
+    scene = np.full((n, N_SLOTS), -1, np.int16)
+    days = np.full((n, N_SLOTS), np.nan, np.float32)
+    used, imgs, cache = {}, [], {}
+
+    def read(i):
+        if i not in cache:
+            d, sr, udm, nb = ps[i]
+            with rasterio.open(sr) as r:
+                k = r.count
+            pos = (list(range(8)) if nb == 8 else list(PS4_POS))[:k]
+            a10 = _warp(sr, range(1, k + 1), pgrid, Resampling.average, 0)
+            c10 = _warp(udm, [1], pgrid, Resampling.average, 255)[0]
+            ok = (np.nan_to_num(c10[rows + 1, cols + 1], nan=0.0) >= PS_CELL_CLEAR) & \
+                np.isfinite(a10[:, rows + 1, cols + 1]).all(0)
+            cache[i] = (ok, pos)
+        return cache[i]
+
+    for k, (a, b) in enumerate(slot_bounds(f['year'])):
+        if max(a, seeding) > min(b, harvest):
+            continue
+        centre = (a + b) / 2.0
+        todo = np.ones(n, bool)
+        for i in sorted((i for i, s in enumerate(ps) if a <= s[0] <= b), key=lambda i: (abs(ps[i][0] - centre), ps[i][0])):
+            try:
+                ok, _ = read(i)
+            except Exception:
+                continue
+            take = todo & ok
+            if take.any():
+                if i not in used:
+                    used[i] = len(used)
+                scene[take, k] = used[i]
+                days[take, k] = ps[i][0]
+                todo &= ~take
+            if not todo.any():
+                break
+    for i in sorted(used, key=used.get):
+        d, sr, udm, nb = ps[i]
+        _, pos = read(i)
+        a3 = _warp(sr, range(1, len(pos) + 1), pgrid, Resampling.average, 0, scale=SUB)
+        c3 = _warp(udm, [1], pgrid, Resampling.average, 255, scale=SUB)[0]
+        img = np.full((8,) + a3.shape[1:], np.nan, np.float32)
+        img[pos] = np.where((np.nan_to_num(c3, nan=0.0) >= PS_SUB_CLEAR) & np.isfinite(a3).all(0), a3, np.nan)
+        imgs.append(img.transpose(1, 2, 0).astype(np.float16))
+    stack = (np.stack(imgs) if imgs else np.full((0, 3 * (H + 2), 3 * (W + 2), 8), np.nan, np.float16))
+    return f['vgir_id'], scene, days, stack
+
+
+def write_ps_window(ws, artifact_root, workers):
+    """ps_win/<field_code>.npy and ps_win_scene.npy (row order of the built index); the selection is checked
+    against the round-1 ps_times.npy."""
     out = Path(artifact_root)
+    d = out / 'neighbourhood_dense' / COUNTRY
+    (d / 'ps_win').mkdir(exist_ok=True)
+    recs, tasks = _field_tasks(ws, out)
+    ps_times = np.load(d / 'ps_times.npy', mmap_mode='r')
+    scene = np.full((sum(r['n_rows'] for r in recs), N_SLOTS), -1, np.int16)
+    pos = {r['field_shared_name']: r for r in recs}
+    with Pool(workers) as pool:
+        for vgir, sc, days, stack in pool.imap_unordered(_ps_window, tasks):
+            r = pos[vgir]
+            ref = np.asarray(ps_times[r['row_start']:r['row_end']])
+            assert np.array_equal(np.isfinite(ref), sc >= 0) and np.allclose(ref[sc >= 0], days[sc >= 0]), vgir
+            scene[r['row_start']:r['row_end']] = sc
+            np.save(d / 'ps_win' / '{}.npy'.format(r['field_code']), stack)
+            print('  {} {} scenes {} MB'.format(vgir, len(stack), stack.nbytes >> 20), flush=True)
+    np.save(d / 'ps_win_scene.npy', scene)
+
+
+def _field_tasks(ws, out):
     idx = np.load(out / 'index' / COUNTRY / 'rows.npz')
     recs = json.loads((out / 'index' / COUNTRY / 'fields.json').read_text())
-    recs = recs['fields'] if isinstance(recs, dict) else recs
     by_id = {f['vgir_id']: f for f in field_table(ws)}
     tasks = []
     for r in recs:
@@ -586,7 +663,16 @@ def write_dem_patch(ws, artifact_root, workers):
         s, e = r['row_start'], r['row_end']
         assert (idx['grid_row'][s:e] == rows).all() and (idx['grid_col'][s:e] == cols).all(), r['field_shared_name']
         tasks.append((ws, by_id[r['field_shared_name']], rows, cols, grid))
-    N = len(idx['grid_row'])
+    return recs, tasks
+
+
+def write_dem_patch(ws, artifact_root, workers):
+    """dem10x10.npy (N, 100) f16, row order of the built index: per cell the 1 m DEM on its 10x10 sub-grid
+    (row-major, north first) minus the cell's mean elevation (the mean is the ``dem`` static channel), and
+    dem_patch_sums.npz (per field season count / sum / sum of squares, train-only normalization)."""
+    out = Path(artifact_root)
+    recs, tasks = _field_tasks(ws, out)
+    N = sum(r['n_rows'] for r in recs)
     arr = np.full((N, DEM_SUB * DEM_SUB), np.nan, np.float16)
     cnt, sm, ssq = np.zeros(len(recs)), np.zeros(len(recs)), np.zeros(len(recs))
     pos = {r['field_shared_name']: i for i, r in enumerate(recs)}
@@ -631,6 +717,10 @@ if __name__ == '__main__':
     elif '--dem_patch_only' in sys.argv:
         arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
         write_dem_patch(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),
+                        int(arg('--workers', 8)))
+    elif '--ps_window_only' in sys.argv:
+        arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
+        write_ps_window(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),
                         int(arg('--workers', 8)))
     else:
         main()

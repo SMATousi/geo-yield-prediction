@@ -46,6 +46,10 @@ FIELD_CONTEXT_STREAMS = ('yieldsat_s2_field', 'yieldsat_s2_dev', 'yieldsat_field
 # 8 SR bands averaged over the 10 m cell, or on a 3x3 sub-grid of the cell (3.33 m, sub-cell-major)
 PS_BANDS = ('coastal_blue', 'blue', 'green_i', 'green', 'yellow', 'red', 'rededge', 'nir')
 PS_STREAMS = {'10m': ('planetscope_10m', 'ps10.npy', 1), '3x3': ('planetscope_3x3', 'ps3x3.npy', 9)}
+# PlanetScope 30 m window: the cell and its 8 neighbours on the 3.33 m grid (9x9, sub-cell-major), cut per batch
+# from the per-field scene stacks ps_win/<field_code>.npy with the per-cell scene index ps_win_scene.npy
+PS_WINDOW = 'planetscope_win'
+PS_WIN_SIDE = 9
 # the 1 m DEM on the cell's 10x10 sub-grid minus the cell mean (dem10x10.npy); both sub-grid streams carry
 # ``grid = (side, channels)`` in their layout so the model can encode them spatially
 DEM_PATCH = 'yieldsat_dem_patch'
@@ -397,7 +401,15 @@ class YieldSATPointDataset(Dataset):
         # PlanetScope (own dataset only): rows aligned with the cache; train-only per-band normalization
         # (``planetscope_norm[country]`` from ps_normalization)
         self.planetscope = {}
-        for key in planetscope_streams or ():
+        self.ps_window = None
+        if 'win' in (planetscope_streams or ()):
+            root = Path(planetscope_root)
+            self.ps_window = {'root': root, 'scene': {c: np.load(root / c / 'ps_win_scene.npy', mmap_mode='r')
+                                                      for c in self.countries}, 'stacks': {}}
+            out = ['pw{}_{}'.format(i, b) for i in range(PS_WIN_SIDE ** 2) for b in PS_BANDS]
+            self.layout[PS_WINDOW] = {'temporal': True, 'channels': out, 'positions': np.zeros(0, dtype=np.int64),
+                                      'out_channels': out, 'grid': (PS_WIN_SIDE, len(PS_BANDS))}
+        for key in [k for k in planetscope_streams or () if k != 'win']:
             name, fname, n_sub = PS_STREAMS[key]
             self.planetscope[name] = ({c: np.load(Path(planetscope_root) / c / fname, mmap_mode='r')
                                        for c in self.countries}, n_sub)
@@ -429,6 +441,30 @@ class YieldSATPointDataset(Dataset):
     def __getitem__(self, i):
         return self.get_batch(np.array([i], dtype=np.int64))
 
+    def _cut_windows(self, country, sel, rows, r, out):
+        """Fill ``out[sel]`` (B, T, 81*8) with each cell's normalized 9x9 PlanetScope window per slot."""
+        w = self.ps_window
+        scene = np.asarray(w['scene'][country][rows])
+        pn = self.planetscope_norm[country]
+        mean, std = pn['mean'], pn['std']
+        codes = r['field_code'][rows]
+        d = np.arange(PS_WIN_SIDE)
+        for code in np.unique(codes):
+            key = (country, int(code))
+            if key not in w['stacks']:          # opened lazily, per process (DataLoader workers)
+                w['stacks'][key] = np.load(w['root'] / country / 'ps_win' / '{}.npy'.format(int(code)),
+                                           mmap_mode='r')
+            stack = w['stacks'][key]
+            i = np.flatnonzero(codes == code)
+            bi, k = np.nonzero(scene[i] >= 0)
+            if not len(bi):
+                continue
+            gi = i[bi]
+            R = (3 * r['grid_row'][rows[gi]])[:, None] + d[None, :]
+            C = (3 * r['grid_col'][rows[gi]])[:, None] + d[None, :]
+            v = np.asarray(stack[scene[gi, k][:, None, None], R[:, :, None], C[:, None, :]], dtype=np.float32)
+            out[sel[gi], k] = ((v - mean) / std).reshape(len(gi), -1)
+
     def cutoff_day(self, seeding_day, harvest_day):
         if self.cutoff_mode == 'before_harvest':
             return harvest_day - self.cutoff_days
@@ -451,6 +487,8 @@ class YieldSATPointDataset(Dataset):
         ps = {name: np.empty((B, NUM_TIME_SLOTS, 8 * n_sub), np.float32)
               for name, (_, n_sub) in self.planetscope.items()}
         dpatch = (np.empty((B, DEM_SIDE * DEM_SIDE), np.float32) if self.dem_patch is not None else None)
+        if self.ps_window is not None:
+            ps[PS_WINDOW] = np.full((B, NUM_TIME_SLOTS, PS_WIN_SIDE ** 2 * len(PS_BANDS)), np.nan, np.float32)
         fc = self.field_context is not None
         if fc:
             f_mean = np.empty((B, NUM_TIME_SLOTS, len(_S2_CH)), np.float32)
@@ -484,6 +522,8 @@ class YieldSATPointDataset(Dataset):
                 pn = self.planetscope_norm[country]
                 mean, std = np.tile(pn['mean'], n_sub), np.tile(pn['std'], n_sub)
                 ps[name][sel[order]] = (v - mean) / std
+            if self.ps_window is not None:
+                self._cut_windows(country, sel, rows, r, ps[PS_WINDOW])
             if dpatch is not None:
                 order = np.argsort(rows)
                 dn = self.dem_patch_norm[country]

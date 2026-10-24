@@ -318,6 +318,10 @@ OWN_ARMS = {'ours-p3nbr-dense-fc-rel10': [], 'ours-p3nbr-dense-fc-rel10-ps10': [
 OWN_ARMS_SPATIAL = {'ours-p3nbr-dense-fc-rel10-ps3x3sp': ['--planetscope', '3x3', '--ps_spatial'],
                     'ours-p3nbr-dense-fc-rel10-dem10': ['--dem_patch'],
                     'ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10': ['--planetscope', '3x3', '--ps_spatial', '--dem_patch']}
+# round 3: the 30 m PlanetScope window (cell + 8 neighbours at 3.33 m, convolutional encoder), alone and next to the
+# flat 3x3 sub-grid (the best round-2 arm)
+OWN_ARMS_WINDOW = {'ours-p3nbr-dense-fc-rel10-pswin': ['--planetscope', 'win'],
+                   'ours-p3nbr-dense-fc-rel10-ps3x3-pswin': ['--planetscope', '3x3', 'win']}
 
 
 def own_units(arms=OWN_ARMS, seeds=(0,)):
@@ -362,6 +366,13 @@ def cmd_units(a):
         Path('cluster/tabm/protocol_own2_units.json').write_text(
             json.dumps({'suite': 'protocol_own2', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_own2: {} units'.format(len(units)))
+    if a.batch == 'own3':
+        # round 3 (spec/own-dataset-training.md §8): the 30 m window arms, three seeds
+        units = own_units(OWN_ARMS_WINDOW, (0, 1, 2))
+        units.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
+        Path('cluster/tabm/protocol_own3_units.json').write_text(
+            json.dumps({'suite': 'protocol_own3', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_own3: {} units'.format(len(units)))
         return
     nn, tab = [], []
     nn_tags = [t for t in NN if a.with_lstm or not t.startswith('lstm-')]
@@ -868,7 +879,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
