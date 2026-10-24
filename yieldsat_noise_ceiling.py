@@ -17,7 +17,7 @@ import numpy as np
 from dataset.yieldsat_source import load_country_index
 
 CROP = {'C': 'corn', 'S': 'soybean', 'W': 'wheat', 'R': 'rapeseed'}
-COUNTRY = {'ARG': 'Argentina', 'BRA': 'Brazil', 'GER': 'Germany', 'URG': 'Uruguay'}
+COUNTRY = {'ARG': 'Argentina', 'BRA': 'Brazil', 'GER': 'Germany', 'URG': 'Uruguay', 'MO': 'Missouri'}
 PAIRS = ('ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')
 LAGS = tuple(range(1, 31))          # fit uses h = 1..3; longer lags for the plots (to 300 m)
 
@@ -50,16 +50,17 @@ def main():
     pa = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     pa.add_argument('--artifact_root', required=True)
     pa.add_argument('--out', required=True)
+    pa.add_argument('--pairs', nargs='+', default=list(PAIRS), help='e.g. MO-S MO-C (our dataset)')
     a = pa.parse_args()
     res = {}
-    for country in sorted(set(COUNTRY.values())):
+    for country in sorted({COUNTRY[p.split('-')[0]] for p in a.pairs}):
         idx = load_country_index(a.artifact_root, None, country, False)
         rows = idx['rows']
         accs = collections.defaultdict(lambda: {'n': 0, 'ss': 0.0, 'g': collections.Counter(),
                                                 'k': collections.Counter(), 'fields': 0})
         per_field = collections.defaultdict(list)
         for f in idx['fields']:
-            pair = next((p for p in PAIRS if COUNTRY[p[:3]] == country and CROP[p[4]] == f['crop']), None)
+            pair = next((p for p in a.pairs if COUNTRY[p.split('-')[0]] == country and CROP[p.split('-')[1]] == f['crop']), None)
             if pair is None:
                 continue
             s = slice(f['row_start'], f['row_end'])
@@ -80,7 +81,7 @@ def main():
             res[pair] = ceiling(acc)
             res[pair]['median_field_nugget_frac'] = float(np.median(per_field[pair]))
             print(pair, json.dumps(res[pair]), flush=True)
-    m = {k: float(np.mean([res[p][k] for p in PAIRS])) for k in ('nugget_frac', 'ceiling_within_r2')}
+    m = {k: float(np.mean([res[p][k] for p in a.pairs])) for k in ('nugget_frac', 'ceiling_within_r2')}
     res['MEAN'] = m
     print('MEAN', json.dumps(m))
     with open(a.out, 'w') as fh:

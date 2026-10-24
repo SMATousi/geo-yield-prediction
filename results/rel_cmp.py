@@ -3,7 +3,8 @@ Pooled R2 and within-field metrics per pair x protocol, plus a paired field-seas
 deltas (per pair and for the mean over pairs). All statistics are additive per field season, so a bootstrap
 replicate is a weighted sum."""
 import glob, os, json, sys, numpy as np
-root = os.environ.get('REL_ROOT', '/data/YieldSAT/yieldsat_results/protocol') + '/paper'   # REL_ROOT: e.g. the local backup
+root = (os.environ.get('REL_ROOT', '/data/YieldSAT/yieldsat_results/protocol')   # REL_ROOT: e.g. the local backup
+        + '/' + os.environ.get('REL_SUB', 'paper'))                               # REL_SUB=own: our dataset
 BASE = os.environ.get('REL_BASE', 'ours-p3nbr-dense')
 VARS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['ours-p3nbr-dense-rel05', 'ours-p3nbr-dense-rel10']
 PAIRS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
