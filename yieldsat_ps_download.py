@@ -21,6 +21,7 @@ import argparse
 import csv
 import json
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta, timezone
@@ -30,14 +31,22 @@ from pyproj import Transformer
 from shapely.geometry import mapping, shape
 
 import geo_data_downloader.datasets.planetscope as P
-from geo_data_downloader.http.client import HttpClient
+from geo_data_downloader.http.client import HttpClient, RetryPolicy
 from geo_data_downloader.http.planet import PlanetClient
 
 P._TO_ALBERS = Transformer.from_crs('EPSG:4326', 'ESRI:102033', always_xy=True).transform
 P._TO_WGS84 = Transformer.from_crs('ESRI:102033', 'EPSG:4326', always_xy=True).transform
 
 AOIS = Path('/root/yieldsat_artifacts/planetscope/aois_ARG-S_ARG-C_BRA-C.geojson')
-CADENCE, MAX_CLOUD, PAD_DAYS, TIMEOUT_S, POLL_S = 7, 0.1, 10, 6 * 3600, 30
+CADENCE, MAX_CLOUD, PAD_DAYS, TIMEOUT_S, POLL_S = 7, 0.1, 10, 12 * 3600, 60
+# Planet answers bursts of order creation with HTTP 429: creation is serialized and spaced, and every request
+# backs off on 429 for up to ~1 h
+CREATE_GAP_S = 2.0
+_create_lock, _last_create = threading.Lock(), [0.0]
+
+
+def client():
+    return PlanetClient(HttpClient(policy=RetryPolicy(max_attempts=15, initial_backoff=5.0, max_backoff=300.0)))
 BUNDLE_8B, BUNDLE_4B = 'analytic_8b_sr_udm2', 'analytic_sr_udm2'
 INDEX_COLS = ['bin', 'date', 'acquired', 'item_id', 'satellite_id', 'instrument', 'cloud_cover', 'clear_percent',
               'aoi_coverage', 'bands_ordered', 'expected_charge_km2', 'delivered', 'bands']
@@ -76,7 +85,7 @@ def cmd_select(args):
 
     def job(f):
         name, pair, aoi, start, end = f
-        s = dict(select_one(PlanetClient(HttpClient()), name, aoi, start, end), pair=pair)
+        s = dict(select_one(client(), name, aoi, start, end), pair=pair)
         d = out / name / 'planetscope'; d.mkdir(parents=True, exist_ok=True)
         (d / '_selection.json').write_text(json.dumps(s))
         return name
@@ -107,7 +116,7 @@ def summarize(out):
 
 
 def order_one(name, d):
-    client = PlanetClient(HttpClient())
+    cl = client()
     sel = json.loads((d / '_selection.json').read_text())
     state_p = d / '_order.json'
     if (d / 'planetscope_index.csv').exists():
@@ -122,13 +131,18 @@ def order_one(name, d):
         four = [r['item_id'] for r in sel['rows'] if r['bands_ordered'] == 4]
         products = ([{'item_ids': eight, 'item_type': 'PSScene', 'product_bundle': BUNDLE_8B}] if eight else []) + \
                    ([{'item_ids': four, 'item_type': 'PSScene', 'product_bundle': BUNDLE_4B}] if four else [])
-        order = client.create_order({'name': 'ysat-' + name, 'order_type': 'partial', 'products': products,
-                                     'tools': [{'clip': {'aoi': sel['aoi']}}]})
+        with _create_lock:
+            time.sleep(max(0.0, _last_create[0] + CREATE_GAP_S - time.monotonic()))
+            try:
+                order = cl.create_order({'name': 'ysat-' + name, 'order_type': 'partial', 'products': products,
+                                         'tools': [{'clip': {'aoi': sel['aoi']}}]})
+            finally:
+                _last_create[0] = time.monotonic()
         state = {'order_id': order['id'], 'created_at': datetime.now(timezone.utc).isoformat(),
                  'expected_charge_km2': sel['expected_charge_km2']}
         state_p.write_text(json.dumps(state))
         say(name, '{} scenes, {:.2f} km2; order {}'.format(len(sel['rows']), sel['expected_charge_km2'], order['id']))
-    order = client.wait_for_order(state['order_id'], TIMEOUT_S, POLL_S)
+    order = cl.wait_for_order(state['order_id'], TIMEOUT_S, POLL_S)
     if order.get('state') not in ('success', 'partial'):
         raise RuntimeError('order {} ended {}'.format(state['order_id'], order.get('state')))
     got, bands = set(), {}
@@ -141,7 +155,7 @@ def order_one(name, d):
                 row = by_item.get(item)
                 fn = d / '{}_{}_{}'.format(row['date'] if row else 'unknown', item, label)
                 if not fn.exists():
-                    tmp = fn.with_suffix('.part'); tmp.write_bytes(client.download(res['location'])); tmp.rename(fn)
+                    tmp = fn.with_suffix('.part'); tmp.write_bytes(cl.download(res['location'])); tmp.rename(fn)
                 if label == 'sr.tif':
                     got.add(item); bands[item] = 8 if suffix == '_SR_8b_clip.tif' else 4
     with open(d / 'planetscope_index.csv.part', 'w', newline='') as fh:
