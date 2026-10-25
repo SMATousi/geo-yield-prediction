@@ -1,6 +1,7 @@
 # Training on our own dataset: does PlanetScope's resolution raise within-field R²?
 
-**Status (2026-10-24): rounds 1 and 2 done (576 runs, no failures); results §6 (seed 0) and §7 (3 seeds, final).**
+**Status (2026-10-25): rounds 1–3 done (768 runs, no failures); results §6 (seed 0), §7 (3 seeds) and §8 (30 m
+window, 3 seeds, final). Paper: `sec/5b_dataset.tex` + supplement `sec:supp_owndata`.**
 
 Related:
 - [own-dataset-ground-truth.md](./own-dataset-ground-truth.md): the yield maps (65 clean field-seasons, 10 m target).
@@ -146,9 +147,41 @@ Reading:
   combined. Within-cell relief is 2–22 cm and mostly the cell's own plane, which the 10 m slope / curvature
   already carry. It raises pooled R² in LOYO corn (+0.055), i.e. a level effect between fields, not within.
 
-## 8. Log
+## 8. Round 3: 30 m PlanetScope window
+
+**Design.** `--planetscope win`: per cell and slot, the 9×9 sub-cells at 3.33 m covering the cell and its 8
+neighbours (30 m), read by `PatchTemporalEncoder` (two 3×3 convs per slot, then the temporal encoder). Same scene
+selection as the 3×3 sub-grid (asserted equal to `ps_times.npy`); stacks per field in `ps_win/<field_code>.npy`
+(3.4 GB), cut per batch. Arms: window alone (`-pswin`) and with the flat 3×3 (`-ps3x3-pswin`); 3 seeds, 192 units.
+
+**Memory.** At eval batch 4,096 a window run needed ~19 GB host RAM; 4 runs per pod OOM at 20 Gi. Fix:
+`--eval_batch_size 1024` (11 GB), PS masking in place (10 GB), 2 runs per pod at 24 Gi (16 pods + 4 L4).
+
+**Results** (within-field R², seeds pooled; Δ vs S2 only, * = CI excludes 0; `results/own_cmp_all.json`):
+
+| Arm | CV10 soy | CV10 corn | LOYO soy | LOYO corn | CV10 mean Δ | LOYO mean Δ | pooled Δ CV10 / LOYO |
+|---|---|---|---|---|---|---|---|
+| S2 only | 0.211 | 0.440 | 0.193 | 0.381 | | | |
+| ps3x3 (flat) | 0.237* | 0.462 | 0.234* | 0.445* | +0.024* | +0.052* | +0.039 / +0.091* |
+| pswin | 0.225 | 0.480* | 0.221* | 0.439* | +0.027* [+0.009, +0.051] | +0.043* [+0.016, +0.077] | +0.033 / +0.059* |
+| ps3x3-pswin | **0.245*** | **0.494*** | **0.236*** | **0.455*** | **+0.044*** [+0.022, +0.069] | **+0.058*** [+0.036, +0.089] | +0.083* / +0.099* |
+
+ps3x3-pswin vs ps3x3 (paired, `results/own_cmp_win_vs_3x3.json`): CV10 +0.008 soy / +0.031 corn, mean +0.020
+[+0.000, +0.038]; LOYO +0.002 / +0.010, mean +0.006 [−0.009, +0.027].
+
+**Reading.**
+- The 30 m window alone is about as good as the flat sub-grid; together they are the best arm, significant in all
+  four crop–protocol cells and both means, and with the largest pooled gain.
+- Beyond the sub-grid, the window adds little (+0.02 CV10, borderline; LOYO n.s.), mostly on corn. Most of the PS
+  gain comes from the cell's own 3 m sub-pixels; neighbourhood context at 3 m is a small extra.
+- Best within-field 0.24 (soy) / 0.46–0.49 (corn) against ceilings 0.80 / 0.92: most explainable variance remains.
+
+## 9. Log
 
 - 2026-10-24: dataset built and checked (§3); CPU smoke of the S2 and 3×3 arms (2 × 30 steps) runs end to end.
 - 2026-10-24: cluster run (12 pods × 4) done, 96/96, no failures; results §6.
 - 2026-10-24: round 2 built (DEM patch, spatial encoders; CPU smoke and tests pass), 480 units submitted (§7).
 - 2026-10-24: round 2 done (480/480, no failures; 20 A10/3090 pods + 4 L4, ~6 h); results §7.
+- 2026-10-24: round 3 (30 m window) built; first submission OOM at 20 Gi with 4 runs per pod; resubmitted with
+  1,024-cell eval batches, in-place masking, 2 runs per pod at 24 Gi.
+- 2026-10-25: round 3 done (192/192, no failures, ~6 h); results §8; paper section and supplement filled.
