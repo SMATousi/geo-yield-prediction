@@ -547,13 +547,14 @@ write('supp_scale.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{l''' + 'c' * len(B) + r'''}
 \toprule
 Wavelength & ''' + ' & '.join(b.replace('-', '--').replace('>', '$>$').replace(' m', '\\,m') for b in B) + r''' \\
 \midrule
 ''' + '\n'.join(rows) + r'''
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{\textbf{Within-field variability by spatial scale} (CV10, nine pairs pooled; difference-of-Gaussians
 bands on the 10\,m grid).}
 \label{tab:supp_scale}
