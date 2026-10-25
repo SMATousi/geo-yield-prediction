@@ -6,6 +6,11 @@ Each row shares one colour scale (2-98th percentile of the ground truth); anomal
 field mean with a symmetric diverging scale.
 
     python results/figures/qualitative/plot_yield_maps.py <results root with paper/> <out dir>
+    python results/figures/qualitative/plot_yield_maps.py <results root with own/> <out dir> own
+
+`own`: our Missouri dataset (spec/own-dataset-training.md), the best arm (S2 + PlanetScope 3x3 + 30 m window)
+against the 3x3 alone and S2 only; main figure the median field per crop, supplementary the fields at the 25th,
+50th and 75th percentile of the best arm's within-field R2.
 """
 import glob
 import json
@@ -19,17 +24,22 @@ import numpy as np
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else '/root/yieldsat_backups/protocol_results')
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).resolve().parent)
-GROUP = 'cv10_season_noval_s0'
+OWN = len(sys.argv) > 3 and sys.argv[3] == 'own'
+SUB, GROUP = ('own' if OWN else 'paper'), 'cv10_season_noval_s0'
 MODELS = [('ours-p3nbr-dense-fc-rel10', 'Ours'), ('ours-p3nbr-dense', 'Ours (base)'), ('paper_mmgf', 'MMGF')]
 PAIRS_ALL = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 PAIRS_MAIN = ['ARG-S', 'BRA-C', 'GER-R', 'URG-S']
 MIN_CELLS = 2000
+if OWN:
+    MODELS = [('ours-p3nbr-dense-fc-rel10-ps3x3-pswin', 'Ours + PS'), ('ours-p3nbr-dense-fc-rel10-ps3x3', 'Ours + PS 3x3'),
+              ('ours-p3nbr-dense-fc-rel10', 'Ours (S2)')]
+    PAIRS_ALL = PAIRS_MAIN = ['MO-S', 'MO-C']
 
 
 def load(tag, pair):
     """-> {field name: (row, col, target, pred)} over the CV10 test folds."""
     out = {}
-    for f in sorted(glob.glob('%s/paper/%s/s2_adm/%s_seed0/%s/fold*/test_predictions.npz' % (ROOT, GROUP, tag, pair))):
+    for f in sorted(glob.glob('%s/%s/%s/s2_adm/%s_seed0/%s/fold*/test_predictions.npz' % (ROOT, SUB, GROUP, tag, pair))):
         z = np.load(f)
         names = z['season_names'].astype(str)
         for si in np.unique(z['season']):
@@ -49,28 +59,36 @@ def grid(r, c, v):
     return g
 
 
-def pick(pair):
-    data = {tag: load(tag, pair) for tag, _ in MODELS}
+_cache = {}
+
+
+def pick(pair, q=0.5):
+    """The field at quantile q of the best model's within-field R2 (q=0.5: the median field)."""
+    if pair not in _cache:
+        _cache[pair] = {tag: load(tag, pair) for tag, _ in MODELS}
+    data = _cache[pair]
     ours = data[MODELS[0][0]]
     cands = [(within_r2(v[2], v[3])[0], k) for k, v in ours.items()
              if len(v[2]) >= MIN_CELLS and all(k in data[t] for t, _ in MODELS)]
     cands.sort()
-    name = cands[len(cands) // 2][1]
+    name = cands[int(round(q * (len(cands) - 1)))][1] if q != 0.5 else cands[len(cands) // 2][1]
     return name, {tag: data[tag][name] for tag, _ in MODELS}
 
 
-def figure(pairs, models, path, panel=1.55):
+def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
     """One row per field: absolute maps (shared scale per row) | within-field anomaly maps (symmetric scale)."""
     nm = 1 + len(models)
-    fig, axes = plt.subplots(len(pairs), 2 * nm, figsize=(panel * 2 * nm + 1.2, panel * len(pairs) + 0.5), squeeze=False)
+    rows = [(p, q) for p in pairs for q in qs]
+    fig, axes = plt.subplots(len(rows), 2 * nm, figsize=(panel * 2 * nm + 1.2, panel * len(rows) + 0.5), squeeze=False)
     meta = {}
-    for i, pair in enumerate(pairs):
-        name, d = pick(pair)
+    for i, (pair, q) in enumerate(rows):
+        name, d = pick(pair, q)
+        row_label = pair if len(qs) == 1 else '%s, p%d' % (pair, round(100 * q))
         r, c, y, _ = d[MODELS[0][0]]
         lo, hi = np.percentile(y, [2, 98])
         a = np.percentile(np.abs(y - y.mean()), 98)
         maps = [('Ground truth', y, None)] + [(lab, d[tag][3], within_r2(d[tag][2], d[tag][3])) for tag, lab in models]
-        meta[pair] = {'field': name, 'cells': int(len(y)), 'within_r2': {lab: float(sc[0]) for lab, _, sc in maps[1:]}}
+        meta[row_label] = {'field': name, 'cells': int(len(y)), 'within_r2': {lab: float(sc[0]) for lab, _, sc in maps[1:]}}
         for j, (lab, v, sc) in enumerate(maps):
             for k, (vals, cmap, vmin, vmax) in enumerate(((v, 'RdYlGn', lo, hi), (v - v.mean(), 'RdBu', -a, a))):
                 ax = axes[i, j + k * nm]
@@ -83,7 +101,7 @@ def figure(pairs, models, path, panel=1.55):
                 if sc is not None and k == 1:
                     ax.set_xlabel(r'$R^2_w$ %.2f, $r$ %.2f' % sc, fontsize=7, labelpad=2)
                 if j == 0 and k == 0:
-                    ax.set_ylabel(pair, fontsize=9)
+                    ax.set_ylabel(row_label, fontsize=9)
                 if j == nm - 1:
                     cb = fig.colorbar(im, ax=ax, fraction=0.05, pad=0.02)
                     cb.ax.tick_params(labelsize=6)
@@ -96,6 +114,12 @@ def figure(pairs, models, path, panel=1.55):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    if OWN:
+        meta = {'main': figure(PAIRS_MAIN, [MODELS[0], MODELS[2]], OUT / 'yield_maps_own_main.png'),
+                'supp': figure(PAIRS_ALL, MODELS, OUT / 'yield_maps_own_supp.png', qs=(0.25, 0.5, 0.75))}
+        (OUT / 'yield_maps_own_fields.json').write_text(json.dumps(meta, indent=1))
+        print(json.dumps({k: {p: v['field'] for p, v in m.items()} for k, m in meta.items()}, indent=1))
+        return
     main_models = [m for m in MODELS if m[0] != 'ours-p3nbr-dense']
     meta = {'main': figure(PAIRS_MAIN, main_models, OUT / 'yield_maps_main.png'),
             'supp_a': figure(PAIRS_ALL[:5], MODELS, OUT / 'yield_maps_supp_a.png'),
