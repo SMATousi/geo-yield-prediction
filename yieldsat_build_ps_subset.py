@@ -62,6 +62,7 @@ def main():
     ap.add_argument('--artifact_root', required=True)
     ap.add_argument('--layers', required=True, help='<layers>/<field_shared_name>/planetscope/ (yieldsat_ps_download.py)')
     ap.add_argument('--workers', type=int, default=8)
+    ap.add_argument('--only_downloaded', action='store_true', help='smoke test: only field seasons already downloaded')
     a = ap.parse_args()
     out = Path(a.artifact_root)
     ws = Path(a.layers).parent
@@ -73,6 +74,8 @@ def main():
         crops = {cr for c, cr in SUBSET.values() if c == country}
         idx = np.load(out / 'index' / country / 'rows.npz')
         recs = [r for r in json.loads((out / 'index' / country / 'fields.json').read_text()) if r['crop'] in crops]
+        if a.only_downloaded:
+            recs = [r for r in recs if (ws / 'layers' / r['field_shared_name'] / 'planetscope' / 'planetscope_index.csv').exists()]
         d = out / 'neighbourhood_dense' / country
         (d / 'ps_win').mkdir(parents=True, exist_ok=True)
         scene_all = np.full((len(idx['field_code']), N_SLOTS), -1, np.int16)
@@ -99,7 +102,7 @@ def main():
                 cov = float((scene >= 0).any(1).mean())
                 manifest['fields'][name] = {'field_code': int(code), 'scenes': int(len(stack)), 'cells': int(len(scene)),
                                             'cell_slots_with_ps': int((scene >= 0).sum()), 'cells_with_any_ps': cov}
-                print('{} {}/{} {} scenes {} MB cells with PS {:.1%}'.format(
+                print('{} {}/{} {}: {} scenes, {} MB, cells with PS {:.1%}'.format(
                     country, i + 1, len(tasks), name, len(stack), stack.nbytes >> 20, cov), flush=True)
         np.save(d / 'ps_win_scene.npy', scene_all)
         np.savez(d / 'ps_field_sums.npz', field_codes=np.array(codes), bands=np.array(PS_BANDS),
