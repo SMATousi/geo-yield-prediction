@@ -9,8 +9,9 @@ field mean with a symmetric diverging scale.
     python results/figures/qualitative/plot_yield_maps.py <results root with own/> <out dir> own
 
 `own`: our Missouri dataset (spec/own-dataset-training.md), the best arm (S2 + PlanetScope 3x3 + 30 m window)
-against the 3x3 alone and S2 only; main figure the field at the 90th percentile of the best arm's within-field R2 per
-crop (a good field, not the best), supplementary the fields at the 25th, 50th and 75th percentile.
+against the 3x3 alone and S2 only; main figure the fields at the 75th and 90th percentile of the best arm's
+within-field R2 per crop (good fields, not the best; corn, with 12 test fields, uses the next field below its 90th
+percentile, the 82nd), supplementary the fields at the 25th, 50th and 75th percentile.
 """
 import glob
 import json
@@ -34,6 +35,7 @@ if OWN:
     MODELS = [('ours-p3nbr-dense-fc-rel10-ps3x3-pswin', 'Ours + PS'), ('ours-p3nbr-dense-fc-rel10-ps3x3', 'Ours + PS 3x3'),
               ('ours-p3nbr-dense-fc-rel10', 'Ours (S2)')]
     PAIRS_ALL = PAIRS_MAIN = ['MO-S', 'MO-C']
+RANK_SHIFT = {('MO-C', 0.9): -1} if OWN else {}                 # main figure: corn's 90th percentile -> the next below
 
 
 def load(tag, pair):
@@ -63,7 +65,7 @@ _cache = {}
 
 
 def pick(pair, q=0.5):
-    """The field at quantile q of the best model's within-field R2 (q=0.5: the median field)."""
+    """The field at quantile q of the best model's within-field R2 (q=0.5: the median field); returns its quantile."""
     if pair not in _cache:
         _cache[pair] = {tag: load(tag, pair) for tag, _ in MODELS}
     data = _cache[pair]
@@ -71,8 +73,10 @@ def pick(pair, q=0.5):
     cands = [(within_r2(v[2], v[3])[0], k) for k, v in ours.items()
              if len(v[2]) >= MIN_CELLS and all(k in data[t] for t, _ in MODELS)]
     cands.sort()
-    name = cands[int(round(q * (len(cands) - 1)))][1] if q != 0.5 else cands[len(cands) // 2][1]
-    return name, {tag: data[tag][name] for tag, _ in MODELS}
+    i = int(round(q * (len(cands) - 1))) if q != 0.5 else len(cands) // 2
+    i += RANK_SHIFT.get((pair, q), 0)
+    name = cands[i][1]
+    return name, {tag: data[tag][name] for tag, _ in MODELS}, i / (len(cands) - 1)
 
 
 def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
@@ -82,8 +86,8 @@ def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
     fig, axes = plt.subplots(len(rows), 2 * nm, figsize=(panel * 2 * nm + 1.2, panel * len(rows) + 0.5), squeeze=False)
     meta = {}
     for i, (pair, q) in enumerate(rows):
-        name, d = pick(pair, q)
-        row_label = pair if qs == (0.5,) else '%s, p%d' % (pair, round(100 * q))
+        name, d, qq = pick(pair, q)
+        row_label = pair if qs == (0.5,) else '%s, p%d' % (pair, round(100 * qq))
         r, c, y, _ = d[MODELS[0][0]]
         lo, hi = np.percentile(y, [2, 98])
         a = np.percentile(np.abs(y - y.mean()), 98)
@@ -115,7 +119,7 @@ def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     if OWN:
-        meta = {'main': figure(PAIRS_MAIN, [MODELS[0], MODELS[2]], OUT / 'yield_maps_own_main.png', qs=(0.9,)),
+        meta = {'main': figure(PAIRS_MAIN, [MODELS[0], MODELS[2]], OUT / 'yield_maps_own_main.png', qs=(0.75, 0.9)),
                 'supp': figure(PAIRS_ALL, MODELS, OUT / 'yield_maps_own_supp.png', qs=(0.25, 0.5, 0.75))}
         (OUT / 'yield_maps_own_fields.json').write_text(json.dumps(meta, indent=1))
         print(json.dumps({k: {p: v['field'] for p, v in m.items()} for k, m in meta.items()}, indent=1))
