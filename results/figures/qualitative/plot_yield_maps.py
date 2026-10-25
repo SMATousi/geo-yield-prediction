@@ -9,8 +9,8 @@ field mean with a symmetric diverging scale.
     python results/figures/qualitative/plot_yield_maps.py <results root with own/> <out dir> own
 
 `own`: our Missouri dataset (spec/own-dataset-training.md), the best arm (S2 + PlanetScope 3x3 + 30 m window)
-against the 3x3 alone and S2 only; main figure the median field per crop, supplementary the fields at the 25th,
-50th and 75th percentile of the best arm's within-field R2.
+against the 3x3 alone and S2 only; main figure the field at the 90th percentile of the best arm's within-field R2 per
+crop (a good field, not the best), supplementary the fields at the 25th, 50th and 75th percentile.
 """
 import glob
 import json
@@ -83,7 +83,7 @@ def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
     meta = {}
     for i, (pair, q) in enumerate(rows):
         name, d = pick(pair, q)
-        row_label = pair if len(qs) == 1 else '%s, p%d' % (pair, round(100 * q))
+        row_label = pair if qs == (0.5,) else '%s, p%d' % (pair, round(100 * q))
         r, c, y, _ = d[MODELS[0][0]]
         lo, hi = np.percentile(y, [2, 98])
         a = np.percentile(np.abs(y - y.mean()), 98)
@@ -115,7 +115,7 @@ def figure(pairs, models, path, panel=1.55, qs=(0.5,)):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     if OWN:
-        meta = {'main': figure(PAIRS_MAIN, [MODELS[0], MODELS[2]], OUT / 'yield_maps_own_main.png'),
+        meta = {'main': figure(PAIRS_MAIN, [MODELS[0], MODELS[2]], OUT / 'yield_maps_own_main.png', qs=(0.9,)),
                 'supp': figure(PAIRS_ALL, MODELS, OUT / 'yield_maps_own_supp.png', qs=(0.25, 0.5, 0.75))}
         (OUT / 'yield_maps_own_fields.json').write_text(json.dumps(meta, indent=1))
         print(json.dumps({k: {p: v['field'] for p, v in m.items()} for k, m in meta.items()}, indent=1))
