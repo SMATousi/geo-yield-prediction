@@ -1,6 +1,6 @@
 # PlanetScope on a YieldSAT subset: does 3 m imagery raise within-field R² there too?
 
-**Status (2026-10-25): data download running; builder, units and job ready.**
+**Status (2026-10-25): data downloaded and built; 156 units training (job `smatousi-yieldsat-protocol-ysat-ps`).**
 
 Related:
 - [own-dataset-training.md](./own-dataset-training.md) §8: on our Missouri data the flat PS 3×3 sub-grid + 30 m window
@@ -54,6 +54,12 @@ scene rule and 3.33 m padded grid as Missouri (`yieldsat_build_owndata._ps_windo
 (`ps3x3_from_window`; on Missouri the cut equals the stored 3×3 exactly, inputs and masks, 2,048 cells × 72 slots).
 Normalization per band from the cell mean (centre 3×3) over the training field seasons.
 
+Delivered and built (2026-10-25): 18,418 of 18,447 selected scenes delivered (29 not in the order results), 31 GB
+of clipped scenes, uploaded to `/data/YieldSAT/yieldsat_artifacts/planetscope/layers` (per-file sizes checked) and
+built on the PVC: 11,720 scenes used in the windows (one per cell and dense slot at most), 23 GB (Argentina) + 3.8 GB
+(Brazil) of window stacks. Every one of the 5,260,617 cells of the 743 field seasons has PlanetScope in at least one
+slot; PS slots per cell median 15 (p10 11, p90 19) of the in-season dense slots (Missouri: 13–14).
+
 ## 3. Runs
 
 `yieldsat_protocol_runs.py units --batch ysat-ps` → `cluster/tabm/protocol_ysat_ps_units.json`: 156 units
@@ -71,3 +77,7 @@ Pending.
 ## 5. Log
 
 - 2026-10-25: design fixed (§1); AOIs and selection (§2); orders started (10 workers, then 60: one order takes > 8 min).
+- 2026-10-25: 60 parallel orders hit HTTP 429 on order creation (20 fields failed); creation serialized 2 s apart with
+  a long backoff, restarted: 743/743 field seasons, 0 failures, ~4.5 h. Upload in 10-field tar chunks (50-field
+  chunks timed out). Windows built on the PVC (results pod, 7 workers, ~20 min). CPU smoke of a BRA-C unit (1 epoch,
+  5 steps) loads the window and the cut 3×3 and validates; job submitted.
