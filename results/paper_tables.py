@@ -729,38 +729,44 @@ if (R / OWN_FILE).exists():
     MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps10', '-ps3x3', '-pswin', '-ps3x3-pswin'))]
     sd = lambda m: float(np.std(m['seed_within_r2']))
 
-    def cell(m):
-        s_ = '%s {\\scriptsize(%s)}' % (f2(m['within_r2']), f2(m['d_within_r2'], True))
-        lo, hi = m['ci_within_r2']
+    # main: as tab:main, mean over the two crops per protocol; change vs S2 only in brackets, bold when the
+    # interval of the mean change excludes 0 (per-crop values in tab:supp_owndata_full)
+    mean = lambda pr, t, m: float(np.mean([(oc['%s|%s' % (pr, p)]['baseline'] if t is None else
+                                            oc['%s|%s' % (pr, p)][t])[m] for p in OWN_PAIRS]))
+
+    def cell(pr, t, m):
+        if t is None:
+            return f2(mean(pr, None, m))
+        d, lo, hi = oc['%s|MEAN|%s' % (pr, t)][m]
+        s_ = '%s {\\scriptsize(%s)}' % (f2(mean(pr, t, m)), f2(d, True))
         return r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_
-    rows = [r'S2 only & %s & & \\' % ' & '.join(f2(oc['%s|%s' % c]['baseline']['within_r2']) for c in COLS)]
-    for t, lab in ARMS:
-        if t not in MAIN_ARMS:
-            continue
-        rows.append(r'%s & %s & %s & %s \\' % (lab, ' & '.join(cell(oc['%s|%s' % c][t]) for c in COLS),
-                                                ci(oc['CV10|MEAN|%s' % t]['within_r2']), ci(oc['LOYO|MEAN|%s' % t]['within_r2'])))
-    write('owndata_main.tex', r"""\begin{table*}[t]
+    rows = [r'%s & %s \\' % (lab, ' & '.join(cell(pr, t, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')))
+            for t, lab in [(None, 'S2 only')] + [(t, lab) for t, lab in ARMS if t in MAIN_ARMS]]
+    ceil = f2(float(np.mean([nco[p]['ceiling_within_r2'] for p in OWN_PAIRS])))
+    write('owndata_main.tex', r"""\begin{table}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccccc}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
 \toprule
- & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} & \multicolumn{2}{c}{Mean $\Delta$ within $R^2$} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-Inputs & Soybean & Corn & Soybean & Corn & CV10 & LOYO \\
+ & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Inputs & Pooled & Within & Pooled & Within \\
 \midrule
 """ + '\n'.join(rows) + r"""
 \midrule
-Noise ceiling & %s & %s & %s & %s & & \\
+Noise ceiling & & %s & & %s \\
 \bottomrule
-\end{tabular}
-\caption{\textbf{High-resolution inputs on our Missouri dataset.} Within-field $R^2$ of \method{} with Sentinel-2
-only and with PlanetScope (PS, 3.3\,m) added, seeds 0--2 pooled; in brackets the change vs.\ S2 only (bold: 95\%%
-field-season cluster bootstrap interval excludes 0). Last columns: mean change over the two crops with its interval.
-The 30\,m window is the cell and its eight neighbours on the PS grid, read by a convolutional encoder.}
+\end{tabular}}
+\caption{\textbf{High-resolution inputs on our Missouri dataset.} Pixel-level $R^2$ of \method{}, mean over the
+two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets the change
+vs.\ S2 only (bold: 95\%% field-season cluster bootstrap interval excludes 0). The 30\,m window is the cell and its
+eight neighbours on the PS grid, read by a convolutional encoder. Per-crop results in
+\cref{tab:supp_owndata_full}.}
 \label{tab:owndata}
-\end{table*}
-""" % tuple(f2(nco[p]['ceiling_within_r2']) for _ in OWN_PROTOS for p in OWN_PAIRS))
+\end{table}
+""" % (ceil, ceil))
 
     # supplementary: every arm, within and pooled change per pair with intervals, seed spread
     rows = [r'S2 only & %s \\' % ' & '.join(
