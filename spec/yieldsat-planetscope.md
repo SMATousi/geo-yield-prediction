@@ -60,7 +60,25 @@ built on the PVC: 11,720 scenes used in the windows (one per cell and dense slot
 (Brazil) of window stacks. Every one of the 5,260,617 cells of the 743 field seasons has PlanetScope in at least one
 slot; PS slots per cell median 15 (p10 11, p90 19) of the in-season dense slots (Missouri: 13–14).
 
+**Registration** (`results/ps_registration_qc.py` → `results/ps_registration_qc.json`): per field season, the mean
+over slots of the across-cell correlation of S2 NDVI with PlanetScope NDVI (cell mean of the 3×3), PS shifted by
+up to ±3 sub-pixels (±10 m). 740 of 743 field seasons (3 have no slot with ≥ 500 cells seen by both):
+
+| Pair | Fields | r at 0 (median) | r at best shift | Median gain | Mean best dy, dx (m) | Best shift ≥ 6.6 m | At the ±10 m edge |
+|---|---|---|---|---|---|---|---|
+| ARG-S | 438 | 0.824 | 0.849 | 0.014 | +1.1, −0.5 | 23.5% | 1.4% |
+| ARG-C | 184 | 0.802 | 0.834 | 0.018 | +2.2, +1.1 | 25.0% | 0.5% |
+| BRA-C | 118 | 0.763 | 0.792 | 0.020 | +3.4, −1.2 | 17.8% | 0.8% |
+| All | 740 | 0.809 | 0.836 | 0.016 | +1.7, −0.2 | 23.0% | 1.1% |
+
+PlanetScope sits on the yield / S2 grid to within about one 3.3 m sub-pixel for most fields (median best offset
+3.3 m; 77% ≤ 4.7 m), with no systematic shift beyond ~2 m; correcting it would raise the PS–S2 agreement by only
+~0.02. The data are used as delivered (no co-registration), as on Missouri; the 30 m window lets the encoder
+absorb a residual sub-cell offset.
+
 ## 3. Runs
+
+Jobs `smatousi-yieldsat-protocol-ysat-ps` (20 pods: A10 / 3090 / 4090) and `-b` (6 L4 pods) share the units' claims.
 
 `yieldsat_protocol_runs.py units --batch ysat-ps` → `cluster/tabm/protocol_ysat_ps_units.json`: 156 units
 (3 pairs × CV10 10 folds + LOYO 8/8/6 folds × 3 seeds), outputs next to the paper runs

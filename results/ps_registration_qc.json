@@ -1,0 +1,5922 @@
+{
+ "Argentina_DUP1_farm42_field437_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.844206582959474,
+  "r_best": 0.8667883429918983,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm38_field413_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.9287790585712031,
+  "r_best": 0.9344941094971008,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field668_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8345173880678834,
+  "r_best": 0.8345173880678834,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field677_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8282553746167683,
+  "r_best": 0.8282553746167683,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm38_field415_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8557569779745862,
+  "r_best": 0.9034690925331101,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field643_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8006497576420397,
+  "r_best": 0.8046674489998793,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm42_field433_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8150101595394469,
+  "r_best": 0.8505957352753795,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm38_field416_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8445872945567017,
+  "r_best": 0.8691666820977332,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm42_field441_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7606594287285808,
+  "r_best": 0.784967205796775,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm42_field439_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8070210804310399,
+  "r_best": 0.857087260849109,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm38_field417_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7967313197160174,
+  "r_best": 0.8003664228002235,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm38_field414_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8525014783349159,
+  "r_best": 0.8597430968995056,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field674_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7835699776444254,
+  "r_best": 0.7835699776444254,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm22_field217_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7310187122817459,
+  "r_best": 0.7331682874531663,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm32_field341_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8277923063912037,
+  "r_best": 0.8526478789269252,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field628_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7699521249058711,
+  "r_best": 0.7808168364234259,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm22_field212_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8146696843578484,
+  "r_best": 0.8234473205002724,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm49_field659_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.7530297855037185,
+  "r_best": 0.7718891179265066,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field312_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8705002136734367,
+  "r_best": 0.9069140567584583,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field642_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8490465608778524,
+  "r_best": 0.8490465608778524,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field653_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7779479096107552,
+  "r_best": 0.7895913023791786,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field221_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8468252701162882,
+  "r_best": 0.853549721496133,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field626_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.6696636620943984,
+  "r_best": 0.6696636620943984,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field291_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8625754135088529,
+  "r_best": 0.8625754135088529,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field295_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8981552237552753,
+  "r_best": 0.8981552237552753,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm49_field661_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7203101065741728,
+  "r_best": 0.7226097313757935,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm55_field745_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8013260611191565,
+  "r_best": 0.8118655022862485,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm49_field665_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8347385551165079,
+  "r_best": 0.8628704300784571,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm22_field211_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7365512688624775,
+  "r_best": 0.7418874828786185,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field390_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7000029570158662,
+  "r_best": 0.7483599781510063,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field227_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8173403844819227,
+  "r_best": 0.8223530835860112,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field293_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8618326864899445,
+  "r_best": 0.8618326864899445,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field598_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.817294655703007,
+  "r_best": 0.8469738917799878,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm23_field218_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7372631585420064,
+  "r_best": 0.7372707939571914,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm32_field339_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8102919355927061,
+  "r_best": 0.8258338144625313,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field623_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8809082125610393,
+  "r_best": 0.8809082125610393,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm16_field162_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8099583457047466,
+  "r_best": 0.8204281886568144,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field608_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.7670189664994962,
+  "r_best": 0.7899198822926387,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field281_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.84771963731106,
+  "r_best": 0.8753280485108391,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field633_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8486928776269741,
+  "r_best": 0.8583617594541588,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field597_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.88586426616291,
+  "r_best": 0.8942697703739061,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm23_field222_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8353185264664836,
+  "r_best": 0.8369764444371232,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm16_field158_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7113420635875001,
+  "r_best": 0.7256677133591543,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field297_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 19,
+  "r_at_0": 0.8741882426214055,
+  "r_best": 0.8741882426214055,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field681_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8098716838114178,
+  "r_best": 0.8098716838114178,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm26_field269_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.9219156002449582,
+  "r_best": 0.9319516028936718,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field278_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8743280471181532,
+  "r_best": 0.8870565859016453,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm26_field268_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8155967216945432,
+  "r_best": 0.8208098560336112,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field638_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.8743914417346778,
+  "r_best": 0.8745380396113492,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field298_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.9000968040353072,
+  "r_best": 0.9000968040353072,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field282_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8816241907993384,
+  "r_best": 0.9245296723230998,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm19_field196_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7773590082384506,
+  "r_best": 0.79284601769344,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field47_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7064506490331529,
+  "r_best": 0.7101782660360692,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm11_field107_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7716235152547039,
+  "r_best": 0.7765938192231221,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field270_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8765638213431866,
+  "r_best": 0.9412911687023316,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field284_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8333417978049603,
+  "r_best": 0.868477356288152,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field292_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.879000406915734,
+  "r_best": 0.879000406915734,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm18_field193_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8068730884828432,
+  "r_best": 0.8209423162794557,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm28_field318_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.7951793874372228,
+  "r_best": 0.8080804351014648,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field680_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7418776000965176,
+  "r_best": 0.7418776000965176,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm32_field336_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.749271533984142,
+  "r_best": 0.7749534154129266,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm57_field753_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.877952367776907,
+  "r_best": 0.9241025029892002,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field96_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.9064200230030537,
+  "r_best": 0.9178813054063277,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm28_field322_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8026930904422167,
+  "r_best": 0.8144512862686548,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field722_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8452132329257577,
+  "r_best": 0.8473034757459723,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm1_field4_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8889530021510912,
+  "r_best": 0.8889530021510912,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm28_field317_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.5786644639324302,
+  "r_best": 0.6184215492580353,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm9_field95_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9105973958727697,
+  "r_best": 0.9344793618352888,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm16_field155_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.6637134198761403,
+  "r_best": 0.6956638895374984,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field303_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8711045102800266,
+  "r_best": 0.8711045102800266,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm4_field55_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8664279617677264,
+  "r_best": 0.9181813617676796,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm28_field315_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.5557181597984672,
+  "r_best": 0.633760608903404,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm17_field189_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8387313768065041,
+  "r_best": 0.8611605180761827,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field647_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7503114962404561,
+  "r_best": 0.7614944463725061,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field605_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7558478786690521,
+  "r_best": 0.7743533784815175,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field220_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7928367397317692,
+  "r_best": 0.7928367397317692,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field306_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8903181317563088,
+  "r_best": 0.8903181317563088,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field574_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8075701557357955,
+  "r_best": 0.8185492570553026,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field173_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8157305396130252,
+  "r_best": 0.8528952645193373,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field395_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8734581305789197,
+  "r_best": 0.8926210960914279,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field305_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8971027134044749,
+  "r_best": 0.8971027134044749,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm13_field111_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8045729594875467,
+  "r_best": 0.8111335269859338,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field309_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8358803906904159,
+  "r_best": 0.8782997966004457,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm5_field56_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7826343651992956,
+  "r_best": 0.8014578949861542,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field565_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7223779984357901,
+  "r_best": 0.7238615905911092,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm39_field429_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7546316846213222,
+  "r_best": 0.7978378112345802,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm19_field198_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.703382245298328,
+  "r_best": 0.7183440715802488,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm12_field109_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.828442279603636,
+  "r_best": 0.8372277473826925,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field130_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.842981967502166,
+  "r_best": 0.8804901464913439,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field511_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.6607973518070641,
+  "r_best": 0.6779035273080315,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field512_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 19,
+  "r_at_0": 0.7343238871253831,
+  "r_best": 0.7345954715946735,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field561_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.7160410758054945,
+  "r_best": 0.718557868536544,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field122_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 6,
+  "r_at_0": 0.7712540115866696,
+  "r_best": 0.7712540115866696,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field78_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.9096782541062555,
+  "r_best": 0.9155575639546467,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field143_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7916887629977887,
+  "r_best": 0.792348898691106,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field715_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7851546572135177,
+  "r_best": 0.7969352792796468,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm16_field161_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7952579887455925,
+  "r_best": 0.8006334352358528,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field363_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7240044983498377,
+  "r_best": 0.7240206240334507,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field616_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8777803440407487,
+  "r_best": 0.885757108876702,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm14_field115_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8793419280757523,
+  "r_best": 0.8945454938527045,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field242_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.6782301307709948,
+  "r_best": 0.7633266297561765,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm2_field14_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8409124899922754,
+  "r_best": 0.8619118098793747,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field310_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.826490691476649,
+  "r_best": 0.8923231953137548,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field502_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.6372453881759474,
+  "r_best": 0.6381091392778346,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field617_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7721016651803702,
+  "r_best": 0.7721016651803702,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field509_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8267945615405733,
+  "r_best": 0.8346237929921496,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm49_field662_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7270380782986277,
+  "r_best": 0.7685531233205463,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field367_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7992126976226791,
+  "r_best": 0.7992126976226791,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm16_field163_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7456389772136328,
+  "r_best": 0.7524380124766445,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm5_field57_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9038289374351419,
+  "r_best": 0.9244088284145461,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field206_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8535604388177229,
+  "r_best": 0.8535604388177229,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm5_field62_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8321691679855863,
+  "r_best": 0.8559847878738529,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field652_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.8042325816553532,
+  "r_best": 0.8042325816553532,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm42_field435_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7838427092974709,
+  "r_best": 0.8295421240185014,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm49_field664_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8426959087737488,
+  "r_best": 0.875186097892688,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field469_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7541936571325701,
+  "r_best": 0.7580945091327641,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm42_field440_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7820995620871043,
+  "r_best": 0.7949542721617127,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field393_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.9375994911356527,
+  "r_best": 0.9473634711026893,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field484_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8372999383157362,
+  "r_best": 0.8474376705079457,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm22_field215_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7436708253241224,
+  "r_best": 0.7493933621493716,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field300_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8875843435590864,
+  "r_best": 0.8875843435590864,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field452_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7871526151391186,
+  "r_best": 0.7994099552739419,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm9_field100_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7989813924675641,
+  "r_best": 0.8205831897909948,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm29_field327_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8610677377359146,
+  "r_best": 0.881937644950024,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field290_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8350336199829909,
+  "r_best": 0.8350336199829909,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field487_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8235155971505418,
+  "r_best": 0.8252894065677447,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field226_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8521198861135897,
+  "r_best": 0.8521198861135897,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm5_field63_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8757781692326694,
+  "r_best": 0.9044338522204028,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm49_field660_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.6425702573249296,
+  "r_best": 0.6508208134548505,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field207_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7986435881232665,
+  "r_best": 0.8126296058879643,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field151_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9066560002578525,
+  "r_best": 0.9184933619311352,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm6_field69_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8339644320213905,
+  "r_best": 0.839517254961033,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm49_field663_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.6661330211549084,
+  "r_best": 0.689014973351241,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm5_field66_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8556630378795271,
+  "r_best": 0.873711247185979,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field719_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8641100610328651,
+  "r_best": 0.8725206719026722,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field470_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7188674150362778,
+  "r_best": 0.7188674150362778,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm19_field200_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7076729943747779,
+  "r_best": 0.7271912112141223,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field267_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.8538756490501712,
+  "r_best": 0.8914789809960111,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field451_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7226113450160276,
+  "r_best": 0.7407334887202691,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field275_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8358784590232323,
+  "r_best": 0.881461383178976,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field307_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9264168475789153,
+  "r_best": 0.9264168475789153,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm22_field214_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8523637530685424,
+  "r_best": 0.8523637530685424,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field398_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7626227243356928,
+  "r_best": 0.7907315939134885,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field195_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.9057532501896569,
+  "r_best": 0.9188651987577183,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field169_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8384405931635809,
+  "r_best": 0.8692370373941284,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field257_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.75989207849086,
+  "r_best": 0.8233096365890362,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm42_field438_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.875912001262329,
+  "r_best": 0.919028674402392,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field245_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7952440990676773,
+  "r_best": 0.8412352797187966,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field575_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.6801360102098042,
+  "r_best": 0.6975778826128778,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field621_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.4784110577331287,
+  "r_best": 0.5347097692276525,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field174_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8665989499278375,
+  "r_best": 0.9010132633072763,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field378_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8285357934995492,
+  "r_best": 0.886107035206511,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field302_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8974960991572453,
+  "r_best": 0.9078089241874457,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field225_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8194272189848587,
+  "r_best": 0.8194272189848587,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field667_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9605439295347836,
+  "r_best": 0.961858871049266,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm56_field750_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8835484121920619,
+  "r_best": 0.9045809337629276,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm31_field334_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.9182666267077924,
+  "r_best": 0.9359881075397363,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field635_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8657871076917282,
+  "r_best": 0.8807533043698588,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field167_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8484264555049732,
+  "r_best": 0.8940806997410409,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field81_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.9075430045037824,
+  "r_best": 0.9075430045037824,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm55_field746_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8520989868181482,
+  "r_best": 0.8630113693982202,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field265_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.759310635847716,
+  "r_best": 0.839455351935997,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field604_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7932469647039334,
+  "r_best": 0.7932469647039334,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field682_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.8628195604061158,
+  "r_best": 0.8628195604061158,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field134_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.5141001058911752,
+  "r_best": 0.5746960303360453,
+  "best_dy_m": -6.666666666666667,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm36_field379_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.792919780057208,
+  "r_best": 0.8495543013000498,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm22_field216_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8512864450804964,
+  "r_best": 0.8541206929339491,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field286_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 2,
+  "r_at_0": 0.7572769787616322,
+  "r_best": 0.7930498726642048,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field97_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8113314840935802,
+  "r_best": 0.8550148363394778,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field68_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8809110659862388,
+  "r_best": 0.8809110659862388,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field126_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7948200555273164,
+  "r_best": 0.8897504286365747,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm52_field707_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7824835247114389,
+  "r_best": 0.811416001074861,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field402_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8900869166350011,
+  "r_best": 0.9083213477411325,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field713_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.801244222718733,
+  "r_best": 0.8233039031004609,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm25_field246_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8085963278753194,
+  "r_best": 0.8861783473084734,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm24_field234_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8094910061685068,
+  "r_best": 0.824232810852176,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field651_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8390915332856381,
+  "r_best": 0.8547498314612618,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field592_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7642569468714796,
+  "r_best": 0.7750489237732233,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field394_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.855612489344397,
+  "r_best": 0.8855930909401069,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field154_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7609456696229892,
+  "r_best": 0.7880343975117045,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field288_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 2,
+  "r_at_0": 0.7248781134635311,
+  "r_best": 0.7406101058379889,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field48_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.6903053856338712,
+  "r_best": 0.6903053856338712,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm23_field233_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7254451114948292,
+  "r_best": 0.7480837170297092,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field289_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.8851143516019289,
+  "r_best": 0.8851143516019289,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm43_field443_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 12,
+  "r_at_0": 0.5510908244417114,
+  "r_best": 0.6043633618795873,
+  "best_dy_m": 10.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field146_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.6728070669310741,
+  "r_best": 0.7752538299505064,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm45_field595_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.5796442651998088,
+  "r_best": 0.6673335084440858,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field446_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.771001386227046,
+  "r_best": 0.8082463220234536,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field273_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8377822537619719,
+  "r_best": 0.8668942652226964,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field98_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8655018085517675,
+  "r_best": 0.9087334248904115,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field263_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.8051429252740621,
+  "r_best": 0.8733279075749624,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field671_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8871697483463314,
+  "r_best": 0.8871697483463314,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm55_field747_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8428495236034539,
+  "r_best": 0.8557880267210362,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field712_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7044042789335441,
+  "r_best": 0.719667333900056,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field450_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 27,
+  "r_at_0": 0.8127110086513689,
+  "r_best": 0.8226521454254093,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field566_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7105106600848745,
+  "r_best": 0.7105106600848745,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field523_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7692603687179645,
+  "r_best": 0.7692603687179645,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field405_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8305018458109625,
+  "r_best": 0.8836666233453025,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field547_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8289720771619112,
+  "r_best": 0.8392429422066636,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field387_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.8387127672413048,
+  "r_best": 0.8781650289483574,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field197_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.7114674579549691,
+  "r_best": 0.7248721001902517,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field280_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8471581665499417,
+  "r_best": 0.8741854886358653,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm17_field179_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8803817885456187,
+  "r_best": 0.8943298733513515,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field721_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8508757775844286,
+  "r_best": 0.8582698696427007,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field571_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.774544251633914,
+  "r_best": 0.7756512139007362,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field552_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.6963138501090962,
+  "r_best": 0.708518533130188,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field348_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.827247869158126,
+  "r_best": 0.885161676194077,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field624_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8387343440418079,
+  "r_best": 0.8706647264036955,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field132_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.6550312302348769,
+  "r_best": 0.6909342783870578,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field678_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8321503597919993,
+  "r_best": 0.8321503597919993,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field21_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.6823285578097188,
+  "r_best": 0.697476470841406,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field549_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.6383901928205734,
+  "r_best": 0.6383901928205734,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field138_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7527023063259416,
+  "r_best": 0.7790295824494174,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field527_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7350027527868539,
+  "r_best": 0.7372679395658889,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field481_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.6640668250757441,
+  "r_best": 0.6640668250757441,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field584_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 1,
+  "r_at_0": 0.9103711245718098,
+  "r_best": 0.9650802909598958,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field182_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.794076992839653,
+  "r_best": 0.8021741386835239,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field570_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7418692558441045,
+  "r_best": 0.7493547191628578,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field460_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.7810071777147993,
+  "r_best": 0.7835549735227725,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field593_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8543379031090422,
+  "r_best": 0.8543379031090422,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field456_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.830792723076108,
+  "r_best": 0.8313000227432994,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field553_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 24,
+  "r_at_0": 0.7020080336064858,
+  "r_best": 0.7164306231483507,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field724_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8532014340923663,
+  "r_best": 0.8676388517026924,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field463_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7246263977820022,
+  "r_best": 0.7261145535629534,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field500_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8403630540467402,
+  "r_best": 0.8495018138426652,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field478_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8087879384854837,
+  "r_best": 0.8150901806939228,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field149_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.5956865776289196,
+  "r_best": 0.7026359680033638,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm23_field232_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8474123294534835,
+  "r_best": 0.8474123294534835,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field562_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 19,
+  "r_at_0": 0.7923352924058316,
+  "r_best": 0.8037431005899403,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field485_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8852842794923326,
+  "r_best": 0.8852842794923326,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field518_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8221918678814576,
+  "r_best": 0.8296558888748358,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm46_field655_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8177389796447746,
+  "r_best": 0.8385881914123821,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm54_field740_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7850027055407126,
+  "r_best": 0.8069566768998931,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field119_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 4,
+  "r_at_0": 0.44325287564273896,
+  "r_best": 0.4742653402501838,
+  "best_dy_m": -6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm54_field736_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7224134124703675,
+  "r_best": 0.7399702398961163,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field445_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8480721824289918,
+  "r_best": 0.8600948435182367,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm54_field732_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 24,
+  "r_at_0": 0.7784376567330518,
+  "r_best": 0.7786037207523542,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field304_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8132884958612292,
+  "r_best": 0.8132884958612292,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field505_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.8105495554631943,
+  "r_best": 0.8128576841107283,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field46_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7918269967005677,
+  "r_best": 0.7997913831187387,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field539_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6746657457525527,
+  "r_best": 0.6917431403145364,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field486_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.6903446749444834,
+  "r_best": 0.7134327486573275,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field519_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8853317560249293,
+  "r_best": 0.8853317560249293,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field554_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 23,
+  "r_at_0": 0.7523208101241332,
+  "r_best": 0.7523208101241332,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm41_field432_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.814128790276727,
+  "r_best": 0.814128790276727,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field145_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7186135781551907,
+  "r_best": 0.7669168813122091,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field472_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.686550060837718,
+  "r_best": 0.6891920637064096,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field581_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8501107387965476,
+  "r_best": 0.8563282082079751,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field491_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7834798974239381,
+  "r_best": 0.7859623042205315,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field669_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8898410707026749,
+  "r_best": 0.8898410707026749,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field279_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8384369403495809,
+  "r_best": 0.8685371976638909,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field262_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.8328044651831165,
+  "r_best": 0.9091892587380387,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field201_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.8137509122824099,
+  "r_best": 0.8348283771149637,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field536_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.640151157485235,
+  "r_best": 0.640151157485235,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm14_field114_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8086698165153647,
+  "r_best": 0.8276027354387618,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm27_field308_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8799582786207117,
+  "r_best": 0.8799582786207117,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field133_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.686670784025033,
+  "r_best": 0.7157108160944872,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm54_field737_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.6340851786727264,
+  "r_best": 0.6340851786727264,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field514_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7103319866806741,
+  "r_best": 0.7222751821945192,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field123_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 6,
+  "r_at_0": 0.6800668270468426,
+  "r_best": 0.6800668270468426,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm54_field735_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8495756994464619,
+  "r_best": 0.8550869403380744,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm14_field117_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.9044074015559807,
+  "r_best": 0.9135793723293661,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm57_field754_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.863171239261862,
+  "r_best": 0.923189474141672,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field94_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8223695434028243,
+  "r_best": 0.8437828945541265,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field125_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8474404916643138,
+  "r_best": 0.9140387232462363,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm52_field723_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8302503015206896,
+  "r_best": 0.8309674948648902,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field91_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8772860205595359,
+  "r_best": 0.8847768928962895,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field687_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9237188682322904,
+  "r_best": 0.9237188682322904,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field404_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8680701705674049,
+  "r_best": 0.9105395928994784,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm25_field249_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7831052042016918,
+  "r_best": 0.8546543263661629,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm32_field337_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8613704666523391,
+  "r_best": 0.8771703938689741,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm7_field86_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8680804713455167,
+  "r_best": 0.8688986257996738,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field589_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8241641171155267,
+  "r_best": 0.8245347588523337,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field254_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.804665929680338,
+  "r_best": 0.883198929774882,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field27_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8648029424112488,
+  "r_best": 0.8788754500798632,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field311_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8901945059510439,
+  "r_best": 0.9200202383617049,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm23_field230_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8394960474656505,
+  "r_best": 0.8406573622504102,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field614_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7781008336948494,
+  "r_best": 0.7897511493198043,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm32_field340_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8137538001082948,
+  "r_best": 0.8333313931751701,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field264_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.8070757679050639,
+  "r_best": 0.8507645193040043,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field477_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7093943356535908,
+  "r_best": 0.7093943356535908,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field444_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7543542943111845,
+  "r_best": 0.7785352239318367,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field176_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8401839985546448,
+  "r_best": 0.8603786381463949,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field175_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8540963639376898,
+  "r_best": 0.8885959843304894,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm1_field1_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8707680058591478,
+  "r_best": 0.8738413471414572,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field70_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8793242024375899,
+  "r_best": 0.88969488318369,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field572_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.7980261788234002,
+  "r_best": 0.8363001305053375,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm28_field320_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8515544180123384,
+  "r_best": 0.8697515928417223,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm39_field423_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7467182265959805,
+  "r_best": 0.7838851289540827,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm6_field74_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7901609970775088,
+  "r_best": 0.8770455127895442,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field503_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8157375654771799,
+  "r_best": 0.8216207226233129,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm19_field194_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8240337127909843,
+  "r_best": 0.8308706293066136,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field35_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8985791081631418,
+  "r_best": 0.9186839857417388,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field219_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.9242800096408059,
+  "r_best": 0.9242800096408059,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm5_field58_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8629709544913361,
+  "r_best": 0.8799255375415765,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field532_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7882079406022803,
+  "r_best": 0.7882079406022803,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field77_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9409328138303248,
+  "r_best": 0.9585912555021143,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field93_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8041996062572999,
+  "r_best": 0.8139781077928768,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm14_field113_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.9272424633204991,
+  "r_best": 0.9453994554428666,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm24_field239_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 27,
+  "r_at_0": 0.7787182586273264,
+  "r_best": 0.8224220011799552,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field610_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 1,
+  "r_at_0": 0.8408690656029308,
+  "r_best": 0.8999770410562441,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field698_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8094169273151168,
+  "r_best": 0.8360475129413895,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field557_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8041077410266064,
+  "r_best": 0.814539899955198,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm8_field87_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8490316279851697,
+  "r_best": 0.8700449983855767,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field510_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7030553324897262,
+  "r_best": 0.7068812808570267,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field80_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8623908035644932,
+  "r_best": 0.866574429735267,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field400_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8203140456819097,
+  "r_best": 0.8306401614643727,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field124_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 5,
+  "r_at_0": 0.5985330346715454,
+  "r_best": 0.6001058086391173,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm24_field235_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8474354654108683,
+  "r_best": 0.8653097725065957,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field186_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8261569575235802,
+  "r_best": 0.8488962175341748,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field529_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7678624282114176,
+  "r_best": 0.7804067589620199,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm17_field180_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8625857426620951,
+  "r_best": 0.8768026884142394,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field506_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.802627367317029,
+  "r_best": 0.8043828374786889,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field251_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.7689569097253391,
+  "r_best": 0.8239419907044713,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field401_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7922602663145556,
+  "r_best": 0.7922602663145556,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm53_field729_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.8733820562149289,
+  "r_best": 0.8969680617076884,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm37_field407_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7547112912820871,
+  "r_best": 0.7798275942626899,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field185_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8084785792150817,
+  "r_best": 0.8487070615235649,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm16_field157_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8719911261916864,
+  "r_best": 0.8839284634205012,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field673_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8906386627891638,
+  "r_best": 0.8907021018712696,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm16_field159_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8647554231299288,
+  "r_best": 0.8658527714381644,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field717_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7482966236068138,
+  "r_best": 0.7620743483257023,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm6_field85_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8844091929485919,
+  "r_best": 0.8941098315336108,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm28_field319_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7502666460607142,
+  "r_best": 0.7714467512281388,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field609_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.9069204520176872,
+  "r_best": 0.924860776718162,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field26_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.888347383341883,
+  "r_best": 0.894264322899025,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field25_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.9157393328466276,
+  "r_best": 0.9173429056262343,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field136_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.6700725980246897,
+  "r_best": 0.6700725980246897,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm14_field118_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.922795722511665,
+  "r_best": 0.9321923252793223,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field637_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8324114506798074,
+  "r_best": 0.8477148419546663,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field33_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8717699459447541,
+  "r_best": 0.9199152167781846,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field543_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.775511378274685,
+  "r_best": 0.775511378274685,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm30_field332_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8967129006404713,
+  "r_best": 0.922884595986008,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm11_field106_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7950737092577018,
+  "r_best": 0.8105100155833704,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field515_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7749953569184673,
+  "r_best": 0.7793295539266474,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field272_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.9191454462457593,
+  "r_best": 0.948940831478701,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field542_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7184590508011535,
+  "r_best": 0.7259643438412837,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field360_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7398717318804043,
+  "r_best": 0.7400123162335089,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field567_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7151480560398149,
+  "r_best": 0.7151480560398149,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field131_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8488011817182084,
+  "r_best": 0.8725372007656045,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm12_field110_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8021599795192952,
+  "r_best": 0.8135418048216165,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm5_field60_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8910321211120115,
+  "r_best": 0.9227758891211922,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm39_field430_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.6933924783681521,
+  "r_best": 0.738066083886407,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field42_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8769967375617946,
+  "r_best": 0.8943741387383414,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field285_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8718727897712379,
+  "r_best": 0.9089626277976429,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm2_field52_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7786128027457969,
+  "r_best": 0.7827008806072869,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field44_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9027964930225085,
+  "r_best": 0.9053389694095002,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field147_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.6733194072215545,
+  "r_best": 0.7524789939986278,
+  "best_dy_m": -6.666666666666667,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm1_field2_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8696582144035383,
+  "r_best": 0.8696582144035383,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm35_field357_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7612147670759672,
+  "r_best": 0.8415545037692356,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field522_corn_2018": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7575017263089824,
+  "r_best": 0.7724525209238281,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field716_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.6985925394254139,
+  "r_best": 0.7143822370756648,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm24_field238_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 26,
+  "r_at_0": 0.8024384224389826,
+  "r_best": 0.844455973024419,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field283_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9112126444199848,
+  "r_best": 0.9392260355045131,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm36_field381_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.6911879989323427,
+  "r_best": 0.7900532763977555,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field488_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7845914688961277,
+  "r_best": 0.7947897267110304,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field168_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7574828086531772,
+  "r_best": 0.8356725308475711,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field274_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8681014595197828,
+  "r_best": 0.9264601116348639,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm15_field140_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.818224275655582,
+  "r_best": 0.8515864048093597,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field672_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8272846651516661,
+  "r_best": 0.8330406745284156,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field533_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7924502983266581,
+  "r_best": 0.8004196207323093,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm1_field3_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8942979967823498,
+  "r_best": 0.8942979967823498,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field537_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8213178144745178,
+  "r_best": 0.8234544569935631,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field508_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6198137015922811,
+  "r_best": 0.6198137015922811,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field375_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.8418253924545723,
+  "r_best": 0.8969996014056301,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field170_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8672813914716769,
+  "r_best": 0.910360711374822,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field385_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.808620369441235,
+  "r_best": 0.8717881791864868,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field183_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7899330043117614,
+  "r_best": 0.8632908546054399,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm2_field49_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7894490309022839,
+  "r_best": 0.7951161043529125,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm16_field156_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.80117179818572,
+  "r_best": 0.8224851589500548,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field252_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7917128704407937,
+  "r_best": 0.8767736380807943,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field73_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8081090420443409,
+  "r_best": 0.8200528427034955,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm28_field316_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 4,
+  "r_at_0": 0.9317543595478059,
+  "r_best": 0.9387191849364047,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field39_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.883528047474532,
+  "r_best": 0.88697059731378,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field13_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8327310529294729,
+  "r_best": 0.8529760086914339,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field528_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7535522706448098,
+  "r_best": 0.7556462961792317,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field240_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8072744791283166,
+  "r_best": 0.8590656652350167,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field276_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.9316315038064906,
+  "r_best": 0.9571719470236175,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field370_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8239467063584556,
+  "r_best": 0.904860811283244,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field364_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7065618511371702,
+  "r_best": 0.7079688207113912,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field384_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8049428527346765,
+  "r_best": 0.8890555341499382,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field244_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7863026455215921,
+  "r_best": 0.8623517964254814,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field365_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.725973812799301,
+  "r_best": 0.725973812799301,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field392_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.806392194841692,
+  "r_best": 0.8900802859597506,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field374_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.8387531207517385,
+  "r_best": 0.9183384262026153,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field366_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.6672243397454554,
+  "r_best": 0.6672243397454554,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field45_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.9173473181994567,
+  "r_best": 0.923245072309985,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field507_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.812764539716111,
+  "r_best": 0.8172795362459943,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field396_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7852637981980067,
+  "r_best": 0.8182831146372054,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field353_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8066245738353306,
+  "r_best": 0.8638886503532841,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm34_field343_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8323846383285446,
+  "r_best": 0.849845681567469,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field408_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8972496680092453,
+  "r_best": 0.8976937151513765,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field686_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9049652313772896,
+  "r_best": 0.910431104831072,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm39_field426_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8069492218014869,
+  "r_best": 0.8518148849119868,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm5_field64_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7889889536795038,
+  "r_best": 0.8088153489431764,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field345_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8316276103660564,
+  "r_best": 0.8649496353343193,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field397_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7098224757765738,
+  "r_best": 0.7344626155912836,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm17_field164_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8202956286551868,
+  "r_best": 0.8412574520430435,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field71_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8256261646010834,
+  "r_best": 0.8857828904657109,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm36_field380_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7976296722369086,
+  "r_best": 0.8988011584590149,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field383_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7542289575705106,
+  "r_best": 0.8626578004274345,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field399_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8052044932577127,
+  "r_best": 0.8454683660547967,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field386_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 11,
+  "r_at_0": 0.9173149746098216,
+  "r_best": 0.9462730885799835,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field406_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8300846493847585,
+  "r_best": 0.8439919397051584,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm56_field751_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.769793679228635,
+  "r_best": 0.8258572392087955,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm13_field112_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.910768387011212,
+  "r_best": 0.9140207363751426,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm35_field355_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8151775309426439,
+  "r_best": 0.9037771958341629,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field371_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8068622525222526,
+  "r_best": 0.8965921711995053,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field15_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 21,
+  "r_at_0": 0.8122988004346774,
+  "r_best": 0.8344107444426302,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm29_field330_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9370672521511524,
+  "r_best": 0.9485584104128196,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field243_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8359159896688356,
+  "r_best": 0.9008733665875946,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field520_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8393413307857713,
+  "r_best": 0.8463272274917774,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field255_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.782991265423536,
+  "r_best": 0.9245155761000813,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm2_field53_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8468769870564785,
+  "r_best": 0.8495782422274345,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm30_field333_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8700634441566912,
+  "r_best": 0.895049974808378,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field32_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9046579919763013,
+  "r_best": 0.9371018445431397,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field127_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7599084858622703,
+  "r_best": 0.8524186381830564,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm25_field256_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7961133794064736,
+  "r_best": 0.8641801984274197,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field700_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7442127929664432,
+  "r_best": 0.7650678179088332,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field466_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8105720433046013,
+  "r_best": 0.8105720433046013,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm5_field67_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.856703624088342,
+  "r_best": 0.892150787057486,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field294_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8710323942308931,
+  "r_best": 0.8710323942308931,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field266_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7669385197142787,
+  "r_best": 0.8673944938699268,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field301_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.934882386599865,
+  "r_best": 0.934882386599865,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm29_field329_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9220268726423273,
+  "r_best": 0.9421663082379428,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field471_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8936983499290526,
+  "r_best": 0.8936983499290526,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field259_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7749435521244881,
+  "r_best": 0.876563641209706,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field382_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7142222729072769,
+  "r_best": 0.8227401320708443,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field513_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6838677628030027,
+  "r_best": 0.6838677628030027,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm20_field208_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8646914272550812,
+  "r_best": 0.9028791907539666,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field40_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8740749378073048,
+  "r_best": 0.8745351815835163,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field704_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8572659389421585,
+  "r_best": 0.8671410735374846,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field150_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.6989607968478131,
+  "r_best": 0.8116223766158118,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm52_field720_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8432701801479338,
+  "r_best": 0.8605837997795062,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field377_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7840500074571277,
+  "r_best": 0.8613556202724008,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field101_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8872318536797726,
+  "r_best": 0.913419716212997,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field411_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7465398238062102,
+  "r_best": 0.7630100796319709,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field137_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7148454764835951,
+  "r_best": 0.7590959227635614,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field79_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7549635890365579,
+  "r_best": 0.8867198576865777,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field190_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 20,
+  "r_at_0": 0.7474527052224171,
+  "r_best": 0.8619755439632334,
+  "best_dy_m": 0.0,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm2_field28_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8716535533008559,
+  "r_best": 0.9089144139336436,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm52_field718_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9007631852267638,
+  "r_best": 0.9007631852267638,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field128_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7653664170635232,
+  "r_best": 0.8667832285650228,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm15_field152_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.733170004745931,
+  "r_best": 0.799188626919219,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm25_field247_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7852853943414329,
+  "r_best": 0.8677596782473119,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field634_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.844937061610529,
+  "r_best": 0.8608157715224763,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field142_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.8121382775055893,
+  "r_best": 0.8244013473706341,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field351_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.8044527405800252,
+  "r_best": 0.8737302808137015,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field102_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.7707857493775969,
+  "r_best": 0.7900573327456057,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field271_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9006711784991581,
+  "r_best": 0.9447185725071123,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm17_field165_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8236859759684715,
+  "r_best": 0.8467825748657513,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field148_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.6436063912539682,
+  "r_best": 0.798274226634339,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -10.0
+ },
+ "Argentina_DUP1_farm2_field34_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9072241625621718,
+  "r_best": 0.9381426297128603,
+  "best_dy_m": 0.0,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm35_field356_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8062713401828456,
+  "r_best": 0.8478173316132265,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field600_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8496548271595685,
+  "r_best": 0.8744599168916044,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field706_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.705364817303838,
+  "r_best": 0.7233347890600457,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm23_field223_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.753925770790117,
+  "r_best": 0.758477462276791,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm39_field418_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7918717894126541,
+  "r_best": 0.8011503258209821,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm6_field82_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8624222399532591,
+  "r_best": 0.8852224926373122,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field650_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.836367623055283,
+  "r_best": 0.8456991297706334,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field708_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7320608440574514,
+  "r_best": 0.7459378578691697,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field701_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8897888976135411,
+  "r_best": 0.9081561299152534,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm35_field346_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.754555761109512,
+  "r_best": 0.83511304923291,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field629_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8482458225623637,
+  "r_best": 0.861298015565191,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm9_field92_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8751016717638899,
+  "r_best": 0.8751016717638899,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field43_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.89992983989756,
+  "r_best": 0.9072169633283229,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field229_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7665160246477484,
+  "r_best": 0.7705240671477881,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field590_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8506041891278848,
+  "r_best": 0.852442050004492,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field30_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.9045774950516591,
+  "r_best": 0.9188018675100647,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field277_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9356382633813205,
+  "r_best": 0.95939330234584,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field630_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8839166468558808,
+  "r_best": 0.8967578950590748,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field369_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8283716869601744,
+  "r_best": 0.9096847626502641,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field705_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.7809087241819508,
+  "r_best": 0.7896877879546526,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm5_field59_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 8,
+  "r_at_0": 0.9637288037675752,
+  "r_best": 0.9767109257149719,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field725_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.8152072629615192,
+  "r_best": 0.8258886907010372,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field181_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8535539890865264,
+  "r_best": 0.8713387420817815,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field391_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7575275882484342,
+  "r_best": 0.8466117017872614,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field691_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7699481899233703,
+  "r_best": 0.7942959194152462,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field388_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 11,
+  "r_at_0": 0.8391218762266341,
+  "r_best": 0.899816939818828,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm46_field656_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8567566351990473,
+  "r_best": 0.8977687005429121,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field373_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.84009707022315,
+  "r_best": 0.9219863065835561,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field350_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7522140055442241,
+  "r_best": 0.8741955009678349,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm10_field104_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.6548568018138349,
+  "r_best": 0.6653872988615398,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field188_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8122984526451859,
+  "r_best": 0.867285041675264,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm52_field726_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.816736888545323,
+  "r_best": 0.8339822772240567,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm14_field116_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.9252414039151652,
+  "r_best": 0.9364884622935747,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field41_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9322200529453186,
+  "r_best": 0.9395909090135677,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field172_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.834053824070665,
+  "r_best": 0.8530473407294518,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field72_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8565017343105886,
+  "r_best": 0.8950410896697969,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field631_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8884606862856823,
+  "r_best": 0.8960283012136164,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field362_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.6614698265183975,
+  "r_best": 0.6614698265183975,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm54_field734_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 9,
+  "r_at_0": 0.6528049373180039,
+  "r_best": 0.6840891751416067,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm34_field344_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.7743824583679397,
+  "r_best": 0.8349441555254774,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field409_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7629176022641778,
+  "r_best": 0.8111780630643788,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm54_field743_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.781397656796181,
+  "r_best": 0.8056799180350772,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field84_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8592565629479189,
+  "r_best": 0.8638794758771661,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm54_field739_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8398801913118675,
+  "r_best": 0.8398801913118675,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm37_field403_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8704549062960825,
+  "r_best": 0.9186555572726549,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field602_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 1,
+  "r_at_0": 0.9001911589100376,
+  "r_best": 0.9389779940574068,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm54_field744_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.7962074885124711,
+  "r_best": 0.7992524554577279,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field260_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7798905866592175,
+  "r_best": 0.857118332036827,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm25_field248_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7836982515932187,
+  "r_best": 0.8231041471365077,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field224_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.818928499406102,
+  "r_best": 0.8251115812633727,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field697_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.8423751280734675,
+  "r_best": 0.8527991025447594,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field585_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.8951084289600284,
+  "r_best": 0.9078976527920487,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field31_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9071326091230377,
+  "r_best": 0.9350107314128466,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field710_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9114033810296062,
+  "r_best": 0.9190002985296448,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field727_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7281349564848564,
+  "r_best": 0.7331080805156347,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field372_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.8022052551953065,
+  "r_best": 0.8999081551810703,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field9_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7740262730731666,
+  "r_best": 0.7976728139277379,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field376_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.870308990259865,
+  "r_best": 0.9235884261815974,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm29_field324_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9474142462767043,
+  "r_best": 0.9592433906826613,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field359_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.6630466680832128,
+  "r_best": 0.6689883203718555,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm29_field326_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8520175546261204,
+  "r_best": 0.872546864560212,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field171_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.783030473441849,
+  "r_best": 0.8181105817906367,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field178_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8768416258832971,
+  "r_best": 0.8849771613790769,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field541_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.6686272199954576,
+  "r_best": 0.668899236593858,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field728_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8659677989607563,
+  "r_best": 0.8741626955494134,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field556_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8242555935001353,
+  "r_best": 0.8242555935001353,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field498_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7636226465863017,
+  "r_best": 0.7861645879813428,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field38_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9336576611906757,
+  "r_best": 0.9454680492293961,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field702_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8546109082265846,
+  "r_best": 0.8810222191322346,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field544_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7712084004039036,
+  "r_best": 0.7716013045245264,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field504_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7321076440438236,
+  "r_best": 0.7334666451704417,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm17_field192_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8216829909382483,
+  "r_best": 0.8430613307841271,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field548_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.8639275221470383,
+  "r_best": 0.8781656175737222,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field29_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8898560852579858,
+  "r_best": 0.9278217662285877,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm35_field347_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.703750504407467,
+  "r_best": 0.8297923485445178,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm36_field358_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7169160745544223,
+  "r_best": 0.7310824181893268,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field690_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7073454433962408,
+  "r_best": 0.7124264339380164,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm27_field299_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.9046725674372463,
+  "r_best": 0.9058846268675858,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field695_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8142754819198036,
+  "r_best": 0.8474954302577532,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field462_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7798475110239026,
+  "r_best": 0.8095285450421451,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field689_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8133406053343409,
+  "r_best": 0.8264216909504063,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm17_field191_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8486316655389744,
+  "r_best": 0.8502790007491494,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm5_field65_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8690708078361615,
+  "r_best": 0.8947111103852645,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field494_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 11,
+  "r_at_0": 0.7284030615399356,
+  "r_best": 0.7384888692241748,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field458_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6575678912784707,
+  "r_best": 0.6857882348673843,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field496_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.794095909220939,
+  "r_best": 0.7975392716616007,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field696_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6976969660304674,
+  "r_best": 0.7152816428865877,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm39_field424_corn_2024": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.8250579965133858,
+  "r_best": 0.8487045924452123,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field51_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7458786640579476,
+  "r_best": 0.7569260623177414,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field688_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.6705297332004527,
+  "r_best": 0.6799660829679779,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field253_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.838045701020763,
+  "r_best": 0.9047703175085433,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm27_field296_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.8807685183264562,
+  "r_best": 0.8807685183264562,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field389_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 14,
+  "r_at_0": 0.7918500293349837,
+  "r_best": 0.863058287482149,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field693_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7707440674009071,
+  "r_best": 0.7899812882072892,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field241_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7889328112085435,
+  "r_best": 0.8283476374164868,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field714_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7944944107812387,
+  "r_best": 0.805007310895012,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field7_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.7175153676974215,
+  "r_best": 0.737016730247606,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field703_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 18,
+  "r_at_0": 0.7943194241611289,
+  "r_best": 0.8111968894591516,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field37_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9306895831793978,
+  "r_best": 0.9382162634453634,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field120_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 8,
+  "r_at_0": 0.5272945039677978,
+  "r_best": 0.5272945039677978,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm51_field679_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8488651327136385,
+  "r_best": 0.8488651327136385,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field692_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7908599868250704,
+  "r_best": 0.804856532897386,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field139_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7664785318699088,
+  "r_best": 0.8201906730946614,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm47_field657_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.6711517060254956,
+  "r_best": 0.6735421665507009,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field699_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.7692398321437182,
+  "r_best": 0.781540550582589,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field709_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8126315079061164,
+  "r_best": 0.8278493179234264,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm20_field209_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9019852792444141,
+  "r_best": 0.9389625716388008,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 6.666666666666667
+ },
+ "Argentina_DUP1_farm2_field36_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8169013953705987,
+  "r_best": 0.832099364466476,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm29_field331_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.9151486432087851,
+  "r_best": 0.9304004076799146,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field490_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8362827409025639,
+  "r_best": 0.8366127298129186,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field448_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 25,
+  "r_at_0": 0.7673247200948059,
+  "r_best": 0.7874562808132939,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field455_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.7881830988802171,
+  "r_best": 0.7881830988802171,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm17_field166_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.839886352169887,
+  "r_best": 0.848218255018777,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm52_field711_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 17,
+  "r_at_0": 0.8301652781699044,
+  "r_best": 0.8301652781699044,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field464_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8051986070445606,
+  "r_best": 0.810027395290606,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field482_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7754920041819091,
+  "r_best": 0.7919330083562024,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field473_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 28,
+  "r_at_0": 0.7585295689361856,
+  "r_best": 0.7835222355295753,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field250_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.840049097200336,
+  "r_best": 0.8807118641153487,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field354_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.7369027391585419,
+  "r_best": 0.8460319590667662,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm17_field177_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 10,
+  "r_at_0": 0.666244082864758,
+  "r_best": 0.68072302217062,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm29_field325_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8656003382341536,
+  "r_best": 0.874364133490182,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field129_soybean_2018": {
+  "pair": "ARG-S",
+  "slots": 9,
+  "r_at_0": 0.8097096809423996,
+  "r_best": 0.8667100054576553,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm45_field649_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.777687352874293,
+  "r_best": 0.7851028029223717,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field619_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.8064856597274903,
+  "r_best": 0.8318017985423535,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm12_field108_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 12,
+  "r_at_0": 0.8908437818688206,
+  "r_best": 0.8925487028071569,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field141_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7811232448177067,
+  "r_best": 0.8000123225602849,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm29_field323_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8633281645088543,
+  "r_best": 0.8897642072750267,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field228_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8675413217822351,
+  "r_best": 0.8808704408942089,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field153_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8111680765456202,
+  "r_best": 0.8549738298926854,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm10_field105_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8321745007362725,
+  "r_best": 0.8431683407874765,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm23_field231_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.8306599152717922,
+  "r_best": 0.8306599152717922,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm45_field620_corn_2017": {
+  "pair": "ARG-C",
+  "slots": 2,
+  "r_at_0": 0.9401463810614468,
+  "r_best": 0.9446549719460827,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field569_corn_2019": {
+  "pair": "ARG-C",
+  "slots": 9,
+  "r_at_0": 0.7216165274016842,
+  "r_best": 0.7409602217159323,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field517_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7768832458121665,
+  "r_best": 0.7840445627237235,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field75_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8983232821806493,
+  "r_best": 0.9142379773025767,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field19_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.6862184631492638,
+  "r_best": 0.7091512400122857,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm39_field422_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.9367502403416281,
+  "r_best": 0.9532736149702891,
+  "best_dy_m": 0.0,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm36_field368_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.748885684753869,
+  "r_best": 0.748885684753869,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field50_soybean_2024": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8823364948929547,
+  "r_best": 0.8823364948929547,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm29_field328_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8207315930478658,
+  "r_best": 0.8472211581546444,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm25_field261_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 16,
+  "r_at_0": 0.7509667769418045,
+  "r_best": 0.837825696043406,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm44_field476_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.5987287858372271,
+  "r_best": 0.5987287858372271,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm44_field497_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8358869297662771,
+  "r_best": 0.8358869297662771,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm35_field349_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.740377039880756,
+  "r_best": 0.8468263370489367,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm15_field135_soybean_2019": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.7126316888746522,
+  "r_best": 0.7559777583025483,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm44_field499_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7611340905423114,
+  "r_best": 0.7797618405973409,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field410_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.8557207699480875,
+  "r_best": 0.8836994728429489,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm15_field144_soybean_2020": {
+  "pair": "ARG-S",
+  "slots": 11,
+  "r_at_0": 0.7680894012468152,
+  "r_best": 0.8132012296131084,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm6_field83_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 14,
+  "r_at_0": 0.8399138695592782,
+  "r_best": 0.862256298763905,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm37_field412_soybean_2021": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.9018510338255735,
+  "r_best": 0.9268785796930877,
+  "best_dy_m": -3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Argentina_DUP1_farm15_field121_soybean_2017": {
+  "pair": "ARG-S",
+  "slots": 5,
+  "r_at_0": 0.7918891267706626,
+  "r_best": 0.7918891267706626,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm36_field361_corn_2021": {
+  "pair": "ARG-C",
+  "slots": 13,
+  "r_at_0": 0.7233311874618676,
+  "r_best": 0.7233311874618676,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm25_field258_corn_2023": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.7612438472287705,
+  "r_best": 0.8433828547350446,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm45_field596_corn_2020": {
+  "pair": "ARG-C",
+  "slots": 17,
+  "r_at_0": 0.8466662680271295,
+  "r_best": 0.8466662680271295,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field24_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8587548152528774,
+  "r_best": 0.8835779381833553,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm19_field199_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.8338739491111745,
+  "r_best": 0.8408416603309385,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm6_field76_soybean_2023": {
+  "pair": "ARG-S",
+  "slots": 16,
+  "r_at_0": 0.9269195169067805,
+  "r_best": 0.9313888523210947,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Argentina_DUP1_farm51_field670_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.839853877298547,
+  "r_best": 0.839853877298547,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm52_field694_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 15,
+  "r_at_0": 0.8185931063169368,
+  "r_best": 0.8745685100565331,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm35_field352_soybean_2022": {
+  "pair": "ARG-S",
+  "slots": 13,
+  "r_at_0": 0.7120676320754689,
+  "r_best": 0.8505158503567477,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field18_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7610911686723454,
+  "r_best": 0.7846288236639192,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field10_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.7274030940220982,
+  "r_best": 0.7392713891859247,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field23_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 19,
+  "r_at_0": 0.7699788723534248,
+  "r_best": 0.7997834197628672,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field20_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.7267427160250693,
+  "r_best": 0.7435860573136646,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field22_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.8082413883257515,
+  "r_best": 0.8296961945610477,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field8_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 15,
+  "r_at_0": 0.5953635641383992,
+  "r_best": 0.6194679228462555,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field12_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 18,
+  "r_at_0": 0.7521851255484557,
+  "r_best": 0.7746325823799987,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Argentina_DUP1_farm2_field17_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.8481917543062026,
+  "r_best": 0.8626258373472421,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Argentina_DUP1_farm2_field16_corn_2022": {
+  "pair": "ARG-C",
+  "slots": 20,
+  "r_at_0": 0.790724780781079,
+  "r_best": 0.8013034872132815,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field501_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8138034588514436,
+  "r_best": 0.8360545907331315,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field551_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.7137194367788021,
+  "r_best": 0.7515026387327287,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm9_field504_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.6218266671909075,
+  "r_best": 0.6792973846217888,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm5_field145_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8048103230997778,
+  "r_best": 0.8373717288545844,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field264_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8106119768717482,
+  "r_best": 0.8283659159975556,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field515_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8535656621104545,
+  "r_best": 0.8699264702758825,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field247_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.744792942368039,
+  "r_best": 0.7516659509772429,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field265_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8311877811905377,
+  "r_best": 0.860488436296422,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field125_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 5,
+  "r_at_0": 0.7554716594133908,
+  "r_best": 0.7823338094389023,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field134_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.483955074004319,
+  "r_best": 0.5384375303585188,
+  "best_dy_m": 0.0,
+  "best_dx_m": -10.0
+ },
+ "Brazil_DUP2_farm2_field17_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.6499731674706205,
+  "r_best": 0.6556609932700074,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field186_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.800745037057094,
+  "r_best": 0.8139041753668039,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm4_field71_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8686583845611366,
+  "r_best": 0.8922085521743355,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field324_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.810933799716729,
+  "r_best": 0.8328619090981941,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field400_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.6345699463107486,
+  "r_best": 0.6510152537772526,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field160_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8088496671013846,
+  "r_best": 0.8293218481865517,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field330_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7820887705424326,
+  "r_best": 0.7906422823159404,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field112_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.7453958001133408,
+  "r_best": 0.7621721344348965,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field459_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.85446363745721,
+  "r_best": 0.8662282932432007,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm2_field26_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.6861358910089413,
+  "r_best": 0.6920795379910359,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Brazil_DUP2_farm1_field2_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7614116210114015,
+  "r_best": 0.7818783412255889,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field120_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8780019919821697,
+  "r_best": 0.9053093438109496,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field388_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.9062063829468344,
+  "r_best": 0.9124834402712794,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field410_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.6739133135306719,
+  "r_best": 0.6995490825735313,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field358_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.592269835720966,
+  "r_best": 0.6047453215637245,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field65_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.5917180137829899,
+  "r_best": 0.6617464166795309,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm6_field374_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.7847216018250954,
+  "r_best": 0.8061223028186849,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field146_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.839131904886993,
+  "r_best": 0.8576057930119412,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field381_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7403507805319551,
+  "r_best": 0.7660556239287389,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field286_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.5978823741084472,
+  "r_best": 0.6142979830386827,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field539_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.5554817802730816,
+  "r_best": 0.6298496144366149,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm5_field261_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7289580968876151,
+  "r_best": 0.7707872206430287,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field421_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7579579990418049,
+  "r_best": 0.7610487761674731,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field143_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.8038420063285029,
+  "r_best": 0.8225471449024437,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field290_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.9022894654689575,
+  "r_best": 0.9231319899194614,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field289_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.7192071249868482,
+  "r_best": 0.7304766558267838,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field519_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7895665177754319,
+  "r_best": 0.8113363500864832,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 3.3333333333333335
+ },
+ "Brazil_DUP2_farm2_field43_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.7805518489731841,
+  "r_best": 0.8107019854639891,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field393_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7929046854564851,
+  "r_best": 0.8073620856419794,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field268_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 19,
+  "r_at_0": 0.7103404621289908,
+  "r_best": 0.732131191114859,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field406_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.6061046702823092,
+  "r_best": 0.6211911605202747,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field263_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7885630467444547,
+  "r_best": 0.8149069683146737,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field195_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.9219390472450449,
+  "r_best": 0.9404389121655772,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field396_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.8930514054168658,
+  "r_best": 0.9036925406808836,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field411_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.6932795615032687,
+  "r_best": 0.7168610917368091,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field298_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.8363928336431157,
+  "r_best": 0.8411818793343695,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field438_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.800598457431227,
+  "r_best": 0.8155060195655895,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm2_field39_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.7043735201502467,
+  "r_best": 0.7586067657831296,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field283_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.838318576075036,
+  "r_best": 0.8551868021132594,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field464_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.80721766418327,
+  "r_best": 0.8295252877595065,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field319_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.539306321098283,
+  "r_best": 0.5584553502981912,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field353_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.8439545144835566,
+  "r_best": 0.8599712900251618,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm2_field46_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7071847505175468,
+  "r_best": 0.7147278216203706,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field447_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.8320627147188834,
+  "r_best": 0.8320627147188834,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm2_field25_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.794720323179453,
+  "r_best": 0.8348576920296692,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field432_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.7338592624276843,
+  "r_best": 0.7580750775156916,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field285_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7550141584569632,
+  "r_best": 0.7778820998055574,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field147_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.7848337363648067,
+  "r_best": 0.8206542830078555,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field243_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8030898446296042,
+  "r_best": 0.8243217816514822,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field156_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8145272245731847,
+  "r_best": 0.8361743013494142,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field452_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.8248885019479459,
+  "r_best": 0.8482347879636106,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field544_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.7613268142749375,
+  "r_best": 0.7895358319991261,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm9_field521_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.630255971391042,
+  "r_best": 0.7147899570255474,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm5_field230_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.7643007445187284,
+  "r_best": 0.7976374370181267,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field250_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8477437192293835,
+  "r_best": 0.8867480822655226,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field258_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8230514248239761,
+  "r_best": 0.8434744152231118,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field275_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8254631658578266,
+  "r_best": 0.8790616114323401,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field204_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.8321090379421087,
+  "r_best": 0.8532087060263042,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field273_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.7042171869651139,
+  "r_best": 0.7131202456838965,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field463_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.6283670390409432,
+  "r_best": 0.642788225286516,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field308_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.5890679412522823,
+  "r_best": 0.6526137723727338,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field458_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.716791783283923,
+  "r_best": 0.7322542012700708,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field456_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.778988354434773,
+  "r_best": 0.8098082373065953,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field443_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.6267082421869454,
+  "r_best": 0.6420847276824181,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field429_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.8673925317502793,
+  "r_best": 0.876431945837394,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field129_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.6857119160400371,
+  "r_best": 0.7180094517609789,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field124_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8769855460867501,
+  "r_best": 0.908484459706248,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field135_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.5763761511988511,
+  "r_best": 0.589453783564242,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field440_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.8943561350994812,
+  "r_best": 0.913068794151305,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field295_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.902992821158872,
+  "r_best": 0.9046317543663736,
+  "best_dy_m": 0.0,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm4_field130_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.6444903218819467,
+  "r_best": 0.6969204326827299,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm6_field339_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.7426913115909763,
+  "r_best": 0.7607274777304813,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm4_field138_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8942010597570687,
+  "r_best": 0.9183957954811398,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field442_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 13,
+  "r_at_0": 0.8509723129299629,
+  "r_best": 0.8717315208064012,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field311_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.6965053315756529,
+  "r_best": 0.709610281995779,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field416_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 16,
+  "r_at_0": 0.8508132485920139,
+  "r_best": 0.866989082157212,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field437_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.6231298409266722,
+  "r_best": 0.656988586449988,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field89_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.7362011302983851,
+  "r_best": 0.7589434015940106,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field59_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.5186213252482689,
+  "r_best": 0.5656086496668191,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm6_field380_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.6576050868095815,
+  "r_best": 0.6777175254835318,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field111_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8702791056469293,
+  "r_best": 0.9074514012261652,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field373_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7422828689028765,
+  "r_best": 0.7859238588917108,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field157_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.7697755706814722,
+  "r_best": 0.7963890167690384,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field397_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.7519616620409585,
+  "r_best": 0.7878589663034017,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field378_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.8450425915309685,
+  "r_best": 0.8483682137303727,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm2_field8_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 12,
+  "r_at_0": 0.7538320767355996,
+  "r_best": 0.8117029082007218,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field140_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.7097864115203694,
+  "r_best": 0.7192204329835629,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm2_field4_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.724913800342322,
+  "r_best": 0.7382299855853508,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field69_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 11,
+  "r_at_0": 0.6278523798074163,
+  "r_best": 0.7092994680025159,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm4_field103_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.7882825654082003,
+  "r_best": 0.7936899416582625,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field100_corn_2018": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.6570989677173447,
+  "r_best": 0.7061869472639286,
+  "best_dy_m": 0.0,
+  "best_dx_m": -6.666666666666667
+ },
+ "Brazil_DUP2_farm6_field446_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 7,
+  "r_at_0": 0.410433477796937,
+  "r_best": 0.4158090841073548,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm4_field77_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 14,
+  "r_at_0": 0.8666098052448399,
+  "r_best": 0.8857032767786548,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field439_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.6207639720016181,
+  "r_best": 0.6380470464277725,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field402_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.6782655814881365,
+  "r_best": 0.7015242250843969,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field367_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 14,
+  "r_at_0": 0.8452759510227145,
+  "r_best": 0.8543356199981785,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field211_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8689804897888107,
+  "r_best": 0.9131977033232889,
+  "best_dy_m": 6.666666666666667,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field408_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.685111859921518,
+  "r_best": 0.6948347392669592,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field348_corn_2017": {
+  "pair": "BRA-C",
+  "slots": 6,
+  "r_at_0": 0.6542196706920643,
+  "r_best": 0.6542196706920643,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm3_field54_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 10,
+  "r_at_0": 0.6547014357473055,
+  "r_best": 0.6634126899668447,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm3_field57_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 15,
+  "r_at_0": 0.8764258862825565,
+  "r_best": 0.8846153451224193,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field347_corn_2019": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.7614879564464108,
+  "r_best": 0.7784103526403722,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field262_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.748265019002536,
+  "r_best": 0.7726284036639214,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm6_field423_corn_2024": {
+  "pair": "BRA-C",
+  "slots": 9,
+  "r_at_0": 0.8082056348562261,
+  "r_best": 0.8082056348562261,
+  "best_dy_m": 0.0,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field372_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 18,
+  "r_at_0": 0.8151306444318058,
+  "r_best": 0.835450440190415,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": -3.3333333333333335
+ },
+ "Brazil_DUP2_farm5_field266_corn_2020": {
+  "pair": "BRA-C",
+  "slots": 17,
+  "r_at_0": 0.7480605812649759,
+  "r_best": 0.7618884043290309,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm5_field236_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 8,
+  "r_at_0": 0.8263131599655206,
+  "r_best": 0.8575791521342178,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 0.0
+ },
+ "Brazil_DUP2_farm6_field462_corn_2023": {
+  "pair": "BRA-C",
+  "slots": 14,
+  "r_at_0": 0.8689960494352297,
+  "r_best": 0.8807851710621958,
+  "best_dy_m": 3.3333333333333335,
+  "best_dx_m": 3.3333333333333335
+ }
+}
