@@ -409,10 +409,15 @@ class YieldSATPointDataset(Dataset):
             out = ['pw{}_{}'.format(i, b) for i in range(PS_WIN_SIDE ** 2) for b in PS_BANDS]
             self.layout[PS_WINDOW] = {'temporal': True, 'channels': out, 'positions': np.zeros(0, dtype=np.int64),
                                       'out_channels': out, 'grid': (PS_WIN_SIDE, len(PS_BANDS))}
+        # the 3x3 sub-grid is the window's centre (same scene per cell and slot), so with the window and no
+        # ps3x3.npy (the YieldSAT subset, spec/yieldsat-planetscope.md) it is cut from the window
+        self.ps3x3_from_window = (self.ps_window is not None and '3x3' in (planetscope_streams or ()) and
+                                  not all((Path(planetscope_root) / c / 'ps3x3.npy').exists() for c in self.countries))
         for key in [k for k in planetscope_streams or () if k != 'win']:
             name, fname, n_sub = PS_STREAMS[key]
-            self.planetscope[name] = ({c: np.load(Path(planetscope_root) / c / fname, mmap_mode='r')
-                                       for c in self.countries}, n_sub)
+            if not (key == '3x3' and self.ps3x3_from_window):
+                self.planetscope[name] = ({c: np.load(Path(planetscope_root) / c / fname, mmap_mode='r')
+                                           for c in self.countries}, n_sub)
             out = (['ps_' + b for b in PS_BANDS] if n_sub == 1 else
                    ['ps{}_{}'.format(i, b) for i in range(n_sub) for b in PS_BANDS])
             self.layout[name] = {'temporal': True, 'channels': out, 'positions': np.zeros(0, dtype=np.int64),
@@ -450,15 +455,15 @@ class YieldSATPointDataset(Dataset):
         codes = r['field_code'][rows]
         d = np.arange(PS_WIN_SIDE)
         for code in np.unique(codes):
+            i = np.flatnonzero(codes == code)
+            bi, k = np.nonzero(scene[i] >= 0)
+            if not len(bi):
+                continue
             key = (country, int(code))
             if key not in w['stacks']:          # opened lazily, per process (DataLoader workers)
                 w['stacks'][key] = np.load(w['root'] / country / 'ps_win' / '{}.npy'.format(int(code)),
                                            mmap_mode='r')
             stack = w['stacks'][key]
-            i = np.flatnonzero(codes == code)
-            bi, k = np.nonzero(scene[i] >= 0)
-            if not len(bi):
-                continue
             gi = i[bi]
             R = (3 * r['grid_row'][rows[gi]])[:, None] + d[None, :]
             C = (3 * r['grid_col'][rows[gi]])[:, None] + d[None, :]
@@ -491,6 +496,8 @@ class YieldSATPointDataset(Dataset):
         dpatch = (np.empty((B, DEM_SIDE * DEM_SIDE), np.float32) if self.dem_patch is not None else None)
         if self.ps_window is not None:
             ps[PS_WINDOW] = np.full((B, NUM_TIME_SLOTS, PS_WIN_SIDE ** 2 * len(PS_BANDS)), np.nan, np.float32)
+        if self.ps3x3_from_window:
+            ps['planetscope_3x3'] = np.empty((B, NUM_TIME_SLOTS, 9 * len(PS_BANDS)), np.float32)
         fc = self.field_context is not None
         if fc:
             f_mean = np.empty((B, NUM_TIME_SLOTS, len(_S2_CH)), np.float32)
@@ -526,6 +533,11 @@ class YieldSATPointDataset(Dataset):
                 ps[name][sel[order]] = (v - mean) / std
             if self.ps_window is not None:
                 self._cut_windows(country, sel, rows, r, ps[PS_WINDOW])
+                if self.ps3x3_from_window:
+                    c = (PS_WIN_SIDE - 3) // 2
+                    ps['planetscope_3x3'][sel] = ps[PS_WINDOW][sel].reshape(
+                        len(sel), NUM_TIME_SLOTS, PS_WIN_SIDE, PS_WIN_SIDE, len(PS_BANDS))[:, :, c:c + 3, c:c + 3].reshape(
+                        len(sel), NUM_TIME_SLOTS, -1)
             if dpatch is not None:
                 order = np.argsort(rows)
                 dn = self.dem_patch_norm[country]

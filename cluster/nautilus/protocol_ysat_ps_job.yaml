@@ -1,0 +1,71 @@
+# PlanetScope on a YieldSAT subset (spec/yieldsat-planetscope.md): the Missouri-fixed arm (flat 3x3 + 30 m window)
+# on ARG-S, ARG-C, BRA-C, CV10 + LOYO, 3 seeds, 156 units; 20 pods x 2 runs at 32 Gi (Argentina has 28x the
+# Missouri rows). Stages the country's cache, neighbourhood (with the window stacks) and index. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-protocol-ysat-ps
+spec:
+  completions: 20
+  parallelism: 20
+  backoffLimit: 1000
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
+                - k8s-chase-ci-07.calit2.optiputer.net
+                - ry-gpu-02.sdsc.optiputer.net
+                - hcc-chase-shor-c4705.unl.edu
+                - ry-gpu-06.sdsc.optiputer.net
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_ysat_ps_units.json --concurrency 2
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: own-dataset-training
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 32Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 32Gi, ephemeral-storage: 80Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 4Gi}

@@ -352,7 +352,43 @@ def own_units(arms=OWN_ARMS, seeds=(0,)):
     return units
 
 
+# PlanetScope on a YieldSAT subset (spec/yieldsat-planetscope.md): the arm fixed on our Missouri data (flat 3x3
+# sub-grid + 30 m window) added to the paper's best model; the S2-only baseline is the paper's own runs (seeds 0-2,
+# identical arguments)
+YSAT_PS_PAIRS = ('ARG-S', 'ARG-C', 'BRA-C')
+YSAT_PS_TAG, YSAT_PS_ARGS = '-ps3x3-pswin', ['--planetscope', '3x3', 'win', '--eval_batch_size', '1024']
+
+
+def ysat_ps_units():
+    base = 'ours-p3nbr-dense-fc-rel10'
+    src = (json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units']
+           + json.loads(Path('cluster/tabm/protocol_fc_all_units.json').read_text())['units']
+           + json.loads(Path('cluster/tabm/protocol_seeds_ours_units.json').read_text())['units'])
+    units = []
+    for u in src:
+        tag, pair, proto = u['id'].split('__')[:3]
+        seed = 0 if tag == base else int(tag[len(base) + 2:]) if tag.startswith(base + '-s') and tag[len(base) + 2:].isdigit() else None
+        if seed is None or pair not in YSAT_PS_PAIRS or proto not in ('cv', 'loyo'):
+            continue
+        args = list(u['args'])
+        j = args.index('--output_dir')
+        old = '/{}_seed{}/'.format(base, seed)
+        assert old in args[j + 1] and args[args.index('--seed') + 1] == str(seed), u['id']
+        args[j + 1] = args[j + 1].replace(old, '/{}{}_seed{}/'.format(base, YSAT_PS_TAG, seed))
+        uid = base + YSAT_PS_TAG + ('-s{}'.format(seed) if seed else '')
+        units.append(dict(u, id='__'.join([uid] + u['id'].split('__')[1:]), args=args + YSAT_PS_ARGS))
+    # Argentina soybean first (largest), seed 0 first
+    units.sort(key=lambda u: (YSAT_PS_PAIRS.index(u['pair']), '-s' in u['id'].split('__')[0]))
+    return units
+
+
 def cmd_units(a):
+    if a.batch == 'ysat-ps':
+        units = ysat_ps_units()
+        Path('cluster/tabm/protocol_ysat_ps_units.json').write_text(
+            json.dumps({'suite': 'protocol_ysat_ps', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_ysat_ps: {} units'.format(len(units)))
+        return
     if a.batch == 'own':
         units = own_units()
         Path('cluster/tabm/protocol_own_units.json').write_text(
@@ -880,7 +916,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'ysat-ps'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
