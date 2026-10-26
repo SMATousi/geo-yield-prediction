@@ -382,7 +382,40 @@ def ysat_ps_units():
     return units
 
 
+# Model size (spec/yieldsat-model-size.md): one setting at a time around the final model (8 latents, width 128,
+# depth 2), 4 DEV pairs x CV10/LOYO, seed 0; the baseline is the final model's own DEV runs (fc-dev, seed 0)
+SIZE_BASE = 'ours-p3nbr-dense-fc-rel10'
+SIZE_ARMS = {'-lat4': ['--num_latents', '4'], '-lat16': ['--num_latents', '16'], '-lat32': ['--num_latents', '32'],
+             '-w64': ['--embed_dim', '64'], '-w256': ['--embed_dim', '256'],
+             '-d1': ['--depth', '1'], '-d4': ['--depth', '4']}
+
+
+def size_units():
+    src = [u for u in json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units']
+           if u['id'].split('__')[0] == SIZE_BASE]
+    units = []
+    for u in src:
+        args = list(u['args'])
+        j = args.index('--output_dir')
+        old = '/{}_seed0/'.format(SIZE_BASE)
+        assert old in args[j + 1] and args[args.index('--seed') + 1] == '0', u['id']
+        for suffix, extra in SIZE_ARMS.items():
+            a_ = list(args)
+            a_[j + 1] = a_[j + 1].replace(old, '/{}{}_seed0/'.format(SIZE_BASE, suffix))
+            units.append(dict(u, id=u['id'].replace(SIZE_BASE, SIZE_BASE + suffix, 1), args=a_ + extra))
+    # longest pairs first; within a unit slot every variant, so all variants progress together
+    order = {'ARG-W': 0, 'GER-R': 1, 'BRA-C': 2, 'URG-S': 3}
+    units.sort(key=lambda u: (order[u['pair']], u['id'].split('__')[2:], u['id']))
+    return units
+
+
 def cmd_units(a):
+    if a.batch == 'size-dev':
+        units = size_units()
+        Path('cluster/tabm/protocol_size_dev_units.json').write_text(
+            json.dumps({'suite': 'protocol_size_dev', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_size_dev: {} units'.format(len(units)))
+        return
     if a.batch == 'ysat-ps':
         units = ysat_ps_units()
         Path('cluster/tabm/protocol_ysat_ps_units.json').write_text(
@@ -916,7 +949,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'ysat-ps'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'ysat-ps', 'size-dev'])
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
