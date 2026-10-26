@@ -876,7 +876,7 @@ Protocol & Pair & Fields & S2 only & + PS & S2 only & + PS \\
 \bottomrule
 \end{tabular}}
 \caption{\textbf{PlanetScope on YieldSAT.} \method{} with S2 only and with PS (3$\times$3 sub-grid and 30\,m window,
-the best variant on our dataset, unchanged) on the three pairs of \cref{sec:dataset}; seeds 0--2 pooled. ``+ PS'':
+the best variant on our dataset, unchanged) on the three pairs of \cref{sec:q4}; seeds 0--2 pooled. ``+ PS'':
 change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold: excludes 0).}
 \label{tab:supp_ysat_ps}
 \end{table}
