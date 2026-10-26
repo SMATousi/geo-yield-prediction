@@ -835,4 +835,40 @@ slots of the dense series inside the season. Noise ceiling: within-field $R^2$ (
 \end{table}
 """)
 
+# ---- PlanetScope on a YieldSAT subset (spec/yieldsat-planetscope.md): the Missouri-best arm vs S2 only ------------
+if (R / 'ysat_ps_cmp.json').exists():
+    yc, PS_ARM = J('ysat_ps_cmp.json'), OURS + '-ps3x3-pswin'
+    rows = []
+    for proto in ('CV10', 'LOYO'):
+        for p in ('ARG-S', 'ARG-C', 'BRA-C'):
+            b, o = yc['%s|%s' % (proto, p)]['baseline'], yc['%s|%s' % (proto, p)][PS_ARM]
+            rows.append(r'%s & %s & %d & %s & %s & %s & %s \\' % (
+                proto if p == 'ARG-S' else '', p, b['fields'], f2(b['within_r2']),
+                ci([o['d_within_r2']] + o['ci_within_r2']), f2(b['pooled_r2']),
+                ci([o['d_pooled_r2']] + o['ci_pooled_r2'])))
+        m = yc['%s|MEAN|%s' % (proto, PS_ARM)]
+        mb = lambda k: f2(float(np.mean([yc['%s|%s' % (proto, p)]['baseline'][k] for p in ('ARG-S', 'ARG-C', 'BRA-C')])))
+        rows.append(r' & Mean & & %s & %s & %s & %s \\' % (mb('within_r2'), ci(m['within_r2']), mb('pooled_r2'),
+                                                         ci(m['pooled_r2'])))
+    write('supp_ysat_ps.tex', r"""\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccc}
+\toprule
+ & & & \multicolumn{2}{c}{Within-field $R^2$} & \multicolumn{2}{c}{Pooled $R^2$} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Protocol & Pair & Fields & S2 only & + PS & S2 only & + PS \\
+\midrule
+""" + '\n'.join(rows[:4]) + '\n' + r'\midrule' + '\n' + '\n'.join(rows[4:]) + r"""
+\bottomrule
+\end{tabular}}
+\caption{\textbf{PlanetScope on YieldSAT.} \method{} with S2 only and with PS (3$\times$3 sub-grid and 30\,m window,
+the best variant on our dataset, unchanged) on the three pairs of \cref{sec:dataset}; seeds 0--2 pooled. ``+ PS'':
+change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold: excludes 0).}
+\label{tab:supp_ysat_ps}
+\end{table}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))
