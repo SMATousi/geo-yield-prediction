@@ -1,0 +1,47 @@
+{
+ "pair": "ARG-S",
+ "candidates": 433,
+ "fields": [
+  {
+   "name": "Argentina_DUP1_farm29_field327_soybean_2023",
+   "cells": 9600,
+   "mean_t_ha": 2.8142322293731072,
+   "shape": [
+    148,
+    141
+   ],
+   "within_r2_ours": 0.6500279545958012,
+   "within_r2_mmgf": 0.7817750943270944
+  },
+  {
+   "name": "Argentina_DUP1_farm27_field307_soybean_2020",
+   "cells": 8707,
+   "mean_t_ha": 3.8666963069669222,
+   "shape": [
+    149,
+    119
+   ],
+   "within_r2_ours": 0.6571503874710699,
+   "within_r2_mmgf": 0.6250333179982306
+  },
+  {
+   "name": "Argentina_DUP1_farm27_field291_soybean_2020",
+   "cells": 19837,
+   "mean_t_ha": 4.310147632119059,
+   "shape": [
+    214,
+    302
+   ],
+   "within_r2_ours": 0.5400710140302745,
+   "within_r2_mmgf": 0.5274096135378139
+  }
+ ],
+ "scale_t_ha": [
+  0.8732666695117951,
+  6.382616796493529
+ ],
+ "canvas_cells": [
+  214,
+  574
+ ]
+}
