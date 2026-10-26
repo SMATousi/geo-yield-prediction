@@ -1,6 +1,7 @@
 # PlanetScope on a YieldSAT subset: does 3 m imagery raise within-field R² there too?
 
-**Status (2026-10-25): data downloaded and built; 156 units training (job `smatousi-yieldsat-protocol-ysat-ps`).**
+**Status (2026-10-26): done. PS 3×3 + 30 m window raises within-field R² on all three pairs under both protocols
+(mean +0.019 CV10, +0.019 LOYO; every paired CI above zero). Results §4, `results/ysat_ps_cmp.json`.**
 
 Related:
 - [own-dataset-training.md](./own-dataset-training.md) §8: on our Missouri data the flat PS 3×3 sub-grid + 30 m window
@@ -90,7 +91,28 @@ ours-p3nbr-dense-fc-rel10-ps3x3-pswin ARG-S,ARG-C,BRA-C ysat_ps_cmp`.
 
 ## 4. Results
 
-Pending.
+`results/ysat_ps_cmp.json`. Our model (`ours-p3nbr-dense-fc-rel10`, S2 only, the paper runs) vs the same model with
+`--planetscope 3x3 win`; seeds 0–2 pooled, Δ with a 95% paired field-season bootstrap CI.
+
+| Protocol | Pair | Fields | Within S2 | Within +PS | Δ within [CI] | Pooled S2 | Pooled +PS | Δ pooled [CI] | Median field R² |
+|---|---|---|---|---|---|---|---|---|---|
+| CV10 | ARG-S | 440 | 0.543 | 0.555 | +0.012 [+0.005, +0.019] | 0.737 | 0.739 | +0.001 [-0.007, +0.010] | 0.501 → 0.528 |
+| CV10 | ARG-C | 185 | 0.456 | 0.481 | +0.025 [+0.011, +0.042] | 0.726 | 0.744 | +0.018 [+0.005, +0.031] | 0.437 → 0.457 |
+| CV10 | BRA-C | 118 | 0.280 | 0.299 | +0.019 [+0.010, +0.028] | 0.490 | 0.504 | +0.015 [+0.003, +0.026] | 0.309 → 0.321 |
+| LOYO | ARG-S | 440 | 0.491 | 0.502 | +0.011 [+0.004, +0.018] | 0.654 | 0.655 | +0.002 [-0.014, +0.016] | 0.441 → 0.454 |
+| LOYO | ARG-C | 185 | 0.345 | 0.376 | +0.032 [+0.008, +0.061] | 0.501 | 0.602 | +0.101 [+0.062, +0.148] | 0.326 → 0.349 |
+| LOYO | BRA-C | 118 | 0.194 | 0.208 | +0.014 [+0.005, +0.023] | 0.197 | 0.244 | +0.047 [+0.015, +0.076] | 0.203 → 0.224 |
+
+Mean over the three pairs (Δ [CI]): CV10 within +0.019 [+0.013, +0.025], pooled +0.011 [+0.005, +0.017];
+LOYO within +0.019 [+0.010, +0.029], pooled +0.050 [+0.033, +0.068].
+
+- The answer to §1 is yes: the gain is not specific to our Missouri maps. Within-field R² rises in all 6 pair–protocol
+  cells, each CI above zero, and the three seeds of the PS arm all beat all three S2 seeds in every cell.
+- The gain is about half of Missouri's (+0.044 CV10, +0.058 LOYO). Untested candidate reasons: the yield maps'
+  own processing and resolution, the PS-to-grid registration (§2: best shift ≥ 6.6 m for 23% of fields), and a
+  stronger S2 baseline (ARG-S within 0.54 vs Missouri 0.33).
+- Pooled R²: no change on ARG-S, gains on the corn pairs; the large LOYO ARG-C pooled gain (+0.10) comes from
+  better between-field levels in held-out years, with a wide CI.
 
 ## 5. Log
 
@@ -99,3 +121,4 @@ Pending.
   a long backoff, restarted: 743/743 field seasons, 0 failures, ~4.5 h. Upload in 10-field tar chunks (50-field
   chunks timed out). Windows built on the PVC (results pod, 7 workers, ~20 min). CPU smoke of a BRA-C unit (1 epoch,
   5 steps) loads the window and the cut 3×3 and validates; job submitted.
+- 2026-10-26: 156/156 units done (~22 h, 0 failed); rel_cmp → §4.
