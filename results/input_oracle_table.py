@@ -11,7 +11,8 @@ import numpy as np
 
 ORACLE, ROOT, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 PAIRS = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
-MODELS = ['ours-p3nbr-dense-fc-rel10', 'ours-p3nbr-dense', 'paper_mmgf', 'lgbm-f0', 'tabm-f1']
+MODELS = ['ours-p3nbr-dense-fc-rel10', 'ours-p3nbr-dense', 'paper_mmgf', 'lgbm-f0', 'tabm-f1',
+          'paper_3dlstm', 'paper_3dconvlstm', 'paper_aff', 'tabm-f0-dense-bs2048', 'lgbm-f0-dense']   # + the rest of the paper's set
 NOISE = json.load(open('results/noise_ceiling.json'))
 
 rows = [json.loads(l) for l in open(ORACLE)]
