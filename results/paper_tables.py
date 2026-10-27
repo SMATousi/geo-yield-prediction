@@ -882,4 +882,39 @@ change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold: ex
 \end{table}
 """)
 
+# ---- Model size sweep (spec/yieldsat-model-size.md): one setting at a time around the default, DEV pairs, seed 0 ----
+if (R / 'ysat_size_cmp.json').exists():
+    sz, DEV = J('ysat_size_cmp.json'), ('ARG-W', 'BRA-C', 'GER-R', 'URG-S')
+    groups = [('Latent queries (8)', [('lat4', '4', '2.0M'), ('lat16', '16', '2.0M'), ('lat32', '32', '2.0M')]),
+              ('Token width (128)', [('w64', '64', '1.6M'), ('w256', '256', '3.6M')]),
+              ('Latent self-attention blocks (2)', [('d1', '1', '1.8M'), ('d4', '4', '2.4M')])]
+    mb = lambda proto, k: f2(float(np.mean([sz['%s|%s' % (proto, p)]['baseline'][k] for p in DEV])))
+    rows = [r'Default & 2.0M & %s \\' % ' & '.join(mb(p, k) for p in ('CV10', 'LOYO') for k in ('pooled_r2', 'within_r2'))]
+    for gname, items in groups:
+        rows.append(r'\multicolumn{6}{l}{\emph{%s}} \\' % gname)
+        for key, label, npar in items:
+            t = OURS + '-' + key
+            rows.append(r'\quad %s & %s & %s \\' % (label, npar, ' & '.join(
+                ci(sz['%s|MEAN|%s' % (p, t)][m]) for p in ('CV10', 'LOYO') for m in ('pooled_r2', 'within_r2'))))
+    write('supp_size.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+ & & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+Setting & Parameters & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
+\midrule
+""" + rows[0] + '\n' + r'\midrule' + '\n' + '\n'.join(rows[1:]) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Model size.} \method{} with one setting changed at a time (default in parentheses) on the
+development pairs (ARG-W, BRA-C, GER-R, URG-S), seed 0. Parameters as built for ARG-W. First row: the default's mean
+$R^2$ over the four pairs; other
+rows: mean change over the four pairs with 95\% field-season cluster-bootstrap intervals (bold when the interval
+excludes 0).}
+\label{tab:supp_size}
+\end{table*}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))
