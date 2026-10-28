@@ -138,6 +138,9 @@ Niemi.
 - **Excluded by QC:** 10 field-seasons with unit errors in the export (implausible yields, or swath polygons covering
   1–7% of the field). The earlier portal outputs of the same fields have the same defects, so these are input
   problems.
+  **Corrected 2026-10-28:** only partly input problems. 5 are curated exports sorted by northing (pass detection
+  drops 95–98% of points), and 4 are a pipeline unit bug (`Distance_i` inches converted as feet, ×12). The same bug
+  affects 9 of the 65 clean field-seasons. Details in `spec/own-dataset-unprocessed.md`.
 
 ## 5. Draft for the paper (dataset section)
 
