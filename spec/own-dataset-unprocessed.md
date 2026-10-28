@@ -110,7 +110,7 @@ covering under 40% of the field outline.
   to the value: a median in [10, 100) is "assumed feet, converted to inches (×12)". A combine logging once per second
   at 1.5-2 m/s covers 59-79 in, which lands inside that range, so inch values are multiplied by 12.
 - The implied combine speed after the conversion gives this away: 16.5-22.1 m/s (60-80 km/h) for these fields, against
-  1.2-2.4 m/s for the correctly converted ones. The raw file of SoyBean2020_68 also logs `Speed_mph_` 3.69
+  1.2-3.2 m/s for the correctly converted ones. The raw file of SoyBean2020_68 also logs `Speed_mph_` 3.69
   (65 in/s) next to a `Distance_i` of 65.
 - **Effect:** each vehicle rectangle is 12× too long. Consecutive rectangles overlap, and rectangles from neighbouring
   passes overlap too. Overlap resolution then leaves later rectangles with slivers, and mass over a sliver gives
