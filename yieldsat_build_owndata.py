@@ -695,9 +695,14 @@ PAIRS = ('MO-S', 'MO-C')
 PROTOCOLS = ('cv', 'loyo')
 
 
+VAL_FRAC = 0.15        # validation carve-out of the training field seasons (spec/own-dataset-v2.md)
+
+
 def write_splits(artifact_root):
     """The paper's protocol on our pairs (no validation set, selection on the test fold): CV10 grouped by
-    field season and stratified by county, and leave-one-year-out; ``noval_paper_<cv10|loyo>_<pair>_...``."""
+    field season and stratified by county, and leave-one-year-out; ``noval_paper_<cv10|loyo>_<pair>_...``.
+    Also the same test folds with ``VAL_FRAC`` of the training field seasons held out for epoch selection,
+    ``val_paper_<cv10|loyo>_<pair>_...``."""
     from dataset.yieldsat_splits import (load_field_table, make_paper_folds, noval_split, paper_row_prefix,
                                          save_folds)
     table = load_field_table(artifact_root, None, [COUNTRY], check_source=False)
@@ -708,6 +713,10 @@ def write_splits(artifact_root):
                       for s in make_paper_folds(table, pair, protocol, val_frac=0.0)]
             save_folds(splits, artifact_root, prefix)
             print(prefix, len(splits), [len(s['partitions']['test']) for s in splits])
+            val = make_paper_folds(table, pair, protocol, val_frac=VAL_FRAC)
+            assert [v['partitions']['test'] for v in val] == [s['partitions']['test'] for s in splits]
+            save_folds(val, artifact_root, 'val_' + paper_row_prefix(pair, protocol))
+            print('val_' + paper_row_prefix(pair, protocol), [len(s['partitions']['val']) for s in val])
 
 
 if __name__ == '__main__':

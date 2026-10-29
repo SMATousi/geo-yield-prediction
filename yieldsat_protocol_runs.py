@@ -325,18 +325,20 @@ OWN_ARMS_WINDOW = {'ours-p3nbr-dense-fc-rel10-pswin': ['--planetscope', 'win', '
                    'ours-p3nbr-dense-fc-rel10-ps3x3-pswin': ['--planetscope', '3x3', 'win', '--eval_batch_size', '1024']}
 
 
-def own_units(arms=OWN_ARMS, seeds=(0,)):
+def own_units(arms=OWN_ARMS, seeds=(0,), selection='test', folds=OWN_FOLDS, root='own'):
+    """``selection='test'``: the paper's protocol (``noval_*`` splits, epoch on the test fold); ``'val'``: the same
+    test folds with the epoch selected on validation field seasons carved from training (``val_*`` splits)."""
     inputs, margs, _ = NN['ours-p3nbr']
     units = []
-    for (pair, proto), n in OWN_FOLDS.items():
-        prefix = 'noval_' + paper_row_prefix(pair, proto)
-        group = '{}_noval_s0'.format(GROUP[proto])
+    for (pair, proto), n in folds.items():
+        prefix = ('noval_' if selection == 'test' else 'val_') + paper_row_prefix(pair, proto)
+        group = '{}_{}_s0'.format(GROUP[proto], 'noval' if selection == 'test' else 'val')
         for (tag, extra), seed in ((a, s) for a in arms.items() for s in seeds):
             for i in range(n):
-                out = '{{out_root}}/own/{}/{}/{}_seed{}/{}/fold{:02d}'.format(group, inputs, tag, seed, pair, i)
+                out = '{{out_root}}/{}/{}/{}/{}_seed{}/{}/fold{:02d}'.format(root, group, inputs, tag, seed, pair, i)
                 stage = (['cache_dense/Missouri', 'neighbourhood_dense/Missouri', 'index/Missouri',
                           'splits/{}*'.format(prefix), 'geometry/fields_geometry_Missouri.json'])
-                uid = tag if seed == 0 else '{}-s{}'.format(tag, seed)
+                uid = (tag if seed == 0 else '{}-s{}'.format(tag, seed)) + ('-val' if selection == 'val' else '')
                 units.append({'id': '{}__{}__{}__f{}'.format(uid, pair, proto, i), 'pair': pair, 'n_folds': 1,
                               'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV, 'stage': stage,
                               'args': COMMON + margs + ['--weather_first_slot', 'keep', '--skip_source_check',
@@ -436,6 +438,22 @@ def cmd_units(a):
         Path('cluster/tabm/protocol_own2_units.json').write_text(
             json.dumps({'suite': 'protocol_own2', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_own2: {} units'.format(len(units)))
+    if a.batch == 'own-v2':
+        # spec/own-dataset-v2.md: every arm on the fixed ground truth (v2), 3 seeds, epoch selected on the test fold
+        # (paper protocol) and on a validation carve-out; fold counts from the v2 split manifests
+        root = Path(a.own_artifact_root) / 'splits'
+        folds = {(pair, proto): len(json.loads((root / '{}.folds.json'.format('noval_' + paper_row_prefix(pair, proto)))
+                                               .read_text())['folds'])
+                 for pair in OWN_PAIRS for proto in ('cv', 'loyo')}
+        arms = {**OWN_ARMS, **OWN_ARMS_SPATIAL}
+        units = [u for sel in ('test', 'val') for u in own_units(arms, (0, 1, 2), sel, folds, 'own_v2')]
+        win = [u for sel in ('test', 'val') for u in own_units(OWN_ARMS_WINDOW, (0, 1, 2), sel, folds, 'own_v2')]
+        for name, us in (('own_v2', units), ('own_v2_win', win)):
+            us.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
+            Path('cluster/tabm/protocol_{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': 'protocol_' + name, 'out_root': a.out_root, 'units': us}, indent=1))
+            print('protocol_{}: {} units'.format(name, len(us)), folds)
+        return
     if a.batch == 'own3':
         # round 3 (spec/own-dataset-training.md §8): the 30 m window arms, three seeds
         units = own_units(OWN_ARMS_WINDOW, (0, 1, 2))
@@ -949,7 +967,9 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'ysat-ps', 'size-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'ysat-ps', 'size-dev'])
+    u.add_argument('--own_artifact_root', default='/root/owndata_artifacts_v2',
+                   help='own-v2: the built Missouri artifacts, for the fold counts of its split manifests')
     u.add_argument('--with_lstm', action='store_true',
                    help='include the paper LSTM (deferred 2026-10-06: our models first, LSTM only if needed)')
     u.set_defaults(func=cmd_units)
