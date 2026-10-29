@@ -338,7 +338,10 @@ def own_units(arms=OWN_ARMS, seeds=(0,), selection='test', folds=OWN_FOLDS, root
                 out = '{{out_root}}/{}/{}/{}/{}_seed{}/{}/fold{:02d}'.format(root, group, inputs, tag, seed, pair, i)
                 stage = (['cache_dense/Missouri', 'neighbourhood_dense/Missouri', 'index/Missouri',
                           'splits/{}*'.format(prefix), 'geometry/fields_geometry_Missouri.json'])
-                uid = (tag if seed == 0 else '{}-s{}'.format(tag, seed)) + ('-val' if selection == 'val' else '')
+                # unit ids key the cluster-wide claim pool: a test-selected unit outside the original root gets the
+                # root in its id, or it would collide with (and be skipped as) the same unit of an earlier round
+                uid = (tag if seed == 0 else '{}-s{}'.format(tag, seed)) + ('-val' if selection == 'val' else
+                                                                           '' if root == 'own' else '-' + root)
                 units.append({'id': '{}__{}__{}__f{}'.format(uid, pair, proto, i), 'pair': pair, 'n_folds': 1,
                               'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV, 'stage': stage,
                               'args': COMMON + margs + ['--weather_first_slot', 'keep', '--skip_source_check',
@@ -448,6 +451,11 @@ def cmd_units(a):
         arms = {**OWN_ARMS, **OWN_ARMS_SPATIAL}
         units = [u for sel in ('test', 'val') for u in own_units(arms, (0, 1, 2), sel, folds, 'own_v2')]
         win = [u for sel in ('test', 'val') for u in own_units(OWN_ARMS_WINDOW, (0, 1, 2), sel, folds, 'own_v2')]
+        # the claim pool is shared by every batch: no id may repeat one of an earlier batch
+        seen = {u['id'] for f in Path('cluster/tabm').glob('protocol_*_units.json')
+                if not f.name.startswith('protocol_own_v2') for u in json.loads(f.read_text())['units']}
+        clash = seen & {u['id'] for u in units + win}
+        assert not clash, 'unit ids already used by an earlier batch: {}'.format(sorted(clash)[:5])
         for name, us in (('own_v2', units), ('own_v2_win', win)):
             us.sort(key=lambda u: ('ps3x3' not in u['id'].split('__')[0], u['pair'] != 'MO-S'))
             Path('cluster/tabm/protocol_{}_units.json'.format(name)).write_text(

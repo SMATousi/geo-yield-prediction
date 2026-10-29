@@ -3,7 +3,7 @@
  "out_root": "/data/YieldSAT/yieldsat_results/protocol",
  "units": [
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -76,7 +76,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -149,7 +149,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -222,7 +222,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -295,7 +295,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -368,7 +368,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -441,7 +441,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -514,7 +514,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -587,7 +587,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -660,7 +660,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -733,7 +733,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -806,7 +806,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -879,7 +879,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -952,7 +952,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1025,7 +1025,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1098,7 +1098,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1171,7 +1171,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1244,7 +1244,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1317,7 +1317,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1390,7 +1390,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1463,7 +1463,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1536,7 +1536,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1609,7 +1609,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1682,7 +1682,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1755,7 +1755,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1828,7 +1828,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1901,7 +1901,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -1974,7 +1974,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2047,7 +2047,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2120,7 +2120,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2193,7 +2193,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2267,7 +2267,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2341,7 +2341,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2415,7 +2415,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2489,7 +2489,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2563,7 +2563,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2637,7 +2637,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2711,7 +2711,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2785,7 +2785,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2859,7 +2859,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -2933,7 +2933,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3007,7 +3007,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3081,7 +3081,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3155,7 +3155,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3229,7 +3229,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3303,7 +3303,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3377,7 +3377,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3451,7 +3451,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3525,7 +3525,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3599,7 +3599,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3673,7 +3673,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3747,7 +3747,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3821,7 +3821,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3895,7 +3895,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -3969,7 +3969,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4043,7 +4043,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4117,7 +4117,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4191,7 +4191,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4265,7 +4265,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4339,7 +4339,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4413,7 +4413,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4488,7 +4488,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4563,7 +4563,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4638,7 +4638,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4713,7 +4713,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4788,7 +4788,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4863,7 +4863,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -4938,7 +4938,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5013,7 +5013,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5088,7 +5088,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5163,7 +5163,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5238,7 +5238,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5313,7 +5313,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5388,7 +5388,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5463,7 +5463,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5538,7 +5538,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5613,7 +5613,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5688,7 +5688,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5763,7 +5763,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5838,7 +5838,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5913,7 +5913,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -5988,7 +5988,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6063,7 +6063,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6138,7 +6138,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6213,7 +6213,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6288,7 +6288,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6363,7 +6363,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6438,7 +6438,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6513,7 +6513,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6588,7 +6588,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6663,7 +6663,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6736,7 +6736,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6809,7 +6809,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6882,7 +6882,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -6955,7 +6955,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7028,7 +7028,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7101,7 +7101,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7174,7 +7174,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7247,7 +7247,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7320,7 +7320,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7393,7 +7393,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7466,7 +7466,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7539,7 +7539,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7612,7 +7612,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7685,7 +7685,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7758,7 +7758,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7831,7 +7831,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7904,7 +7904,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -7977,7 +7977,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8050,7 +8050,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8123,7 +8123,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8196,7 +8196,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8270,7 +8270,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8344,7 +8344,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8418,7 +8418,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8492,7 +8492,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8566,7 +8566,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8640,7 +8640,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8714,7 +8714,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8788,7 +8788,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8862,7 +8862,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -8936,7 +8936,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9010,7 +9010,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9084,7 +9084,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9158,7 +9158,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9232,7 +9232,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9306,7 +9306,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9380,7 +9380,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9454,7 +9454,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9528,7 +9528,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9602,7 +9602,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9676,7 +9676,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9750,7 +9750,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9825,7 +9825,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9900,7 +9900,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -9975,7 +9975,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10050,7 +10050,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10125,7 +10125,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10200,7 +10200,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10275,7 +10275,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10350,7 +10350,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10425,7 +10425,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10500,7 +10500,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10575,7 +10575,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10650,7 +10650,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10725,7 +10725,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10800,7 +10800,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10875,7 +10875,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -10950,7 +10950,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -11025,7 +11025,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -11100,7 +11100,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -11175,7 +11175,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -11250,7 +11250,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -22647,7 +22647,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -22720,7 +22720,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -22793,7 +22793,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -22866,7 +22866,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -22939,7 +22939,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23012,7 +23012,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23085,7 +23085,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23158,7 +23158,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23231,7 +23231,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23304,7 +23304,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23377,7 +23377,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23450,7 +23450,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23523,7 +23523,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23596,7 +23596,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23669,7 +23669,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23742,7 +23742,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23815,7 +23815,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23888,7 +23888,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -23961,7 +23961,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24034,7 +24034,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24107,7 +24107,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24180,7 +24180,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24253,7 +24253,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24326,7 +24326,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24399,7 +24399,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24472,7 +24472,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24545,7 +24545,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24618,7 +24618,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24691,7 +24691,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24764,7 +24764,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24837,7 +24837,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24911,7 +24911,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -24985,7 +24985,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25059,7 +25059,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25133,7 +25133,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25207,7 +25207,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25281,7 +25281,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25355,7 +25355,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25429,7 +25429,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25503,7 +25503,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25577,7 +25577,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25651,7 +25651,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25725,7 +25725,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25799,7 +25799,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25873,7 +25873,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -25947,7 +25947,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26021,7 +26021,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26095,7 +26095,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26169,7 +26169,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26243,7 +26243,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26317,7 +26317,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26391,7 +26391,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26465,7 +26465,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26539,7 +26539,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26613,7 +26613,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26687,7 +26687,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26761,7 +26761,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26835,7 +26835,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26909,7 +26909,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -26983,7 +26983,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27057,7 +27057,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27132,7 +27132,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27207,7 +27207,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27282,7 +27282,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27357,7 +27357,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27432,7 +27432,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27507,7 +27507,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27582,7 +27582,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27657,7 +27657,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27732,7 +27732,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27807,7 +27807,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27882,7 +27882,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -27957,7 +27957,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28032,7 +28032,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28107,7 +28107,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28182,7 +28182,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28257,7 +28257,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28332,7 +28332,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28407,7 +28407,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28482,7 +28482,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28557,7 +28557,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28632,7 +28632,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28707,7 +28707,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28782,7 +28782,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28857,7 +28857,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -28932,7 +28932,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29007,7 +29007,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29082,7 +29082,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29157,7 +29157,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29232,7 +29232,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29307,7 +29307,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29380,7 +29380,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29453,7 +29453,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29526,7 +29526,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29599,7 +29599,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29672,7 +29672,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29745,7 +29745,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29818,7 +29818,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29891,7 +29891,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -29964,7 +29964,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30037,7 +30037,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30110,7 +30110,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30183,7 +30183,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30256,7 +30256,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30329,7 +30329,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30402,7 +30402,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30475,7 +30475,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30548,7 +30548,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30621,7 +30621,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30695,7 +30695,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30769,7 +30769,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30843,7 +30843,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30917,7 +30917,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -30991,7 +30991,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31065,7 +31065,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31139,7 +31139,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31213,7 +31213,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31287,7 +31287,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31361,7 +31361,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31435,7 +31435,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31509,7 +31509,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31583,7 +31583,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31657,7 +31657,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31731,7 +31731,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31805,7 +31805,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31879,7 +31879,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -31953,7 +31953,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32028,7 +32028,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32103,7 +32103,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32178,7 +32178,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32253,7 +32253,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32328,7 +32328,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32403,7 +32403,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32478,7 +32478,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32553,7 +32553,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32628,7 +32628,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32703,7 +32703,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32778,7 +32778,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32853,7 +32853,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -32928,7 +32928,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -33003,7 +33003,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -33078,7 +33078,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -33153,7 +33153,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -33228,7 +33228,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps3x3sp-dem10-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -43959,7 +43959,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44030,7 +44030,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44101,7 +44101,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44172,7 +44172,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44243,7 +44243,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44314,7 +44314,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44385,7 +44385,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44456,7 +44456,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44527,7 +44527,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44598,7 +44598,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44669,7 +44669,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44740,7 +44740,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44811,7 +44811,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44882,7 +44882,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -44953,7 +44953,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45024,7 +45024,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45095,7 +45095,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45166,7 +45166,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45237,7 +45237,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45308,7 +45308,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45379,7 +45379,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45450,7 +45450,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45521,7 +45521,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45592,7 +45592,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45663,7 +45663,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45734,7 +45734,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45805,7 +45805,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45876,7 +45876,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -45947,7 +45947,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46018,7 +46018,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46089,7 +46089,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46162,7 +46162,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46235,7 +46235,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46308,7 +46308,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46381,7 +46381,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46454,7 +46454,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46527,7 +46527,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46600,7 +46600,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46673,7 +46673,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46746,7 +46746,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46819,7 +46819,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46892,7 +46892,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -46965,7 +46965,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47038,7 +47038,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47111,7 +47111,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47184,7 +47184,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47257,7 +47257,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47330,7 +47330,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47403,7 +47403,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47476,7 +47476,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47549,7 +47549,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47622,7 +47622,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47695,7 +47695,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47768,7 +47768,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47841,7 +47841,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47914,7 +47914,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -47987,7 +47987,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48060,7 +48060,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48133,7 +48133,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48206,7 +48206,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48279,7 +48279,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48351,7 +48351,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48423,7 +48423,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48495,7 +48495,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48567,7 +48567,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48639,7 +48639,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48711,7 +48711,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48783,7 +48783,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48855,7 +48855,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48927,7 +48927,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -48999,7 +48999,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49071,7 +49071,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49143,7 +49143,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49215,7 +49215,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49287,7 +49287,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49359,7 +49359,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49431,7 +49431,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49503,7 +49503,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49575,7 +49575,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49647,7 +49647,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49719,7 +49719,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49791,7 +49791,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49863,7 +49863,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -49935,7 +49935,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50007,7 +50007,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50079,7 +50079,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50151,7 +50151,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50223,7 +50223,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f7",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50295,7 +50295,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f8",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50367,7 +50367,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__cv__f9",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50439,7 +50439,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50510,7 +50510,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50581,7 +50581,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50652,7 +50652,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50723,7 +50723,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50794,7 +50794,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50865,7 +50865,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -50936,7 +50936,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51007,7 +51007,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51078,7 +51078,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51149,7 +51149,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51220,7 +51220,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51291,7 +51291,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51362,7 +51362,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51433,7 +51433,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51504,7 +51504,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51575,7 +51575,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51646,7 +51646,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51717,7 +51717,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51788,7 +51788,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51859,7 +51859,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -51930,7 +51930,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52003,7 +52003,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52076,7 +52076,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52149,7 +52149,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52222,7 +52222,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52295,7 +52295,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52368,7 +52368,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52441,7 +52441,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52514,7 +52514,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52587,7 +52587,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52660,7 +52660,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52733,7 +52733,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52806,7 +52806,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52879,7 +52879,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -52952,7 +52952,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53025,7 +53025,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53098,7 +53098,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53171,7 +53171,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53244,7 +53244,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53317,7 +53317,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53390,7 +53390,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53463,7 +53463,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53535,7 +53535,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53607,7 +53607,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53679,7 +53679,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53751,7 +53751,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53823,7 +53823,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53895,7 +53895,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -53967,7 +53967,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54039,7 +54039,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54111,7 +54111,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54183,7 +54183,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54255,7 +54255,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54327,7 +54327,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54399,7 +54399,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54471,7 +54471,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f0",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54543,7 +54543,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f1",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54615,7 +54615,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f2",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54687,7 +54687,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f3",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54759,7 +54759,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f4",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54831,7 +54831,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f5",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -54903,7 +54903,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-S__loyo__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-S__loyo__f6",
    "pair": "MO-S",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -65991,7 +65991,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66062,7 +66062,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66133,7 +66133,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66204,7 +66204,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66275,7 +66275,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66346,7 +66346,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66417,7 +66417,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66488,7 +66488,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66559,7 +66559,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66630,7 +66630,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66701,7 +66701,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66772,7 +66772,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66843,7 +66843,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66914,7 +66914,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -66985,7 +66985,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67056,7 +67056,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67127,7 +67127,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67198,7 +67198,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67269,7 +67269,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67340,7 +67340,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67411,7 +67411,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67482,7 +67482,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67553,7 +67553,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67624,7 +67624,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67695,7 +67695,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67766,7 +67766,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67837,7 +67837,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67908,7 +67908,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -67979,7 +67979,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68050,7 +68050,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68121,7 +68121,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68194,7 +68194,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68267,7 +68267,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68340,7 +68340,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68413,7 +68413,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68486,7 +68486,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68559,7 +68559,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68632,7 +68632,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68705,7 +68705,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68778,7 +68778,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68851,7 +68851,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68924,7 +68924,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -68997,7 +68997,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69070,7 +69070,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69143,7 +69143,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69216,7 +69216,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69289,7 +69289,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69362,7 +69362,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69435,7 +69435,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69508,7 +69508,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69581,7 +69581,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69654,7 +69654,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69727,7 +69727,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69800,7 +69800,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69873,7 +69873,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -69946,7 +69946,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70019,7 +70019,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70092,7 +70092,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70165,7 +70165,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70238,7 +70238,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70311,7 +70311,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70383,7 +70383,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70455,7 +70455,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70527,7 +70527,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70599,7 +70599,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70671,7 +70671,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70743,7 +70743,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70815,7 +70815,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70887,7 +70887,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -70959,7 +70959,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71031,7 +71031,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71103,7 +71103,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71175,7 +71175,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71247,7 +71247,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71319,7 +71319,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71391,7 +71391,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71463,7 +71463,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71535,7 +71535,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71607,7 +71607,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71679,7 +71679,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71751,7 +71751,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71823,7 +71823,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71895,7 +71895,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -71967,7 +71967,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72039,7 +72039,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72111,7 +72111,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72183,7 +72183,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f6",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f6",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72255,7 +72255,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f7",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f7",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72327,7 +72327,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f8",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f8",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72399,7 +72399,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__cv__f9",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__cv__f9",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72471,7 +72471,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72542,7 +72542,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72613,7 +72613,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72684,7 +72684,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72755,7 +72755,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72826,7 +72826,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72897,7 +72897,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -72968,7 +72968,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73039,7 +73039,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73110,7 +73110,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73181,7 +73181,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73252,7 +73252,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73323,7 +73323,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73394,7 +73394,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73465,7 +73465,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73536,7 +73536,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73607,7 +73607,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73678,7 +73678,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73749,7 +73749,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73822,7 +73822,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73895,7 +73895,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -73968,7 +73968,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74041,7 +74041,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74114,7 +74114,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74187,7 +74187,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74260,7 +74260,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74333,7 +74333,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74406,7 +74406,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74479,7 +74479,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74552,7 +74552,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74625,7 +74625,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74698,7 +74698,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74771,7 +74771,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74844,7 +74844,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74917,7 +74917,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -74990,7 +74990,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-ps10-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75063,7 +75063,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75135,7 +75135,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75207,7 +75207,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75279,7 +75279,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75351,7 +75351,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75423,7 +75423,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75495,7 +75495,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75567,7 +75567,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75639,7 +75639,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75711,7 +75711,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75783,7 +75783,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75855,7 +75855,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s1-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75927,7 +75927,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f0",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f0",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -75999,7 +75999,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f1",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f1",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -76071,7 +76071,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f2",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f2",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -76143,7 +76143,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f3",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f3",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -76215,7 +76215,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f4",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f4",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
@@ -76287,7 +76287,7 @@
    ]
   },
   {
-   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2__MO-C__loyo__f5",
+   "id": "ours-p3nbr-dense-fc-rel10-dem10-s2-own_v2__MO-C__loyo__f5",
    "pair": "MO-C",
    "n_folds": 1,
    "script": "main_yieldsat_finetune.py",
