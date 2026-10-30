@@ -1,0 +1,72 @@
+# Supplementary job (2026-10-29): the same units and claim pool on GPU types the main job does not use; the cluster had no free A10 / 3090 / 4090.
+# Own dataset v2 (spec/own-dataset-v2.md): the fixed ground truth (84 field-seasons), six non-window arms, 3 seeds,
+# epoch selected on the test fold (paper protocol) and on a 15% validation carve-out, 1,188 units. 20 pods x 2 runs,
+# 24 Gi as round 3. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-protocol-own-v2-b
+spec:
+  completions: 10
+  parallelism: 10
+  backoffLimit: 1000
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values: [NVIDIA-L40, NVIDIA-L40S, NVIDIA-RTX-A6000, NVIDIA-RTX-A5000, NVIDIA-A40]
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
+                - k8s-chase-ci-07.calit2.optiputer.net
+                - ry-gpu-02.sdsc.optiputer.net
+                - hcc-chase-shor-c4705.unl.edu
+                - ry-gpu-06.sdsc.optiputer.net
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_own_v2_units.json --concurrency 2
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/owndata_artifacts_v2
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: own-dataset-training
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 24Gi, ephemeral-storage: 80Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 4Gi}

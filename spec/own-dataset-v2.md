@@ -1,6 +1,6 @@
 # Own dataset v2: fixed ground truth, test- vs validation-selected epochs
 
-Status: RUNNING (2026-10-29). Diagnosis of v1's losses: `spec/own-dataset-unprocessed.md`.
+Status: DONE (2026-10-30); paper on v2, test-selected. Diagnosis of v1's losses: `spec/own-dataset-unprocessed.md`.
 
 ## 1. Ground truth v2
 
@@ -58,7 +58,27 @@ Outputs: `protocol/own_v2/<group>_noval_s0/...` (test-selected) and `<group>_val
 
 ## 4. Results
 
-Pending.
+All 1,584 units (2026-10-30). Within-field / pooled R2 of S2 only, seeds 0-2 pooled (`results/own_cmp_all.json`):
+
+| | v1 test-sel. | v2 test-sel. | v2 val-sel. |
+|---|---|---|---|
+| MO-S CV10 | 0.211 / 0.293 | 0.273 / 0.435 | 0.244 / 0.179 |
+| MO-C CV10 | 0.440 / 0.431 | 0.462 / 0.448 | 0.382 / 0.159 |
+| MO-S LOYO | 0.193 / 0.245 | 0.241 / 0.395 | 0.228 / 0.203 |
+| MO-C LOYO | 0.381 / 0.219 | 0.412 / 0.266 | 0.329 / 0.054 |
+
+Mean within-field gain over S2 only, test-selected (val-selected in brackets): ps10 +0.033 / +0.055 (+0.048 / +0.057),
+ps3x3 +0.040 / +0.019 n.s. (+0.054 / +0.048), pswin +0.036 / +0.041 (+0.048 / +0.063), ps3x3-pswin +0.056 / +0.062
+(+0.050 / +0.094), ps3x3sp -0.004 / +0.010 n.s., dem10 -0.003 / -0.011 n.s., ps3x3sp-dem10 +0.010 / +0.012 n.s.
+(CV10 / LOYO). ps3x3-pswin vs ps3x3: +0.015 n.s. / +0.043; vs ps10: +0.023 [+0.006, +0.047] / +0.007 n.s.
+
+- The data fix raises every S2-only number; the PS gain is at least v1's (+0.044 / +0.058).
+- Validation selection costs within-field R2 (0.01-0.08) and most of pooled R2: the carve-out (about two corn fields
+  per fold) picks the epoch poorly for field levels. The PS gain holds under it.
+- Decision (project lead, 2026-10-30): test selection stays the default (as for YieldSAT); val selection is not
+  reported for now.
+- Per field (`results/field_cmp.json`, `FC_OWN_SUB=own_v2`): PS improves 70% (CV10) / 75% (LOYO) of 79 field
+  seasons, median gain +0.027 / +0.046. Noise ceiling 0.82 (soybean) / 0.92 (corn). Paper updated to v2.
 
 ## 5. Baselines on our data (2026-10-30, project lead: "run the papers and our added baselines on our dataset")
 

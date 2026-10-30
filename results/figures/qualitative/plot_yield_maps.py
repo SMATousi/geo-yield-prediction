@@ -15,6 +15,7 @@ percentile, the 82nd), supplementary the fields at the 25th, 50th and 75th perce
 """
 import glob
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -26,7 +27,7 @@ import numpy as np
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else '/root/yieldsat_backups/protocol_results')
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).resolve().parent)
 OWN = len(sys.argv) > 3 and sys.argv[3] == 'own'
-SUB, GROUP = ('own' if OWN else 'paper'), 'cv10_season_noval_s0'
+SUB, GROUP = (os.environ.get('MAPS_OWN_SUB', 'own') if OWN else 'paper'), 'cv10_season_noval_s0'   # own_v2: v2 data
 MODELS = [('ours-p3nbr-dense-fc-rel10', 'Ours'), ('ours-p3nbr-dense', 'Ours (base)'), ('paper_mmgf', 'MMGF')]
 PAIRS_ALL = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 PAIRS_MAIN = ['ARG-S', 'BRA-C', 'GER-R', 'URG-S']
@@ -35,7 +36,7 @@ if OWN:
     MODELS = [('ours-p3nbr-dense-fc-rel10-ps3x3-pswin', 'Ours + PS'), ('ours-p3nbr-dense-fc-rel10-ps3x3', 'Ours + PS 3x3'),
               ('ours-p3nbr-dense-fc-rel10', 'Ours (S2)')]
     PAIRS_ALL = PAIRS_MAIN = ['MO-S', 'MO-C']
-RANK_SHIFT = {('MO-C', 0.9): -1} if OWN else {}                 # main figure: corn's 90th percentile -> the next below
+RANK_SHIFT = {('MO-C', 0.9): -1} if OWN and SUB == 'own' else {}               # main figure: corn's 90th percentile -> the next below
 
 
 def load(tag, pair):

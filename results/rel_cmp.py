@@ -11,6 +11,7 @@ VARS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['ours-p3nbr-dense-rel05
 PAIRS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['ARG-W', 'BRA-C', 'GER-R', 'URG-S']
 PROTOS = {'cv10': 'CV10', 'loyo': 'LOYO', 'loro': 'LORO'}
 SEEDS = [int(x) for x in os.environ.get('REL_SEEDS', '0').split(',')]
+SEL = os.environ.get('REL_SEL', 'noval')                                          # REL_SEL=val: epoch picked on validation
 MIN_PIX, B = 50, 2000
 
 
@@ -71,7 +72,7 @@ res = {}
 for g, proto in PROTOS.items():
     # per pair, the first group holding its baseline: LORO is farm-level (loro_na_noval_s0) for most pairs and
     # province-level (loro_na_province_noval_s0) for the Argentine pairs
-    groups = sorted(glob.glob('%s/%s_*noval_s0' % (root, g)), key=lambda d: ('province' in d, d))
+    groups = sorted(glob.glob('%s/%s_*_%s_s0' % (root, g, SEL)), key=lambda d: ('province' in d, d))
     if not groups:
         continue
     boots = {v: [] for v in VARS}
