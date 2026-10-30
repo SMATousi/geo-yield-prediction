@@ -917,4 +917,46 @@ excludes 0).}
 \end{table*}
 """)
 
+# ---- Per-field within-field R2 (results/field_cmp.py): the typical field and the share of fields that improve ------
+if (R / 'field_cmp.json').exists():
+    fcm = J('field_cmp.json')
+    iqr = lambda v: r'%s {\scriptsize[%s, %s]}' % (f2(v[0]), f2(v[1][0]), f2(v[1][1]))
+    pct = lambda v: r'%d\%% {\scriptsize[%d, %d]}' % tuple(round(100 * x) for x in [v[0]] + v[1])
+    BLOCKS = [('vs_mmgf', r'\method{} vs.\ MMGF', 'MMGF', r'\method{}'),
+              ('vs_tabm', r'\method{} vs.\ TabM', 'TabM', r'\method{}'),
+              ('vs_base', r'\method{} vs.\ \method{} (base)', 'Base', r'\method{}'),
+              ('ps_yieldsat', r'+ PS on YieldSAT (ARG-S, ARG-C, BRA-C; seeds 0--2)', 'S2 only', '+ PS'),
+              ('ps_own', r'+ PS on our dataset (seeds 0--2)', 'S2 only', '+ PS')]
+    rows = []
+    for key, title, bl, vl in BLOCKS:
+        protos = [p for p in ('cv10', 'loyo', 'loro') if '%s|%s' % (key, p) in fcm]
+        if not protos or any(fcm['%s|%s' % (key, p)].get('incomplete') for p in protos):
+            continue
+        rows.append(r'\midrule' + '\n' + r'\multicolumn{6}{l}{\emph{%s} (%s / %s)} \\' % (title, bl, vl))
+        for p in protos:
+            v = fcm['%s|%s' % (key, p)]
+            gain = [v['median_gain']] + v['ci_median_gain']
+            rows.append(r'\quad %s & %d & %s & %s & %s & %s \\' % (
+                p.upper(), v['fields'], iqr([v['base_median'], v['base_iqr']]), iqr([v['var_median'], v['var_iqr']]),
+                ci(gain), pct([v['share_improved'], v['ci_share_improved']])))
+    write('supp_per_field.tex', r"""\begin{table*}[t]
+\centering
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+ & Field & \multicolumn{2}{c}{Per-field within-field $R^2$, median [IQR]} & Median per-field & Fields \\
+\cmidrule(lr){3-4}
+Comparison & seasons & Baseline & Variant & gain & improved \\
+""" + '\n'.join(rows) + r"""
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per field.} Within-field $R^2$ of each field season on its own (field seasons with at least
+1{,}000 labelled test cells), on the test pixels of \cref{tab:main,tab:owndata,tab:supp_ysat_ps}. Median and
+interquartile range per model; median of the paired per-field change and share of field seasons whose within-field
+$R^2$ rises, with 95\% field-season bootstrap intervals resampled within each pair (bold: excludes 0). Seed 0 for
+YieldSAT models, seeds 0--2 pooled per field for PS.}
+\label{tab:supp_per_field}
+\end{table*}
+""")
+
 print('written', sorted(p.name for p in OUT.glob('*.tex')))

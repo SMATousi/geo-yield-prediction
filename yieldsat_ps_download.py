@@ -188,5 +188,11 @@ if __name__ == '__main__':
     ap.add_argument('--out', default='/root/yieldsat_artifacts/planetscope/scenes')
     ap.add_argument('--workers', type=int, default=8)
     ap.add_argument('--limit', type=int, default=None)
+    ap.add_argument('--aois', default=str(AOIS), help='field-season AOI geojson (default: the first subset)')
+    ap.add_argument('--albers', default='ESRI:102033',
+                    help='equal-area CRS for areas and coverage (ESRI:102013 for the German fields)')
     a = ap.parse_args()
+    AOIS = Path(a.aois)
+    P._TO_ALBERS = Transformer.from_crs('EPSG:4326', a.albers, always_xy=True).transform
+    P._TO_WGS84 = Transformer.from_crs(a.albers, 'EPSG:4326', always_xy=True).transform
     {'select': cmd_select, 'order': cmd_order, 'summary': lambda a: summarize(a.out)}[a.cmd](a)
