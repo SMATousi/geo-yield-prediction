@@ -50,6 +50,7 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          pip install --quiet --no-cache-dir tabm==0.0.3 rtdl_num_embeddings &&
           exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_own_baselines_gpu_units.json --concurrency 2
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/owndata_artifacts_v2
         env:
