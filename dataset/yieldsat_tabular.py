@@ -2,13 +2,14 @@
 
 One row per cache cell of the pair (all field seasons of that crop in the
 country). Columns follow spec/yieldsat-tabm.md §2 (feature set F0, optionally
-F1 with the S6 neighbourhood stream):
+F1 with the S6 neighbourhood stream, or F0P with the PlanetScope 3x3 sub-grid of our dataset):
 
   values  temporal  24 slots x 16 channels (S2 bands + weather), then (F1) 24 x 12
                     neighbourhood S2
+          (F0P)     24 x 72 PlanetScope 3x3 sub-grid (9 sub-cells x 8 bands, ps3x3.npy)
           time      24 x 3 (days since seeding / 365, day-of-year sin, cos)
           static    dem, aspect sin, aspect cos, curvature, slope, twi, soil (48)
-  masks   one validity flag per slot and stream (S2, weather, neighbourhood; cloud
+  masks   one validity flag per slot and stream (S2, weather, neighbourhood, PlanetScope; cloud
           masking invalidates a slot's bands together), per static value (aspect
           sin/cos share the aspect flag), and per slot (dated)
 
@@ -28,7 +29,7 @@ from dataset.yieldsat_schema import CACHE_NAME, NBR_NAME, NUM_TIME_SLOTS, SOIL, 
 _S = {c: i for i, c in enumerate(STATIC_CHANNELS)}
 
 
-def build_pair(artifact_root, country, crop, neighbourhood=False):
+def build_pair(artifact_root, country, crop, neighbourhood=False, planetscope=False):
     """Returns dict with values (N, V) float32 (raw, NaN invalid), masks (N, M) uint8,
     target (N,), season (N,) index into ``seasons``, grid_row/col, column names."""
     root = Path(artifact_root)
@@ -40,6 +41,7 @@ def build_pair(artifact_root, country, crop, neighbourhood=False):
     S = np.load(cache / 'static.npy', mmap_mode='r')
     TM = np.load(cache / 'times.npy', mmap_mode='r')
     nbr = np.load(root / NBR_NAME / country / 's2_nbr5.npy', mmap_mode='r') if neighbourhood else None
+    ps = np.load(root / NBR_NAME / country / 'ps3x3.npy', mmap_mode='r') if planetscope else None
     idx = np.concatenate([np.arange(f['row_start'], f['row_end']) for f in fields])
     season = np.concatenate([np.full(f['row_end'] - f['row_start'], i, np.int32) for i, f in enumerate(fields)])
     n = len(idx)
@@ -65,6 +67,12 @@ def build_pair(artifact_root, country, crop, neighbourhood=False):
             nv = np.isfinite(nb) & dated[:, :, None]
             parts_v.insert(1, np.where(nv, nb, np.nan).reshape(len(sl), -1))
             parts_m.append(nv.any(-1))
+        if ps is not None:
+            # a sub-cell is NaN when less than half of it is clear; the slot is valid when any value is
+            pv = np.asarray(ps[lo:hi])[sl - lo].astype(np.float32)
+            pok = np.isfinite(pv) & dated[:, :, None]
+            parts_v.insert(1, np.where(pok, pv, np.nan).reshape(len(sl), -1))
+            parts_m.append(pok.any(-1))
         asp = np.deg2rad(s[:, _S['aspect']])
         stat_cols = [s[:, _S['dem']], np.sin(asp), np.cos(asp), s[:, _S['curvature']], s[:, _S['slope']],
                      s[:, _S['twi']]] + [s[:, _S[c]] for c in SOIL]
@@ -80,12 +88,16 @@ def build_pair(artifact_root, country, crop, neighbourhood=False):
     vnames = list(tnames)
     if neighbourhood:
         vnames += ['nbr5_{}@{}'.format(c, k) for k in range(NUM_TIME_SLOTS) for c in TEMPORAL_CHANNELS[:12]]
+    if planetscope:
+        vnames += ['ps3x3_{}@{}'.format(j, k) for k in range(NUM_TIME_SLOTS) for j in range(ps.shape[2])]
     vnames += ['{}@{}'.format(c, k) for k in range(NUM_TIME_SLOTS) for c in ('days_since_seeding', 'doy_sin', 'doy_cos')]
     snames = ['dem', 'aspect_sin', 'aspect_cos', 'curvature', 'slope', 'twi'] + list(SOIL)
     vnames += snames
     mnames = ['valid:s2@{}'.format(k) for k in range(NUM_TIME_SLOTS)] + ['valid:weather@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     if neighbourhood:
         mnames += ['valid:nbr5@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
+    if planetscope:
+        mnames += ['valid:ps@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     mnames += ['valid:' + c for c in ['dem', 'aspect', 'curvature', 'slope', 'twi'] + list(SOIL)]
     mnames += ['dated@{}'.format(k) for k in range(NUM_TIME_SLOTS)]
     out = {'values': np.concatenate(vals), 'masks': np.concatenate(masks), 'value_names': vnames,

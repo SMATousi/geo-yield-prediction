@@ -16,6 +16,8 @@ cache (yieldsat_build_dense.py):
                           ps_win/<field_code>.npy (scenes, 3(H+2), 3(W+2), 8) f16 + ps_win_scene.npy (N, 72) i16:
                           the PlanetScope scene chosen per cell and slot on the field's 3.33 m grid padded by one
                           cell, from which the dataset cuts each cell's 30 m (9x9) window (``--ps_window_only``)
+  cache/Missouri/         the release's monthly format (N, 24, 16) f32 for the YieldSAT models that read it:
+                          one S2 acquisition per field and month (``--monthly_only``)
 
 Slots, S2 and weather follow the dense YieldSAT rules (10-day bins from January of harvest year - 1, masked
 outside [seeding, harvest]; per cell the clear S2 acquisition nearest the bin centre; weather summed over
@@ -691,6 +693,120 @@ def write_dem_patch(ws, artifact_root, workers):
     print('dem10x10: {} cells, {:.1%} valid'.format(N, np.isfinite(arr).mean()))
 
 
+# ---- monthly series (the release's format, for the YieldSAT models that read it) ---------------------------------
+
+M_SLOTS = 24                            # calendar months from January of harvest year - 1
+
+
+def month_bounds(harvest_year):
+    """(start_day, end_day) inclusive, days since 1970, for the 24 monthly slots."""
+    out = []
+    for k in range(M_SLOTS):
+        y, m = harvest_year - 1 + k // 12, k % 12 + 1
+        out.append((day(datetime.date(y, m, 1)), day(datetime.date(y, m, calendar.monthrange(y, m)[1]))))
+    return out
+
+
+def _monthly(task):
+    """One field season in the release's monthly format: per month one S2 acquisition for the whole field (the
+    in-season acquisition with the most clear cells, ties nearest mid-month), cells not clear in it NaN; the
+    slot time is that acquisition's date for every cell. Weather summed over the month's in-season days; months
+    outside [seeding, harvest] stay NaN, as in the dense series."""
+    ws, f, rows, cols, grid = task
+    ld = Path(ws) / 'layers' / f['vgir_id']
+    n = len(rows)
+    seeding, harvest = f['planting_day'], f['harvest_day']
+    temporal = np.full((n, M_SLOTS, 16), np.nan, np.float32)
+    times = np.full((n, M_SLOTS), np.nan, np.float32)
+    s2 = {}
+    for r in csv.DictReader(open(ld / 'sentinel2' / 'sentinel2_index.csv')):
+        d = _date_day(r['date'])
+        if seeding <= d <= harvest and r.get('file_10m') and r.get('file_20m') and r.get('file_scl'):
+            s2.setdefault(d, r)
+    weather = _weather(ld)
+    w_pos = [TEMPORAL_CHANNELS.index(c) for c in WEATHER_COLS]
+    st = {'season_months': 0, 'months_with_s2': 0, 'clear_cells': 0}
+    for k, (a, b) in enumerate(month_bounds(f['year'])):
+        lo, hi = max(a, seeding), min(b, harvest)
+        if lo > hi:
+            continue
+        st['season_months'] += 1
+        days = [d for d in range(lo, hi + 1) if d in weather]
+        if days:
+            temporal[:, k, w_pos] = np.nansum(np.array([weather[d] for d in days]), axis=0)
+            times[:, k] = min(max(round((a + b) / 2.0), lo), hi)
+        best = None
+        for d in sorted((d for d in s2 if a <= d <= b), key=lambda d: (abs(d - (a + b) / 2.0), d)):
+            try:
+                v, ok = _s2_date(ld / 'sentinel2', s2[d], grid, rows, cols)
+            except Exception:
+                continue
+            if best is None or ok.sum() > best[2].sum():
+                best = (d, v, ok)
+        if best is not None:
+            d, v, ok = best
+            v[~ok] = np.nan
+            temporal[:, k, :12] = v
+            times[:, k] = d
+            st['months_with_s2'] += 1
+            st['clear_cells'] += int(ok.sum())
+    s2v = temporal[:, :, :12]
+    s2v[s2v > 65504] = np.nan
+    return f['vgir_id'], temporal, times, st
+
+
+def write_monthly(ws, artifact_root, workers):
+    """cache/Missouri/: temporal.npy (N, 24, 16) f32, times.npy (N, 24) f32, static.npy, flags.npy,
+    field_stats.npz, cache_manifest.json, in the row order of the built index (static copied from cache_dense)."""
+    import shutil
+    from dataset.yieldsat_cache import (CACHE_VERSION, FIELD_STATS_VERSION, N_S, N_T, _Accumulator,
+                                        static_valid_mask, temporal_valid_mask)
+    out = Path(artifact_root)
+    c = out / 'cache' / COUNTRY
+    c.mkdir(parents=True, exist_ok=True)
+    recs, tasks = _field_tasks(ws, out)
+    N = sum(r['n_rows'] for r in recs)
+    temporal = np.full((N, M_SLOTS, 16), np.nan, np.float32)
+    times = np.full((N, M_SLOTS), np.nan, np.float32)
+    pos = {r['field_shared_name']: r for r in recs}
+    stats = {}
+    with Pool(workers) as pool:
+        for vgir, t, tm, st in pool.imap_unordered(_monthly, tasks):
+            r = pos[vgir]
+            temporal[r['row_start']:r['row_end']], times[r['row_start']:r['row_end']] = t, tm
+            stats[vgir] = st
+            print('  {} {} months in season, {} with S2, {:.1f} clear months per cell'.format(
+                vgir, st['season_months'], st['months_with_s2'], st['clear_cells'] / r['n_rows']), flush=True)
+    np.save(c / 'temporal.npy', temporal)
+    np.save(c / 'times.npy', times)
+    shutil.copyfile(out / 'cache_dense' / COUNTRY / 'static.npy', c / 'static.npy')
+    static = np.load(c / 'static.npy', mmap_mode='r')
+    acc_t, acc_s = _Accumulator(len(recs), N_T), _Accumulator(len(recs), N_S)
+    for slot, r in enumerate(recs):
+        s, e = r['row_start'], r['row_end']
+        valid = temporal_valid_mask(temporal[s:e], times[s:e], mask_first_weather=False)
+        acc_t.add(slot, np.where(valid, temporal[s:e], np.nan).reshape(-1, N_T))
+        st_ = np.asarray(static[s:e])
+        acc_s.add(slot, np.where(static_valid_mask(st_), st_, np.nan))
+    np.savez(c / 'field_stats.npz', field_codes=np.array([r['field_code'] for r in recs]),
+             temporal_count=acc_t.count, temporal_sum=acc_t.sum, temporal_sumsq=acc_t.sumsq,
+             temporal_min=acc_t.min, temporal_max=acc_t.max,
+             static_count=acc_s.count, static_sum=acc_s.sum, static_sumsq=acc_s.sumsq,
+             static_min=acc_s.min, static_max=acc_s.max)
+    np.save(c / 'flags.npy', np.zeros(N, np.uint8))
+    (c / 'build_stats.json').write_text(json.dumps(stats, indent=1))
+    (c / 'cache_manifest.json').write_text(json.dumps(
+        {'contract': CONTRACT_KEY, 'cache_version': CACHE_VERSION, 'country': COUNTRY,
+         'fingerprint': {'own_dataset': True}, 'index_fingerprint': {'own_dataset': True}, 'rows': int(N),
+         'complete': True, 'cache_written': True, 'temporal_channels': list(TEMPORAL_CHANNELS),
+         'static_channels': list(STATIC_CHANNELS), 'n_slots': M_SLOTS, 'field_stats_version': FIELD_STATS_VERSION,
+         'slot_rule': 'calendar months from January of harvest year - 1; per field and month the in-season S2 '
+                      'acquisition with the most clear cells (SCL 4/5/6), cells not clear in it NaN',
+         'missing_channels': ['B01', 'B09', 'soil uncertainty']}, indent=1))
+    print('monthly cache: {} cells, {:.2f} clear S2 months per cell'.format(
+        N, np.isfinite(temporal[:, :, 1]).sum() / N))
+
+
 PAIRS = ('MO-S', 'MO-C')
 PROTOCOLS = ('cv', 'loyo')
 
@@ -727,6 +843,10 @@ if __name__ == '__main__':
         arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
         write_dem_patch(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),
                         int(arg('--workers', 8)))
+    elif '--monthly_only' in sys.argv:
+        arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
+        write_monthly(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),
+                      int(arg('--workers', 8)))
     elif '--ps_window_only' in sys.argv:
         arg = lambda k, d: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
         write_ps_window(arg('--workspace', '/home1/pupil/SMATousi/gdd-workspace'), arg('--artifact_root', None),

@@ -59,3 +59,29 @@ Outputs: `protocol/own_v2/<group>_noval_s0/...` (test-selected) and `<group>_val
 ## 4. Results
 
 Pending.
+
+## 5. Baselines on our data (2026-10-30, project lead: "run the papers and our added baselines on our dataset")
+
+The four YieldSAT models and the two strong baselines, with their YieldSAT arguments unchanged (no search), on the v2
+data: 3 seeds, test- and val-selected (as §3), CV10 and LOYO. TabM and LightGBM also with the PlanetScope 3×3
+sub-grid as flat features (`--features F0P`: F0 + `ps3x3.npy`, 72 slots × 72 values, one validity flag per slot),
+to test whether the PS gain is specific to our model.
+
+| Model | Input | Tag |
+|---|---|---|
+| 3D-LSTM, 3D-ConvLSTM | monthly series (`cache/Missouri`, below) | `paper_3dlstm`, `paper_3dconvlstm` |
+| AFF, MMGF | dense series | `paper_aff`, `paper_mmgf` |
+| TabM, LightGBM | dense F0 / F0P | `tabm-f0-dense-bs2048`, `lgbm-f0-dense`, `tabm-f0p-dense-bs2048`, `lgbm-f0p-dense` |
+
+**Monthly cache** (`yieldsat_build_owndata.py --monthly_only`), the release's format for the two input-fusion
+models: 24 calendar months from January of harvest year − 1; per field and month the in-season S2 acquisition with
+the most clear cells (SCL 4/5/6; ties nearest mid-month), cells not clear in it NaN, slot time = that acquisition's
+date; weather summed over the month's in-season days; months outside [seeding, harvest] NaN (as the dense series;
+the release keeps some out-of-season months in Argentina and Brazil). 5.62 clear S2 months per cell (dense: ~11
+clear slots).
+
+**Runs** (local RTX 3090, `yieldsat_protocol_runs.py units --batch own-baselines`): 840 GPU units
+(`cluster/tabm/protocol_own_baselines_gpu_units.json`, one fold per paper-model unit, one row per tabular unit) and
+48 LightGBM units (`..._lgbm_units.json`), claim pool under `/root/owndata_results_v2/_claims`, outputs
+`/root/owndata_results_v2/own_v2/<group>/s2_adm/<tag>_seed<k>/<pair>/foldNN`. The paper models are CPU-bound
+(data loading; GPU ~25%): 5 concurrent runs.

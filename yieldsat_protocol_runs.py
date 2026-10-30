@@ -462,6 +462,52 @@ def cmd_units(a):
                 json.dumps({'suite': 'protocol_' + name, 'out_root': a.out_root, 'units': us}, indent=1))
             print('protocol_{}: {} units'.format(name, len(us)), folds)
         return
+    if a.batch == 'own-baselines':
+        # spec/own-dataset-v2.md §baselines: the YieldSAT models and the strong baselines on our data with their
+        # YieldSAT arguments unchanged, 3 seeds, test- and val-selected; the tabular ones also with the PlanetScope
+        # 3x3 sub-grid (F0P). 3D-LSTM / 3D-ConvLSTM read the monthly cache (cache/Missouri, the release's format).
+        root = Path(a.own_artifact_root) / 'splits'
+        nf = {(pair, proto): len(json.loads((root / '{}.folds.json'.format('noval_' + paper_row_prefix(pair, proto)))
+                                            .read_text())['folds'])
+              for pair in OWN_PAIRS for proto in ('cv', 'loyo')}
+        tab = {'tabm-f0-dense-bs2048': TAB['tabm-f0'] + ['--batch_size', '2048', '--max_steps', '6000',
+                                                        '--eval_every', '200'],
+               'lgbm-f0-dense': TAB['lgbm-f0']}
+        tab.update({k.replace('-f0-', '-f0p-'): [x if x != 'F0' else 'F0P' for x in v] for k, v in list(tab.items())})
+        units = []
+        for sel, seed, (pair, proto) in ((s, k, c) for s in ('test', 'val') for k in (0, 1, 2) for c in nf):
+            fs = 'noval' if sel == 'test' else 'val'
+            prefix = '{}_{}'.format(fs, paper_row_prefix(pair, proto))
+            group = '{}_{}_s0'.format(GROUP[proto], fs)
+            sfx = ('' if seed == 0 else '-s{}'.format(seed)) + ('-val' if sel == 'val' else '') + '-own_v2'
+            for m, dense in PAPER_MODELS_DENSE.items():
+                for i in range(nf[(pair, proto)]):
+                    out = '{{out_root}}/own_v2/{}/s2_adm/{}_seed{}/{}/fold{:02d}'.format(group, m, seed, pair, i)
+                    args = COMMON + PAPER_MODEL_ARGS + ['--model', m, '--skip_source_check', '--countries', 'Missouri',
+                                                        '--crops', OWN_PAIRS[pair], '--split',
+                                                        '{}_fold{:02d}'.format(prefix, i), '--output_dir', out,
+                                                        '--streams', *PAPER_MODEL_STREAMS]
+                    args[args.index('--seed') + 1] = str(seed)
+                    units.append({'id': '{}{}__{}__{}__f{}'.format(m, sfx, pair, proto, i), 'pair': pair, 'n_folds': 1,
+                                  'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV if dense else {},
+                                  'args': args})
+            for tag, targs in tab.items():
+                units.append({'id': '{}{}__{}__{}__all'.format(tag, sfx, pair, proto), 'pair': pair,
+                              'n_folds': nf[(pair, proto)], 'env': DENSE_ENV,
+                              'args': targs + ['--tag', tag, '--out_sub', 'own_v2', '--fold_set', fs,
+                                               '--protocols', proto, '--seed', str(seed), '--val_rows_per_field', '0',
+                                               '--pairs', pair]})
+        seen = {u['id'] for f in Path('cluster/tabm').glob('protocol_*_units.json')
+                if not f.name.startswith('protocol_own_baselines') for u in json.loads(f.read_text())['units']}
+        clash = seen & {u['id'] for u in units}
+        assert not clash, 'unit ids already used by an earlier batch: {}'.format(sorted(clash)[:5])
+        # LightGBM is CPU-only: its own file, run beside the GPU pool
+        for name, us in (('own_baselines_gpu', [u for u in units if not u['id'].startswith('lgbm')]),
+                         ('own_baselines_lgbm', [u for u in units if u['id'].startswith('lgbm')])):
+            Path('cluster/tabm/protocol_{}_units.json'.format(name)).write_text(
+                json.dumps({'suite': 'protocol_' + name, 'out_root': a.out_root, 'units': us}, indent=1))
+            print('protocol_{}: {} units'.format(name, len(us)), nf)
+        return
     if a.batch == 'own3':
         # round 3 (spec/own-dataset-training.md §8): the 30 m window arms, three seeds
         units = own_units(OWN_ARMS_WINDOW, (0, 1, 2))
@@ -975,7 +1021,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'ysat-ps', 'size-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'own-baselines', 'ysat-ps', 'size-dev'])
     u.add_argument('--own_artifact_root', default='/root/owndata_artifacts_v2',
                    help='own-v2: the built Missouri artifacts, for the fold counts of its split manifests')
     u.add_argument('--with_lstm', action='store_true',

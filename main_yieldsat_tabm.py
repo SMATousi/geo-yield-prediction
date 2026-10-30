@@ -66,9 +66,10 @@ def protocol_rows(artifact_root, pairs=None, protocols=('cv', 'loyo', 'loro'), f
             todo = []
             for code in (pairs or PAPER_PAIRS):
                 country, crop = parse_pair(code)
-                prefix = 'noval_' + paper_row_prefix(code, proto)
+                # val: the same test folds, epoch / rounds selected on validation field seasons carved from training
+                prefix = fold_set + '_' + paper_row_prefix(code, proto)
                 group = GROUP[proto] + ('_province' if proto == 'loro' and code.startswith('ARG') else '')
-                todo.append((country, crop, code, prefix, '{}_noval_s0'.format(group)))
+                todo.append((country, crop, code, prefix, '{}_{}_s0'.format(group, fold_set)))
         for country, crop, code, prefix, group in todo:
             folds = json.loads((Path(artifact_root) / 'splits' / '{}.folds.json'.format(prefix)).read_text())['folds']
             out.append({'country': country, 'crop': crop, 'pair': code, 'protocol': proto, 'group': group,
@@ -169,7 +170,7 @@ def load_pair(artifact_root, country, crop, features):
             # silently corrupted data on the shared volume (2026-10-06: Bad CRC-32 in Argentina_soybean_F1)
             print('corrupt cache, rebuilding:', cache, repr(exc), flush=True)
             cache.unlink(missing_ok=True)
-    d = build_pair(artifact_root, country, crop, neighbourhood=features == 'F1')
+    d = build_pair(artifact_root, country, crop, neighbourhood=features == 'F1', planetscope=features == 'F0P')
     cache.parent.mkdir(parents=True, exist_ok=True)
     # atomic: several cluster pods may build the same pair concurrently
     tmp = cache.with_name('{}.{}-{}.partial.npz'.format(cache.stem, os.uname().nodename, os.getpid()))  # pids repeat across pods
@@ -316,7 +317,7 @@ def train_lgbm(args, pair, rows):
 
 
 def run_fold(args, row, fold_i, split_name, pair, device):
-    out = Path(args.out_root) / 'paper' / row['group'] / 's2_adm' / '{}_seed{}'.format(args.tag, args.seed) / \
+    out = Path(args.out_root) / args.out_sub / row['group'] / 's2_adm' / '{}_seed{}'.format(args.tag, args.seed) / \
         row['pair'] / 'fold{:02d}'.format(fold_i)
     if (out / 'report.json').exists():
         return None
@@ -372,7 +373,8 @@ def main():
     p.add_argument('--out_root', required=True)
     p.add_argument('--tag', required=True)
     p.add_argument('--model', default='tabm', choices=['tabm', 'tabm-mini', 'mlp', 'lgbm'])
-    p.add_argument('--features', default='F0', choices=['F0', 'F1'])
+    p.add_argument('--features', default='F0', choices=['F0', 'F1', 'F0P'],
+                   help='F0P: F0 + the PlanetScope 3x3 sub-grid (our dataset)')
     p.add_argument('--pairs', nargs='*', default=None)
     p.add_argument('--protocols', nargs='+', default=['cv', 'loyo', 'loro'])
     p.add_argument('--max_folds', type=int, default=0)
@@ -395,7 +397,8 @@ def main():
     p.add_argument('--field_alpha', type=float, default=0.5)
     p.add_argument('--val_rows_per_field', type=int, default=500,
                    help='cells per selection season (0 = all; the paper protocol selects on the full test fold)')
-    p.add_argument('--fold_set', default='dev', choices=['dev', 'noval', 'pooled'],
+    p.add_argument('--out_sub', default='paper', help='results sub-root under --out_root (own_v2: our dataset)')
+    p.add_argument('--fold_set', default='dev', choices=['dev', 'noval', 'val', 'pooled'],
                    help='dev: DEV rows with validation; noval/pooled: the paper protocol per pair / pooled')
     p.add_argument('--pooled_train_rows_per_field', type=int, default=1000)
     p.add_argument('--build_only', action='store_true', help='build the --pairs flat-matrix caches and exit')
@@ -418,7 +421,7 @@ def main():
         for i, name in enumerate(folds):
             if a.folds is not None and i not in a.folds:
                 continue
-            rel = 'paper/{}/s2_adm/{}_seed{}/{}/fold{:02d}'.format(row['group'], a.tag, a.seed, row['pair'], i)
+            rel = '{}/{}/s2_adm/{}_seed{}/{}/fold{:02d}'.format(a.out_sub, row['group'], a.tag, a.seed, row['pair'], i)
             with open(runs, 'a') as f:
                 f.write(json.dumps({'rel_path': rel, 'experiment': a.tag, 'protocol': row['protocol'],
                                     'pair': row['pair']}) + '\n')
