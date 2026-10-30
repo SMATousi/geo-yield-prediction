@@ -1,6 +1,6 @@
 {
  "suite": "protocol_own_baselines_lgbm",
- "out_root": "/root/owndata_results_v2",
+ "out_root": "/data/YieldSAT/yieldsat_results/protocol",
  "units": [
   {
    "id": "lgbm-f0-dense-own_v2__MO-S__cv__all",
@@ -11,6 +11,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -43,6 +50,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -75,6 +89,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -107,6 +128,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -139,6 +167,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -171,6 +206,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -203,6 +245,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -235,6 +284,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -267,6 +323,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -299,6 +362,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -331,6 +401,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -363,6 +440,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -395,6 +479,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -427,6 +518,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -459,6 +557,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -491,6 +596,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -523,6 +635,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -555,6 +674,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -587,6 +713,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -619,6 +752,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -651,6 +791,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -683,6 +830,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -715,6 +869,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -747,6 +908,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/noval_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -779,6 +947,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -811,6 +986,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -843,6 +1025,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -875,6 +1064,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -907,6 +1103,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -939,6 +1142,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -971,6 +1181,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1003,6 +1220,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1035,6 +1259,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1067,6 +1298,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1099,6 +1337,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1131,6 +1376,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1163,6 +1415,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1195,6 +1454,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1227,6 +1493,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1259,6 +1532,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1291,6 +1571,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1323,6 +1610,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-S_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1355,6 +1649,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1387,6 +1688,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_soybean_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-S_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1419,6 +1727,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1451,6 +1766,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_cv10_MO-C_season_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1483,6 +1805,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",
@@ -1515,6 +1844,13 @@
     "YIELDSAT_CACHE_NAME": "cache_dense",
     "YIELDSAT_NBR_NAME": "neighbourhood_dense"
    },
+   "stage": [
+    "cache_dense/Missouri",
+    "tabular/Missouri_corn_F0P_cache_dense.npz",
+    "index/Missouri",
+    "splits/val_paper_loyo_MO-C_na_paper_s0*",
+    "geometry/fields_geometry_Missouri.json"
+   ],
    "args": [
     "--model",
     "lgbm",

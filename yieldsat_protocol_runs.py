@@ -479,6 +479,8 @@ def cmd_units(a):
             fs = 'noval' if sel == 'test' else 'val'
             prefix = '{}_{}'.format(fs, paper_row_prefix(pair, proto))
             group = '{}_{}_s0'.format(GROUP[proto], fs)
+            # staged per pod (yieldsat_tabm_cluster.py pool --stage_from): the data each unit reads
+            own_stage = ['index/Missouri', 'splits/{}*'.format(prefix), 'geometry/fields_geometry_Missouri.json']
             sfx = ('' if seed == 0 else '-s{}'.format(seed)) + ('-val' if sel == 'val' else '') + '-own_v2'
             for m, dense in PAPER_MODELS_DENSE.items():
                 for i in range(nf[(pair, proto)]):
@@ -490,10 +492,14 @@ def cmd_units(a):
                     args[args.index('--seed') + 1] = str(seed)
                     units.append({'id': '{}{}__{}__{}__f{}'.format(m, sfx, pair, proto, i), 'pair': pair, 'n_folds': 1,
                                   'script': 'main_yieldsat_finetune.py', 'env': DENSE_ENV if dense else {},
+                                  'stage': [('cache_dense/' if dense else 'cache/') + 'Missouri'] + own_stage,
                                   'args': args})
             for tag, targs in tab.items():
+                feats = 'F0P' if '-f0p-' in tag else 'F0'
                 units.append({'id': '{}{}__{}__{}__all'.format(tag, sfx, pair, proto), 'pair': pair,
                               'n_folds': nf[(pair, proto)], 'env': DENSE_ENV,
+                              'stage': ['cache_dense/Missouri', 'tabular/Missouri_{}_{}_cache_dense.npz'.format(
+                                  OWN_PAIRS[pair], feats)] + own_stage,
                               'args': targs + ['--tag', tag, '--out_sub', 'own_v2', '--fold_set', fs,
                                                '--protocols', proto, '--seed', str(seed), '--val_rows_per_field', '0',
                                                '--pairs', pair]})
