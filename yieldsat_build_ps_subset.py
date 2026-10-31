@@ -63,10 +63,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--artifact_root', required=True)
     ap.add_argument('--layers', required=True, help='<layers>/<field_shared_name>/planetscope/ (yieldsat_ps_download.py)')
+    ap.add_argument('--out_root', default=None,
+                    help='write neighbourhood_dense/ here instead of under --artifact_root (geometry and index are '
+                         'still read from --artifact_root)')
     ap.add_argument('--workers', type=int, default=8)
     ap.add_argument('--only_downloaded', action='store_true', help='smoke test: only field seasons already downloaded')
     a = ap.parse_args()
     out = Path(a.artifact_root)
+    dst = Path(a.out_root or a.artifact_root)
     ws = Path(a.layers).parent
     assert (ws / 'layers').resolve() == Path(a.layers).resolve(), 'the layers directory must be named layers'
     geo = {g['field_shared_name']: g for g in json.loads((out / GEOMETRY).read_text())}
@@ -78,7 +82,7 @@ def main():
         recs = [r for r in json.loads((out / 'index' / country / 'fields.json').read_text()) if r['crop'] in crops]
         if a.only_downloaded:
             recs = [r for r in recs if (ws / 'layers' / r['field_shared_name'] / 'planetscope' / 'planetscope_index.csv').exists()]
-        d = out / 'neighbourhood_dense' / country
+        d = dst / 'neighbourhood_dense' / country
         (d / 'ps_win').mkdir(parents=True, exist_ok=True)
         scene_all = np.full((len(idx['field_code']), N_SLOTS), -1, np.int16)
         tasks = []
@@ -109,7 +113,7 @@ def main():
         np.save(d / 'ps_win_scene.npy', scene_all)
         np.savez(d / 'ps_field_sums.npz', field_codes=np.array(codes), bands=np.array(PS_BANDS),
                  count=np.array(cnt), sum=np.array(sm), sumsq=np.array(ssq))
-    (out / 'neighbourhood_dense' / 'ps_subset_manifest.json').write_text(json.dumps(manifest, indent=1))
+    (dst / 'neighbourhood_dense' / 'ps_subset_manifest.json').write_text(json.dumps(manifest, indent=1))
 
 
 if __name__ == '__main__':

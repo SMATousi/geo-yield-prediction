@@ -135,6 +135,9 @@ def get_args_parser():
                    help='own dataset (spec/own-dataset-training.md): PlanetScope SR per slot, averaged over the '
                         '10 m cell and/or on its 3x3 sub-grid (<artifact_root>/<NBR_NAME>/<country>/ps*.npy); '
                         'win: the 30 m (9x9 at 3.33 m) window around the cell, convolutional encoder')
+    p.add_argument('--planetscope_root', default=None,
+                   help='directory holding <country>/ps_win* for --planetscope (default <artifact_root>/<NBR_NAME>); '
+                        'the nine-pair YieldSAT windows live on a second volume (cluster/nautilus/pvc_ps_1t.yaml)')
     p.add_argument('--ps_spatial', action='store_true',
                    help='with --planetscope 3x3: encode the sub-grid with per-slot convolutions (patch_temporal) '
                         'instead of as 72 flat channels')
@@ -478,7 +481,7 @@ def main(args):
                   neighbourhood_root=str(Path(args.artifact_root) / NBR_NAME) if args.neighbourhood else None,
                   field_context_root=str(Path(args.artifact_root) / NBR_NAME) if args.field_context else None)
     if args.planetscope:
-        nbr_root = Path(args.artifact_root) / NBR_NAME
+        nbr_root = Path(args.planetscope_root or Path(args.artifact_root) / NBR_NAME)
         common.update(planetscope_root=str(nbr_root), planetscope_streams=tuple(args.planetscope),
                       planetscope_norm={c: ps_normalization(nbr_root, c, [f['field_code'] for f in parts['train']
                                                                          if f['country'] == c])
@@ -486,6 +489,8 @@ def main(args):
     if args.ps_spatial and '3x3' not in args.planetscope:
         raise SystemExit('--ps_spatial needs --planetscope 3x3')
     if args.dem_patch:
+        if args.planetscope and args.planetscope_root:
+            raise SystemExit('--dem_patch reads its patches from planetscope_root: not with --planetscope_root')
         nbr_root = Path(args.artifact_root) / NBR_NAME
         common.update(planetscope_root=str(nbr_root),
                       dem_patch_norm={c: dem_patch_normalization(nbr_root, c, [f['field_code'] for f in parts['train']

@@ -1,0 +1,12 @@
+# Second data volume (1 Ti) for the YieldSAT PlanetScope scenes and windows of all nine pairs; ali-vol-1tera
+# was 97% full (2026-10-31) and nothing on it is removed. Mounted at /data2 next to /data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: smatousi-yieldsat-ps-1t
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: rook-cephfs-central
+  resources:
+    requests:
+      storage: 1Ti

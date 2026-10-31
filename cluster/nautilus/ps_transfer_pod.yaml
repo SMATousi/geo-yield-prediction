@@ -1,0 +1,27 @@
+# Small CPU pod for moving PlanetScope data onto the second volume: mounts ali-vol-1tera at /data (read for the
+# first three pairs' scenes, geometry, index; nothing is removed) and smatousi-yieldsat-ps-1t at /data2.
+# Sized for tar / cp (I/O bound): 1 CPU, 2 Gi. No credentials inside.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smatousi-yieldsat-ps-transfer
+spec:
+  restartPolicy: Never
+  containers:
+  - name: yieldsat
+    image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+    imagePullPolicy: Always
+    command: [/bin/bash, -c]
+    args:
+    - git clone --quiet -b own-dataset-training https://github.com/SMATousi/geo-yield-prediction.git /workspace/code && sleep 43200
+    resources:
+      limits: {cpu: '1', memory: 2Gi, ephemeral-storage: 10Gi}
+      requests: {cpu: '1', memory: 2Gi, ephemeral-storage: 10Gi}
+    volumeMounts:
+    - {name: data, mountPath: /data}
+    - {name: data2, mountPath: /data2}
+  volumes:
+  - name: data
+    persistentVolumeClaim: {claimName: ali-vol-1tera}
+  - name: data2
+    persistentVolumeClaim: {claimName: smatousi-yieldsat-ps-1t}
