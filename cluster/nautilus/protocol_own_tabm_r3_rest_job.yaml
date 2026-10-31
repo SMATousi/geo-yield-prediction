@@ -1,5 +1,5 @@
 # Own dataset v2 TabM retry ('__r3' ids), one run per GPU: two TabM runs do not fit on a 22 GB A10 (CUDA OOM).
-# Other TabM units (33: F0 both crops, F0P corn): about 2-6 GiB RAM per run; 10 pods, 3 CPU / 8 Gi. No credentials inside.
+# Other TabM units: since the r4 retry, the 21 F0 units (both crops, '__r4' ids, full batch); F0P units moved to the r4 jobs. 10 pods (parallelism capped at 6), 3 CPU / 8 Gi. No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:

@@ -251,15 +251,23 @@ def train_nn(args, pair, rows, Vn, device, Xn=None):
     t0 = time.time()
     for step in range(1, args.max_steps + 1):
         idx = draw(args.batch_size)
-        with torch.autocast(device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
-            loss = model.loss(V[idx].float(), M[idx], Y[idx], None if X is None else X[idx].float())
         opt.zero_grad(set_to_none=True)
-        loss.float().backward()
+        # gradient accumulation over micro-batches: the loss is a mean, so weighting each chunk by its share gives the
+        # gradient of the full batch. Wide inputs need it: TabM expands the input to its k members before the first
+        # layer, [2048, 32, 52848] in bf16 (6.9 GB) for soybean with PS (6,606 features), which OOMs a 24 GB GPU
+        mb = args.micro_batch or len(idx)
+        loss = 0.0
+        for a in range(0, len(idx), mb):
+            sl = idx[a:a + mb]
+            with torch.autocast(device.type, dtype=torch.bfloat16, enabled=device.type == 'cuda'):
+                part = model.loss(V[sl].float(), M[sl], Y[sl], None if X is None else X[sl].float()) * (len(sl) / len(idx))
+            part.float().backward()
+            loss += float(part)
         opt.step()
         if step % args.eval_every == 0 or step == args.max_steps:
             rec = {'step': step, 'train_loss': float(loss), 'seconds': round(time.time() - t0, 1)}
             if val is not None:
-                pv = predict(model, V, M, val, device, X=X) * ys + ym
+                pv = predict(model, V, M, val, device, bs=args.micro_batch or 4096, X=X) * ys + ym
                 rec['val_pixel_rmse'] = float(np.sqrt(np.nanmean((pv - y[val]) ** 2)))
                 if rec['val_pixel_rmse'] < best:
                     best, bad = rec['val_pixel_rmse'], 0
@@ -271,7 +279,7 @@ def train_nn(args, pair, rows, Vn, device, Xn=None):
                 break
     if best_state is not None:
         model.load_state_dict(best_state)
-    pt = predict(model, V, M, rows['test'], device, X=X) * ys + ym
+    pt = predict(model, V, M, rows['test'], device, bs=args.micro_batch or 4096, X=X) * ys + ym
     del V, M, Y, X
     torch.cuda.empty_cache()
     return pt, {'history': hist, 'best_val_pixel_rmse': None if best == np.inf else best, 'steps': step,
@@ -391,6 +399,9 @@ def main():
     p.add_argument('--lr', type=float, default=1e-3)
     p.add_argument('--weight_decay', type=float, default=3e-4)
     p.add_argument('--batch_size', type=int, default=4096)
+    p.add_argument('--micro_batch', type=int, default=0,
+                   help='split each batch into chunks of this size (gradient accumulation, same gradient); also the '
+                        'prediction chunk. 0: whole batch')
     p.add_argument('--max_steps', type=int, default=3000)
     p.add_argument('--eval_every', type=int, default=100)
     p.add_argument('--patience', type=int, default=8)
