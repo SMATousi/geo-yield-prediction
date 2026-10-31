@@ -1,4 +1,4 @@
-"""PlanetScope 30 m windows for a YieldSAT subset (spec/yieldsat-planetscope.md): ARG-S, ARG-C, BRA-C.
+"""PlanetScope 30 m windows for YieldSAT (spec/yieldsat-planetscope.md): first ARG-S, ARG-C, BRA-C, now all nine pairs.
 
 The same rule and layout as our Missouri dataset (yieldsat_build_owndata.write_ps_window): per cell and dense slot,
 the in-season scene nearest the bin centre whose cell is >= 90% clear; the scenes used, warped onto the field's
@@ -27,7 +27,9 @@ from rasterio.crs import CRS
 
 from yieldsat_build_owndata import N_SLOTS, PS_BANDS, PS_CELL_CLEAR, PS_SUB_CLEAR, SUB, _ps_window
 
-SUBSET = {'ARG-S': ('Argentina', 'soybean'), 'ARG-C': ('Argentina', 'corn'), 'BRA-C': ('Brazil', 'corn')}
+SUBSET = {'ARG-S': ('Argentina', 'soybean'), 'ARG-C': ('Argentina', 'corn'), 'ARG-W': ('Argentina', 'wheat'),
+          'BRA-C': ('Brazil', 'corn'), 'BRA-S': ('Brazil', 'soybean'), 'BRA-W': ('Brazil', 'wheat'),
+          'GER-R': ('Germany', 'rapeseed'), 'GER-W': ('Germany', 'wheat'), 'URG-S': ('Uruguay', 'soybean')}
 GEOMETRY = 'geometry/fields_geometry_Argentina-Brazil-Germany-Uruguay.json'
 
 
