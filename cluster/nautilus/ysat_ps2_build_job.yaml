@@ -1,0 +1,37 @@
+# PlanetScope 30 m windows of all nine YieldSAT pairs (yieldsat_build_ps_subset.py) on the second volume:
+# reads geometry + index from ali-vol-1tera (/data), scenes from /data2/yieldsat_planetscope/layers, writes
+# /data2/yieldsat_planetscope/neighbourhood_dense/<Country>/ps_win*. CPU only. No credentials inside.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-ps2-build
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: build
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet -b own-dataset-training https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git log -1 --format=%h &&
+          exec python yieldsat_build_ps_subset.py --artifact_root /data/YieldSAT/yieldsat_artifacts
+          --layers /data2/yieldsat_planetscope/layers --out_root /data2/yieldsat_planetscope --workers 8
+        resources:
+          limits: {cpu: '8', memory: 20Gi, ephemeral-storage: 10Gi}
+          requests: {cpu: '8', memory: 20Gi, ephemeral-storage: 10Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: data2, mountPath: /data2}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: data2
+        persistentVolumeClaim: {claimName: smatousi-yieldsat-ps-1t}

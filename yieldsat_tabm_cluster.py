@@ -90,9 +90,10 @@ class Claims:
         (self.d(uid) / 'heartbeat').write_text(str(time.time()))
 
 
-def stage(rels, src_root, dst_root):
+def stage(rels, src_root, dst_root, ignore=()):
     """Copy artifact paths (files, directories or globs relative to src_root) to the local
-    artifact root once per pod; a '.staged' marker records a complete copy."""
+    artifact root once per pod; a '.staged' marker records a complete copy. `ignore`: extra name patterns
+    left out of directory copies."""
     import fcntl
     src, dst = Path(src_root), Path(dst_root)
     dst.mkdir(parents=True, exist_ok=True)
@@ -107,7 +108,7 @@ def stage(rels, src_root, dst_root):
                 d_.parent.mkdir(parents=True, exist_ok=True)
                 if s_.is_dir():
                     shutil.copytree(s_, d_, dirs_exist_ok=True,
-                                    ignore=shutil.ignore_patterns('uuids.npy', 'field_stats_v2_backup'))
+                                    ignore=shutil.ignore_patterns('uuids.npy', 'field_stats_v2_backup', *ignore))
                 else:
                     shutil.copy2(s_, d_)
             mark.parent.mkdir(parents=True, exist_ok=True)
@@ -209,7 +210,10 @@ def cmd_pool(a):
             attempts = 1
         (d / 'attempts').write_text(str(attempts))
         if unit.get('stage') and a.stage_from:
-            stage(unit['stage'], a.stage_from, a.artifact_root)
+            stage(unit['stage'], a.stage_from, a.artifact_root, unit.get('stage_ignore', ()))
+        if unit.get('stage_ps'):
+            # PlanetScope windows on the second volume (cluster/nautilus/pvc_ps_1t.yaml), staged to <artifact_root>/ps2
+            stage(unit['stage_ps']['paths'], unit['stage_ps']['from'], str(Path(a.artifact_root) / 'ps2'))
         if unit.get('skip_if_exists'):
             # a follow-up unit whose result another unit id already produced (same output path)
             done_path = Path(unit['skip_if_exists'].format(out_root=out_root))

@@ -364,7 +364,15 @@ YSAT_PS_PAIRS = ('ARG-S', 'ARG-C', 'BRA-C')
 YSAT_PS_TAG, YSAT_PS_ARGS = '-ps3x3-pswin', ['--planetscope', '3x3', 'win', '--eval_batch_size', '1024']
 
 
-def ysat_ps_units():
+# all nine pairs (2026-10-31): the other six pairs under CV10 / LOYO and every pair under LORO; the windows of all
+# nine pairs are rebuilt on the second volume and staged from there (the S2-only part of neighbourhood_dense still
+# from the first volume, without its old three-pair windows)
+YSAT_PS_REST = ('ARG-W', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S')
+YSAT_PS2_FROM = '/data2/yieldsat_planetscope'
+PS_WIN_FILES = ('ps_win', 'ps_win_scene.npy', 'ps_field_sums.npz')
+
+
+def ysat_ps_units(pairs=YSAT_PS_PAIRS, protos=('cv', 'loyo'), ps2=False):
     base = 'ours-p3nbr-dense-fc-rel10'
     src = (json.loads(Path('cluster/tabm/protocol_fc_dev_units.json').read_text())['units']
            + json.loads(Path('cluster/tabm/protocol_fc_all_units.json').read_text())['units']
@@ -373,7 +381,8 @@ def ysat_ps_units():
     for u in src:
         tag, pair, proto = u['id'].split('__')[:3]
         seed = 0 if tag == base else int(tag[len(base) + 2:]) if tag.startswith(base + '-s') and tag[len(base) + 2:].isdigit() else None
-        if seed is None or pair not in YSAT_PS_PAIRS or proto not in ('cv', 'loyo'):
+        if seed is None or (pair, proto) not in {(p_, q_) for p_ in pairs for q_ in protos} | (
+                {(p_, 'loro') for p_ in PAPER_PAIRS} if ps2 else set()):
             continue
         args = list(u['args'])
         j = args.index('--output_dir')
@@ -381,9 +390,19 @@ def ysat_ps_units():
         assert old in args[j + 1] and args[args.index('--seed') + 1] == str(seed), u['id']
         args[j + 1] = args[j + 1].replace(old, '/{}{}_seed{}/'.format(base, YSAT_PS_TAG, seed))
         uid = base + YSAT_PS_TAG + ('-s{}'.format(seed) if seed else '')
-        units.append(dict(u, id='__'.join([uid] + u['id'].split('__')[1:]), args=args + YSAT_PS_ARGS))
-    # Argentina soybean first (largest), seed 0 first
-    units.sort(key=lambda u: (YSAT_PS_PAIRS.index(u['pair']), '-s' in u['id'].split('__')[0]))
+        extra = list(YSAT_PS_ARGS)
+        unit = dict(u, id='__'.join([uid] + u['id'].split('__')[1:]))
+        if ps2:
+            countries = sorted({x.split('/')[1] for x in u['stage'] if x.startswith('neighbourhood_dense/')})
+            unit.update(stage_ignore=list(PS_WIN_FILES),
+                        stage_ps={'from': YSAT_PS2_FROM, 'paths': ['neighbourhood_dense/' + c for c in countries]})
+            extra += ['--planetscope_root', '{artifact_root}/ps2/neighbourhood_dense']
+        units.append(dict(unit, args=args + extra))
+    order = {p_: i for i, p_ in enumerate(PAPER_PAIRS)}
+    if not ps2:     # Argentina soybean first (largest), seed 0 first
+        units.sort(key=lambda u: (YSAT_PS_PAIRS.index(u['pair']), '-s' in u['id'].split('__')[0]))
+    else:           # seed 0 of every pair and protocol first, then by pair
+        units.sort(key=lambda u: ('-s' in u['id'].split('__')[0], order[u['pair']], u['id']))
     return units
 
 
@@ -420,6 +439,12 @@ def cmd_units(a):
         Path('cluster/tabm/protocol_size_dev_units.json').write_text(
             json.dumps({'suite': 'protocol_size_dev', 'out_root': a.out_root, 'units': units}, indent=1))
         print('protocol_size_dev: {} units'.format(len(units)))
+        return
+    if a.batch == 'ysat-ps2':
+        units = ysat_ps_units(YSAT_PS_REST, ('cv', 'loyo'), ps2=True)
+        Path('cluster/tabm/protocol_ysat_ps2_units.json').write_text(
+            json.dumps({'suite': 'protocol_ysat_ps2', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_ysat_ps2: {} units'.format(len(units)))
         return
     if a.batch == 'ysat-ps':
         units = ysat_ps_units()
@@ -1027,7 +1052,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'own-baselines', 'ysat-ps', 'size-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'own-baselines', 'ysat-ps', 'ysat-ps2', 'size-dev'])
     u.add_argument('--own_artifact_root', default='/root/owndata_artifacts_v2',
                    help='own-v2: the built Missouri artifacts, for the fold counts of its split manifests')
     u.add_argument('--with_lstm', action='store_true',
