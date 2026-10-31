@@ -752,32 +752,55 @@ if (R / OWN_FILE).exists():
         d, lo, hi = oc['%s|MEAN|%s' % (pr, t)][m]
         s_ = '%s {\\scriptsize(%s)}' % (f2(mean(pr, t, m)), f2(d, True))
         return r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_
-    rows = [r'%s & %s \\' % (lab, ' & '.join(cell(pr, t, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')))
+    rows = [r'\method{} & %s & %s \\' % (lab, ' & '.join(cell(pr, t, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')))
             for t, lab in [(None, 'S2 only')] + [(t, lab) for t, lab in ARMS if t in MAIN_ARMS]]
+    # baselines (own_cmp_baselines.json, rel_cmp.py with REL_BASE = \method{} S2 only, or \method{} + PS 3x3 for the
+    # PS baselines): change vs \method{} with the same inputs; TabM rows stay a placeholder until its runs are in
+    ob = J('own_cmp_baselines.json') if (R / 'own_cmp_baselines.json').exists() else {}
+    OWN_BASE = PAPER + [('lgbm-f0-dense', 'LightGBM', 's2'), ('lgbm-f0p-dense', 'LightGBM', 'ps3x3'),
+                        ('tabm-f0-dense-bs2048', 'TabM', 's2'), ('tabm-f0p-dense-bs2048', 'TabM', 'ps3x3')]
+    brows = []
+    for b in OWN_BASE:
+        t, name, ref = b if len(b) == 3 else b + ('s2',)
+        lab = 'S2 only' if ref == 's2' else r'+ PS, 3$\times$3 sub-grid'
+        rc = ob.get(ref, {})
+        if not all(t in rc.get('%s|%s' % (pr, p), {}) for pr in OWN_PROTOS for p in OWN_PAIRS):
+            brows.append(r'%s & %s & \multicolumn{4}{c}{\TODO{running}} \\' % (name, lab))
+            continue
+        cs = []
+        for pr in OWN_PROTOS:
+            for m in ('pooled_r2', 'within_r2'):
+                d, lo, hi = rc['%s|MEAN|%s' % (pr, t)][m]
+                s_ = '%s {\\scriptsize(%s)}' % (f2(float(np.mean([rc['%s|%s' % (pr, p)][t][m] for p in OWN_PAIRS]))),
+                                                f2(d, True))
+                cs.append(r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_)
+        brows.append(r'%s & %s & %s \\' % (name, lab, ' & '.join(cs)))
     ceil = f2(float(np.mean([nco[p]['ceiling_within_r2'] for p in OWN_PAIRS])))
-    write('owndata_main.tex', r"""\begin{table}[t]
+    write('owndata_main.tex', r"""\begin{table*}[t]
 \centering
-\scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcccc}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llcccc}
 \toprule
- & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-Inputs & Pooled & Within & Pooled & Within \\
+ & & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+Model & Inputs & Pooled & Within & Pooled & Within \\
+\midrule
+""" + '\n'.join(brows) + r"""
 \midrule
 """ + '\n'.join(rows) + r"""
 \midrule
-Noise ceiling & & %s & & %s \\
+Noise ceiling & & & %s & & %s \\
 \bottomrule
-\end{tabular}}
-\caption{\textbf{High-resolution inputs on our Missouri dataset.} Pixel-level $R^2$ of \method{}, mean over the
-two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets the change
-vs.\ S2 only (bold: 95\%% field-season cluster bootstrap interval excludes 0). The 30\,m window is the cell and its
-eight neighbours on the PS grid, read by a convolutional encoder. Per-crop results in
-\cref{tab:supp_owndata_full}.}
+\end{tabular}
+\caption{\textbf{Baselines and high-resolution inputs on our Missouri dataset.} Pixel-level $R^2$, mean over the
+two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets: for
+\method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with the same inputs
+(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features). Bold: 95\%% field-season
+cluster bootstrap interval excludes 0. The 30\,m window is the cell and its eight neighbours on the PS grid, read by
+a convolutional encoder. Per-crop results of \method{} in \cref{tab:supp_owndata_full}.}
 \label{tab:owndata}
-\end{table}
+\end{table*}
 """ % (ceil, ceil))
 
     # supplementary: every arm, within and pooled change per pair with intervals, seed spread
