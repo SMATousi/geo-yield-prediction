@@ -40,19 +40,31 @@ def f2(x, signed=False):
     return s.replace('-', '$-$') if not signed else s.replace('-', '$-$').replace('+', '$+$')
 
 
-def ci(v):
-    """[point, lo, hi] -> '+0.016 [+0.010, +0.022]' with bold when the CI excludes 0."""
+def marks(vals, higher=True, fmt='%.3f'):
+    """'b' for the best, 'u' for the second best, '' otherwise; None is not ranked. Of two candidates only the best
+    is marked (the second would be the worst)."""
+    sh = [None if v is None else float(fmt % v) for v in vals]
+    ranks = sorted({s for s in sh if s is not None}, reverse=higher)
+    n = sum(s is not None for s in sh)
+    if n < 2:
+        return [''] * len(vals)
+    return ['' if s is None else 'b' if s == ranks[0] else 'u' if n > 2 and len(ranks) > 1 and s == ranks[1] else ''
+            for s in sh]
+
+
+def deco(s, m):
+    return r'\textbf{%s}' % s if m == 'b' else r'\underline{%s}' % s if m == 'u' else s
+
+
+def ci(v, m=''):
+    """[point, lo, hi] -> '+0.016 [+0.010, +0.022]', the point marked by `m` (see marks)."""
     pt, lo, hi = v
-    s = r'%s {\scriptsize[%s, %s]}' % (f2(pt, True), f2(lo, True), f2(hi, True))
-    return r'\textbf{%s}' % s if lo > 0 or hi < 0 else s
+    return r'%s {\scriptsize[%s, %s]}' % (deco(f2(pt, True), m), f2(lo, True), f2(hi, True))
 
 
-def bold_best(v, t, key, fmt, best):
-    """v[t][key] formatted as in f2, bold when it is the best of the row's models at the printed precision (ties all bold)."""
-    shown = lambda x: float(fmt % x)
-    s = fmt % v[t][key]
-    s = s.replace('-', '$-$')
-    return r'\textbf{%s}' % s if shown(v[t][key]) == best(shown(v[m][key]) for m, _ in MODELS) else s
+def ranked(xs, higher=True, fmt='%.3f'):
+    """xs formatted with fmt, marked best / second best."""
+    return [deco((fmt % x).replace('-', '$-$'), m) for x, m in zip(xs, marks(xs, higher, fmt))]
 
 
 def write(name, body):
@@ -63,15 +75,8 @@ def write(name, body):
 pm = J('paper_models_table.json')
 rows = []
 for proto in PROTOS:
-    cells = []
-    best_p = max(np.mean([pm['%s|%s' % (proto, p)][t]['pooled_r2'] for p in PAIRS]) for t, _ in MODELS)
-    best_w = max(np.mean([pm['%s|%s' % (proto, p)][t]['within_r2'] for p in PAIRS]) for t, _ in MODELS)
-    for t, _ in MODELS:
-        p = np.mean([pm['%s|%s' % (proto, x)][t]['pooled_r2'] for x in PAIRS])
-        w = np.mean([pm['%s|%s' % (proto, x)][t]['within_r2'] for x in PAIRS])
-        ps, ws = f2(p), f2(w)
-        cells.append((r'\textbf{%s}' % ps if p == best_p else ps) + ' & ' + (r'\textbf{%s}' % ws if w == best_w else ws))
-    rows.append(proto + ' & ' + ' & '.join(cells) + r' \\')
+    P, W = ([np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for t, _ in MODELS] for k in ('pooled_r2', 'within_r2'))
+    rows.append(proto + ' & ' + ' & '.join('%s & %s' % c for c in zip(ranked(P), ranked(W))) + r' \\')
 write('main_results.tex', r'''\begin{table*}[t]
 \centering
 \scriptsize
@@ -90,7 +95,7 @@ paper's metric (all test pixels of all folds pooled). \emph{Within}: within-fiel
 which scores only the spatial pattern inside each field. \emph{YieldSAT models}: our reimplementations of the best
 models of \cite{yieldsat}. \emph{Strong baselines}: TabM~\cite{gorishniy2025tabm} and LightGBM~\cite{ke2017lightgbm} on
 the same dense series flattened into per-cell features, added by us. All models use identical splits, inputs and test
-pixels. Best per row in bold. Per-pair results in the supplementary (\cref{tab:supp_full}).}
+pixels. Best per row and metric in bold, second best underlined. Per-pair results in the supplementary (\cref{tab:supp_full}).}
 \label{tab:main}
 \end{table*}
 ''')
@@ -99,16 +104,9 @@ pixels. Best per row in bold. Per-pair results in the supplementary (\cref{tab:s
 if 'field_r2' in pm['CV10|ARG-C'][OURS]:
     rows = []
     for proto in PROTOS:
-        vals = {t: [np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for k in ('field_r2', 'field_rmse')]
-                for t, _ in MODELS}
-        best = [max(v[0] for v in vals.values()), min(v[1] for v in vals.values())]
-        cells = []
-        for t, _ in MODELS:
-            r2, rmse = vals[t]
-            a = r'\textbf{%.3f}' % r2 if abs(r2 - best[0]) < 1e-12 else '%.3f' % r2
-            b = r'\textbf{%.2f}' % rmse if abs(rmse - best[1]) < 1e-12 else '%.2f' % rmse
-            cells.append('%s / %s' % (a, b))
-        rows.append(proto + ' & ' + ' & '.join(cells) + r' \\')
+        R2, RMSE = ([np.mean([pm['%s|%s' % (proto, x)][t][k] for x in PAIRS]) for t, _ in MODELS]
+                    for k in ('field_r2', 'field_rmse'))
+        rows.append(proto + ' & ' + ' & '.join('%s / %s' % c for c in zip(ranked(R2), ranked(RMSE, False, '%.2f'))) + r' \\')
     write('field_level.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
@@ -122,7 +120,8 @@ if 'field_r2' in pm['CV10|ARG-C'][OURS]:
 \end{tabular}
 \caption{\textbf{Field-level $R^2$ / RMSE} (t/ha; a field season's prediction and target are the means over its
 test cells), mean over the nine pairs, the metrics reported in~\cite{yieldsat}. Same models and test pixels as
-\cref{tab:main}; best per row in bold. Per pair in \cref{tab:supp_field}.}
+\cref{tab:main}; best per row and metric in bold (highest $R^2$, lowest RMSE), second best underlined. Per pair in
+\cref{tab:supp_field}.}
 \label{tab:field}
 \end{table*}
 """)
@@ -130,8 +129,8 @@ test cells), mean over the nine pairs, the metrics reported in~\cite{yieldsat}. 
     for proto in PROTOS:
         for i, p in enumerate(PAIRS):
             v = pm['%s|%s' % (proto, p)]
-            cells = ' & '.join('%s / %s' % (bold_best(v, t, 'field_r2', '%.3f', max),
-                                            bold_best(v, t, 'field_rmse', '%.2f', min)) for t, _ in MODELS)
+            cells = ' & '.join('%s / %s' % c for c in zip(ranked([v[t]['field_r2'] for t, _ in MODELS]),
+                                                          ranked([v[t]['field_rmse'] for t, _ in MODELS], False, '%.2f')))
             rows.append((r'\multirow{9}{*}{%s}' % proto if i == 0 else '') + ' & %s & %s \\\\' % (p, cells))
         if proto != 'LORO':
             rows.append(r'\midrule')
@@ -146,8 +145,8 @@ Protocol & Pair & """ + ' & '.join(n for _, n in MODELS) + r""" \\
 """ + '\n'.join(rows) + r"""
 \bottomrule
 \end{tabular}
-\caption{\textbf{Per-pair field-level results} (field-level $R^2$ / field RMSE in t/ha). Best per row in bold
-(highest $R^2$, lowest RMSE).}
+\caption{\textbf{Per-pair field-level results} (field-level $R^2$ / field RMSE in t/ha). Best per row and metric in
+bold (highest $R^2$, lowest RMSE), second best underlined.}
 \label{tab:supp_field}
 \end{table*}
 """)
@@ -204,21 +203,22 @@ Target noise ceiling & semivariogram nugget & %s \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{How much within-field yield variability is predictable}, CV10, mean over the nine pairs (fields
-with $\geq$200 cells). Model-based and model-free estimates agree on three levels.}
+with $\geq$200 cells). Model-based and model-free estimates agree on three levels. Among the models trained across
+fields, the best is in bold and the second best underlined.}
 \label{tab:levels}
 \end{table}
-''' % (f2(np.mean([nc[p]['ceiling_within_r2'] for p in PAIRS])), f2(m('gbm_B8')),
-       f2(np.mean([mi[p]['per_field']['d8_k5']['r2_eq_median'] for p in PAIRS])),
-       f2(np.mean([mi[p]['pooled']['d8_k5']['r2_eq'] for p in PAIRS])),
-       f2(m(OURS)), f2(m('paper_mmgf')), f2(m('lgbm-f0'))))
+''' % ((f2(np.mean([nc[p]['ceiling_within_r2'] for p in PAIRS])), f2(m('gbm_B8')),
+        f2(np.mean([mi[p]['per_field']['d8_k5']['r2_eq_median'] for p in PAIRS])),
+        f2(np.mean([mi[p]['pooled']['d8_k5']['r2_eq'] for p in PAIRS])))
+       + tuple(ranked([m(OURS), m('paper_mmgf'), m('lgbm-f0')]))))
 
 # ---- Supp S1: per-pair full table --------------------------------------------------------------------------------
 rows = []
 for proto in PROTOS:
     for i, p in enumerate(PAIRS):
         v = pm['%s|%s' % (proto, p)]
-        cells = ' & '.join('%s / %s' % (bold_best(v, t, 'pooled_r2', '%.3f', max),
-                                        bold_best(v, t, 'within_r2', '%.3f', max)) for t, _ in MODELS)
+        cells = ' & '.join('%s / %s' % c for c in zip(ranked([v[t]['pooled_r2'] for t, _ in MODELS]),
+                                                      ranked([v[t]['within_r2'] for t, _ in MODELS])))
         rows.append((r'\multirow{9}{*}{%s}' % proto if i == 0 else '') + ' & %s & %s \\\\' % (p, cells))
     rows.append(r'\midrule' if proto != 'LORO' else '')
 write('supp_full.tex', r'''\begin{table*}[t]
@@ -233,7 +233,8 @@ Protocol & Pair & ''' + ' & '.join(n for _, n in MODELS) + r''' \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Per-pair results} (pooled $R^2$ / within-field $R^2$), all models on identical splits and test
-pixels. LORO holds out farms, except for the Argentine pairs (provinces). Best per row in bold, for each metric.}
+pixels. LORO holds out farms, except for the Argentine pairs (provinces). Best per row and metric in bold, second
+best underlined.}
 \label{tab:supp_full}
 \end{table*}
 ''')
@@ -267,15 +268,16 @@ Model & ARG-S & BRA-C & BRA-S & GER-R & GER-W & URG-S & Mean \\
 
 # ---- Supp S3: component ablations ------------------------------------------------------------------------------------
 rl, fc, fa = J('rel_dev_rl04.json'), J('fc_dev_fc04.json'), J('fc_all_fc05.json')
-rows = [
-    r'\multicolumn{4}{l}{\emph{DEV pairs (ARG-W, BRA-C, GER-R, URG-S), vs.\ \method{} (base)}} \\',
-    r'+ relation loss ($\lambda{=}0.5$) & CV10 & %s & %s \\' % (ci(rl['CV10|MEAN|ours-p3nbr-dense-rel05']['pooled_r2']), ci(rl['CV10|MEAN|ours-p3nbr-dense-rel05']['within_r2'])),
-    r'+ relation loss ($\lambda{=}1$) & CV10 & %s & %s \\' % (ci(fc['CV10|MEAN|ours-p3nbr-dense-rel10']['pooled_r2']), ci(fc['CV10|MEAN|ours-p3nbr-dense-rel10']['within_r2'])),
-    r'+ field context & CV10 & %s & %s \\' % (ci(fc['CV10|MEAN|ours-p3nbr-dense-fc']['pooled_r2']), ci(fc['CV10|MEAN|ours-p3nbr-dense-fc']['within_r2'])),
-    r'+ both & CV10 & %s & %s \\' % (ci(fc['CV10|MEAN|ours-p3nbr-dense-fc-rel10']['pooled_r2']), ci(fc['CV10|MEAN|ours-p3nbr-dense-fc-rel10']['within_r2'])),
-    r'+ relation loss ($\lambda{=}1$) & LOYO & %s & %s \\' % (ci(fc['LOYO|MEAN|ours-p3nbr-dense-rel10']['pooled_r2']), ci(fc['LOYO|MEAN|ours-p3nbr-dense-rel10']['within_r2'])),
-    r'+ field context & LOYO & %s & %s \\' % (ci(fc['LOYO|MEAN|ours-p3nbr-dense-fc']['pooled_r2']), ci(fc['LOYO|MEAN|ours-p3nbr-dense-fc']['within_r2'])),
-    r'+ both & LOYO & %s & %s \\' % (ci(fc['LOYO|MEAN|ours-p3nbr-dense-fc-rel10']['pooled_r2']), ci(fc['LOYO|MEAN|ours-p3nbr-dense-fc-rel10']['within_r2'])),
+LAM05, LAM1 = r'+ relation loss ($\lambda{=}0.5$)', r'+ relation loss ($\lambda{=}1$)'
+rows = [r'\multicolumn{4}{l}{\emph{DEV pairs (ARG-W, BRA-C, GER-R, URG-S), vs.\ \method{} (base)}} \\']
+for proto, items in (('CV10', [(LAM05, rl, '-rel05'), (LAM1, fc, '-rel10'), ('+ field context', fc, '-fc'), ('+ both', fc, '-fc-rel10')]),
+                     ('LOYO', [(LAM1, fc, '-rel10'), ('+ field context', fc, '-fc'), ('+ both', fc, '-fc-rel10')])):
+    # variants of one protocol ranked against each other, per metric
+    v = [[d['%s|MEAN|ours-p3nbr-dense%s' % (proto, s)][k] for _, d, s in items] for k in ('pooled_r2', 'within_r2')]
+    mk = [marks([x[0] for x in vk]) for vk in v]
+    rows += [r'%s & %s & %s & %s \\' % (lab, proto, ci(v[0][i], mk[0][i]), ci(v[1][i], mk[1][i]))
+             for i, (lab, _, _) in enumerate(items)]
+rows += [
     r'\midrule',
     r'\multicolumn{4}{l}{\emph{All nine pairs: \method{} vs.\ \method{} (base)}} \\',
 ] + [r'+ both & %s & %s & %s \\' % (p, ci(fa['%s|MEAN|%s' % (p, OURS)]['pooled_r2']), ci(fa['%s|MEAN|%s' % (p, OURS)]['within_r2'])) for p in PROTOS]
@@ -290,8 +292,8 @@ Variant & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
 ''' + '\n'.join(rows) + r'''
 \bottomrule
 \end{tabular}
-\caption{\textbf{Component ablations}: mean change over pairs with 95\% field-season cluster-bootstrap intervals;
-bold when the interval excludes 0.}
+\caption{\textbf{Component ablations}: mean change over pairs with 95\% field-season cluster-bootstrap intervals.
+Per protocol and metric, the best variant in bold, the second best underlined.}
 \label{tab:supp_ablation}
 \end{table}
 ''')
@@ -303,13 +305,16 @@ if (R / 'ablation_dev.json').exists():
               ('Auxiliary inputs', [('noweather', 'weather'), ('nosoil', 'soil'), ('noterrain', 'DEM and terrain')]),
               ('Field context', [('nofstats', 'field S2 statistics'), ('nofdev', 'within-field S2 anomaly'),
                                  ('nofpos', 'within-field position')])]
+    cols = [(p, m) for p in ('CV10', 'LOYO') for m in ('pooled_r2', 'within_r2')]
+    keys = [key for _, items in groups for key, _ in items]
+    mk = {c: dict(zip(keys, marks([ab['%s|MEAN|%s-abl-%s' % (c[0], OURS, k)][c[1]][0] for k in keys]))) for c in cols}
     rows = []
     for gname, items in groups:
         rows.append(r'\multicolumn{5}{l}{\emph{%s}} \\' % gname)
         for key, label in items:
             t = OURS + '-abl-' + key
-            rows.append(r'$-$ %s & %s \\' % (label, ' & '.join(ci(ab['%s|MEAN|%s' % (p, t)][m])
-                                                           for p in ('CV10', 'LOYO') for m in ('pooled_r2', 'within_r2'))))
+            rows.append(r'$-$ %s & %s \\' % (label, ' & '.join(ci(ab['%s|MEAN|%s' % (p, t)][m], mk[(p, m)][key])
+                                                           for p, m in cols)))
     write('supp_ablation_loo.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
@@ -323,8 +328,9 @@ Removed from \method{} & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ & $
 \bottomrule
 \end{tabular}
 \caption{\textbf{Leave-one-out ablations} of \method{} on the development pairs (ARG-W, BRA-C, GER-R, URG-S): mean
-change over the four pairs when one input stream is removed, with 95\% field-season cluster-bootstrap intervals (bold
-when the interval excludes 0). Positive values mean the model is better without the stream.}
+change over the four pairs when one input stream is removed, with 95\% field-season cluster-bootstrap intervals.
+Positive values mean the model is better without the stream. Per column, the best variant in bold, the second best
+underlined.}
 \label{tab:supp_ablation_loo}
 \end{table*}
 """)
@@ -339,9 +345,9 @@ if (R / 'ablation_a1_dense.json').exists():
         d = [x['vs_best_paper_by_within_r2'] for x in v]
         mean = lambda t, k: np.mean([x[t][k] for x in v])
         cnt = lambda k: '%d / %d' % (sum(x['ci_' + k][0] > 0 for x in d), sum(x['ci_' + k][1] < 0 for x in d))
+        mp, mw = (ranked([mean(MONTHLY, k), mean(DENSE, k)]) for k in ('pooled_r2', 'within_r2'))
         rows.append(r'%s & %s / %s & %s / %s & %s & %s & %s & %s \\' % (
-            proto, f2(mean(MONTHLY, 'pooled_r2')), f2(mean(MONTHLY, 'within_r2')),
-            f2(mean(DENSE, 'pooled_r2')), f2(mean(DENSE, 'within_r2')),
+            proto, mp[0], mw[0], mp[1], mw[1],
             f2(np.mean([x['d_pooled_r2'] for x in d]), True), cnt('pooled_r2'),
             f2(np.mean([x['d_within_r2'] for x in d]), True), cnt('within_r2')))
     write('supp_monthly.tex', r"""\begin{table*}[t]
@@ -356,8 +362,8 @@ Protocol & pooled / within & pooled / within & mean & better / worse & mean & be
 """ + '\n'.join(rows) + r"""
 \bottomrule
 \end{tabular}
-\caption{\textbf{Monthly preprocessed release vs.\ dense series}, \method{} (base), mean over the nine pairs.
-\emph{Better / worse}: number of pairs in which the dense series is significantly better / worse (95\% field-season
+\caption{\textbf{Monthly preprocessed release vs.\ dense series}, \method{} (base), mean over the nine pairs; the
+better of the two in bold. \emph{Better / worse}: number of pairs in which the dense series is significantly better / worse (95\% field-season
 cluster bootstrap).}
 \label{tab:supp_monthly}
 \end{table*}
@@ -366,16 +372,18 @@ cluster bootstrap).}
 # ---- Supp: seed variance (spec/yieldsat-ablations-seeds.md) --------------------------------------------------------
 if (R / 'seed_table.json').exists():
     sd = J('seed_table.json')
-    pm_ = lambda d: r'%.3f {\scriptsize$\pm$%.3f}' % (d['mean'], d['sd'])
     rows = []
     for proto in PROTOS:
         sm = sd['%s|MEAN' % proto]
         cells = [sd['%s|%s' % (proto, p)]['diff'] for p in PAIRS]
         cnt = lambda k: '%d / %d' % (sum(x[k]['ci'][0] > 0 for x in cells), sum(x[k]['ci'][1] < 0 for x in cells))
+        # mean +- seed sd, the better of the two models in bold
+        pm_ = lambda k: [r'%s {\scriptsize$\pm$%.3f}' % (s, sm[t][k]['sd'])
+                         for s, t in zip(ranked([sm[t][k]['mean'] for t in (OURS, 'paper_mmgf')]), (OURS, 'paper_mmgf'))]
         rows.append(r'%s & %s & %s & %s & %s & %s & %s & %s & %s \\' % (
-            proto, pm_(sm[OURS]['pooled_r2']), pm_(sm['paper_mmgf']['pooled_r2']),
+            proto, *pm_('pooled_r2'),
             ci([sm['diff']['pooled_r2']['mean']] + sm['diff']['pooled_r2']['ci']), cnt('pooled_r2'),
-            pm_(sm[OURS]['within_r2']), pm_(sm['paper_mmgf']['within_r2']),
+            *pm_('within_r2'),
             ci([sm['diff']['within_r2']['mean']] + sm['diff']['within_r2']['ci']), cnt('within_r2')))
     write('supp_seeds.tex', r"""\begin{table*}[t]
 \centering
@@ -391,7 +399,7 @@ Protocol & \method{} & MMGF & $\Delta$ & better / worse & \method{} & MMGF & $\D
 \bottomrule
 \end{tabular}
 \caption{\textbf{Seed variance.} \method{} and MMGF trained with three seeds on all 217 folds: mean $\pm$ standard
-deviation over seeds of the nine-pair mean. $\Delta$: seed-averaged difference with a 95\% field-season cluster
+deviation over seeds of the nine-pair mean, the better model in bold. $\Delta$: seed-averaged difference with a 95\% field-season cluster
 bootstrap interval (each resample scores all seeds of both models). \emph{Better / worse}: number of pairs in which
 the seed-averaged difference is significant.}
 \label{tab:supp_seeds}
@@ -401,13 +409,18 @@ the seed-averaged difference is significant.}
 # ---- Supp: computational cost (cost-bench batch + all run reports, spec/yieldsat-ablations-seeds.md) ------------------
 if (R / 'cost_bench.json').exists() and (R / 'cost_reports.json').exists():
     cb, cr = J('cost_bench.json'), J('cost_reports.json')
-    rows = []
-    for t, name in [m for m in MODELS if m[0] in cb]:          # TabM / LightGBM were not benchmarked
-        b, c = cb[t], cr[t]
-        rows.append(r'%s & %.2f & %.1f & %s & %s & %.1f & %.0f & %.0f \\' % (
-            name, c['params'][0] / 1e6, c['peak_gpu_gb_median'], '{:,}'.format(int(round(b['samples_per_second'], -2))),
-            '{:,}'.format(int(round(b['test_rows_per_second'], -2))), c['train_samples_median'] / 1e6,
-            c['train_samples_median'] / b['samples_per_second'] / 60, c['train_samples_total'] / b['samples_per_second'] / 3600))
+    ms = [m for m in MODELS if m[0] in cb]                     # TabM / LightGBM were not benchmarked
+    # columns: value, higher is better, format; throughputs are shown rounded to 100 with thousands separators
+    cols = [([cr[t]['params'][0] / 1e6 for t, _ in ms], False, '%.2f'),
+            ([cr[t]['peak_gpu_gb_median'] for t, _ in ms], False, '%.1f'),
+            ([round(cb[t]['samples_per_second'], -2) for t, _ in ms], True, '%.0f'),
+            ([round(cb[t]['test_rows_per_second'], -2) for t, _ in ms], True, '%.0f'),
+            ([cr[t]['train_samples_median'] / 1e6 for t, _ in ms], False, '%.1f'),
+            ([cr[t]['train_samples_median'] / cb[t]['samples_per_second'] / 60 for t, _ in ms], False, '%.0f'),
+            ([cr[t]['train_samples_total'] / cb[t]['samples_per_second'] / 3600 for t, _ in ms], False, '%.0f')]
+    cells = [[deco('{:,}'.format(int(x)) if j in (2, 3) else f % x, m) for x, m in zip(v, marks(v, hi, f))]
+             for j, (v, hi, f) in enumerate(cols)]
+    rows = [r'%s & %s \\' % (name, ' & '.join(c[i] for c in cells)) for i, (_, name) in enumerate(ms)]
     write('supp_cost.tex', r"""\begin{table*}[t]
 \centering
 \small
@@ -421,19 +434,23 @@ Model & (M) & memory (GB) & (cells/s) & (cells/s) & stop (M) & per fold (min) & 
 \end{tabular}
 \caption{\textbf{Computational cost.} Throughput: each model alone on one NVIDIA A10 (GER-R, CV10 fold 0), including
 data loading. Peak GPU memory and the number of training cells processed until early stopping: medians over the 217
-folds of the main experiments. GPU time = cells to stop / training throughput (training only).}
+folds of the main experiments. GPU time = cells to stop / training throughput (training only). Best per column in
+bold (smallest, or fastest for throughput), second best underlined.}
 \label{tab:supp_cost}
 \end{table*}
 """)
 
 # ---- Supp S4: learned field encoder (negative result) ---------------------------------------------------------------
 fe, fb = J('fe_dev_fe04.json'), J('fe_b_dev_fe04b.json')
+FE = (('Field encoder (level + deviation heads)', fe, 'ours-p3nbr-dense-fe'),
+      ('Field encoder (residual, warm-started)', fb, 'ours-p3nbr-dense-fe-b'))
+mk = {(p, k): marks([d['%s|MEAN|%s' % (p, tag)][k][0] for _, d, tag in FE]) for p in ('CV10', 'LOYO') for k in ('pooled_r2', 'within_r2')}
 rows = []
-for name, d, tag in (('Field encoder (level + deviation heads)', fe, 'ours-p3nbr-dense-fe'),
-                     ('Field encoder (residual, warm-started)', fb, 'ours-p3nbr-dense-fe-b')):
+for i, (name, d, tag) in enumerate(FE):
     for p in ('CV10', 'LOYO'):
         v = d['%s|MEAN|%s' % (p, tag)]
-        rows.append(r'%s & %s & %s & %s \\' % (name if p == 'CV10' else '', p, ci(v['pooled_r2']), ci(v['within_r2'])))
+        rows.append(r'%s & %s & %s & %s \\' % (name if p == 'CV10' else '', p, ci(v['pooled_r2'], mk[(p, 'pooled_r2')][i]),
+                                              ci(v['within_r2'], mk[(p, 'within_r2')][i])))
 write('supp_field_encoder.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
@@ -446,7 +463,8 @@ Variant & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Learned field encoder} (set encoder over 64--128 pixels of the field with pixel-to-field
-cross-attention) vs.\ \method{}, four DEV pairs. It does not improve on the explicit field context.}
+cross-attention) vs.\ \method{}, four DEV pairs, with 95\% field-season cluster-bootstrap intervals; the better of
+the two variants in bold. It does not improve on the explicit field context.}
 \label{tab:supp_fe}
 \end{table}
 ''')
@@ -467,9 +485,8 @@ for proto in ('CV10', 'LOYO', 'LORO', 'LORO (province)'):
     a1, a2 = agg.get((proto, 'image_full')), agg.get((proto, 'image_v2'))
     if not a1 or not a2:
         continue
-    rows.append(r'%s & %s / %s & %s / %s & %s / %s \\' % (proto, f2(np.mean(a1['image_p'])), f2(np.mean(a1['image_w'])),
-                                                          f2(np.mean(a2['image_p'])), f2(np.mean(a2['image_w'])),
-                                                          f2(np.mean(a1['point_p'])), f2(np.mean(a1['point_w']))))
+    P, W = (ranked([np.mean(a1['image_' + k]), np.mean(a2['image_' + k]), np.mean(a1['point_' + k])]) for k in 'pw')
+    rows.append(r'%s & %s \\' % (proto, ' & '.join('%s / %s' % c for c in zip(P, W))))
 write('supp_image.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
@@ -481,18 +498,19 @@ Protocol & Image v1 & Image v2 & Point model \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Image (tile) models} vs.\ the point model on matched cells (pooled / within-field $R^2$; earlier
-validation-selected suite, S2+ADM). Seeing whole tiles does not help within fields.}
+validation-selected suite, S2+ADM). Best per row and metric in bold, second best underlined. Seeing whole tiles does
+not help within fields.}
 \label{tab:supp_image}
 \end{table}
 ''')
 
 # ---- Supp S6: per-field oracle per pair -------------------------------------------------------------------------------
-rows = [r'%s & %d & %s & %s & %s & %s & %s & %s & %s & %s & %s \\' % (
-    p, orc[p]['fields'], f2(orc[p]['noise_ceiling']), f2(orc[p]['gbm_B4']), f2(orc[p]['gbm_B8']), f2(orc[p]['gbm_B16']),
-    f2(orc[p]['ridge_B8']), f2(orc[p]['coord_B8']), f2(orc[p]['lgbm-f0']), f2(orc[p]['paper_mmgf']), f2(orc[p][OURS]))
-    for p in PAIRS]
-rows.append(r'\midrule' + '\n' + r'Mean & & %s & %s & %s & %s & %s & %s & %s & %s & %s \\' % tuple(
-    f2(m(k)) for k in ('noise_ceiling', 'gbm_B4', 'gbm_B8', 'gbm_B16', 'ridge_B8', 'coord_B8', 'lgbm-f0', 'paper_mmgf', OURS)))
+ORC_REF, ORC_MODELS = ('noise_ceiling', 'gbm_B4', 'gbm_B8', 'gbm_B16', 'ridge_B8', 'coord_B8'), ('lgbm-f0', 'paper_mmgf', OURS)
+# the ceiling and oracles are bounds, not models: only the three models trained across fields are ranked
+rows = [r'%s & %d & %s & %s \\' % (p, orc[p]['fields'], ' & '.join(f2(orc[p][k]) for k in ORC_REF),
+                                   ' & '.join(ranked([orc[p][k] for k in ORC_MODELS]))) for p in PAIRS]
+rows.append(r'\midrule' + '\n' + r'Mean & & %s & %s \\' % (' & '.join(f2(m(k)) for k in ORC_REF),
+                                                           ' & '.join(ranked([m(k) for k in ORC_MODELS]))))
 write('supp_oracle.tex', r'''\begin{table*}[t]
 \centering
 \scriptsize
@@ -507,7 +525,8 @@ Pair & Fields & ceiling & 40\,m & 80\,m & 160\,m & 80\,m & only, 80\,m & fields 
 \end{tabular}
 \caption{\textbf{Within-field oracle per pair} (within-field $R^2$, CV10 test predictions for the models, spatial
 block cross-validation inside each field for the oracle). The coordinates-only control measures pure spatial
-interpolation.}
+interpolation. Among the three models trained across fields (last three columns), the best is in bold and the second
+best underlined.}
 \label{tab:supp_oracle}
 \end{table*}
 ''')
@@ -549,9 +568,11 @@ def tot(src):
 
 t0 = tot(OURS)
 rows = [r'Share of variance & ' + ' & '.join(f2(v) for v in t0['yy'] / t0['yy'].sum()) + r' \\', r'\midrule']
-for src, lab in ((OURS, r'\method{}'), (BASE, r'\method{} (base)'), ('paper_mmgf', 'MMGF')):
-    s = tot(src)
-    rows.append(r'%s: explained & ' % lab + ' & '.join(f2(v) for v in 1 - s['ee'] / s['yy']) + r' \\')
+SC = ((OURS, r'\method{}'), (BASE, r'\method{} (base)'), ('paper_mmgf', 'MMGF'))
+ex = [1 - tot(src)['ee'] / tot(src)['yy'] for src, _ in SC]
+cells = list(zip(*[ranked(list(col)) for col in zip(*ex)]))       # ranked per band across the three models
+for (src, lab), c in zip(SC, cells):
+    rows.append(r'%s: explained & ' % lab + ' & '.join(c) + r' \\')
 s = tot('input:peak_ndvi')
 rows.append(r'Peak NDVI: correlation & ' + ' & '.join(f2(v) for v in s['py'] / np.sqrt(s['pp'] * s['yy'])) + r' \\')
 write('supp_scale.tex', r'''\begin{table}[t]
@@ -567,7 +588,7 @@ Wavelength & ''' + ' & '.join(b.replace('-', '--').replace('>', '$>$').replace('
 \bottomrule
 \end{tabular}}
 \caption{\textbf{Within-field variability by spatial scale} (CV10, nine pairs pooled; difference-of-Gaussians
-bands on the 10\,m grid).}
+bands on the 10\,m grid). Explained share per band: best of the three models in bold, second best underlined.}
 \label{tab:supp_scale}
 \end{table}
 ''')
@@ -597,36 +618,38 @@ if (R / 'coarse_dev_icc.json').exists():
     tags = [(2, r'20\,m'), (3, r'30\,m'), (6, r'60\,m')]
     rows = []
     for p in DEV + ['MEAN']:
+        # 10 m and the three coarsened inputs ranked per metric (10 m enters as a change of 0)
         if p == 'MEAN':
-            cells = []
-            for k, _ in tags:
-                v = cc['CV10|MEAN|%s-c%d' % (OURS, k)]
-                cells.append('%s & %s' % (ci(v['pooled_r2']), ci(v['within_r2'])))
-            base_w = np.mean([cc['CV10|%s' % q]['baseline']['within_r2'] for q in DEV])
-            rows.append(r'\midrule' + '\n' + r'Mean & %s & %s \\' % (f2(base_w), ' & '.join(cells)))
-            continue
-        v = cc['CV10|%s' % p]
-        cells = []
-        for k, _ in tags:
-            m_ = v['%s-c%d' % (OURS, k)]
-            cells.append('%s & %s' % (ci([m_['d_pooled_r2']] + m_['ci_pooled_r2']), ci([m_['d_within_r2']] + m_['ci_within_r2'])))
-        rows.append(r'%s & %s & %s \\' % (p, f2(v['baseline']['within_r2']), ' & '.join(cells)))
+            base = {k: np.mean([cc['CV10|%s' % q]['baseline'][k] for q in DEV]) for k in ('pooled_r2', 'within_r2')}
+            d = {k: [cc['CV10|MEAN|%s-c%d' % (OURS, c)][k] for c, _ in tags] for k in base}
+        else:
+            v = cc['CV10|%s' % p]
+            base = {k: v['baseline'][k] for k in ('pooled_r2', 'within_r2')}
+            d = {k: [[v['%s-c%d' % (OURS, c)]['d_' + k]] + v['%s-c%d' % (OURS, c)]['ci_' + k] for c, _ in tags] for k in base}
+        mk = {k: marks([0.0] + [x[0] for x in d[k]]) for k in base}
+        cells = ' & '.join('%s & %s' % (ci(d['pooled_r2'][i], mk['pooled_r2'][i + 1]), ci(d['within_r2'][i], mk['within_r2'][i + 1]))
+                           for i in range(len(tags)))
+        rows.append((r'\midrule' + '\n' if p == 'MEAN' else '') + r'%s & %s & %s & %s \\' % (
+            'Mean' if p == 'MEAN' else p, deco(f2(base['pooled_r2']), mk['pooled_r2'][0]),
+            deco(f2(base['within_r2']), mk['within_r2'][0]), cells))
     write('supp_resolution.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{lc""" + 'cc' * len(tags) + r"""}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcc""" + 'cc' * len(tags) + r"""}
 \toprule
- & 10\,m & """ + ' & '.join(r'\multicolumn{2}{c}{S2 at %s}' % lab for _, lab in tags) + r""" \\
-""" + ''.join(r'\cmidrule(lr){%d-%d}' % (3 + 2 * i, 4 + 2 * i) for i in range(len(tags))) + r"""
-Pair & within $R^2$ & """ + ' & '.join([r'$\Delta$ pooled & $\Delta$ within'] * len(tags)) + r""" \\
+ & \multicolumn{2}{c}{S2 at 10\,m} & """ + ' & '.join(r'\multicolumn{2}{c}{S2 at %s}' % lab for _, lab in tags) + r""" \\
+""" + ''.join(r'\cmidrule(lr){%d-%d}' % (2 + 2 * i, 3 + 2 * i) for i in range(len(tags) + 1)) + r"""
+Pair & pooled $R^2$ & within $R^2$ & """ + ' & '.join([r'$\Delta$ pooled & $\Delta$ within'] * len(tags)) + r""" \\
 \midrule
 """ + '\n'.join(rows) + r"""
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{\textbf{Input resolution}: \method{} with Sentinel-2 coarsened to 20, 30 and 60\,m (mean of aligned
 $k\times k$ blocks within the field; targets stay at 10\,m), CV10 on the four development pairs; change vs.\ 10\,m
-with 95\% field-season cluster-bootstrap intervals.}
+with 95\% field-season cluster-bootstrap intervals. Per pair and metric, the best resolution in bold, the second best
+underlined.}
 \label{tab:supp_resolution}
 \end{table*}
 """)
@@ -636,9 +659,10 @@ if (R / 'prior_year.json').exists():
     py = J('prior_year.json')
     M = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5']
     lab = {'M0': 'Model', 'M1': 'Persist.', 'M2': 'Blend', 'M3': 'Resid.', 'M4': 'Blend+res.', 'M5': 'Rescale'}
-    rows = [r'%s & %d & %s \\' % (p, py[p]['seasons'], ' & '.join(f2(py[p]['within_r2'][m]['all']) for m in M)) for p in PAIRS if p in py]
+    rows = [r'%s & %d & %s \\' % (p, py[p]['seasons'], ' & '.join(ranked([py[p]['within_r2'][m]['all'] for m in M])))
+            for p in PAIRS if p in py]
     rows.append(r'\midrule' + '\n' + r'Mean & %d & %s \\' % (sum(py[p]['seasons'] for p in PAIRS if p in py),
-                                                          ' & '.join(f2(py['MEAN_PAIRS'][m]) for m in M)))
+                                                          ' & '.join(ranked([py['MEAN_PAIRS'][m] for m in M]))))
     rows.append(r'$\Delta$ vs.\ model & & & %s \\' % ' & '.join(ci(py['DELTA_VS_M0'][m]) for m in M[1:]))
     write('supp_prior_year.tex', r"""\begin{table*}[t]
 \centering
@@ -655,8 +679,8 @@ Pair & Seasons & """ + ' & '.join(lab[m] for m in M) + r""" \\
 has an earlier season). The farmer's yield map of the same field from an earlier year is aligned to this year's cells.
 \emph{Persist.}: last year's anomaly pattern alone; \emph{Blend}: model + last year's pattern; \emph{Resid.}: the
 model's own error pattern from last year added to this year's prediction; \emph{Rescale}: per-field amplitude fitted
-on last year. Coefficients are fitted on training years only. Bottom row: mean change vs.\ the model with 95\%
-field-season bootstrap intervals.}
+on last year. Coefficients are fitted on training years only. Best per row in bold, second best underlined. Bottom
+row: mean change vs.\ the model with 95\% field-season bootstrap intervals.}
 \label{tab:supp_prior_year}
 \end{table*}
 """)
@@ -721,7 +745,7 @@ Protocol & Pair & \method{} & MMGF & \method{} & MMGF & $\Delta$ within & $\Delt
 \bottomrule
 \end{tabular}
 \caption{\textbf{Clean model selection, per pair.} Cells: pooled / within-field $R^2$. Last two columns: difference
-under validation selection with 95\% field-season cluster bootstrap intervals (bold: excludes 0).}
+under validation selection with 95\% field-season cluster bootstrap intervals.}
 \label{tab:supp_clean_protocol}
 \end{table*}
 """)
@@ -741,40 +765,50 @@ if (R / OWN_FILE).exists():
     MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps10', '-ps3x3', '-pswin', '-ps3x3-pswin'))]
     sd = lambda m: float(np.std(m['seed_within_r2']))
 
-    # main: as tab:main, mean over the two crops per protocol; change vs S2 only in brackets, bold when the
+    # main: as tab:main, mean over the two crops per protocol; change vs S2 only in brackets, '*' when the
     # interval of the mean change excludes 0 (per-crop values in tab:supp_owndata_full)
     mean = lambda pr, t, m: float(np.mean([(oc['%s|%s' % (pr, p)]['baseline'] if t is None else
                                             oc['%s|%s' % (pr, p)][t])[m] for p in OWN_PAIRS]))
 
     def cell(pr, t, m):
+        """(value, bracket) of an arm of ours: R2 and its change vs. S2 only, '*' when the interval excludes 0."""
         if t is None:
-            return f2(mean(pr, None, m))
+            return mean(pr, None, m), None
         d, lo, hi = oc['%s|MEAN|%s' % (pr, t)][m]
-        s_ = '%s {\\scriptsize(%s)}' % (f2(mean(pr, t, m)), f2(d, True))
-        return r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_
-    rows = [r'\method{} & %s & %s \\' % (lab, ' & '.join(cell(pr, t, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')))
-            for t, lab in [(None, 'S2 only')] + [(t, lab) for t, lab in ARMS if t in MAIN_ARMS]]
+        return mean(pr, t, m), f2(d, True) + ('$^{*}$' if lo > 0 or hi < 0 else '')
+    COLS4 = [(pr, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')]
     # baselines (own_cmp_baselines.json, rel_cmp.py with REL_BASE = \method{} S2 only, or \method{} + PS 3x3 for the
-    # PS baselines): change vs \method{} with the same inputs; TabM rows stay a placeholder until its runs are in
+    # PS baselines): difference to \method{} with the same inputs; TabM rows stay a placeholder until its runs are in
     ob = J('own_cmp_baselines.json') if (R / 'own_cmp_baselines.json').exists() else {}
     OWN_BASE = PAPER + [('lgbm-f0-dense', 'LightGBM', 's2'), ('lgbm-f0p-dense', 'LightGBM', 'ps3x3'),
                         ('tabm-f0-dense-bs2048', 'TabM', 's2'), ('tabm-f0p-dense-bs2048', 'TabM', 'ps3x3')]
-    brows = []
+    entries = []                                       # (model, inputs, [(value, bracket)] per column or None)
     for b in OWN_BASE:
         t, name, ref = b if len(b) == 3 else b + ('s2',)
         lab = 'S2 only' if ref == 's2' else r'+ PS, 3$\times$3 sub-grid'
         rc = ob.get(ref, {})
         if not all(t in rc.get('%s|%s' % (pr, p), {}) for pr in OWN_PROTOS for p in OWN_PAIRS):
-            brows.append(r'%s & %s & \multicolumn{4}{c}{\TODO{running}} \\' % (name, lab))
+            entries.append((name, lab, None))
             continue
         cs = []
-        for pr in OWN_PROTOS:
-            for m in ('pooled_r2', 'within_r2'):
-                d, lo, hi = rc['%s|MEAN|%s' % (pr, t)][m]
-                s_ = '%s {\\scriptsize(%s)}' % (f2(float(np.mean([rc['%s|%s' % (pr, p)][t][m] for p in OWN_PAIRS]))),
-                                                f2(d, True))
-                cs.append(r'\textbf{%s}' % s_ if lo > 0 or hi < 0 else s_)
-        brows.append(r'%s & %s & %s \\' % (name, lab, ' & '.join(cs)))
+        for pr, m in COLS4:
+            d, lo, hi = rc['%s|MEAN|%s' % (pr, t)][m]
+            cs.append((float(np.mean([rc['%s|%s' % (pr, p)][t][m] for p in OWN_PAIRS])),
+                       f2(d, True) + ('$^{*}$' if lo > 0 or hi < 0 else '')))
+        entries.append((name, lab, cs))
+    nb = len(entries)
+    entries += [(r'\method{}', lab, [cell(pr, t, m) for pr, m in COLS4])
+                for t, lab in [(None, 'S2 only')] + [(t, lab) for t, lab in ARMS if t in MAIN_ARMS]]
+    # best / second best per column over every model and input with results
+    mk = [marks([None if e[2] is None else e[2][j][0] for e in entries]) for j in range(len(COLS4))]
+    lines = []
+    for i, (name, lab, cs) in enumerate(entries):
+        if cs is None:
+            lines.append(r'%s & %s & \multicolumn{4}{c}{\TODO{running}} \\' % (name, lab))
+            continue
+        lines.append(r'%s & %s & %s \\' % (name, lab, ' & '.join(
+            deco(f2(v), mk[j][i]) + ('' if br is None else r' {\scriptsize(%s)}' % br) for j, (v, br) in enumerate(cs))))
+    brows, rows = lines[:nb], lines[nb:]
     ceil = f2(float(np.mean([nco[p]['ceiling_within_r2'] for p in OWN_PAIRS])))
     write('owndata_main.tex', r"""\begin{table*}[t]
 \centering
@@ -796,21 +830,25 @@ Noise ceiling & & & %s & & %s \\
 \caption{\textbf{Baselines and high-resolution inputs on our Missouri dataset.} Pixel-level $R^2$, mean over the
 two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets: for
 \method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with the same inputs
-(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features). Bold: 95\%% field-season
-cluster bootstrap interval excludes 0. The 30\,m window is the cell and its eight neighbours on the PS grid, read by
+(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features); $^{*}$: 95\%% field-season
+cluster bootstrap interval excludes 0. Best per column in bold, second best underlined. The 30\,m window is the cell and its eight neighbours on the PS grid, read by
 a convolutional encoder. Per-crop results of \method{} in \cref{tab:supp_owndata_full}.}
 \label{tab:owndata}
 \end{table*}
 """ % (ceil, ceil))
 
     # supplementary: every arm, within and pooled change per pair with intervals, seed spread
+    # per column, S2 only (a change of 0) and every arm ranked
+    mk = {(c, k): marks([0.0] + [oc['%s|%s' % c][t]['d_' + k] for t, _ in ARMS]) for c in COLS for k in ('within_r2', 'pooled_r2')}
     rows = [r'S2 only & %s \\' % ' & '.join(
-        r'%s {\scriptsize$\pm$%s} & %s' % (f2(oc['%s|%s' % c]['baseline']['within_r2']), ('%.3f' % sd(oc['%s|%s' % c]['baseline'])),
-                                          f2(oc['%s|%s' % c]['baseline']['pooled_r2'])) for c in COLS)]
-    for t, lab in ARMS:
+        r'%s {\scriptsize$\pm$%s} & %s' % (deco(f2(oc['%s|%s' % c]['baseline']['within_r2']), mk[(c, 'within_r2')][0]),
+                                          ('%.3f' % sd(oc['%s|%s' % c]['baseline'])),
+                                          deco(f2(oc['%s|%s' % c]['baseline']['pooled_r2']), mk[(c, 'pooled_r2')][0])) for c in COLS)]
+    for i, (t, lab) in enumerate(ARMS):
         rows.append(r'%s & %s \\' % (lab, ' & '.join(
-            '%s & %s' % (ci([oc['%s|%s' % c][t]['d_within_r2']] + oc['%s|%s' % c][t]['ci_within_r2']),
-                         ci([oc['%s|%s' % c][t]['d_pooled_r2']] + oc['%s|%s' % c][t]['ci_pooled_r2'])) for c in COLS)))
+            '%s & %s' % (ci([oc['%s|%s' % c][t]['d_within_r2']] + oc['%s|%s' % c][t]['ci_within_r2'], mk[(c, 'within_r2')][i + 1]),
+                         ci([oc['%s|%s' % c][t]['d_pooled_r2']] + oc['%s|%s' % c][t]['ci_pooled_r2'], mk[(c, 'pooled_r2')][i + 1]))
+            for c in COLS)))
     write('supp_owndata_full.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
@@ -826,8 +864,8 @@ Inputs & within & pooled & within & pooled & within & pooled & within & pooled \
 \bottomrule
 \end{tabular}}
 \caption{\textbf{Our dataset, all input variants.} First row: $R^2$ of S2 only (within-field with its seed standard
-deviation, and pooled). Other rows: change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold:
-excludes 0), seeds 0--2 pooled. ``conv.'': convolutional encoder over the sub-grid instead of flat channels.}
+deviation, and pooled). Other rows: change vs.\ S2 only with 95\% field-season cluster bootstrap intervals, seeds
+0--2 pooled. Per column, the best input in bold, the second best underlined. ``conv.'': convolutional encoder over the sub-grid instead of flat channels.}
 \label{tab:supp_owndata_full}
 \end{table*}
 """)
@@ -872,18 +910,20 @@ slots of the dense series inside the season. Noise ceiling: within-field $R^2$ (
 # ---- PlanetScope on a YieldSAT subset (spec/yieldsat-planetscope.md): the Missouri-best arm vs S2 only ------------
 if (R / 'ysat_ps_cmp.json').exists():
     yc, PS_ARM = J('ysat_ps_cmp.json'), OURS + '-ps3x3-pswin'
+
+    def pair_cells(base, d):
+        # 'S2 only & + PS': R2 of S2 only and the change with PS, the better of the two in bold
+        mk = marks([0.0, d[0]])
+        return '%s & %s' % (deco(f2(base), mk[0]), ci(d, mk[1]))
     rows = []
     for proto in ('CV10', 'LOYO'):
         for p in ('ARG-S', 'ARG-C', 'BRA-C'):
             b, o = yc['%s|%s' % (proto, p)]['baseline'], yc['%s|%s' % (proto, p)][PS_ARM]
-            rows.append(r'%s & %s & %d & %s & %s & %s & %s \\' % (
-                proto if p == 'ARG-S' else '', p, b['fields'], f2(b['within_r2']),
-                ci([o['d_within_r2']] + o['ci_within_r2']), f2(b['pooled_r2']),
-                ci([o['d_pooled_r2']] + o['ci_pooled_r2'])))
+            rows.append(r'%s & %s & %d & %s \\' % (proto if p == 'ARG-S' else '', p, b['fields'], ' & '.join(
+                pair_cells(b[k], [o['d_' + k]] + o['ci_' + k]) for k in ('within_r2', 'pooled_r2'))))
         m = yc['%s|MEAN|%s' % (proto, PS_ARM)]
-        mb = lambda k: f2(float(np.mean([yc['%s|%s' % (proto, p)]['baseline'][k] for p in ('ARG-S', 'ARG-C', 'BRA-C')])))
-        rows.append(r' & Mean & & %s & %s & %s & %s \\' % (mb('within_r2'), ci(m['within_r2']), mb('pooled_r2'),
-                                                         ci(m['pooled_r2'])))
+        mb = lambda k: float(np.mean([yc['%s|%s' % (proto, p)]['baseline'][k] for p in ('ARG-S', 'ARG-C', 'BRA-C')]))
+        rows.append(r' & Mean & & %s \\' % ' & '.join(pair_cells(mb(k), m[k]) for k in ('within_r2', 'pooled_r2')))
     write('supp_ysat_ps.tex', r"""\begin{table}[t]
 \centering
 \scriptsize
@@ -900,7 +940,7 @@ Protocol & Pair & Fields & S2 only & + PS & S2 only & + PS \\
 \end{tabular}}
 \caption{\textbf{PlanetScope on YieldSAT.} \method{} with S2 only and with PS (3$\times$3 sub-grid and 30\,m window,
 the best variant on our dataset, unchanged) on the three pairs of \cref{sec:q4}; seeds 0--2 pooled. ``+ PS'':
-change vs.\ S2 only with 95\% field-season cluster bootstrap intervals (bold: excludes 0).}
+change vs.\ S2 only with 95\% field-season cluster bootstrap intervals. The better input in bold.}
 \label{tab:supp_ysat_ps}
 \end{table}
 """)
@@ -912,13 +952,18 @@ if (R / 'ysat_size_cmp.json').exists():
               ('Token width (128)', [('w64', '64', '1.6M'), ('w256', '256', '3.6M')]),
               ('Latent self-attention blocks (2)', [('d1', '1', '1.8M'), ('d4', '4', '2.4M')])]
     mb = lambda proto, k: f2(float(np.mean([sz['%s|%s' % (proto, p)]['baseline'][k] for p in DEV])))
-    rows = [r'Default & 2.0M & %s \\' % ' & '.join(mb(p, k) for p in ('CV10', 'LOYO') for k in ('pooled_r2', 'within_r2'))]
+    cols = [(p, k) for p in ('CV10', 'LOYO') for k in ('pooled_r2', 'within_r2')]
+    keys = [key for _, items in groups for key, _, _ in items]
+    # per column, the default (a change of 0) and every setting ranked
+    mk = {c: dict(zip(['default'] + keys, marks([0.0] + [sz['%s|MEAN|%s-%s' % (c[0], OURS, k)][c[1]][0] for k in keys])))
+          for c in cols}
+    rows = [r'Default & 2.0M & %s \\' % ' & '.join(deco(mb(p, k), mk[(p, k)]['default']) for p, k in cols)]
     for gname, items in groups:
         rows.append(r'\multicolumn{6}{l}{\emph{%s}} \\' % gname)
         for key, label, npar in items:
             t = OURS + '-' + key
             rows.append(r'\quad %s & %s & %s \\' % (label, npar, ' & '.join(
-                ci(sz['%s|MEAN|%s' % (p, t)][m]) for p in ('CV10', 'LOYO') for m in ('pooled_r2', 'within_r2'))))
+                ci(sz['%s|MEAN|%s' % (p, t)][m], mk[(p, m)][key]) for p, m in cols)))
     write('supp_size.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
@@ -934,8 +979,8 @@ Setting & Parameters & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ & $\D
 \caption{\textbf{Model size.} \method{} with one setting changed at a time (default in parentheses) on the
 development pairs (ARG-W, BRA-C, GER-R, URG-S), seed 0. Parameters as built for ARG-W. First row: the default's mean
 $R^2$ over the four pairs; other
-rows: mean change over the four pairs with 95\% field-season cluster-bootstrap intervals (bold when the interval
-excludes 0).}
+rows: mean change over the four pairs with 95\% field-season cluster-bootstrap intervals. Per column, the best
+setting in bold, the second best underlined.}
 \label{tab:supp_size}
 \end{table*}
 """)
@@ -943,7 +988,7 @@ excludes 0).}
 # ---- Per-field within-field R2 (results/field_cmp.py): the typical field and the share of fields that improve ------
 if (R / 'field_cmp.json').exists():
     fcm = J('field_cmp.json')
-    iqr = lambda v: r'%s {\scriptsize[%s, %s]}' % (f2(v[0]), f2(v[1][0]), f2(v[1][1]))
+    iqr = lambda v, m='': r'%s {\scriptsize[%s, %s]}' % (deco(f2(v[0]), m), f2(v[1][0]), f2(v[1][1]))
     pct = lambda v: r'%d\%% {\scriptsize[%d, %d]}' % tuple(round(100 * x) for x in [v[0]] + v[1])
     BLOCKS = [('vs_mmgf', r'\method{} vs.\ MMGF', 'MMGF', r'\method{}'),
               ('vs_tabm', r'\method{} vs.\ TabM', 'TabM', r'\method{}'),
@@ -959,8 +1004,9 @@ if (R / 'field_cmp.json').exists():
         for p in protos:
             v = fcm['%s|%s' % (key, p)]
             gain = [v['median_gain']] + v['ci_median_gain']
+            mk = marks([v['base_median'], v['var_median']])
             rows.append(r'\quad %s & %d & %s & %s & %s & %s \\' % (
-                p.upper(), v['fields'], iqr([v['base_median'], v['base_iqr']]), iqr([v['var_median'], v['var_iqr']]),
+                p.upper(), v['fields'], iqr([v['base_median'], v['base_iqr']], mk[0]), iqr([v['var_median'], v['var_iqr']], mk[1]),
                 ci(gain), pct([v['share_improved'], v['ci_share_improved']])))
     write('supp_per_field.tex', r"""\begin{table*}[t]
 \centering
@@ -976,7 +1022,8 @@ Comparison & seasons & Baseline & Variant & gain & improved \\
 \caption{\textbf{Per field.} Within-field $R^2$ of each field season on its own (field seasons with at least
 1{,}000 labelled test cells), on the test pixels of \cref{tab:main,tab:owndata,tab:supp_ysat_ps}. Median and
 interquartile range per model; median of the paired per-field change and share of field seasons whose within-field
-$R^2$ rises, with 95\% field-season bootstrap intervals resampled within each pair (bold: excludes 0). Seed 0 for
+$R^2$ rises, with 95\% field-season bootstrap intervals resampled within each pair. The higher median of the two
+models in bold. Seed 0 for
 YieldSAT models, seeds 0--2 pooled per field for PS.}
 \label{tab:supp_per_field}
 \end{table*}
