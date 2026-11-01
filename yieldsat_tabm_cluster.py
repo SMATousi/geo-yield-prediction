@@ -115,6 +115,16 @@ def stage(rels, src_root, dst_root, ignore=()):
             mark.write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
 
 
+def is_staged(unit, artifact_root):
+    """All of the unit's artifact paths already copied to this pod (the '.staged' markers of stage());
+    split files are a few KB per unit and do not count."""
+    sets = [(unit.get('stage') or [], Path(artifact_root))]
+    if unit.get('stage_ps'):
+        sets.append((unit['stage_ps']['paths'], Path(artifact_root) / 'ps2'))
+    return all((dst / '.staged' / rel.replace('/', '__').replace('*', '+')).exists()
+               for rels, dst in sets for rel in rels if not rel.startswith('splits/'))
+
+
 def stage_image(spec, src_img, local_root):
     """Image units: stage the tiles of spec['countries'] (only spec['crops'] tiles, uncompressed and
     sparse, when crops are given; the compressed files otherwise), their patch tables and DINO
@@ -197,7 +207,11 @@ def cmd_pool(a):
             print('GPU no longer healthy; pool worker exits without claiming', flush=True)
             sys.exit(3)
         unit = None
-        for u in plan['units']:
+        # prefer units whose data this pod already holds: every newly staged country adds up to ~45 GB of
+        # local disk, and a pod that hopped Argentina -> Brazil was evicted at the 80 Gi limit (2026-11-01)
+        order = sorted(plan['units'], key=lambda u: not is_staged(u, a.artifact_root)) if a.stage_from \
+            else plan['units']
+        for u in order:
             if claims.try_claim(u['id']):
                 unit = u
                 break
