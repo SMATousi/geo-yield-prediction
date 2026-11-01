@@ -778,7 +778,7 @@ if (R / OWN_FILE).exists():
         return mean(pr, t, m), f2(d, True) + ('$^{*}$' if lo > 0 or hi < 0 else '')
     COLS4 = [(pr, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')]
     # baselines (own_cmp_baselines.json, rel_cmp.py with REL_BASE = \method{} S2 only, or \method{} + PS 3x3 for the
-    # PS baselines): difference to \method{} with the same inputs; TabM rows stay a placeholder until its runs are in
+    # PS baselines): difference to \method{} with the same inputs; a model without results stays a placeholder
     ob = J('own_cmp_baselines.json') if (R / 'own_cmp_baselines.json').exists() else {}
     OWN_BASE = PAPER + [('lgbm-f0-dense', 'LightGBM', 's2'), ('lgbm-f0p-dense', 'LightGBM', 'ps3x3'),
                         ('tabm-f0-dense-bs2048', 'TabM', 's2'), ('tabm-f0p-dense-bs2048', 'TabM', 'ps3x3')]
