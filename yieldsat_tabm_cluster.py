@@ -86,6 +86,16 @@ class Claims:
         (d / 'heartbeat').write_text(str(time.time()))
         return True
 
+    def available(self, uid):
+        """try_claim would take the unit (no claim, or a stale one), without claiming it."""
+        d = self.d(uid)
+        if not d.exists():
+            return True
+        if (d / 'done').exists() or (d / 'gave_up').exists():
+            return False
+        hb = d / 'heartbeat'
+        return time.time() - (hb.stat().st_mtime if hb.exists() else d.stat().st_mtime) >= self.stale
+
     def beat(self, uid):
         (self.d(uid) / 'heartbeat').write_text(str(time.time()))
 
@@ -115,14 +125,9 @@ def stage(rels, src_root, dst_root, ignore=()):
             mark.write_text(time.strftime('%Y-%m-%dT%H:%M:%S'))
 
 
-def is_staged(unit, artifact_root):
-    """All of the unit's artifact paths already copied to this pod (the '.staged' markers of stage());
-    split files are a few KB per unit and do not count."""
-    sets = [(unit.get('stage') or [], Path(artifact_root))]
-    if unit.get('stage_ps'):
-        sets.append((unit['stage_ps']['paths'], Path(artifact_root) / 'ps2'))
-    return all((dst / '.staged' / rel.replace('/', '__').replace('*', '+')).exists()
-               for rels, dst in sets for rel in rels if not rel.startswith('splits/'))
+def unit_country(unit):
+    """The country whose cache a unit stages (cache_dense/<Country>), None for units without one."""
+    return next((r.split('/')[1] for r in unit.get('stage') or [] if r.startswith('cache_dense/')), None)
 
 
 def stage_image(spec, src_img, local_root):
@@ -197,6 +202,30 @@ def cmd_pool(a):
     owner = os.environ.get('HOSTNAME', os.uname().nodename) + (
         '-s' + os.environ['POOL_SLOT'] if os.environ.get('POOL_SLOT') else '')
     claims = Claims(Path(out_root) / '_claims', owner, a.stale_minutes)
+    root = Path(a.artifact_root)
+    country_file = root / '.country'
+    one_country = bool(a.stage_from) and any(u.get('stage_ps') for u in plan['units'])
+    busy = None
+    if one_country:
+        import fcntl
+        root.mkdir(parents=True, exist_ok=True)
+
+    def set_country(new, keep):
+        """keep=None: set the pod's country unless one is set. Otherwise (caller holds .busy exclusively):
+        if the country is still `keep`, clear every staged directory and set `new`. Returns the country."""
+        with open(root / '.country.lock', 'w') as lk:
+            fcntl.flock(lk, fcntl.LOCK_EX)
+            cur = country_file.read_text() if country_file.exists() else None
+            if keep is not None and cur == keep:
+                for p in root.iterdir():
+                    if p.is_dir():
+                        shutil.rmtree(p, ignore_errors=True)
+                print('pod switched from {} to {}; staged data cleared'.format(keep, new), flush=True)
+                cur = None
+            if cur is None:
+                country_file.write_text(new)
+                cur = new
+            return cur
     ran = 0
     while True:
         # a GPU can also fail mid-run (2026-10-06, nrp-01.laccd.edu: 'unspecified launch failure', then
@@ -207,14 +236,42 @@ def cmd_pool(a):
             print('GPU no longer healthy; pool worker exits without claiming', flush=True)
             sys.exit(3)
         unit = None
-        # prefer units whose data this pod already holds: every newly staged country adds up to ~45 GB of
-        # local disk, and a pod that hopped Argentina -> Brazil was evicted at the 80 Gi limit (2026-11-01)
-        order = sorted(plan['units'], key=lambda u: not is_staged(u, a.artifact_root)) if a.stage_from \
-            else plan['units']
-        for u in order:
-            if claims.try_claim(u['id']):
-                unit = u
-                break
+        if busy:
+            busy.close()
+            busy = None
+        if one_country:
+            # PlanetScope units stage up to ~52 GB per country; a pod that held Argentina and then staged
+            # Brazil was evicted at its 80 Gi disk limit (2026-11-01). The pod holds one country at a time:
+            # a slot runs only units of the current country (shared lock on .busy through staging and
+            # training); when none is left it waits for the other slot's unit to end (exclusive lock),
+            # clears the staged data and moves the pod to the next country.
+            busy = open(root / '.busy', 'w')
+            fcntl.flock(busy, fcntl.LOCK_SH)
+            cur = country_file.read_text() if country_file.exists() else None
+            if cur is None:
+                first = next((u for u in plan['units'] if claims.available(u['id'])), None)
+                if first is None:
+                    break
+                cur = set_country(unit_country(first), keep=None)
+            for u in plan['units']:
+                if unit_country(u) in (cur, None) and claims.try_claim(u['id']):
+                    unit = u
+                    break
+            if unit is None:
+                nxt = next((u for u in plan['units'] if claims.available(u['id'])), None)
+                if nxt is None:
+                    break
+                fcntl.flock(busy, fcntl.LOCK_UN)
+                print('no {} units left; waiting for the other slot to switch the pod to {}'.format(
+                    cur, unit_country(nxt)), flush=True)
+                fcntl.flock(busy, fcntl.LOCK_EX)
+                set_country(unit_country(nxt), keep=cur)
+                continue
+        else:
+            for u in plan['units']:
+                if claims.try_claim(u['id']):
+                    unit = u
+                    break
         if unit is None:
             break
         d = claims.d(unit['id'])
