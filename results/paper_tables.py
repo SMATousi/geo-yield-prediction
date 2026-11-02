@@ -17,6 +17,9 @@ J = lambda name: json.loads((R / name).read_text())
 PAIRS = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 PROTOS = ['CV10', 'LOYO', 'LORO']
 OURS, BASE = 'ours-p3nbr-dense-fc-rel10', 'ours-p3nbr-dense'
+# our dataset is reported with the epoch selected on its validation partition (decision 2026-11-02; the *_val files are
+# rel_cmp.py / field_cmp.py with REL_SUB=own_v2 REL_SEL=val (FC_SEL=val), seeds 0-2); OWN_SEL=test: test-selected
+OWN_SEL = os.environ.get('OWN_SEL', 'val')
 PAPER = [('paper_3dlstm', '3D-LSTM'), ('paper_3dconvlstm', '3D-ConvLSTM'), ('paper_aff', 'AFF'), ('paper_mmgf', 'MMGF')]
 #: Strong per-cell baselines added to the paper's set (spec/yieldsat-tabular-dense.md): the dense series flattened
 #: into features (F0) for TabM and LightGBM.
@@ -362,8 +365,7 @@ cluster bootstrap).}
 \end{table*}
 """)
 
-# ---- Supp: epoch selection on a validation partition (RX-2, spec/yieldsat-review-experiments.md; Missouri:
-# spec/own-dataset-v2.md §3, own_val_cmp.json = rel_cmp.py with REL_SUB=own_v2 REL_SEL=val) ---------------------------
+# ---- Supp: epoch selection on a validation partition, YieldSAT (RX-2, spec/yieldsat-review-experiments.md) ----------
 if (R / 'clean_protocol.json').exists():
     cp = J('clean_protocol.json')
     rows = []
@@ -399,38 +401,6 @@ MMGF, both selected on the validation partition; \emph{better / worse}: pairs in
 better / worse (95\% field-season cluster bootstrap).}
 \label{tab:supp_valsel}
 \end{table*}
-''')
-
-if (R / 'own_val_cmp.json').exists():
-    ov, ot = J('own_val_cmp.json'), J('own_cmp_all.json')   # test-selected: the main table's comparison
-    rows = []
-    for pr in ('CV10', 'LOYO'):
-        s2 = [float(np.mean([d['%s|%s' % (pr, p)]['baseline']['within_r2'] for p in ('MO-S', 'MO-C')])) for d in (ot, ov)]
-        cells = []
-        for t in (OURS + '-ps3x3', OURS + '-ps3x3-pswin'):
-            for d in (ot, ov):
-                pt, lo, hi = d['%s|MEAN|%s' % (pr, t)]['within_r2']
-                cells.append(f2(pt, True) + ('$^{*}$' if lo > 0 or hi < 0 else ''))
-        rows.append(r'%s & %s & %s & %s \\' % (pr, f2(s2[0]), f2(s2[1]), ' & '.join(cells)))
-    write('supp_valsel_own.tex', r'''\begin{table}[t]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lcccccc}
-\toprule
- & \multicolumn{2}{c}{S2 only} & \multicolumn{2}{c}{+ PS 3$\times$3} & \multicolumn{2}{c}{+ PS 3$\times$3 + 30\,m window} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-Protocol & Test & Val. & Test & Val. & Test & Val. \\
-\midrule
-''' + '\n'.join(rows) + r'''
-\bottomrule
-\end{tabular}
-\caption{\textbf{Epoch selection on a validation partition}, our Missouri dataset: within-field $R^2$ of \method{} with
-S2 only, and the gain from PS, with the epoch selected on the test fold (\emph{Test}, as in \cref{tab:owndata}) or on
-15\% of the training field seasons held out for validation (\emph{Val.}). Mean over the two crops, seeds 0--2 pooled;
-$^{*}$: 95\% field-season cluster bootstrap interval excludes 0.}
-\label{tab:supp_valsel_own}
-\end{table}
 ''')
 
 # ---- Supp: seed variance (spec/yieldsat-ablations-seeds.md) --------------------------------------------------------
@@ -506,8 +476,8 @@ bold (smallest, or fastest for throughput), second best underlined.}
 
 # ---- Supp S4: learned field encoder (negative result) ---------------------------------------------------------------
 fe, fb = J('fe_dev_fe04.json'), J('fe_b_dev_fe04b.json')
-FE = (('Field encoder (level + deviation heads)', fe, 'ours-p3nbr-dense-fe'),
-      ('Field encoder (residual, warm-started)', fb, 'ours-p3nbr-dense-fe-b'))
+FE = (('level + deviation heads', fe, 'ours-p3nbr-dense-fe'),
+      ('residual, warm-started', fb, 'ours-p3nbr-dense-fe-b'))
 mk = {(p, k): marks([d['%s|MEAN|%s' % (p, tag)][k][0] for _, d, tag in FE]) for p in ('CV10', 'LOYO') for k in ('pooled_r2', 'within_r2')}
 rows = []
 for i, (name, d, tag) in enumerate(FE):
@@ -518,10 +488,10 @@ for i, (name, d, tag) in enumerate(FE):
 write('supp_field_encoder.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{0.1pt}
 \begin{tabular}{llcc}
 \toprule
-Variant & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
+Variant (Field encoder) & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
 \midrule
 ''' + '\n'.join(rows) + r'''
 \bottomrule
@@ -580,7 +550,7 @@ write('supp_oracle.tex', r'''\begin{table*}[t]
 \scriptsize
 \begin{tabular}{lcccccccccc}
 \toprule
- & & Noise & \multicolumn{3}{c}{Per-field oracle (GBM), block size} & Ridge & Coordinates & GBM across & & \\
+ & & Noise & \multicolumn{3}{c}{Per-field probe (GBM), block size} & Ridge & Coordinates & GBM across & & \\
 \cmidrule(lr){4-6}
 Pair & Fields & ceiling & 40\,m & 80\,m & 160\,m & 80\,m & only, 80\,m & fields & MMGF & \method{} \\
 \midrule
@@ -815,7 +785,7 @@ under validation selection with 95\% field-season cluster bootstrap intervals.}
 """)
 
 # ---- Own dataset (spec/own-dataset-training.md): S2 only vs high-resolution inputs, 3 seeds -----------------------
-OWN_FILE = 'own_cmp_all.json' if (R / 'own_cmp_all.json').exists() else 'own2_cmp.json'
+OWN_FILE = 'own_cmp_all_val.json' if OWN_SEL == 'val' else 'own_cmp_all.json'
 if (R / OWN_FILE).exists():
     oc, st, nco = J(OWN_FILE), J('own_dataset_stats.json'), J('noise_ceiling_own.json')
     OWN_PAIRS, OWN_PROTOS = ['MO-S', 'MO-C'], ['CV10', 'LOYO']
@@ -844,7 +814,8 @@ if (R / OWN_FILE).exists():
     COLS4 = [(pr, m) for pr in OWN_PROTOS for m in ('pooled_r2', 'within_r2')]
     # baselines (own_cmp_baselines.json, rel_cmp.py with REL_BASE = \method{} S2 only, or \method{} + PS 3x3 for the
     # PS baselines): difference to \method{} with the same inputs; a model without results stays a placeholder
-    ob = J('own_cmp_baselines.json') if (R / 'own_cmp_baselines.json').exists() else {}
+    OWN_BASE_FILE = 'own_cmp_baselines_val.json' if OWN_SEL == 'val' else 'own_cmp_baselines.json'
+    ob = J(OWN_BASE_FILE) if (R / OWN_BASE_FILE).exists() else {}
     OWN_BASE = PAPER + [('lgbm-f0-dense', 'LightGBM', 's2'), ('lgbm-f0p-dense', 'LightGBM', 'ps3x3'),
                         ('tabm-f0-dense-bs2048', 'TabM', 's2'), ('tabm-f0p-dense-bs2048', 'TabM', 'ps3x3')]
     entries = []                                       # (model, inputs, [(value, bracket)] per column or None)
@@ -1054,6 +1025,8 @@ setting in bold, the second best underlined.}
 # ---- Per-field within-field R2 (results/field_cmp.py): the typical field and the share of fields that improve ------
 if (R / 'field_cmp.json').exists():
     fcm = J('field_cmp.json')
+    if OWN_SEL == 'val' and (R / 'field_cmp_own_val.json').exists():   # our dataset: validation-selected runs
+        fcm.update({k: v for k, v in J('field_cmp_own_val.json').items() if k.startswith('ps_own|')})
     iqr = lambda v, m='': r'%s {\scriptsize[%s, %s]}' % (deco(f2(v[0]), m), f2(v[1][0]), f2(v[1][1]))
     pct = lambda v: r'%d\%% {\scriptsize[%d, %d]}' % tuple(round(100 * x) for x in [v[0]] + v[1])
     BLOCKS = [('vs_mmgf', r'\method{} vs.\ MMGF', 'MMGF', r'\method{}'),

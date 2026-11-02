@@ -105,3 +105,16 @@ clear slots).
 48 LightGBM units (`..._lgbm_units.json`), claim pool under `/root/owndata_results_v2/_claims`, outputs
 `/root/owndata_results_v2/own_v2/<group>/s2_adm/<tag>_seed<k>/<pair>/foldNN`. The paper models are CPU-bound
 (data loading; GPU ~25%): 5 concurrent runs.
+
+## Decision 2026-11-02: the paper reports our dataset validation-selected
+
+Project lead, 2026-11-02: every result on our dataset in the paper uses the epoch selected on the validation partition
+(`<group>_val_s0`); YieldSAT stays test-selected as in its paper (with the RX-2 check in the supplement).
+`results/paper_tables.py` reads the `*_val` files by default (`OWN_SEL=test` restores the test-selected tables):
+- `own_cmp_all_val.json`, `own_cmp_baselines_val.json`, `own_cmp_vs_ps10_val.json`, `own_cmp_win_vs_3x3_val.json`:
+  `rel_cmp.py` with REL_SUB=own_v2 REL_SEL=val REL_SEEDS=0,1,2;
+- `field_cmp_own_val.json`: `field_cmp.py` with FC_SEL=val FC_OWN_SUB=own_v2 (only its ps_own rows are used);
+- maps: `plot_yield_maps.py ... own` with MAPS_OWN_SUB=own_v2 MAPS_GROUP=cv10_season_val_s0.
+Headline: PS (3x3 + window) +0.050 / +0.094 within-field (CV10 / LOYO), sub-grid alone +0.054 / +0.048; pooled R2
+is low for every model under this selection (ours S2-only 0.17 / 0.13); TabM + PS has the best CV10 within-field R2
+(0.372 vs 0.363 / 0.367), ours + window the best LOYO (0.372 vs 0.327); best vs PS 10 m mean +0.002 n.s. / +0.037*.

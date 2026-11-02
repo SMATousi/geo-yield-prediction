@@ -1,0 +1,257 @@
+{
+ "vs_mmgf|cv10": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_mmgf|loyo": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_mmgf|loro": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_tabm|cv10": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_tabm|loyo": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_tabm|loro": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_base|cv10": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_base|loyo": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "vs_base|loro": {
+  "incomplete": [
+   "ARG-C",
+   "ARG-S",
+   "ARG-W",
+   "BRA-C",
+   "BRA-S",
+   "BRA-W",
+   "GER-R",
+   "GER-W",
+   "URG-S"
+  ]
+ },
+ "ps_yieldsat|cv10": {
+  "incomplete": [
+   "ARG-S",
+   "ARG-C",
+   "BRA-C"
+  ]
+ },
+ "ps_yieldsat|loyo": {
+  "incomplete": [
+   "ARG-S",
+   "ARG-C",
+   "BRA-C"
+  ]
+ },
+ "ps_own|cv10": {
+  "base": "ours-p3nbr-dense-fc-rel10",
+  "variant": "ours-p3nbr-dense-fc-rel10-ps3x3-pswin",
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "min_cells": 1000,
+  "fields": 79,
+  "base_median": 0.2270259080608681,
+  "base_iqr": [
+   0.048249735241348735,
+   0.3901435486553036
+  ],
+  "var_median": 0.266044522167204,
+  "var_iqr": [
+   0.135648066953042,
+   0.43094925204542467
+  ],
+  "median_gain": 0.04566169381938667,
+  "share_improved": 0.7341772151898734,
+  "ci_median_gain": [
+   0.03435348480213718,
+   0.07021906875194772
+  ],
+  "ci_share_improved": [
+   0.6455696202531646,
+   0.8227848101265823
+  ],
+  "per_pair": {
+   "MO-S": {
+    "fields": 62,
+    "base_median": 0.2034133058563934,
+    "var_median": 0.23076450383047564,
+    "share_improved": 0.7741935483870968
+   },
+   "MO-C": {
+    "fields": 17,
+    "base_median": 0.29267970933951637,
+    "var_median": 0.35816294673185967,
+    "share_improved": 0.5882352941176471
+   }
+  },
+  "by_threshold": {
+   "50": {
+    "fields": 84,
+    "median_gain": 0.048367546432921904,
+    "share_improved": 0.7380952380952381
+   },
+   "1000": {
+    "fields": 79,
+    "median_gain": 0.04566169381938667,
+    "share_improved": 0.7341772151898734
+   },
+   "3000": {
+    "fields": 31,
+    "median_gain": 0.04566169381938667,
+    "share_improved": 0.7741935483870968
+   }
+  }
+ },
+ "ps_own|loyo": {
+  "base": "ours-p3nbr-dense-fc-rel10",
+  "variant": "ours-p3nbr-dense-fc-rel10-ps3x3-pswin",
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "min_cells": 1000,
+  "fields": 79,
+  "base_median": 0.2312061734650963,
+  "base_iqr": [
+   0.029544628011485052,
+   0.3528154953754761
+  ],
+  "var_median": 0.25794000344940893,
+  "var_iqr": [
+   0.09493702749928218,
+   0.4092038830544415
+  ],
+  "median_gain": 0.03432928435349758,
+  "share_improved": 0.6075949367088608,
+  "ci_median_gain": [
+   -3.7645632303906496e-05,
+   0.09365019222804886
+  ],
+  "ci_share_improved": [
+   0.4936708860759494,
+   0.7088607594936709
+  ],
+  "per_pair": {
+   "MO-S": {
+    "fields": 62,
+    "base_median": 0.20179555720593395,
+    "var_median": 0.23489104475586692,
+    "share_improved": 0.5806451612903226
+   },
+   "MO-C": {
+    "fields": 17,
+    "base_median": 0.24623743315517743,
+    "var_median": 0.3995065047083918,
+    "share_improved": 0.7058823529411765
+   }
+  },
+  "by_threshold": {
+   "50": {
+    "fields": 84,
+    "median_gain": 0.04142270782379309,
+    "share_improved": 0.6190476190476191
+   },
+   "1000": {
+    "fields": 79,
+    "median_gain": 0.03432928435349758,
+    "share_improved": 0.6075949367088608
+   },
+   "3000": {
+    "fields": 31,
+    "median_gain": 0.07311854463811751,
+    "share_improved": 0.6774193548387096
+   }
+  }
+ }
+}
