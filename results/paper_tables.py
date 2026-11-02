@@ -362,6 +362,77 @@ cluster bootstrap).}
 \end{table*}
 """)
 
+# ---- Supp: epoch selection on a validation partition (RX-2, spec/yieldsat-review-experiments.md; Missouri:
+# spec/own-dataset-v2.md §3, own_val_cmp.json = rel_cmp.py with REL_SUB=own_v2 REL_SEL=val) ---------------------------
+if (R / 'clean_protocol.json').exists():
+    cp = J('clean_protocol.json')
+    rows = []
+    for pr in PROTOS:
+        r = [cp['%s|%s' % (pr, p)] for p in PAIRS]
+        vals = [float(np.mean([x[t][k] for x in r])) for t in (OURS, OURS + '-val', 'paper_mmgf-val')
+                for k in ('pooled_r2', 'within_r2')]
+        diffs = []
+        for k in ('within_r2', 'pooled_r2'):
+            vb = [x['vs_best_paper_by_' + k] for x in r]
+            assert all(v['paper_model'] == 'paper_mmgf-val' for v in vb)
+            diffs.append('%s & %d / %d' % (f2(float(np.mean([v['d_' + k] for v in vb])), True),
+                                           sum(v['ci_' + k][0] > 0 for v in vb), sum(v['ci_' + k][1] < 0 for v in vb)))
+        rows.append(r'%s & %s & %s \\' % (pr, ' & '.join(f2(v) for v in vals), ' & '.join(diffs)))
+    write('supp_valsel.tex', r'''\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccccccc}
+\toprule
+ & \multicolumn{2}{c}{\method{}, test fold} & \multicolumn{2}{c}{\method{}, validation} & \multicolumn{2}{c}{MMGF, validation}
+ & \multicolumn{2}{c}{$\Delta$ within, validation} & \multicolumn{2}{c}{$\Delta$ pooled, validation} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+Protocol & Pooled & Within & Pooled & Within & Pooled & Within & mean & better / worse & mean & better / worse \\
+\midrule
+''' + '\n'.join(rows) + r'''
+\bottomrule
+\end{tabular}
+\caption{\textbf{Epoch selection on a validation partition}, YieldSAT, mean over the nine pairs. \emph{Test fold}: the
+protocol of all other tables, as in~\cite{yieldsat}. \emph{Validation}: the epoch is selected on the validation
+partition of YieldSAT's own split manifests; the test folds and test pixels are identical. $\Delta$: \method{} minus
+MMGF, both selected on the validation partition; \emph{better / worse}: pairs in which \method{} is significantly
+better / worse (95\% field-season cluster bootstrap).}
+\label{tab:supp_valsel}
+\end{table*}
+''')
+
+if (R / 'own_val_cmp.json').exists():
+    ov, ot = J('own_val_cmp.json'), J('own_cmp_all.json')   # test-selected: the main table's comparison
+    rows = []
+    for pr in ('CV10', 'LOYO'):
+        s2 = [float(np.mean([d['%s|%s' % (pr, p)]['baseline']['within_r2'] for p in ('MO-S', 'MO-C')])) for d in (ot, ov)]
+        cells = []
+        for t in (OURS + '-ps3x3', OURS + '-ps3x3-pswin'):
+            for d in (ot, ov):
+                pt, lo, hi = d['%s|MEAN|%s' % (pr, t)]['within_r2']
+                cells.append(f2(pt, True) + ('$^{*}$' if lo > 0 or hi < 0 else ''))
+        rows.append(r'%s & %s & %s & %s \\' % (pr, f2(s2[0]), f2(s2[1]), ' & '.join(cells)))
+    write('supp_valsel_own.tex', r'''\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{S2 only} & \multicolumn{2}{c}{+ PS 3$\times$3} & \multicolumn{2}{c}{+ PS 3$\times$3 + 30\,m window} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Protocol & Test & Val. & Test & Val. & Test & Val. \\
+\midrule
+''' + '\n'.join(rows) + r'''
+\bottomrule
+\end{tabular}
+\caption{\textbf{Epoch selection on a validation partition}, our Missouri dataset: within-field $R^2$ of \method{} with
+S2 only, and the gain from PS, with the epoch selected on the test fold (\emph{Test}, as in \cref{tab:owndata}) or on
+15\% of the training field seasons held out for validation (\emph{Val.}). Mean over the two crops, seeds 0--2 pooled;
+$^{*}$: 95\% field-season cluster bootstrap interval excludes 0.}
+\label{tab:supp_valsel_own}
+\end{table}
+''')
+
 # ---- Supp: seed variance (spec/yieldsat-ablations-seeds.md) --------------------------------------------------------
 if (R / 'seed_table.json').exists():
     sd = J('seed_table.json')
