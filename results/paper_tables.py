@@ -249,9 +249,9 @@ repro = {
 }
 rows = [r'%s & %s & %.2f / %.2f \\' % (k, ' & '.join('%.2f / %.2f' % (a, b) for a, b in zip(*v)), np.mean(v[0]), np.mean(v[1]))
         for k, v in repro.items()]
-write('supp_repro.tex', r'''\begin{table}[t]
+write('supp_repro.tex', r'''\begin{table*}[t]
 \centering
-\scriptsize
+% \scriptsize
 \setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{lccccccc}
 \toprule
@@ -263,37 +263,30 @@ Model & ARG-S & BRA-C & BRA-S & GER-R & GER-W & URG-S & Mean \\
 \caption{\textbf{Reproduction check}: CV10 pixel $R^2$ as fold means (the paper's reporting), ours / reported in
 \cite{yieldsat} (Table 4, S2+ADM).}
 \label{tab:supp_repro}
-\end{table}
+\end{table*}
 ''')
 
-# ---- Supp S3: component ablations ------------------------------------------------------------------------------------
-rl, fc, fa = J('rel_dev_rl04.json'), J('fc_dev_fc04.json'), J('fc_all_fc05.json')
-LAM05, LAM1 = r'+ relation loss ($\lambda{=}0.5$)', r'+ relation loss ($\lambda{=}1$)'
-rows = [r'\multicolumn{4}{l}{\emph{DEV pairs (ARG-W, BRA-C, GER-R, URG-S), vs.\ \method{} (base)}} \\']
-for proto, items in (('CV10', [(LAM05, rl, '-rel05'), (LAM1, fc, '-rel10'), ('+ field context', fc, '-fc'), ('+ both', fc, '-fc-rel10')]),
-                     ('LOYO', [(LAM1, fc, '-rel10'), ('+ field context', fc, '-fc'), ('+ both', fc, '-fc-rel10')])):
-    # variants of one protocol ranked against each other, per metric
-    v = [[d['%s|MEAN|ours-p3nbr-dense%s' % (proto, s)][k] for _, d, s in items] for k in ('pooled_r2', 'within_r2')]
-    mk = [marks([x[0] for x in vk]) for vk in v]
-    rows += [r'%s & %s & %s & %s \\' % (lab, proto, ci(v[0][i], mk[0][i]), ci(v[1][i], mk[1][i]))
-             for i, (lab, _, _) in enumerate(items)]
-rows += [
-    r'\midrule',
-    r'\multicolumn{4}{l}{\emph{All nine pairs: \method{} vs.\ \method{} (base)}} \\',
-] + [r'+ both & %s & %s & %s \\' % (p, ci(fa['%s|MEAN|%s' % (p, OURS)]['pooled_r2']), ci(fa['%s|MEAN|%s' % (p, OURS)]['within_r2'])) for p in PROTOS]
+# ---- Supp S3: weight of the relation loss (the component ablation itself is tab:ablation in the main paper) ---------
+rl, fc = J('rel_dev_rl04.json'), J('fc_dev_fc04.json')
+items = [('CV10', r'$\lambda{=}0.5$', rl, '-rel05'), ('CV10', r'$\lambda{=}1$', fc, '-rel10'),
+         ('LOYO', r'$\lambda{=}1$', fc, '-rel10')]
+rows = [r'%s & %s & %s & %s \\' % (proto, lab, ci(d['%s|MEAN|ours-p3nbr-dense%s' % (proto, sfx)]['pooled_r2']),
+                                   ci(d['%s|MEAN|ours-p3nbr-dense%s' % (proto, sfx)]['within_r2']))
+        for proto, lab, d, sfx in items]
 write('supp_ablation.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{llcc}
 \toprule
-Variant & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
+Protocol & Weight & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
 \midrule
 ''' + '\n'.join(rows) + r'''
 \bottomrule
 \end{tabular}
-\caption{\textbf{Component ablations}: mean change over pairs with 95\% field-season cluster-bootstrap intervals.
-Per protocol and metric, the best variant in bold, the second best underlined.}
+\caption{\textbf{Weight $\lambda$ of the relation-matching loss}: \method{} (base) with $\mathcal L_{\text{rel}}$ added,
+change vs.\ \method{} (base) on the four development pairs (ARG-W, BRA-C, GER-R, URG-S), seed 0, mean over pairs with
+95\% field-season cluster-bootstrap intervals. The components themselves are ablated in \cref{tab:ablation}.}
 \label{tab:supp_ablation}
 \end{table}
 ''')
