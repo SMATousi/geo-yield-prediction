@@ -27,7 +27,8 @@ import numpy as np
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else '/root/yieldsat_backups/protocol_results')
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).resolve().parent)
 OWN = len(sys.argv) > 3 and sys.argv[3] == 'own'
-SUB, GROUP = (os.environ.get('MAPS_OWN_SUB', 'own') if OWN else 'paper'), 'cv10_season_noval_s0'   # own_v2: v2 data
+SUB = os.environ.get('MAPS_OWN_SUB', 'own') if OWN else 'paper'                                 # own_v2: v2 data
+GROUP = os.environ.get('MAPS_GROUP', 'cv10_season_noval_s0')     # cv10_season_val_s0: epoch picked on validation
 MODELS = [('ours-p3nbr-dense-fc-rel10', 'Ours'), ('ours-p3nbr-dense', 'Ours (base)'), ('paper_mmgf', 'MMGF')]
 PAIRS_ALL = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 PAIRS_MAIN = ['ARG-S', 'BRA-C', 'GER-R', 'URG-S']
