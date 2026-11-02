@@ -762,7 +762,8 @@ if (R / OWN_FILE).exists():
             (OURS + '-ps3x3sp-dem10', r'+ PS 3$\times$3 conv.\ + DEM patch')]
     ARMS = [(t, lab) for t, lab in ARMS if all(t in oc['%s|%s' % c] and not oc['%s|%s' % c][t].get('incomplete')
                                                for c in COLS)]
-    MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps10', '-ps3x3', '-pswin', '-ps3x3-pswin'))]
+    # main table: the sub-grid and the best variant; the 10 m mean and the window alone are in the supplement
+    MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps3x3', '-ps3x3-pswin'))]
     sd = lambda m: float(np.std(m['seed_within_r2']))
 
     # main: as tab:main, mean over the two crops per protocol; change vs S2 only in brackets, '*' when the
@@ -785,7 +786,7 @@ if (R / OWN_FILE).exists():
     entries = []                                       # (model, inputs, [(value, bracket)] per column or None)
     for b in OWN_BASE:
         t, name, ref = b if len(b) == 3 else b + ('s2',)
-        lab = 'S2 only' if ref == 's2' else r'+ PS, 3$\times$3 sub-grid'
+        lab = 'S2 only' if ref == 's2' else r'S2 + PS, 3$\times$3 sub-grid'
         rc = ob.get(ref, {})
         if not all(t in rc.get('%s|%s' % (pr, p), {}) for pr in OWN_PROTOS for p in OWN_PAIRS):
             entries.append((name, lab, None))
@@ -796,9 +797,11 @@ if (R / OWN_FILE).exists():
             cs.append((float(np.mean([rc['%s|%s' % (pr, p)][t][m] for p in OWN_PAIRS])),
                        f2(d, True) + ('$^{*}$' if lo > 0 or hi < 0 else '')))
         entries.append((name, lab, cs))
-    nb = len(entries)
+    # baselines with S2 only first, then those with PS
+    entries = [e for e in entries if e[1] == 'S2 only'] + [e for e in entries if e[1] != 'S2 only']
+    nb, nb_s2 = len(entries), sum(e[1] == 'S2 only' for e in entries)
     entries += [(r'\method{}', lab, [cell(pr, t, m) for pr, m in COLS4])
-                for t, lab in [(None, 'S2 only')] + [(t, lab) for t, lab in ARMS if t in MAIN_ARMS]]
+                for t, lab in [(None, 'S2 only')] + [(t, 'S2 ' + lab) for t, lab in ARMS if t in MAIN_ARMS]]
     # best / second best per column over every model and input with results
     mk = [marks([None if e[2] is None else e[2][j][0] for e in entries]) for j in range(len(COLS4))]
     lines = []
@@ -808,8 +811,7 @@ if (R / OWN_FILE).exists():
             continue
         lines.append(r'%s & %s & %s \\' % (name, lab, ' & '.join(
             deco(f2(v), mk[j][i]) + ('' if br is None else r' {\scriptsize(%s)}' % br) for j, (v, br) in enumerate(cs))))
-    brows, rows = lines[:nb], lines[nb:]
-    ceil = f2(float(np.mean([nco[p]['ceiling_within_r2'] for p in OWN_PAIRS])))
+    brows, rows = lines[:nb_s2] + [r'\midrule'] + lines[nb_s2:nb], lines[nb:]
     write('owndata_main.tex', r"""\begin{table*}[t]
 \centering
 \small
@@ -823,19 +825,19 @@ Model & Inputs & Pooled & Within & Pooled & Within \\
 """ + '\n'.join(brows) + r"""
 \midrule
 """ + '\n'.join(rows) + r"""
-\midrule
-Noise ceiling & & & %s & & %s \\
 \bottomrule
 \end{tabular}
 \caption{\textbf{Baselines and high-resolution inputs on our Missouri dataset.} Pixel-level $R^2$, mean over the
 two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets: for
 \method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with the same inputs
-(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features); $^{*}$: 95\%% field-season
-cluster bootstrap interval excludes 0. Best per column in bold, second best underlined. The 30\,m window is the cell and its eight neighbours on the PS grid, read by
-a convolutional encoder. Per-crop results of \method{} in \cref{tab:supp_owndata_full}.}
+(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features); $^{*}$: 95\% field-season
+cluster bootstrap interval excludes 0. Best per column in bold, second best underlined. 3$\times$3 sub-grid: the
+cell's nine 3.3\,m sub-cells as flat channels; + 30\,m window: in addition, the cell and its eight neighbours on the
+PS grid, read by a convolutional encoder. Per-crop results and further variants (PS averaged to 10\,m, the window
+alone) in \cref{tab:supp_owndata_full}.}
 \label{tab:owndata}
 \end{table*}
-""" % (ceil, ceil))
+""")
 
     # supplementary: every arm, within and pooled change per pair with intervals, seed spread
     # per column, S2 only (a change of 0) and every arm ranked
