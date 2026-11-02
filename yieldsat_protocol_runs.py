@@ -678,6 +678,48 @@ def cmd_units(a):
             json.dumps({'suite': 'protocol_abl_seeds_ours', 'out_root': a.out_root, 'units': both}, indent=1))
         print('protocol_abl_seeds_ours: {} units'.format(len(both)))
         return
+    if a.batch == 'components':
+        # component ablation for the main paper (tab:ablation): base, + field context, + relation loss, both, on all
+        # nine pairs x CV10/LOYO/LORO, seeds 0-2. Derived from the best model's 217 seed-0 units by dropping its flags,
+        # as the FC-04 / RL-04 DEV arms were; runs that exist (base seed 0, both seeds 0-2, the DEV arms' seed 0 on
+        # CV10/LOYO) are not repeated.
+        src = [u for f in ('protocol_fc_dev_units.json', 'protocol_fc_all_units.json')
+               for u in json.loads(Path('cluster/tabm', f).read_text())['units']
+               if u['id'].startswith('ours-p3nbr-dense-fc-rel10__')]
+        assert len(src) == 217, len(src)
+        full = 'ours-p3nbr-dense-fc-rel10'
+        arms = {'ours-p3nbr-dense': (['--field_context', '--rel_weight'], (1, 2)),
+                'ours-p3nbr-dense-fc': (['--rel_weight'], (0, 1, 2)),
+                'ours-p3nbr-dense-rel10': (['--field_context'], (0, 1, 2))}
+        dev = {('ARG-W', 'cv'), ('ARG-W', 'loyo'), ('BRA-C', 'cv'), ('BRA-C', 'loyo'), ('GER-R', 'cv'),
+               ('GER-R', 'loyo'), ('URG-S', 'cv'), ('URG-S', 'loyo')}
+        units = []
+        for tag, (drop, seeds) in arms.items():
+            for seed in seeds:
+                for u in src:
+                    pair, proto = u['id'].split('__')[1:3]
+                    if seed == 0 and tag != 'ours-p3nbr-dense' and (pair, proto) in dev:
+                        continue                                       # the DEV arm's seed-0 run exists
+                    args = list(u['args'])
+                    for flag in drop:                                  # a flag with its value, if it has one
+                        i = args.index(flag)
+                        del args[i:i + (2 if i + 1 < len(args) and not args[i + 1].startswith('--') else 1)]
+                    i = args.index('--seed')
+                    assert args[i + 1] == '0'
+                    args[i + 1] = str(seed)
+                    j = args.index('--output_dir')
+                    assert '/%s_seed0/' % full in args[j + 1]
+                    args[j + 1] = args[j + 1].replace('/%s_seed0/' % full, '/%s_seed%d/' % (tag, seed))
+                    uid = tag + ('-s%d' % seed if seed else '') + '-cmp'   # '-cmp': never collides with old claims
+                    units.append(dict(u, id=u['id'].replace(full + '__', uid + '__'), args=args, seed=seed))
+        # seed 0 of the new arms first (a first nine-pair read-out), then seeds 1-2; largest pairs first
+        units.sort(key=lambda u: (u['seed'] != 0, -SIZE[u['pair']] * u['n_folds']))
+        for u in units:
+            del u['seed']
+        Path('cluster/tabm/protocol_components_units.json').write_text(
+            json.dumps({'suite': 'protocol_components', 'out_root': a.out_root, 'units': units}, indent=1))
+        print('protocol_components: {} units'.format(len(units)))
+        return
     if a.batch == 'tab-dense':
         # flat-feature baselines (TabM, MLP, LightGBM; F0) on the dense series, per pair x CV10/LOYO/LORO
         # (spec/yieldsat-tabular-dense.md). The flat matrices are built first, one unit per pair. Big pairs (>= 1.3M
@@ -1052,7 +1094,7 @@ def main():
     u = sub.add_parser('units')
     u.add_argument('--artifact_root', default='/root/yieldsat_artifacts')
     u.add_argument('--out_root', default='/data/YieldSAT/yieldsat_results/protocol')
-    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'own-baselines', 'ysat-ps', 'ysat-ps2', 'size-dev'])
+    u.add_argument('--batch', default='point', choices=['point', 'image', 'pk', 'hybrid-shm', 'dense', 'pk-dense', 'obsdrop', 'obsdrop-all', 'rel-dev', 'fc-dev', 'fc-all', 'paper-models', 'fe-dev', 'fe-all', 'fe-b-dev', 'coarse-dev', 'val-protocol', 'ablation-dev', 'seeds', 'cost-bench', 'tab-dense', 'tab-dense-tabm', 'own', 'own2', 'own3', 'own-v2', 'own-baselines', 'ysat-ps', 'ysat-ps2', 'size-dev', 'components'])
     u.add_argument('--own_artifact_root', default='/root/owndata_artifacts_v2',
                    help='own-v2: the built Missouri artifacts, for the fold counts of its split manifests')
     u.add_argument('--with_lstm', action='store_true',

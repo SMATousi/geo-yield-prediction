@@ -216,3 +216,17 @@ results (Overall comparison); a run-to-run note in the leave-one-out ablation pa
 **Reading:** ours is about 5× the training cost of MMGF per fold (34 vs 7 GPU-min), cheaper than the 3D-ConvLSTM, and
 predicts 12,500 cells/s (a 100 ha field in under a second). In the paper: `tables/supp_cost.tex`, `sec:supp_cost`, one
 line in the method's implementation details.
+
+## Component ablation on all nine pairs (2026-11-02, for the main paper's tab:ablation)
+
+The DEV-pair ablation (FC-04, RL-04: field context alone +0.018, relation loss alone +0.010, both +0.015 within-field
+on CV10) left open whether the relation loss adds anything beyond the field context, on four pairs and without LORO.
+`yieldsat_protocol_runs.py units --batch components` (1,606 units, `cluster/nautilus/protocol_components_job.yaml`)
+runs the missing arms on all nine pairs x CV10/LOYO/LORO, seeds 0-2:
+- `ours-p3nbr-dense` (base): seeds 1-2 (seed 0 = the paper runs);
+- `ours-p3nbr-dense-fc` (field context only) and `ours-p3nbr-dense-rel10` (relation loss only): seeds 0-2, except the
+  existing DEV seed-0 runs on CV10/LOYO;
+- the full model `ours-p3nbr-dense-fc-rel10` already has seeds 0-2.
+Arguments are the full model's minus its flags; checked identical to the existing base/FC/RL runs except the seed
+(694 of 694). Unit ids end in `-cmp` so they never meet old claims. Comparison: `rel_cmp.py` with REL_SEEDS=0,1,2 and
+REL_BASE=ours-p3nbr-dense.
