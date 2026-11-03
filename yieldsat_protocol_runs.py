@@ -711,9 +711,20 @@ def cmd_units(a):
                     assert '/%s_seed0/' % full in args[j + 1]
                     args[j + 1] = args[j + 1].replace('/%s_seed0/' % full, '/%s_seed%d/' % (tag, seed))
                     uid = tag + ('-s%d' % seed if seed else '') + '-cmp'   # '-cmp': never collides with old claims
-                    units.append(dict(u, id=u['id'].replace(full + '__', uid + '__'), args=args, seed=seed))
-        # seed 0 of the new arms first (a first nine-pair read-out), then seeds 1-2; largest pairs first
+                    # S2-only runs: leave the PlanetScope window files out of staging (~24 GB for Argentina), so a
+                    # pod that runs every pair holds all four countries within its 80 Gi disk
+                    units.append(dict(u, id=u['id'].replace(full + '__', uid + '__'), args=args, seed=seed,
+                                      stage_ignore=list(PS_WIN_FILES)))
+        # seed 0 of the new arms first (a first nine-pair read-out), then seeds 1-2; within each, pairs interleaved
+        # round-robin (largest first), so every pod's concurrent runs mix large and small pairs and the fleet's RAM
+        # use stays level instead of swinging with the pair all pods are on (the 20% utilization rule)
         units.sort(key=lambda u: (u['seed'] != 0, -SIZE[u['pair']] * u['n_folds']))
+        rank, seen = {}, {}
+        for u in units:
+            k = (u['seed'] != 0, u['pair'])
+            rank[u['id']] = (k[0], seen.get(k, 0), -SIZE[u['pair']])
+            seen[k] = seen.get(k, 0) + 1
+        units.sort(key=lambda u: rank[u['id']])
         for u in units:
             del u['seed']
         Path('cluster/tabm/protocol_components_units.json').write_text(
