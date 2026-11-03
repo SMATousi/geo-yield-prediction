@@ -24,12 +24,14 @@ OWN_SUB = os.environ.get('FC_OWN_SUB', 'own')                  # own_v2 once the
 #: (name, results sub-root, baseline, variant, pairs, protocols, seeds) -- as in the paper's tables
 COMPARISONS = [
     ('vs_mmgf', 'paper', 'paper_mmgf', OURS, PAIRS, ('cv10', 'loyo', 'loro'), (0,)),
-    ('vs_tabm', 'paper', 'tabm-f0-dense-bs2048', OURS, PAIRS, ('cv10', 'loyo', 'loro'), (0,)),
     ('vs_base', 'paper', 'ours-p3nbr-dense', OURS, PAIRS, ('cv10', 'loyo', 'loro'), (0,)),
-    ('ps_yieldsat', 'paper', OURS, OURS + '-ps3x3-pswin', ['ARG-S', 'ARG-C', 'BRA-C'], ('cv10', 'loyo'), (0, 1, 2)),
+    ('ps_yieldsat', 'paper', OURS, OURS + '-ps3x3-pswin', PAIRS, ('cv10', 'loyo', 'loro'), (0, 1, 2)),
     ('ps_own', OWN_SUB, OURS, OURS + '-ps3x3-pswin', ['MO-S', 'MO-C'], ('cv10', 'loyo'), (0, 1, 2)),
 ]
 MIN_CELLS, THRESHOLDS, B = 1000, (50, 1000, 3000), 2000
+ONLY = os.environ.get('FC_ONLY')                                # FC_ONLY=ps_yieldsat: recompute one comparison
+if ONLY:
+    COMPARISONS = [c for c in COMPARISONS if c[0] in ONLY.split(',')]
 SEL = os.environ.get('FC_SEL', 'noval')
 
 
