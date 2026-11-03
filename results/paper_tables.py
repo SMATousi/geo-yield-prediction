@@ -942,22 +942,25 @@ slots of the dense series inside the season. Noise ceiling: within-field $R^2$ (
 \end{table}
 """)
 
-# ---- PlanetScope on a YieldSAT subset (spec/yieldsat-planetscope.md): the Missouri-best arm vs S2 only ------------
-if (R / 'ysat_ps_cmp.json').exists():
-    yc, PS_ARM = J('ysat_ps_cmp.json'), OURS + '-ps3x3-pswin'
+# ---- PlanetScope on YieldSAT (spec/yieldsat-planetscope.md): the Missouri-best arm vs S2 only, all nine pairs ------
+# (ysat_ps9_cmp.json: rel_cmp.py REL_SUB=paper REL_SEEDS=0,1,2 REL_BASE=OURS, all pairs and protocols)
+if (R / 'ysat_ps9_cmp.json').exists():
+    yc, PS_ARM = J('ysat_ps9_cmp.json'), OURS + '-ps3x3-pswin'
 
     def pair_cells(base, d):
         # 'S2 only & + PS': R2 of S2 only and the change with PS, the better of the two in bold
         mk = marks([0.0, d[0]])
         return '%s & %s' % (deco(f2(base), mk[0]), ci(d, mk[1]))
     rows = []
-    for proto in ('CV10', 'LOYO'):
-        for p in ('ARG-S', 'ARG-C', 'BRA-C'):
+    for proto in PROTOS:
+        if rows:
+            rows.append(r'\midrule')
+        for p in PAIRS:
             b, o = yc['%s|%s' % (proto, p)]['baseline'], yc['%s|%s' % (proto, p)][PS_ARM]
-            rows.append(r'%s & %s & %d & %s \\' % (proto if p == 'ARG-S' else '', p, b['fields'], ' & '.join(
+            rows.append(r'%s & %s & %d & %s \\' % (proto if p == PAIRS[0] else '', p, b['fields'], ' & '.join(
                 pair_cells(b[k], [o['d_' + k]] + o['ci_' + k]) for k in ('within_r2', 'pooled_r2'))))
         m = yc['%s|MEAN|%s' % (proto, PS_ARM)]
-        mb = lambda k: float(np.mean([yc['%s|%s' % (proto, p)]['baseline'][k] for p in ('ARG-S', 'ARG-C', 'BRA-C')]))
+        mb = lambda k: float(np.mean([yc['%s|%s' % (proto, p)]['baseline'][k] for p in PAIRS]))
         rows.append(r' & Mean & & %s \\' % ' & '.join(pair_cells(mb(k), m[k]) for k in ('within_r2', 'pooled_r2')))
     write('supp_ysat_ps.tex', r"""\begin{table}[t]
 \centering
@@ -970,11 +973,11 @@ if (R / 'ysat_ps_cmp.json').exists():
 \cmidrule(lr){4-5}\cmidrule(lr){6-7}
 Protocol & Pair & Fields & S2 only & + PS & S2 only & + PS \\
 \midrule
-""" + '\n'.join(rows[:4]) + '\n' + r'\midrule' + '\n' + '\n'.join(rows[4:]) + r"""
+""" + '\n'.join(rows) + r"""
 \bottomrule
 \end{tabular}}
 \caption{\textbf{PlanetScope on YieldSAT.} \method{} with S2 only and with PS (3$\times$3 sub-grid and 30\,m window,
-the best variant on our dataset, unchanged) on the three pairs of \cref{sec:q4}; seeds 0--2 pooled. ``+ PS'':
+the best variant on our dataset, unchanged) on all nine pairs; seeds 0--2 pooled. ``+ PS'':
 change vs.\ S2 only with 95\% field-season cluster bootstrap intervals. The better input in bold.}
 \label{tab:supp_ysat_ps}
 \end{table}
@@ -1025,11 +1028,13 @@ if (R / 'field_cmp.json').exists():
     fcm = J('field_cmp.json')
     if OWN_SEL == 'val' and (R / 'field_cmp_own_val.json').exists():   # our dataset: validation-selected runs
         fcm.update({k: v for k, v in J('field_cmp_own_val.json').items() if k.startswith('ps_own|')})
+    if (R / 'field_cmp_ps9.json').exists():                         # PS on YieldSAT: all nine pairs, with LORO
+        fcm.update({k: v for k, v in J('field_cmp_ps9.json').items() if k.startswith('ps_yieldsat|')})
     iqr = lambda v, m='': r'%s {\scriptsize[%s, %s]}' % (deco(f2(v[0]), m), f2(v[1][0]), f2(v[1][1]))
     pct = lambda v: r'%d\%% {\scriptsize[%d, %d]}' % tuple(round(100 * x) for x in [v[0]] + v[1])
     BLOCKS = [('vs_mmgf', r'\method{} vs.\ MMGF', 'MMGF', r'\method{}'),
               ('vs_base', r'\method{} vs.\ \method{} (base)', 'Base', r'\method{}'),
-              ('ps_yieldsat', r'+ PS on YieldSAT (ARG-S, ARG-C, BRA-C; seeds 0--2)', 'S2 only', '+ PS'),
+              ('ps_yieldsat', r'+ PS on YieldSAT (seeds 0--2)', 'S2 only', '+ PS'),
               ('ps_own', r'+ PS on our dataset (seeds 0--2)', 'S2 only', '+ PS')]
     rows = []
     for key, title, bl, vl in BLOCKS:

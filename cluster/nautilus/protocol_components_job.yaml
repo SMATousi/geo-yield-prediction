@@ -45,6 +45,7 @@ spec:
                 - hcc-chase-shor-c4705.unl.edu
                 - ry-gpu-06.sdsc.optiputer.net
                 - uicnrp-fiona2.evl.uic.edu
+                - k8s-haosu-05.sdsc.optiputer.net
       containers:
       - name: protocol
         image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
