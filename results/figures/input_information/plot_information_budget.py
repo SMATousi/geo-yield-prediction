@@ -19,8 +19,7 @@ R = HERE.parents[1]
 ORC, MI, NC = (json.loads((R / f).read_text()) for f in ('input_oracle.json', 'input_mi.json', 'noise_ceiling.json'))
 PAIRS = ['ARG-C', 'ARG-S', 'ARG-W', 'BRA-C', 'BRA-S', 'BRA-W', 'GER-R', 'GER-W', 'URG-S']
 MODELS = [('paper_3dconvlstm', '3D-ConvLSTM'), ('paper_3dlstm', '3D-LSTM'), ('paper_aff', 'AFF'),
-          ('paper_mmgf', 'MMGF'), ('lgbm-f0-dense', 'LightGBM'), ('ours-p3nbr-dense', 'Yield-ReFiNe (base)'),
-          ('tabm-f0-dense-bs2048', 'TabM'), ('ours-p3nbr-dense-fc-rel10', 'Yield-ReFiNe')]
+          ('paper_mmgf', 'MMGF'), ('ours-p3nbr-dense', 'Yield-ReFiNe (base)'), ('ours-p3nbr-dense-fc-rel10', 'Yield-ReFiNe')]
 OURS = 'ours-p3nbr-dense-fc-rel10'
 # one hue (the paper's purple), dark = most accessible information; ink and baseline bars neutral
 PURPLE, MID, LIGHT, PALE = '#4E4460', '#8A7EA3', '#C4BBD4', '#E6E1EE'
@@ -37,8 +36,8 @@ def main():
     out = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE
     plt.rcParams.update({'font.size': 7, 'font.family': 'serif', 'axes.edgecolor': MUTED, 'axes.linewidth': 0.6,
                          'xtick.color': MUTED, 'ytick.color': INK, 'hatch.linewidth': 0.5})
-    fig, (top, ax) = plt.subplots(2, 1, figsize=(3.35, 2.9), sharex=True,
-                                  gridspec_kw={'height_ratios': [1, 3.3], 'hspace': 0.08})
+    fig, (top, ax) = plt.subplots(2, 1, figsize=(3.35, 2.45), sharex=True,
+                                  gridspec_kw={'height_ratios': [1, 2.5], 'hspace': 0.08})
 
     # budget bar: the target's within-field variance = 1
     segs = [(0, transfer, PURPLE, 'transferable\nacross fields', 'w'), (transfer, oracle, MID, 'field-\nspecific', 'w'),

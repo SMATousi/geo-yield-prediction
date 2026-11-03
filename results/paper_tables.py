@@ -21,11 +21,12 @@ OURS, BASE = 'ours-p3nbr-dense-fc-rel10', 'ours-p3nbr-dense'
 # rel_cmp.py / field_cmp.py with REL_SUB=own_v2 REL_SEL=val (FC_SEL=val), seeds 0-2); OWN_SEL=test: test-selected
 OWN_SEL = os.environ.get('OWN_SEL', 'val')
 PAPER = [('paper_3dlstm', '3D-LSTM'), ('paper_3dconvlstm', '3D-ConvLSTM'), ('paper_aff', 'AFF'), ('paper_mmgf', 'MMGF')]
-#: Strong per-cell baselines added to the paper's set (spec/yieldsat-tabular-dense.md): the dense series flattened
-#: into features (F0) for TabM and LightGBM.
-STRONG = [('tabm-f0-dense-bs2048', 'TabM'), ('lgbm-f0-dense', 'LightGBM')]
-MODELS = PAPER + STRONG + [(BASE, r'\method{} (base)'), (OURS, r'\method{}')]
-GROUPS = [(r'YieldSAT models~\cite{yieldsat}', len(PAPER)), ('Strong baselines (added)', len(STRONG)), ('Ours', 2)]
+# the paper compares with the YieldSAT models only (decision 2026-11-03: TabM / LightGBM, spec/yieldsat-tabular-dense.md,
+# are not in the benchmark and were removed from the paper)
+MODELS = PAPER + [(BASE, r'\method{} (base)'), (OURS, r'\method{}')]
+GROUPS = [(r'YieldSAT models~\cite{yieldsat}', len(PAPER)), ('Ours', 2)]
+# vs_best: the best YieldSAT model per pair (paper_models_table.py with its default PMT_PAPER)
+PM_BEST = 'paper_models_table_ysat.json'
 
 
 def group_header(width: int, first_col: int = 2) -> str:
@@ -96,9 +97,7 @@ Protocol & ''' + ' & '.join(['Pooled & Within'] * len(MODELS)) + r''' \\
 \caption{\textbf{Pixel-level $R^2$ on YieldSAT}, mean over the nine country--crop pairs. \emph{Pooled}: the
 paper's metric (all test pixels of all folds pooled). \emph{Within}: within-field $R^2$ (\cref{eq:within}),
 which scores only the spatial pattern inside each field. \emph{YieldSAT models}: our reimplementations of the best
-models of \cite{yieldsat}. \emph{Strong baselines}: TabM~\cite{gorishniy2025tabm} and LightGBM~\cite{ke2017lightgbm} on
-the same dense series flattened into per-cell features, added by us. All models use identical splits, inputs and test
-pixels. Best per row and metric in bold, second best underlined. Per-pair results in the supplementary (\cref{tab:supp_full}).}
+models of \cite{yieldsat}. All models use identical splits, inputs and test pixels. Best per row and metric in bold, second best underlined. Per-pair results in the supplementary (\cref{tab:supp_full}).}
 \label{tab:main}
 \end{table*}
 ''')
@@ -154,13 +153,14 @@ bold (highest $R^2$, lowest RMSE), second best underlined.}
 \end{table*}
 """)
 
-# ---- Table 2 (main): ours vs the best of the six baselines of each row ----------------------------------------------------
+# ---- Table 2: ours vs the best of the four YieldSAT models of each row ----------------------------------------------------
+pmb = J(PM_BEST)
 rows = []
 for proto in PROTOS:
-    d = [pm['%s|%s' % (proto, p)]['vs_best_paper_by_within_r2'] for p in PAIRS]
+    d = [pmb['%s|%s' % (proto, p)]['vs_best_paper_by_within_r2'] for p in PAIRS]
     better = sum(x['ci_within_r2'][0] > 0 for x in d)
     worse = sum(x['ci_within_r2'][1] < 0 for x in d)
-    dp = [pm['%s|%s' % (proto, p)]['vs_best_paper_by_pooled_r2'] for p in PAIRS]
+    dp = [pmb['%s|%s' % (proto, p)]['vs_best_paper_by_pooled_r2'] for p in PAIRS]
     rows.append(r'%s & %s & %d / %d & %s & %d / %d \\' % (
         proto, f2(np.mean([x['d_within_r2'] for x in d]), True), better, worse,
         f2(np.mean([x['d_pooled_r2'] for x in dp]), True),
@@ -177,8 +177,8 @@ Protocol & mean $\Delta$ & better / worse & mean $\Delta$ & better / worse \\
 ''' + '\n'.join(rows) + r'''
 \bottomrule
 \end{tabular}
-\caption{\textbf{\method{} vs.\ the best baseline of each pair}, chosen per pair and metric among all six baselines
-(the four YieldSAT models, TabM and LightGBM) on the same test data, which favours the baselines. \emph{better / worse}: number of the nine pairs in which \method{} is
+\caption{\textbf{\method{} vs.\ the best baseline of each pair}, chosen per pair and metric among the four YieldSAT
+models on the same test data, which favours the baselines. \emph{better / worse}: number of the nine pairs in which \method{} is
 significantly better / worse (95\% field-season cluster bootstrap).}
 \label{tab:vs_best}
 \end{table}
@@ -816,8 +816,7 @@ if (R / OWN_FILE).exists():
     # PS baselines): difference to \method{} with the same inputs; a model without results stays a placeholder
     OWN_BASE_FILE = 'own_cmp_baselines_val.json' if OWN_SEL == 'val' else 'own_cmp_baselines.json'
     ob = J(OWN_BASE_FILE) if (R / OWN_BASE_FILE).exists() else {}
-    OWN_BASE = PAPER + [('lgbm-f0-dense', 'LightGBM', 's2'), ('lgbm-f0p-dense', 'LightGBM', 'ps3x3'),
-                        ('tabm-f0-dense-bs2048', 'TabM', 's2'), ('tabm-f0p-dense-bs2048', 'TabM', 'ps3x3')]
+    OWN_BASE = PAPER
     entries = []                                       # (model, inputs, [(value, bracket)] per column or None)
     for b in OWN_BASE:
         t, name, ref = b if len(b) == 3 else b + ('s2',)
@@ -846,7 +845,7 @@ if (R / OWN_FILE).exists():
             continue
         lines.append(r'%s & %s & %s \\' % (name, lab, ' & '.join(
             deco(f2(v), mk[j][i]) + ('' if br is None else r' {\scriptsize(%s)}' % br) for j, (v, br) in enumerate(cs))))
-    brows, rows = lines[:nb_s2] + [r'\midrule'] + lines[nb_s2:nb], lines[nb:]
+    brows, rows = lines[:nb_s2] + ([r'\midrule'] + lines[nb_s2:nb] if nb > nb_s2 else []), lines[nb:]
     write('owndata_main.tex', r"""\begin{table*}[t]
 \centering
 \small
@@ -864,8 +863,7 @@ Model & Inputs & Pooled & Within & Pooled & Within \\
 \end{tabular}
 \caption{\textbf{Baselines and high-resolution inputs on our Missouri dataset.} Pixel-level $R^2$, mean over the
 two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3\,m) added. In brackets: for
-\method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with the same inputs
-(S2 only, or the PS 3$\times$3 sub-grid, which the tabular baselines receive as features); $^{*}$: 95\% field-season
+\method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with S2 only; $^{*}$: 95\% field-season
 cluster bootstrap interval excludes 0. Best per column in bold, second best underlined. 3$\times$3 sub-grid: the
 cell's nine 3.3\,m sub-cells as flat channels; + 30\,m window: in addition, the cell and its eight neighbours on the
 PS grid, read by a convolutional encoder. Per-crop results and further variants (PS averaged to 10\,m, the window
@@ -1030,7 +1028,6 @@ if (R / 'field_cmp.json').exists():
     iqr = lambda v, m='': r'%s {\scriptsize[%s, %s]}' % (deco(f2(v[0]), m), f2(v[1][0]), f2(v[1][1]))
     pct = lambda v: r'%d\%% {\scriptsize[%d, %d]}' % tuple(round(100 * x) for x in [v[0]] + v[1])
     BLOCKS = [('vs_mmgf', r'\method{} vs.\ MMGF', 'MMGF', r'\method{}'),
-              ('vs_tabm', r'\method{} vs.\ TabM', 'TabM', r'\method{}'),
               ('vs_base', r'\method{} vs.\ \method{} (base)', 'Base', r'\method{}'),
               ('ps_yieldsat', r'+ PS on YieldSAT (ARG-S, ARG-C, BRA-C; seeds 0--2)', 'S2 only', '+ PS'),
               ('ps_own', r'+ PS on our dataset (seeds 0--2)', 'S2 only', '+ PS')]
