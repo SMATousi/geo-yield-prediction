@@ -15,8 +15,8 @@ kind: Job
 metadata:
   name: smatousi-yieldsat-protocol-components-l
 spec:
-  completions: 14
-  parallelism: 14
+  completions: 9
+  parallelism: 9
   backoffLimit: 1000
   ttlSecondsAfterFinished: 604800
   template:
