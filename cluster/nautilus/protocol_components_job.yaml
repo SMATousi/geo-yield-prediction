@@ -1,13 +1,16 @@
 # Component ablation for the main paper (tab:ablation; yieldsat_protocol_runs.py units --batch components): base,
-# + field context, + relation loss on all nine pairs x CV10/LOYO/LORO, seeds 0-2, 1,606 units. Sizing as the
-# seeds job (4 runs per 24 GB GPU: ~100% GPU util, ~3 CPU per 3 runs). 20 GPUs, so ~80 runs at once. No credentials inside.
+# + field context, + relation loss on all nine pairs x CV10/LOYO/LORO, seeds 0-2, 1,606 units (pairs interleaved).
+# Sized from the smoke pod (2026-11-03, 6 runs on a 24 GB GPU, mixed pairs): GPU memory 13.5 GB (55%), runs' PSS
+# 26 GiB, working set peak 34 GiB, CPU 5 of 6 cores (CPU-bound, GPU often idle), so 10 CPU / 40 Gi here.
+# Any GPU type except the known-bad nodes; runs per pod from the GPU's memory (3 below 14 GB, 4 below 20 GB, else 6);
+# 80 GB+ GPUs are excluded because 6 runs would use under 20% of their memory. No credentials inside.
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: smatousi-yieldsat-protocol-components
 spec:
-  completions: 20
-  parallelism: 20
+  completions: 24
+  parallelism: 24
   backoffLimit: 1000
   ttlSecondsAfterFinished: 604800
   template:
@@ -19,8 +22,8 @@ spec:
             nodeSelectorTerms:
             - matchExpressions:
               - key: nvidia.com/gpu.product
-                operator: In
-                values: [NVIDIA-A10, NVIDIA-GeForce-RTX-3090, NVIDIA-GeForce-RTX-4090]
+                operator: NotIn
+                values: [NVIDIA-A100-SXM4-80GB, NVIDIA-A100-80GB-PCIe, NVIDIA-H100-80GB-HBM3, NVIDIA-H200-NVL]
               - key: kubernetes.io/hostname
                 operator: NotIn
                 values:
@@ -51,14 +54,16 @@ spec:
         - >-
           git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
           cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
-          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_components_units.json --concurrency 4
+          GMB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -1) &&
+          CONC=$(( GMB < 14000 ? 3 : GMB < 20000 ? 4 : 6 )) && echo "GPU $GMB MiB -> concurrency $CONC" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_components_units.json --concurrency $CONC
           --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
         env:
         - name: YIELDSAT_GIT_REF
           value: own-dataset-training
         resources:
-          limits: {nvidia.com/gpu: 1, cpu: '6', memory: 32Gi, ephemeral-storage: 80Gi}
-          requests: {nvidia.com/gpu: 1, cpu: '6', memory: 32Gi, ephemeral-storage: 80Gi}
+          limits: {nvidia.com/gpu: 1, cpu: '10', memory: 40Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '10', memory: 40Gi, ephemeral-storage: 80Gi}
         volumeMounts:
         - {name: data, mountPath: /data}
         - {name: scratch, mountPath: /scratch}
