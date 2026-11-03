@@ -1,0 +1,84 @@
+# Component ablation for the main paper (tab:ablation; yieldsat_protocol_runs.py units --batch components): base,
+# + field context, + relation loss on all nine pairs x CV10/LOYO/LORO, seeds 0-2, 1,606 units (pairs interleaved).
+# Sized from the smoke pod (2026-11-03, 6 runs on a 24 GB GPU, mixed pairs): GPU memory 13.5 GB (55%), runs' PSS
+# 26 GiB, working set peak 34 GiB, CPU 5 of 6 cores (CPU-bound, GPU often idle), so 10 CPU / 40 Gi here.
+# Any GPU type except the known-bad nodes; runs per pod from the GPU's memory (3 below 14 GB, 4 below 20 GB, else 6);
+# 80 GB+ GPUs are excluded because 6 runs would use under 20% of their memory. No credentials inside.
+# Resized 2026-11-03: the cluster counts the runs' own memory (anon + shm), not the page cache over the mmapped
+# caches. Measured on the 40 Gi pods: 3 runs (11-12 GB GPUs) own 4.8-5.4 G + 2.2 G shm, 6 runs (24-32 GB GPUs)
+# 9.5-10.7 G + ~4 G shm, the rest (24-33 G) is page cache; at 40 Gi that is 12-25%, below the 20% rule.
+# Two jobs sized on the owned memory with ~1.7x headroom (the page cache shrinks to fit):
+# protocol_components_s_job.yaml (GPUs < 14 GB, 3 runs, 5 CPU / 14 Gi) and protocol_components_l_job.yaml
+# (14-60 GB GPUs, 4 or 6 runs, 8 CPU / 24 Gi). Same units and claims as the first two jobs.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smatousi-yieldsat-protocol-components-s
+spec:
+  completions: 12
+  parallelism: 12
+  backoffLimit: 1000
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.memory
+                operator: Lt
+                values: ['14000']
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - hcc-chase-shor-c4715.unl.edu
+                - ry-gpu-09.sdsc.optiputer.net
+                - hcc-nrp-shor-c6017.unl.edu
+                - gpu-18.nrp.mghpcc.org
+                - nautilus-ext-gpu01.fullerton.edu
+                - ry-gpu-03.sdsc.optiputer.net
+                - uicnrp-fiona.evl.uic.edu
+                - hcc-nrp-shor-c5825.unl.edu
+                - fiona-prg1.cesnet.cz
+                - nrp-01.laccd.edu
+                - hcc-nrp-shor-c5925.unl.edu
+                - ry-gpu-01.sdsc.optiputer.net
+                - k8s-3090-01.usd.edu
+                - k8s-chase-ci-07.calit2.optiputer.net
+                - ry-gpu-02.sdsc.optiputer.net
+                - hcc-chase-shor-c4705.unl.edu
+                - ry-gpu-06.sdsc.optiputer.net
+                - uicnrp-fiona2.evl.uic.edu
+                - k8s-haosu-05.sdsc.optiputer.net
+      containers:
+      - name: protocol
+        image: gitlab-registry.nrp-nautilus.io/smatous/yieldsat:image-v1
+        imagePullPolicy: Always
+        command: [/bin/bash, -c]
+        args:
+        - >-
+          git clone --quiet https://github.com/SMATousi/geo-yield-prediction.git /workspace/code &&
+          cd /workspace/code && git checkout --quiet "$YIELDSAT_GIT_REF" &&
+          GMB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -1) &&
+          CONC=3 && echo "GPU $GMB MiB -> concurrency $CONC" &&
+          exec python yieldsat_tabm_cluster.py pool --units cluster/tabm/protocol_components_units.json --concurrency $CONC
+          --artifact_root /scratch/a --source_root /data/YieldSAT/preprocessed --stage_from /data/YieldSAT/yieldsat_artifacts
+        env:
+        - name: YIELDSAT_GIT_REF
+          value: own-dataset-training
+        resources:
+          limits: {nvidia.com/gpu: 1, cpu: '5', memory: 14Gi, ephemeral-storage: 80Gi}
+          requests: {nvidia.com/gpu: 1, cpu: '5', memory: 14Gi, ephemeral-storage: 80Gi}
+        volumeMounts:
+        - {name: data, mountPath: /data}
+        - {name: scratch, mountPath: /scratch}
+        - {name: dshm, mountPath: /dev/shm}
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: ali-vol-1tera}
+      - name: scratch
+        emptyDir: {}
+      - name: dshm
+        emptyDir: {medium: Memory, sizeLimit: 4Gi}
