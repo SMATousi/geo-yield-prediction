@@ -796,7 +796,7 @@ if (R / OWN_FILE).exists():
             (OURS + '-ps3x3sp-dem10', r'+ PS 3$\times$3 conv.\ + DEM patch')]
     ARMS = [(t, lab) for t, lab in ARMS if all(t in oc['%s|%s' % c] and not oc['%s|%s' % c][t].get('incomplete')
                                                for c in COLS)]
-    # main table: the sub-grid and the best variant; the 10 m mean and the window alone are in the supplement
+    # main table: the sub-grid and the best variant
     MAIN_ARMS = [t for t, _ in ARMS if t.endswith(('-ps3x3', '-ps3x3-pswin'))]
     sd = lambda m: float(np.std(m['seed_within_r2']))
 
@@ -866,20 +866,21 @@ two crops, seeds 0--2 pooled, with Sentinel-2 only and with PlanetScope (PS, 3.3
 \method{}, the change vs.\ \method{} with S2 only; for a baseline, the difference to \method{} with S2 only; $^{*}$: 95\% field-season
 cluster bootstrap interval excludes 0. Best per column in bold, second best underlined. 3$\times$3 sub-grid: the
 cell's nine 3.3\,m sub-cells as flat channels; + 30\,m window: in addition, the cell and its eight neighbours on the
-PS grid, read by a convolutional encoder. Per-crop results and further variants (PS averaged to 10\,m, the window
-alone) in \cref{tab:supp_owndata_full}.}
+PS grid, read by a convolutional encoder. Per-crop results and further variants in \cref{tab:supp_owndata_full}.}
 \label{tab:owndata}
 \end{table*}
 """)
 
     # supplementary: every arm, within and pooled change per pair with intervals, seed spread
     # per column, S2 only (a change of 0) and every arm ranked
-    mk = {(c, k): marks([0.0] + [oc['%s|%s' % c][t]['d_' + k] for t, _ in ARMS]) for c in COLS for k in ('within_r2', 'pooled_r2')}
+    # the 10 m mean and the window alone are not reported (paper decision 2026-11-03)
+    SUPP_ARMS = [(t, lab) for t, lab in ARMS if t not in (OURS + '-ps10', OURS + '-pswin')]
+    mk = {(c, k): marks([0.0] + [oc['%s|%s' % c][t]['d_' + k] for t, _ in SUPP_ARMS]) for c in COLS for k in ('within_r2', 'pooled_r2')}
     rows = [r'S2 only & %s \\' % ' & '.join(
         r'%s {\scriptsize$\pm$%s} & %s' % (deco(f2(oc['%s|%s' % c]['baseline']['within_r2']), mk[(c, 'within_r2')][0]),
                                           ('%.3f' % sd(oc['%s|%s' % c]['baseline'])),
                                           deco(f2(oc['%s|%s' % c]['baseline']['pooled_r2']), mk[(c, 'pooled_r2')][0])) for c in COLS)]
-    for i, (t, lab) in enumerate(ARMS):
+    for i, (t, lab) in enumerate(SUPP_ARMS):
         rows.append(r'%s & %s \\' % (lab, ' & '.join(
             '%s & %s' % (ci([oc['%s|%s' % c][t]['d_within_r2']] + oc['%s|%s' % c][t]['ci_within_r2'], mk[(c, 'within_r2')][i + 1]),
                          ci([oc['%s|%s' % c][t]['d_pooled_r2']] + oc['%s|%s' % c][t]['ci_pooled_r2'], mk[(c, 'pooled_r2')][i + 1]))
