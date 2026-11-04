@@ -198,13 +198,19 @@ def cmd_pool(a):
     if not a.skip_gpu_check and not gpu_ok():
         sys.exit(3)
     plan = json.loads(Path(a.units).read_text())
+    if a.countries:
+        # e.g. small-GPU pods that can hold only the smaller countries' caches in memory
+        keep = set(a.countries.split(','))
+        plan['units'] = [u for u in plan['units'] if unit_country(u) in keep]
     out_root = a.out_root or plan['out_root']
     owner = os.environ.get('HOSTNAME', os.uname().nodename) + (
         '-s' + os.environ['POOL_SLOT'] if os.environ.get('POOL_SLOT') else '')
     claims = Claims(Path(out_root) / '_claims', owner, a.stale_minutes)
     root = Path(a.artifact_root)
     country_file = root / '.country'
-    one_country = bool(a.stage_from) and any(u.get('stage_ps') for u in plan['units'])
+    # --one_country: interleaved units staged every country's dense cache in each pod (~35 GB), which no longer fit
+    # in the page cache of a right-sized pod and left the runs waiting on disk (2026-11-04: io pressure ~90%)
+    one_country = bool(a.stage_from) and (a.one_country or any(u.get('stage_ps') for u in plan['units']))
     busy = None
     if one_country:
         import fcntl
@@ -359,6 +365,9 @@ def main():
     q.add_argument('--image_local', default='/scratch/img', help='image units: local staging root')
     q.add_argument('--concurrency', type=int, default=1, help='pool workers per pod sharing the GPU')
     q.add_argument('--stale_minutes', type=int, default=45)
+    q.add_argument('--one_country', action='store_true',
+                   help='hold one country\'s staged data per pod at a time (the PlanetScope units always do)')
+    q.add_argument('--countries', default=None, help='comma-separated: only units of these countries')
     q.add_argument('--max_attempts', type=int, default=2)
     q.set_defaults(func=cmd_pool)
     a = p.parse_args()
