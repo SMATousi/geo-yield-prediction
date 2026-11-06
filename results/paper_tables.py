@@ -294,6 +294,39 @@ change vs.\ \method{} (base) on the four development pairs (ARG-W, BRA-C, GER-R,
 \end{table}
 ''')
 
+# ---- Table (main): components, base -> + context / + relation loss / both (rel_cmp.py, nine pairs, seeds 0-2) ---------
+if (R / 'components_cmp.json').exists():
+    cc = J('components_cmp.json')
+    arms = [(BASE, '', ''), ('ours-p3nbr-dense-fc', r'\checkmark', ''), ('ours-p3nbr-dense-rel10', '', r'\checkmark'),
+            (OURS, r'\checkmark', r'\checkmark')]
+    get = lambda proto, v, m: float(np.mean([(cc['%s|%s' % (proto, p)]['baseline'] if v == BASE
+                                               else cc['%s|%s' % (proto, p)][v])[m] for p in PAIRS]))
+    cols = [[get(proto, v, m) for v, _, _ in arms] for proto in PROTOS for m in ('pooled_r2', 'within_r2')]
+    cells = [ranked(c) for c in cols]
+    rows = [r'%s & %s & %s & %s \\' % (r'\method{} (base)' if v == BASE else r'\method{}' if v == OURS else '',
+                                         ctx, rel, ' & '.join(c[i] for c in cells))
+            for i, (v, ctx, rel) in enumerate(arms)]
+    write('ablation.tex', r'''\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.1pt}
+\begin{tabular}{lcccccccc}
+\toprule
+ & & & \multicolumn{2}{c}{CV10} & \multicolumn{2}{c}{LOYO} & \multicolumn{2}{c}{LORO} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+Model & Ctx. & $\mathcal L_{\text{rel}}$ & Pooled & Within & Pooled & Within & Pooled & Within \\
+\midrule
+''' + '\n'.join(rows) + r'''
+\bottomrule
+\end{tabular}
+\caption{\textbf{Components of \method{}}: pixel-level $R^2$, mean over the nine pairs, seeds 0--2 pooled.
+\emph{Ctx.}: the field-context streams (\cref{sec:method_inputs}); $\mathcal L_{\text{rel}}$: the relation-matching
+loss (\cref{sec:method_loss}). Best per column in bold, second best underlined. The weight $\lambda$ of
+$\mathcal L_{\text{rel}}$ in \cref{tab:supp_ablation}.}
+\label{tab:ablation}
+\end{table}
+''')
+
 # ---- Supp S3b: leave-one-out ablations of the full model (A2-A4, spec/yieldsat-ablations-seeds.md) ------------------
 if (R / 'ablation_dev.json').exists():
     ab = J('ablation_dev.json')
