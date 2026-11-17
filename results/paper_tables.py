@@ -167,7 +167,7 @@ for proto in PROTOS:
         sum(x['ci_pooled_r2'][0] > 0 for x in dp), sum(x['ci_pooled_r2'][1] < 0 for x in dp)))
 write('vs_best.tex', r'''\begin{table}[t]
 \centering
-\small
+\footnotesize
 \begin{tabular}{lcccc}
 \toprule
  & \multicolumn{2}{c}{Within-field $R^2$} & \multicolumn{2}{c}{Pooled $R^2$} \\
@@ -189,17 +189,17 @@ orc, mi, nc = J('input_oracle.json'), J('input_mi.json'), J('noise_ceiling.json'
 m = lambda k: np.mean([orc[p][k] for p in PAIRS])
 write('levels.tex', r'''\begin{table}[t]
 \centering
-\small
-\begin{tabular}{llc}
+\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm}lc@{}}
 \toprule
 Level & Estimate & Within-field $R^2$ \\
 \midrule
 Target noise ceiling & semivariogram nugget & %s \\
 \midrule
-\multirow{2}{*}{Per-field information} & per-field oracle (GBM) & %s \\
+\multirow{2}{=}{Per-field information} & per-field oracle (GBM) & %s \\
  & mutual information (KSG) & %s \\
 \midrule
-\multirow{4}{*}{Cross-field information} & mutual information (KSG) & %s \\
+\multirow{4}{=}{Cross-field information} & mutual information (KSG) & %s \\
  & \method{} & %s \\
  & MMGF \cite{mena2025adaptive} & %s \\
  & GBM, trained across fields & %s \\
@@ -521,10 +521,10 @@ for i, (name, d, tag) in enumerate(FE):
 write('supp_field_encoder.tex', r'''\begin{table}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{0.1pt}
-\begin{tabular}{llcc}
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.45cm}lcc@{}}
 \toprule
-Variant (Field encoder) & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
+Variant & Protocol & $\Delta$ pooled $R^2$ & $\Delta$ within-field $R^2$ \\
 \midrule
 ''' + '\n'.join(rows) + r'''
 \bottomrule
@@ -734,7 +734,7 @@ if (R / 'prior_year.json').exists():
     write('supp_prior_year.tex', r"""\begin{table*}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{lc""" + 'c' * len(M) + r"""}
 \toprule
 Pair & Seasons & """ + ' & '.join(lab[m] for m in M) + r""" \\
