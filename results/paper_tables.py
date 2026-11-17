@@ -83,7 +83,7 @@ for proto in PROTOS:
     rows.append(proto + ' & ' + ' & '.join('%s & %s' % c for c in zip(ranked(P), ranked(W))) + r' \\')
 write('main_results.tex', r'''\begin{table*}[t]
 \centering
-\scriptsize
+\small
 \setlength{\tabcolsep}{2.6pt}
 \begin{tabular}{l''' + 'cc' * len(MODELS) + r'''}
 \toprule
@@ -321,8 +321,8 @@ Model & Ctx. & $\mathcal L_{\text{rel}}$ & Pooled & Within & Pooled & Within & P
 \end{tabular}
 \caption{\textbf{Components of \method{}}: pixel-level $R^2$, mean over the nine pairs, seeds 0--2 pooled.
 \emph{Ctx.}: the field-context streams (\cref{sec:method_inputs}); $\mathcal L_{\text{rel}}$: the relation-matching
-loss (\cref{sec:method_loss}). Best per column in bold, second best underlined. The weight $\lambda$ of
-$\mathcal L_{\text{rel}}$ in \cref{tab:supp_ablation}.}
+loss (\cref{sec:method_loss}). Best per column in bold, second best underlined. The ablation for weight $\lambda$ of
+$\mathcal L_{\text{rel}}$ is reported in \cref{tab:supp_ablation}.}
 \label{tab:ablation}
 \end{table}
 ''')
